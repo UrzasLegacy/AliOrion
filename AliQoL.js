@@ -1,6 +1,163 @@
 //--# AliQoL
 // Written by Ali
 
+function RecallRepair()
+	{
+    Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallRepair');
+    Orion.Wait(500);
+    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RecallRepair');
+	RecallByGump('Main', 'Home', 'Main', 'Home2');
+	Orion.WarMode(0);
+	do
+		{
+		Orion.Step('n');
+		Orion.Wait(250);
+		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+		} while(!bench)
+	if(!Orion.WalkTo(bench.X(),bench.Y()))
+		Orion.WalkTo(bench.X(),bench.Y());
+	RepairGear();
+	Orion.Wait(1500);
+	//Orion.Exec('WalkThroughCurrentFarm');
+	}
+
+function RecallArrowBuy()
+    {
+    var currentArrows = Orion.Count('0x0F3F');
+    Orion.Print('Current Arrow Count: ' + currentArrows)
+    if(currentArrows >= 1000)
+        return;
+	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallArrowBuy');
+	Orion.Wait(500);
+	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RecallArrowBuy');
+    RecallByGump('Main','Arrows', 'Main','Arrows2');
+	ArrowBuy();
+    }
+
+function ArrowBuy()
+	{
+    var currentArrows = Orion.Count('0x0F3F');
+    // var quivers = Orion.FindTypeEx(any,any,backpack)
+    // quivers.push(Orion.ObjAtLayer(20));
+    // quivers.forEach(function(item)
+    //     {
+    //     var itemProps = item.Properties();
+    //     if(Orion.Contains(itemProps,'Ammo: '))
+    //         {
+    //         var arrowsQuiverMatch = (itemProps.match(/Ammo: (\d+)\//) || [])
+    //         var arrowsQuiver = arrowsQuiverMatch[1];
+    //         if(arrowsQuiver)
+    //             currentArrows += +arrowsQuiver;
+    //         }
+    //     });
+	do {
+		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(vendor)
+			{
+			return Orion.Contains(vendor.Properties(), 'the bowyer|the provisioner') && !Orion.Contains(vendor.Properties(), 'guild');
+			})[0];
+		Orion.Wait(1000);
+		} while(!vendors)
+    var shopnpcSerial = vendors.Serial();
+    while(currentArrows < 1000)
+        {
+		Orion.WalkTo(vendors.X(),vendors.Y());
+        var shoplist = Orion.GetShopList('Arrows');
+        var amount = 1000 - currentArrows;
+        var items = [new ShopListItem('0x0F3F', '0x0000', '', amount)];
+        shoplist.SetItems(items);
+        Orion.UpdateShopList(shoplist);
+        Orion.BuyHook('Arrows');
+        Orion.WaitContextMenuID(shopnpcSerial, 110);
+        Orion.RequestContextMenu(shopnpcSerial);
+        Orion.Wait(3000);
+        currentArrows = Orion.Count('0x0F3F');
+        }
+    var quivers = Orion.FindTypeEx(any,any,backpack);
+    var back = Orion.ObjAtLayer(20);
+    if(back)
+        quivers.push(back);
+    quivers.forEach(function(item)
+        {
+        var itemProps = item.Properties();
+        if(Orion.Contains(itemProps,'Ammo: '))
+            {
+            var arrowsQuiverMatch = (itemProps.match(/Ammo: (\d+)\//) || [])
+            var arrowsQuiver = arrowsQuiverMatch[1];
+            var needed = 500 - +arrowsQuiver
+            if(needed > 0)
+                {
+                Orion.MoveItemType('0x0F3F', any, backpack, needed, item.Serial());
+                Orion.Wait(1300);
+                }
+            }
+        });
+     if(Player.Weight() > Player.MaxWeight())
+		{
+		DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying arrows. Halting...')
+		RecallByGump('Main','Home');
+		Orion.LogOut();
+		}
+	}
+
+function RecallTithe()
+	{
+    var tithingPoints = Player.TithingPoints();
+    Orion.Print('Current Tithing Points: ' + tithingPoints)
+	if(tithingPoints > 10000)
+        return;
+    Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallTithe');
+    Orion.Wait(500);
+    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RecallTithe');
+    RecallByGump('Main','Tithing','Main','Tithing2');
+    Tithe();
+	Orion.Wait(1500);
+	//Orion.Exec('WalkThroughCurrentFarm');
+	}
+
+
+function Tithe()
+    {
+    CloseAllGumps();
+    var endTime = Orion.Now() + 10000;
+    while(Player.TithingPoints() < 100000)
+        {
+        if(Orion.Now() > endTime)
+            {
+            return DiscordPush(Player.Name() + "couldn't tithe to 100,000")
+            }
+        var subEndTime = Orion.Now() + 5000;
+        var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+        do
+            {
+            if(Orion.Now() > subEndTime)
+                return DiscordPush(Player.Name() + "couldn't find ankh!")
+            Orion.WalkTo(ankh.X(),ankh.Y())
+            Orion.Wait(500);
+            } while(!Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',2)[0])
+        Orion.WaitContextMenuID(ankh.Serial(), 412);
+        Orion.RequestContextMenu(ankh.Serial());
+        if(Orion.WaitForGump(3000))
+            {
+            var gump = Orion.GetGump('any','0x00000293');
+            if(gump !== null)
+                {
+                gump.Select(Orion.CreateGumpHook(1));
+                Orion.Wait(300);
+                }
+            }
+        if(Orion.WaitForGump(3000))
+            {
+            var gump = Orion.GetGump('any','0x00000293');
+            if(gump !== null)
+                {
+                gump.Select(Orion.CreateGumpHook(2));
+                Orion.Wait(300);
+                }
+            }
+        Orion.Wait(1000);
+        }
+    }
+
 function SuitReader()
     {
     Orion.CharPrint(self, 1159, 'Select player or container to evaluate:');

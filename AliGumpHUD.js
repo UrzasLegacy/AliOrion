@@ -1,120 +1,4 @@
-//--# AliGumpHud
-var serialIndex = 1;
-var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'Text', 'FunctionName', [arguments] ]
-    [
-        [ [100, 30, serialIndex++, "BSBodBriber", 'BodBriber', ['Blacksmithy']] ],
-        [],
-        [ [100, 30, serialIndex++, "ImbueGump", "ImbueGump"] ],
-    ]
-
-function SimpleModularGump()
-    {
-    var gump = Orion.CreateCustomGump(12002);
-    gump.Clear();
-    gump.SetCallback('GumpCallback');
-    var widest = Math.max.apply(Math, ModularGumpButtons.map(function (rows)
-        {
-        return rows.length
-        }));
-    gump.AddHtmlGump(1, 0, 0, widest * 105 + 1, ModularGumpButtons.length * 30 + 1, '0x0BB8', 1, 0);
-    gump.Select('htmlgump', 1);
-    var row = 0;
-    var column = 0;
-    ModularGumpButtons.forEach(function(rowLayer)
-        {
-        rowLayer.forEach(function(button)
-            {
-            gump.AddResizepic(x * 105 + 4, y * 29 + 2, '0x24EA', button[0], button[1], button[2], 1);
-            gump.AddText(x * 105 + 10, y * 29 + 6, '0', button[3]);
-            column++;
-            });
-        column = 0;
-        row++;
-        });
-    gump.Select('gump');
-    gump.Update();
-    }
-
-function ModularGumpCallback(_) 
-    {
-    var code = CustomGumpResponse.ReturnCode();
-    if(code == 0) 
-        {
-        var gump = Orion.CreateCustomGump(15);
-        gump.Close();
-        }
-    ModularGumpButtons.forEach(function(rowLayer)
-        {
-        rowLayer.forEach(function(button)
-            {
-            if(button[2] == code)
-                {
-                Orion.Print('Toggle ' + button[3]);
-                Orion.ToggleScript(button[4], false, button[5]);
-                return;
-                }
-            })
-        });
-    }
-
-function BuffMonitor()
-	{
-	var color = { //[textColorHue,barColorRRGGBBAA]
-		'red': [32,'0xFF0000FF'],
-		'tangle': [1159,'0xF0FF0BFF']
-	}
-	var goodActive = color.tangle;
-	var badActive = color.red;
-
-	var buffs = [ //buffID,buffCooldown,timerPosition,timerName,xOffset,yOffset,textColor,font,backgroundColor,cooldownColorObj,dispelWarning,persistentBuff
-		['Evasion', 20000, 'underChar','Evasion', 0, 40,goodActive[0], -1, goodActive[1], badActive],
-		['Blood Oath', 0, 'aboveChar','BLOODOATH', 100, -40,badActive[0], -1, badActive[1]],
-		['Vampiric Embrace', 60000, 'aboveChar','VE Missing!', -100, 40,badActive[0], -1, '0x00000000', false, true],
-		['Hiding', 60000, 'underChar','Hidden', 100, 40,goodActive[0], -1, '0x00000000',false,false,true],
-	]
-
-	while(true)
-		{
-		//var startTime = Orion.Now();
-		Orion.Wait(100);
-		for(var i=0;i<buffs.length;i++)
-			{
-			var buff = buffs[i];
-			if(Orion.BuffExists(buff[0]))
-				{
-				if(buff[10])
-					Orion.RemoveDisplayTimer(buff[0]);
-				else if(!Orion.DisplayTimerExists(buff[0]))
-					{
-					Orion.AddDisplayTimer(buff[0], buff[1] + Orion.BuffTimeRemaining(buff[0]), buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
-					if(buff[9])
-						buff[9][2] = false;
-					else if(buff[11])
-						Orion.DisplayTimerSetShowTime(buff[0], false);
-					}
-				}
-			else if(Orion.DisplayTimerExists(buff[0]))
-				{
-				if(buff[9])
-					{
-					Orion.DisplayTimerSetColorStage(buff[0], 100, buff[9][0], buff[9][1]);
-					buff[9][2] = true;
-					}
-				else if(buff[11])
-					{
-					Orion.RemoveDisplayTimer(buff[0]);
-					}
-				}
-			else if(buff[10])
-				{
-				Orion.AddDisplayTimer(buff[0], buff[1], buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
-				Orion.Wait(10)
-				Orion.DisplayTimerSetShowTime(buff[0], false);
-				}
-			}
-		//Orion.Print('Interval: ' + (Orion.Now() - startTime))
-		}
-	}
+//# AliGumpHud
 
 //Asset Types:
 //'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
@@ -127,7 +11,7 @@ function BuffMonitor()
 //'xSpacer': A blank asset spacer. Args: width
 //'ySpacer': A blank row spacer. Args: height
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
-var title = "Ali's Modular Gump"
+
 
 // var defaultAssets = 
 // [
@@ -141,6 +25,7 @@ var title = "Ali's Modular Gump"
 
 function AliGumpRenderer() 
 	{
+    var title = "Ali's Modular Gump"
     var startTime = Orion.Now();
     var gump = Orion.CreateCustomGump(10420); 
 
@@ -475,3 +360,120 @@ function initVars()
             }
         }
     }
+
+var serialIndex = 1;
+var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'Text', 'FunctionName', [arguments] ]
+    [
+        [ [100, 30, serialIndex++, "BSBodBriber", 'BodBriber', ['Blacksmithy']] ],
+        [],
+        [ [100, 30, serialIndex++, "ImbueGump", "ImbueGump"] ],
+    ]
+
+function SimpleModularGump()
+    {
+    var gump = Orion.CreateCustomGump(12002);
+    gump.Clear();
+    gump.SetCallback('GumpCallback');
+    var widest = Math.max.apply(Math, ModularGumpButtons.map(function (rows)
+        {
+        return rows.length
+        }));
+    gump.AddHtmlGump(1, 0, 0, widest * 105 + 1, ModularGumpButtons.length * 30 + 1, '0x0BB8', 1, 0);
+    gump.Select('htmlgump', 1);
+    var row = 0;
+    var column = 0;
+    ModularGumpButtons.forEach(function(rowLayer)
+        {
+        rowLayer.forEach(function(button)
+            {
+            gump.AddResizepic(x * 105 + 4, y * 29 + 2, '0x24EA', button[0], button[1], button[2], 1);
+            gump.AddText(x * 105 + 10, y * 29 + 6, '0', button[3]);
+            column++;
+            });
+        column = 0;
+        row++;
+        });
+    gump.Select('gump');
+    gump.Update();
+    }
+
+function ModularGumpCallback(_) 
+    {
+    var code = CustomGumpResponse.ReturnCode();
+    if(code == 0) 
+        {
+        var gump = Orion.CreateCustomGump(15);
+        gump.Close();
+        }
+    ModularGumpButtons.forEach(function(rowLayer)
+        {
+        rowLayer.forEach(function(button)
+            {
+            if(button[2] == code)
+                {
+                Orion.Print('Toggle ' + button[3]);
+                Orion.ToggleScript(button[4], false, button[5]);
+                return;
+                }
+            })
+        });
+    }
+
+function BuffMonitor()
+	{
+	var color = { //[textColorHue,barColorRRGGBBAA]
+		'red': [32,'0xFF0000FF'],
+		'tangle': [1159,'0xF0FF0BFF']
+	}
+	var goodActive = color.tangle;
+	var badActive = color.red;
+
+	var buffs = [ //buffID,buffCooldown,timerPosition,timerName,xOffset,yOffset,textColor,font,backgroundColor,cooldownColorObj,dispelWarning,persistentBuff
+		['Evasion', 20000, 'underChar','Evasion', 0, 40,goodActive[0], -1, goodActive[1], badActive],
+		['Blood Oath', 0, 'aboveChar','BLOODOATH', 100, -40,badActive[0], -1, badActive[1]],
+		['Vampiric Embrace', 60000, 'aboveChar','VE Missing!', -100, 40,badActive[0], -1, '0x00000000', false, true],
+		['Hiding', 60000, 'underChar','Hidden', 100, 40,goodActive[0], -1, '0x00000000',false,false,true],
+	]
+
+	while(true)
+		{
+		//var startTime = Orion.Now();
+		Orion.Wait(100);
+		for(var i=0;i<buffs.length;i++)
+			{
+			var buff = buffs[i];
+			if(Orion.BuffExists(buff[0]))
+				{
+				if(buff[10])
+					Orion.RemoveDisplayTimer(buff[0]);
+				else if(!Orion.DisplayTimerExists(buff[0]))
+					{
+					Orion.AddDisplayTimer(buff[0], buff[1] + Orion.BuffTimeRemaining(buff[0]), buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+					if(buff[9])
+						buff[9][2] = false;
+					else if(buff[11])
+						Orion.DisplayTimerSetShowTime(buff[0], false);
+					}
+				}
+			else if(Orion.DisplayTimerExists(buff[0]))
+				{
+				if(buff[9])
+					{
+					Orion.DisplayTimerSetColorStage(buff[0], 100, buff[9][0], buff[9][1]);
+					buff[9][2] = true;
+					}
+				else if(buff[11])
+					{
+					Orion.RemoveDisplayTimer(buff[0]);
+					}
+				}
+			else if(buff[10])
+				{
+				Orion.AddDisplayTimer(buff[0], buff[1], buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+				Orion.Wait(10)
+				Orion.DisplayTimerSetShowTime(buff[0], false);
+				}
+			}
+		//Orion.Print('Interval: ' + (Orion.Now() - startTime))
+		}
+	}

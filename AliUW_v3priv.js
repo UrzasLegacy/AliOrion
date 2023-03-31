@@ -1879,7 +1879,7 @@ function BuyHorse()
         }
     }
 
-function EquipSuitByBotName()
+function EquipLuckSuitByBotName()
 	{
 	if(Orion.Contains(Player.Name(), 'Lady|Lord'))
 		var _pName = Player.Name().slice(5, Player.Name().length);
@@ -2080,38 +2080,6 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(200);
 	if(x == Player.X() && y == Player.Y()) 
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
-	}
-
-function JournalScan()
-	{
-	var msg = 'Greetings|GM|Are you there|Begin GM Chat|equipment is severely'
-	while(true)
-		{
-		var check = Orion.WaitJournal(msg, Orion.Now(), 0, ' ');
-		var checkarr = Orion.Split(check.Text(), ' ')
-		for(i = 0;i<checkarr.length;i++)
-			{
-			switch(checkarr[i])
-				{
-				case 'GM':
-				case 'Are':		
-				case 'Begin':
-					TextWindow.Open()
-					TextWindow.Print(Player.Name() + ': GM');
-					Orion.PlayWav('Alarm09.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-					Orion.Wait(1000);
-					Orion.PauseScript('all');	
-					break;	
-				case 'severely':
-					TextWindow.Open()
-					TextWindow.Print(Player.Name() + ': Durability Low');
-					Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-					break;
-				default:
-					break;
-				}
-			}
-		}
 	}
 
 function WalkToRadiusBorder(targetSerial, distance) 

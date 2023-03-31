@@ -1,4 +1,45 @@
 //--# AliHelpers
+
+function ListLoot(findlist,ignorelist)  //v1
+    {
+    var list = Orion.FindTypeEx('0x2006', '-1', ground, '2').filter(function(part)
+    		{
+    		return (part.Properties().match(/Evil/i))
+    		});
+    if(list.length) 
+        var corpse = list[0];
+    else
+        Orion.Print('no corpse found');
+    if(corpse == null) 
+        {
+        Orion.ResetIgnoreList();
+        Orion.IgnoreReset();        
+        }
+    else 
+        {
+        Orion.UseObject(corpse.Serial());
+        Orion.Wait(1100);
+        var instancedcorpse = Orion.FindObject(Orion.GetSerial(lastcontainer))
+        var lootbag = Orion.FindObject(Orion.GetSerial(backpack));       
+        if(ignorelist)
+            Orion.UseIgnoreList(ignorelist);
+        var lootlist = Orion.FindList(findlist, instancedcorpse.Serial())
+        if(lootlist.length)
+            {
+            for(var i = 0;i<lootlist.length;i++) 
+                {            
+                if(Orion.GetDistance(corpse.Serial()) > 2)
+                    break;
+                var b = Orion.FindObject(lootlist[i]);
+                Orion.Print(b.Name());
+                Orion.MoveItem(lootlist[i], 0, lootbag.Serial());
+                Orion.Wait(1100);
+                }
+            }    
+        Orion.Ignore(corpse.Serial())       
+        }
+    }
+
 var subContainersArr = [];
 function GetAllSubContainers(containerSerial)
     {
