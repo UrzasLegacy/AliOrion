@@ -1,9 +1,15 @@
-//#include AliUWComs.js
+//#include Ali/AliUWComs.js
+//#include Ali/AliQoL.js
+//#include Ali/AliAutomation.js
+//#include Ali/AliDebug.js
+//#include Ali/AliHelpers.js
+//#include Ali/AliGumpHUD.js
+
 var leaderSerial = '0x01DD7DAE'; //Apollo
-//Replace the names here with the names of your healers
+
 var profiles = 
 	{
-	Ali: 
+	Underwater: 
 		{
 		useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
 		useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
@@ -23,14 +29,14 @@ var profiles =
 			useBandieOtherThresholdPercent: 60, //Percentage of other's HP to attempt to use bandage on others
 		}
 	}
-var profile = profiles.Ali;
+var profile = profiles.Underwater;
 Orion.Exec('JournalScan', true);
 
 var defaultAssets = 
 [
-    [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
-    [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
-    [ ['text','Sample Text Here',554,1,1] ],
+    // [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
+    // [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
+    [ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1] ],
     [ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
     [ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
     [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
@@ -46,21 +52,34 @@ function Autostart()
         Orion.Exec('AliComFollower',true);
 	}
 
+function TerminateScripts()
+	{
+	Orion.Terminate('all','JournalScan')
+	}
+
 //--#Inits
 function ________________________INITS(_){}
 
 function SmartStart()
 	{
-	if(Player.Serial() == leaderSerial)
-		initUWLeader();
-    else if(Orion.SkillValue('Archery') >= 100)
-		initUWArcher();
-    else if(Orion.SkillValue('Swordsmanship') >= 100)
-		initUWSamp();
-	else if(Orion.SkillValue('Magery') >= 70)
-		initUWMage();
-	else if(Orion.SkillValue('Mysticism') >= 70)
-		initUWMystic();
+	var role = Shared.GetVar('myRole','misc');
+	switch(role)
+		{
+		case 'leader':
+			UWLeaderStartup();
+			break
+		case 'dexxer':
+			UWSampStartup();
+			break;
+		case 'healer':
+			UWHealerStartup();
+			break;
+		case 'misc':
+			initMisc();
+			break;
+		default:
+			break;
+		}
 	}
 
 function initUWLeader()
@@ -74,8 +93,8 @@ function initUWLeader()
 
 function initUWBarrels()
 	{
-	if(UWSetup)
-		UWBarrelsStartup();
+	//if(UWSetup)
+		//UWBarrelsStartup();
 	Orion.Exec('UWBarrels', true);
 	Orion.Exec('UWBarrelsHealSelf', true);
 	}
@@ -96,7 +115,7 @@ function initUWSamp()
 	if(UWSetup)
 		UWSampStartup();
 	Orion.Exec('UWSamp', true);
-	Orion.Exec('UWSampAttackScimitar', true);
+	Orion.Exec('AutoAttack', true);
 	}
 
 function initUWMystic()
@@ -122,17 +141,12 @@ function ________________________BARRELS(_){}
 function UWBarrels()
     {
 	Orion.Exec('UWBarrelsHealSelf',true);
-    // var sampArr = ['Ephie','Fiska','Grejt','Hejti'];
-    // if(Orion.Contains(Player.Name(), 'Lady|Lord'))
-	// 	var _pName = Player.Name().slice(5, Player.Name().length);
-	// else
-	// 	var _pName = Player.Name();
     var locArr =
         [
-            ['Flywheel',6426,1733],
-            ['Bearing Assembly',6436,1733],
-            ['Wire Spool',6426,1753],
-            ['Power Core',6436,1753]
+            ['Flywheel',6426,1733], //0x46FE
+            ['Bearing Assembly',6436,1733],//0x0E74
+            ['Wire Spool',6426,1753],//0x4CDB
+            ['Power Core',6436,1753]//0x47E6
         ];
 	for(var i=0;i<locArr.length;i++)
 		{
@@ -282,7 +296,7 @@ function UWBarrelsHealSelf()
 				if(bandie[0])
 					{
 					Orion.UseObject(bandie[0]);
-					Orion.WaitForTarget();
+					Orion.WaitForTarget(3000)
 					Orion.TargetObject(self);
 					}
 				}

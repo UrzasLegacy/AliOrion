@@ -146,7 +146,7 @@ function AliComFollower()
         var role = 'dexxer';
     else
         var role = 'misc';
-    Shared.Var('myRole',role);
+    Shared.AddVar('myRole',role);
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
     Orion.UdpSend(42420,'Check:' + playerString + ':' + port); //[cmd,[playerSerial,playerName,role],port]
