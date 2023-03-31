@@ -52,7 +52,7 @@ function AliComLeader()
                         roleArr.push([botPort,botSerial,botName,botRole]);
                         Shared.AddArray(botRole,roleArr);
                         }
-                    Orion.UdpSend(+botPort,'Heard:' + Player.Name()); //send signal back to bot so they know they're connected
+                    Orion.UdpSend(+botPort,'Heard:' + Player.Name() + ':' + Player.Serial()); //send signal back to bot so they know they're connected
 					break;
 				// case '':
 				// 	break;
@@ -169,6 +169,10 @@ function AliComFollower()
             pulseTime = Orion.Now() + 5000;
             }
         }
+    while(Orion.UdpRecv('Coms'))
+        Orion.Wait(10);
+    Shared.AddVar('leaderName',split[1]);
+    Shared.AddVar('leaderSerial',split[2]);
     Orion.CharPrint(self,1159,'Connected to leader: ' + split[1]);
     while(true)
         {
@@ -206,7 +210,3 @@ function MassMessage(role,msg)
     for(var i = 0;i<roleArr.length;i++)
         Orion.UdpSend(roleArr[i][0],msg);
     }
-
-
-
-

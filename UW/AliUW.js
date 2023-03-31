@@ -308,27 +308,34 @@ function UWBarrelsHealSelf()
 		}
 	}
 
-function ParseWinch()
+//--#Leader
+function ________________________Leader(_){}
+
+function UWLeaderStartup()
 	{
-	var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
-	if(!winch)
-		return false;
-	var winchProps = winch.Properties();
-	var statusArr = winchProps.match(/>(\w+)</g)
-	var statusMap = statusArr.map(function(ele)
-		{
-		return ele == '>READY<'
-		})
-	Orion.Print(statusMap);
+	
 	}
 
-
-
-
-
+function UWHealLeader()
+    {
+    while(true)
+        {
+        var target = injuredCheck(.8)
+        if(target)
+            {
+            var healer = healerArr.shift()
+            healerArr.push(healer);
+            Orion.TargetSystemSerial(target.Serial());
+            Orion.SayGuild(healer + ':' + target.Serial())
+            Orion.Wait(500);
+            }
+        Orion.Wait(100);
+        }
+    }
 
 //--#Melee
 function ________________________MELEE(_){}
+
 function UWSamp()
 	{
 	if(Orion.WalkTo(6432, 1699, 0, 0))
@@ -462,23 +469,6 @@ function injuredCheck(range, threshold, healDead)
 	return injurelist[0];
     }
 
-function UWHealLeader()
-    {
-    while(true)
-        {
-        var target = injuredCheck(.8)
-        if(target)
-            {
-            var healer = healerArr.shift()
-            healerArr.push(healer);
-            Orion.TargetSystemSerial(target.Serial());
-            Orion.SayGuild(healer + ':' + target.Serial())
-            Orion.Wait(500);
-            }
-        Orion.Wait(100);
-        }
-    }
-    
 function UWHealBotListen()
 	{
     if(Orion.Contains(Player.Name(), 'Lady|Lord'))
@@ -546,7 +536,7 @@ function UWMysticBot()
 		Orion.UseObject(ladder[0]);
 	 	Orion.Wait(500);
 	 	}
-	 if(Orion.WalkTo(6306, 1711, 0, 0))
+	if(Orion.WalkTo(6306, 1711, 0, 0))
 		{
 		Orion.Step(128, true);
 	 	}
@@ -557,13 +547,13 @@ function UWMysticBot()
 		{	
         Orion.Wait(50)
 		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
-				{
-				return (part.Properties().match(/Shadowlord/i))
-				});
+			{
+			return (part.Properties().match(/Shadowlord/i))
+			});
 		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
-				{
-				return (part.Properties().match(/Evil/i))
-				});
+			{
+			return (part.Properties().match(/Evil/i))
+			});
 	   	if(lord[0])
 			{
 			WalkToRadiusBorder(lord[0].Serial(), 5);
@@ -584,10 +574,9 @@ function UWMysticBot()
 		}
 	}
 
-
 function UWAvoidBot(distance)
 	{
-	// var distanceActual = distance || 5;
+	var distanceActual = distance || 5;
 	// if(Orion.WalkTo(6432, 1699, 0, 0))
 	// 	{
 	// 	var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
@@ -630,7 +619,19 @@ function UWAvoidBot(distance)
 	}
 
 //--#Misc
-
+function ParseWinch()
+	{
+	var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+	if(!winch)
+		return false;
+	var winchProps = winch.Properties();
+	var statusArr = winchProps.match(/>(\w+)</g)
+	var statusMap = statusArr.map(function(ele)
+		{
+		return ele == '>READY<'
+		})
+	Orion.Print(statusMap);
+	}
 
 function EquipLuckSuitByBotName()
 	{
@@ -652,7 +653,7 @@ function EquipUWSuitByBotName()
 	Orion.Dress(setname);
 	}
 
-	function ResetPosition()
+function ResetPosition()
 	{
 	Orion.Terminate('all','ResetPosition|JournalScan');
 	if(Orion.WalkTo(6432, 1633, 0, 0)) //uwboss area
