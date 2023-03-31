@@ -1,3 +1,5 @@
+//--#Include
+
 var healerArr = ['Alyx','Beatrix','Couli','Daemont'];
 var enpointe = 'Iona'
 var healLeader = 'Daemont'
@@ -279,7 +281,7 @@ function AliComLeader()
 			var recvSplit = Orion.Split(recv,':');
 			switch(recvSplit[0])
 				{
-				case 'Check':
+				case 'Check': //"cmd:playerSerial!playerName!role:port"
 					var botString = recvSplit[1];
 					var botPort = +recvSplit[2];
                     var botSplit = Orion.Split(botString,'!'); //playerSerial + '!' + Player.Name() + '!' + roleArrName

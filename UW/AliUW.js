@@ -1,4 +1,3 @@
-//#include underworldpuzzle2.oajs
 //v2
 
 //Replace the names here with the names of your healers
