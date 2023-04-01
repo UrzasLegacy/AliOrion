@@ -865,6 +865,17 @@ function BuyHorse()
         }
     }
 
+function RecallBandieBuy()
+    {
+	Orion.PauseScript('all','JournalScan|RecallBandieBuy');
+	Orion.Wait(500);
+	Orion.Terminate('all','JournalScan|RecallBandieBuy');
+    RecallByGump('Main','Luna');
+	BandieBuy();
+	Orion.Wait(1500);
+	Orion.Exec('WalkThroughCurrentFarm');
+    }
+    
 function BandieBuy()
 	{
 	do {

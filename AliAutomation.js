@@ -428,29 +428,35 @@ function BagOfSendingGold()
         }
 	}
 
-function MageHealBot()
+function SingleMageHealBot()
 	{
 	while(!Player.Dead())
 		{
 		if(!Orion.HaveTarget() && !Player.Frozen())
-			Orion.Cast('Greater Heal')
-		Orion.WaitForTarget(2000);
-		var target = injuredCheck(10, 40);
-		if(Player.Hits('%') < 90)
 			{
-			if(Orion.WaitForTarget(5000))
+			Orion.Cast('Greater Heal')
+			Orion.WaitForTarget(3000);
+			}
+		var target = injuredCheck(10, 50);
+		if(Player.Hits('%') < 80)
+			{
+			if(Orion.WaitForTarget(3000))
 				Orion.TargetObject(self);
 			}
-		else if(target && !target.Poisoned())
+		else if(target)
 			{
-			if(Orion.WaitForTarget(5000))
-				Orion.TargetObject(target.Serial());	
-			}
-		else if(target && target.Poisoned())
-			{
-			Orion.Cast('Cure');
-			if(Orion.WaitForTarget(5000))
-				Orion.TargetObject(target.Serial());	
+			if(target.Poisoned())
+				{
+				Orion.CancelTarget();
+				Orion.Cast('Cure');
+				if(Orion.WaitForTarget(3000))
+					Orion.TargetObject(target.Serial());	
+				}
+			else
+				{
+				if(Orion.WaitForTarget(3000))
+					Orion.TargetObject(target.Serial());	
+				}
 			}
 		Orion.Wait(300);
 		}
