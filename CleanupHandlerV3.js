@@ -664,7 +664,7 @@ function VerifyCleanupPrices(vendorContainer)
                 return itemGraphic == item.Graphic() && itemColor == item.Color() && Orion.Contains(item.Properties(), part[7]);
                 })[0];
             var itemPriceRaw = item.Properties().match(/Price: ([\d,]+)/);
-            if(itemPriceRaw[1])
+            if(itemPriceRaw && itemPriceRaw[1])
                 {
                 var priceTarget = itemArr[6] || itemArr[4] * gpPerCleanupPoint;
                 var itemPrice = Orion.Split(itemPriceRaw[1], ',').join('');

@@ -5,56 +5,69 @@
 //#include Ali/AliHelpers.js
 //#include Ali/AliGumpHUD.js
 
+//Create a findlist for autoloot named 'BotLoot'
+
 var leaderSerial = '0x01DD7DAE'; //Apollo
 
-var profiles = 
+var profile = 
 	{
-	Underwater: 
-		{
-		useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
-		useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-			singleTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-		useMultiTargetSpecial: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-			multiTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-		useMomentumStrike: false, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-		useCounterAttack: false, //boolean. Set to true to maintain Counter Attack at all times.
-		useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
-		useConsecrateWeapon: true, //boolean. Set to true to maintain Consecrate Weapon at all times.
-		useDivineFury: true, //boolean, Set to true to maintain Divine Fury at all times.
-		useConfidence: false, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
-			useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-		useBandieSelf: true, //boolean. Set to true to heal self with bandage when HP drops below a percentage threshold defined below.
-			useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-		useBandieOthers: true, //boolean. Will preferentially heal others over self if BandieSelf and BandieOthers are both on.
-			useBandieOtherThresholdPercent: 60, //Percentage of other's HP to attempt to use bandage on others
-		}
+	useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
+	useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+		singleTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+	useMultiTargetSpecial: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+		multiTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+	useMomentumStrike: true, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+	useCounterAttack: true, //boolean. Set to true to maintain Counter Attack at all times.
+	useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
+	useConsecrateWeapon: true, //boolean. Set to true to maintain Consecrate Weapon at all times.
+	useDivineFury: true, //boolean, Set to true to maintain Divine Fury at all times.
+	useConfidence: false, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
+		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
+	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+		discordHook: '1022287622137200660', //Put Discord WebHook here
+		discordKey: 'w0Nsz8IXTJK2ZcJM0hntdlPMeeLKOLSMweHtBhWb7-0vUI8-lvZdkVUUv10r08_vUJMl', //Put Discord Bot Key here
+	journalScanType: 'GM', //'GM'
 	}
-var profile = profiles.Underwater;
+
 Orion.Exec('JournalScan', true);
 
 var defaultAssets = 
-[
-    // [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
-    // [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
-    [ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1] ],
-    [ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
-    [ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
-    [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
-];
+	[
+		// [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
+		// [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
+		[ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1] ],
+		[ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
+		[ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
+		[ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
+	];
+
+function Init()
+	{
+	Orion.Exec('JournalScan',true);
+	
+	if(Player.Serial() == leaderSerial)
+		Orion.Exec('AliComLeader',true);
+	else
+		Orion.Exec('AliComFollower',true);
+
+	if(Orion.SkillValue('Archery') >= 100)
+		{
+		Orion.Exec('ArcherComs',true);
+		Orion.Exec('AutoAttackArcher',true);
+		Orion.Exec('AutoBuffs',true);
+		Orion.Exec('BandieBot',true);
+		}
+	}
 
 function Autostart()
 	{
+	Shared.AddVar('profile',profile);
 	Orion.Wait(2000);
 	VerifyOpenContainer(backpack);
 	if(Player.Serial() == leaderSerial)
-        Orion.Exec('AliComLeader',true);
-    else
-        Orion.Exec('AliComFollower',true);
-	}
-
-function TerminateScripts()
-	{
-	Orion.Terminate('all','JournalScan')
+		Orion.Exec('AliComLeader',true);
+	else
+		Orion.Exec('AliComFollower',true);
 	}
 
 //--#Inits
@@ -62,19 +75,28 @@ function ________________________INITS(_){}
 
 function SmartStart()
 	{
+	if(Player.Serial() == leaderSerial)
+		Orion.Exec('AliComLeader',true);
+	else
+		Orion.Exec('AliComFollower',true);
+	Orion.Wait(300);
 	var role = Shared.GetVar('myRole','misc');
 	switch(role)
 		{
 		case 'leader':
-			UWLeaderStartup();
-			break
+			StartPositions();
+			initUWLeader();
+			break;
 		case 'dexxer':
-			UWSampStartup();
+			StartPositions();
+			initSamp();
 			break;
 		case 'healer':
-			UWHealerStartup();
+			StartPositions();
+			initHealer();
 			break;
 		case 'misc':
+			StartPositions();
 			initMisc();
 			break;
 		default:
@@ -84,8 +106,6 @@ function SmartStart()
 
 function initUWLeader()
 	{
-	if(UWSetup)
-		UWLeaderStartup();
 	Orion.Exec('AliComLeader',true);
 	Orion.Exec('SingleMageHealBot', true);
 	Orion.Exec('UWAvoidBot', true, [8]);
@@ -93,16 +113,12 @@ function initUWLeader()
 
 function initUWBarrels()
 	{
-	//if(UWSetup)
-		//UWBarrelsStartup();
 	Orion.Exec('UWBarrels', true);
 	Orion.Exec('UWBarrelsHealSelf', true);
 	}
 
 function initUWArcher()
 	{
-	if(UWSetup)
-		UWArcherStartup();
 	Orion.Exec('AutoAttackArcher', true);
 	Orion.Exec('AutoBuffs', true);
 	Orion.Exec('BandieBot', true);
@@ -311,11 +327,6 @@ function UWBarrelsHealSelf()
 //--#Leader
 function ________________________Leader(_){}
 
-function UWLeaderStartup()
-	{
-	
-	}
-
 function UWHealLeader()
     {
     while(true)
@@ -445,7 +456,6 @@ function BandieBot()
 
 function AutoBuffs()
     {
-	Shared.AddVar('AutoBuffs',true);
     var useConfidence = profile.useConfidence;
     var useConfidenceThresholdPercent = profile.useConfidenceThresholdPercent;
     var useEnemyOfOne = profile.useEnemyOfOne;
@@ -550,7 +560,6 @@ function BuffMonitor()
 
 function AutoEvade()
 	{
-	Shared.AddVar('AutoEvade',true);
 	var lowestHPPercent = 30;
 	var highestHPPercent = 50;
 	while(!Player.Dead())
@@ -654,45 +663,16 @@ function AttackNearest()
 
 function AutoInsure() 
 	{
-	var stringSearch = profile.useStringSearch;
-	var checkName = profile.checkNameString;
-	var checkProp = profile.checkPropString;
-	var listSearch = profile.UseListSearch;
 	var insureFind = profile.insureFindList;
-	var insureIgnore = profile.insureIgnoreList;
-	var searchFrequency = profile.searchFrequency;
-	while(stringSearch && !Player.Dead())
+	var searchFrequency = 1000;
+	while(!Player.Dead())
 		{
-		var item = Orion.FindTypeEx(any).filter(function (part) 
-					{
-					if(!Orion.Contains(part.Properties(), 'insured'))
-						{
-						if(checkName && !checkProp)
-							return Orion.Contains(part.Name(), checkName);
-						else if(checkProp && !checkName)
-							return Orion.Contains(part.Properties(), checkProp)      
-						else if(checkProp && checkName)
-							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
-						}
-					return false;
-	                })[0];
-	    if(item && !Orion.HaveTarget())
-	    	{
-			Orion.WaitContextMenuID(self, 418);
-    		Orion.RequestContextMenu(self);
-			if(Orion.WaitForTarget(2000))
-				Orion.TargetObject(item.Serial());
-			if(Orion.WaitForTarget(2000))
-				Orion.CancelTarget();
-			}
-		Orion.Wait(searchFrequency);
-		}
-	while(listSearch && !Player.Dead())
-		{
-		Orion.UseIgnoreList(insureIgnore);
-		var item = Orion.FindList(insureFind);
-		Orion.ResetIgnoreList();
-		if(item && item.length && !Orion.HaveTarget())
+		var items = Orion.FindList(insureFind).filter(function(ele)
+			{
+			var obj = Orion.FindObject(ele);
+			return !Orion.Contains(obj.Properties(),'insured');
+			})
+		if(items.length && !Orion.HaveTarget())
 	    	{
 			Orion.WaitContextMenuID(self, 418);
 			Orion.RequestContextMenu(self);
@@ -721,34 +701,6 @@ function injuredCheck(range, threshold, healDead)
 				});
 	return injurelist[0];
     }
-
-function UWHealBotListen()
-	{
-    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
-		var _pName = Player.Name().slice(5, Player.Name().length)
-	else
-		var _pName = Player.Name()
-	while(true)
-		{
-		var listen = Orion.WaitJournal(_pName, Orion.Now(), 0);
-		if(listen && listen.Color() == 0x03B2 && Orion.HaveTarget())
-            {
-            var listenArr = Orion.Split(listen.Text(), ':')
-            if(Orion.GetDistance(listenArr[1]) > 9)
-                {
-                Orion.PauseScript('UWMysticBot')
-                WalkToRadiusBorder(listenArr[1], 6) 
-                Orion.TargetObject(listenArr[1])
-                Orion.ResumeScript('UWMysticBot')  
-                }
-            else
-                {
-                Orion.TargetObject(listenArr[1])
-                }
-            }
-		Orion.Wait(10);
-		}
-	}
 
 function SingleMageHealBot()
 	{
@@ -829,63 +781,12 @@ function UWMysticBot()
 		}
 	}
 
-function UWAvoidBot(distance)
-	{
-	var distanceActual = distance || 5;
-	// if(Orion.WalkTo(6432, 1699, 0, 0))
-	// 	{
-	// 	var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
-	// 	Orion.UseObject(ladder[0]);
-	//  	Orion.Wait(500);
-	//  	}
-	//  if(Orion.WalkTo(6306, 1711, 0, 0))
-	// 	{
-	// 	Orion.Step(128, true);
-	//  	}
+//--# Utilities
+function ________________________UTILITIES(_){}
 
-	// Orion.Wait(500);
-	// Orion.Resend();
-	// Orion.Wait(500);
-	while(!Player.Dead())
-		{	
-        Orion.Wait(100)
-		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
-			{
-			return part.Properties().match(/Shadowlord/i);
-			});
-		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
-			{
-			return part.Properties().match(/Evil/i);
-			});
-	   	if(lord[0])
-			{
-            WalkToRadiusBorder(lord[0].Serial(), distanceActual);
-			}
-		if(corpse[0])
-    		{
-    		//BotPush('Shadowlord Dead!');
-    		Orion.Wait(Orion.Random(1,5) * 1000);   		
-    		Orion.WalkTo(corpse[0].X(),corpse[0].Y());
-    		ListLoot("BotLoot");
-    		Orion.Wait(100);
-            Orion.Terminate('all');
-    		}		
-		}
-	}
-
-//--#Misc
-function ParseWinch()
+function StartPositions()
 	{
-	var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
-	if(!winch)
-		return false;
-	var winchProps = winch.Properties();
-	var statusArr = winchProps.match(/>(\w+)</g)
-	var statusMap = statusArr.map(function(ele)
-		{
-		return ele == '>READY<'
-		})
-	Orion.Print(statusMap);
+	//check if already in the start position, if not, check that if the boss is currently up, if not move to start position, otherwise exit to boss sequence
 	}
 
 function EquipLuckSuitByBotName()
@@ -976,344 +877,81 @@ function LootUW()
     //ListLoot('BotLoot', "ignorelist")
     }
 
-//--# Helpers
-function ________________________HELPERS(_){}
-
-function ListLoot(findlist,ignorelist)  //v1
-    {
-    var list = Orion.FindTypeEx('0x2006', '-1', ground, '2').filter(function(part)
-    		{
-    		return (part.Properties().match(/Evil/i))
-    		});
-    if(list.length) 
-        var corpse = list[0];
-    else
-        Orion.Print('no corpse found');
-    if(corpse == null) 
-        {
-        Orion.ResetIgnoreList();
-        Orion.IgnoreReset();        
-        }
-    else 
-        {
-        Orion.UseObject(corpse.Serial());
-        Orion.Wait(1100);
-        var instancedcorpse = Orion.FindObject(Orion.GetSerial(lastcontainer))
-        var lootbag = Orion.FindObject(Orion.GetSerial(backpack));       
-        if(ignorelist)
-            Orion.UseIgnoreList(ignorelist);
-        var lootlist = Orion.FindList(findlist, instancedcorpse.Serial())
-        if(lootlist.length)
-            {
-            for(var i = 0;i<lootlist.length;i++) 
-                {            
-                if(Orion.GetDistance(corpse.Serial()) > 2)
-                    break;
-                var b = Orion.FindObject(lootlist[i]);
-                Orion.Print(b.Name());
-                Orion.MoveItem(lootlist[i], 0, lootbag.Serial());
-                Orion.Wait(1100);
-                }
-            }    
-        Orion.Ignore(corpse.Serial())       
-        }
-    }
-
-function VerifyOpenContainer(containerSerial,delay)
-    {
-    var startTime = Orion.Now();
-    var endTime = startTime + (delay || 5000);
-    while(!Orion.GumpExists('container',containerSerial))
-        {
-        if(Orion.Now() > endTime)
-            return false;
-        Orion.UseObject(containerSerial);
-        Orion.Wait(1000);
-        }
-    return true;
-    }
-function injuredCheck(range, threshold, healDead)
+function TerminateScripts()
 	{
-	var flags = healDead ? 'ignoreself|mobile' : 'ignoreself|live';
-	var injurelist = Orion.FindTypeEx(any, any, ground, flags, range, 'green')
-		.filter(function(part)
-			{
-			return part.Hits('%') < threshold;
-			}).sort(function(a,b)
-				{
-				return a.Hits() - b.Hits();
-				});
-	return injurelist[0];
+	Orion.Terminate('all','JournalScan')
+	}
+
+function RecallBandieBuy()
+    {
+	Orion.PauseScript('all','JournalScan|RecallBandieBuy');
+	Orion.Wait(500);
+	Orion.Terminate('all','JournalScan|RecallBandieBuy');
+    RecallByGump('Main','Bandies');
+	BandieBuy();
+	Orion.Wait(1500);
+	Orion.Exec('WalkThroughCurrentFarm');
     }
 
-function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
-    {
-    if(!colorID)
-        var colorID = any;
-    if(!destinationContainerSerial)
-        var destinationContainerSerial = Orion.GetSerial(backpack);
-    while(!Orion.GumpExists('container', supplyContainerSerial))
+function BandieBuy()
+	{
+	do {
+		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(vendor)
+			{
+			return Orion.Contains(vendor.Properties(), 'the weaver') && !Orion.Contains(vendor.Properties(), 'guild');
+			})[0];
+		Orion.Wait(1000);
+		} while(!vendors)
+    var shopnpcSerial = vendors.Serial();
+    while(!Orion.FindType('0x0F9B')[0] || !Orion.FindType('0x0F9E')[0])
         {
-        Orion.CharPrint(self,1159,'Opening Supply Container');
-        if(supplyContainerSerial == Player.BankSerial())
-            Orion.Say('bank')
+		Orion.WalkTo(vendors.X(),vendors.Y());
+        var shoplist = Orion.GetShopList('Cloth');
+        var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
+        if(!Orion.FindType('0x0F9E')[0])
+            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount), new ShopListItem('0x0F9E', '0x0000', '', 1)];
         else
-            Orion.UseObject(supplyContainerSerial);
+            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount)];
+        shoplist.SetItems(items);
+        Orion.UpdateShopList(shoplist);
+        Orion.BuyHook('Cloth');
+        Orion.WaitContextMenuID(shopnpcSerial, 110);
+        Orion.RequestContextMenu(shopnpcSerial);
         Orion.Wait(1300);
         }
-    while(!Orion.GumpExists('container', destinationContainerSerial))
-        {
-        Orion.UseObject(destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    var needed = amount - Orion.Count(graphicID, colorID, destinationContainerSerial, 0, false);
-    var restockItem = Orion.FindType(graphicID, colorID, supplyContainerSerial);
-    if((needed > 0 || amount == 0) && !restockItem[0])
-        {
-        TextWindow.Open();
-        TextWindow.Print("Couldn't restock item: " + itemName);
-        Orion.Wait(100);
-        return false;
-        }
-    if(amount === 0)
-        {
-        Orion.MoveItem(restockItem[0], 0, destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    else if(needed > 0)
-        {
-        Orion.MoveItem(restockItem[0], needed, destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    Orion.Wait(100);
-    return true;
-    }
-
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
-	{
-	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
-	//create global scope variable runeIndex to increment through the book starting from '1'
-	//global variable numRunes declares total runes to increment through
-	if(backupBook == undefined)
-		var backupBook = bookName;
-	if(backupRune == undefined)
-		var backupRune = runeName;
-    if(rotateToggle == undefined)
-        var rotateToggle = false;
-    var x = Player.X(); //noting player start position to check later to see if recall was successful
-	var y = Player.Y();
-	var runeBook = Orion.FindTypeEx('0x22C5').filter(function(part)
-        {
-        return part.Properties().match(/.+$/) == bookName; //this is using Regex to find the last line of the item properties i.e., the runebook name
-        });
-    if(!runeBook[0])
-        {
-        Orion.Print("Runebook named '" + bookName + "' not found!");
-        return false;
-        }
-    if(Orion.SkillValue('Magery', 'base') >= 600)
-    	var startInd = 50; //recall index
-	else
-		var startInd = 75; //sacred journey index
-    Orion.CharPrint(self, 1159, "Recalling to: " + runeName + ' in Book: ' + bookName);
-	var runebookSerial = runeBook[0].Serial();
-    Orion.Wait(1300);
-	Orion.UseObject(runebookSerial);
-	var gump = WaitForSpecificGump(2000, 'generic', runebookSerial, '0x00000059');
-	if(gump)
+    var scissors = Orion.FindType('0x0F9E')[0];
+    do
 		{
-		var runeInd = gump.TextList().indexOf(runeName) - 2;
-		if(runeInd < 0)
-			Orion.Print("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
-		if(gump !== null)
-			{
-			gump.Select(Orion.CreateGumpHook(startInd + runeInd));
-			Orion.Wait(200);
-			}
-        Orion.CloseGump('generic', gump.Serial());
-		}
-	var startJournal = Orion.Now();
-	var endWait = startJournal + 5000;
-	while(x == Player.X() && y == Player.Y() && Orion.Now() < endWait)
-		{
-		if(Orion.InJournal('Something is blocking the location.', 'sys', 0, any, startJournal))
-			{
-	        Orion.Wait(2000);
-	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
-	            {
-	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
-	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
-	            else
-					runeIndex = '1';
-	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
-	            }
-	        var backup = Orion.FindTypeEx('0x9C16').filter(function(part)
-	            {
-	            return part.Properties().match(/.+$/) == backupBook;
-	            })[0];
-	        if(rotateToggle && backup)
-	            return RecallByGump(backupBook, backupRune, 'skipDoubleBlocked', 'skipDoubleBlocked',rotateToggle);
-            else if(backup)
-                return RecallByGump(backupBook, backupRune, bookName, runeName);
-	        else
-	            Orion.Print("No backup runebook named '" + backupBook + "' found!");
-	        }
-	    else if(Orion.InJournal('You cannot teleport into that area.', 'sys', 0, any, startJournal))
-	        {
-	        Orion.Wait(2000);
-            if(rotateToggle)
-                {
-                var runeIndexNum = +runeIndex + 1 
-                if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
-                else
-                    runeIndex = '1';
-                }
-	        return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
-	        }
-		Orion.Wait(500);
-		}
-	Orion.Wait(1000);
-	Orion.Resend();
-	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
-        return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
-	}
-
-function DiscordPush(message)
-	{
-	var bot = Shared.GetVar('discordLink',false);
-    if(!bot)
+		var bolts = Orion.FindType('0x0F9B')[0];
+		Orion.UseObject(scissors)
+		if(Orion.WaitForTarget(2000))
+			Orion.TargetObject(bolts);
+		Orion.Wait(2000)
+        var cloth = Orion.FindType('0x1766')[0];
+        } while(!cloth)
+    do
         {
-        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
-        Shared.AddVar('discordLink',bot);
+		Orion.UseObject(scissors);
+		if(Orion.WaitForTarget(2000))
+			Orion.TargetObject(cloth);
+        Orion.Wait(2000);
+        var bandies = Orion.FindType('0x0E21', any, ground)[0] || Orion.FindType('0x0E21')[0];
+        } while(!bandies)
+    while(Orion.FindType('0x0E21', any, ground)[0])
+        {
+        Orion.MoveItem(bandies);
+        Orion.Wait(1300);
         }
-	Orion.HttpPost(bot, "content=" + message);
-	}
-
-function WalkToRadiusBorder(targetSerial, distance) 
-	{
-	var target = Orion.FindObject(targetSerial)
-	if(target) 
+     if(Player.Weight() > Player.MaxWeight())
 		{
-		var x = target.X();
-		var y = target.Y();
-		var z = target.Z();
-	
-		var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
-			.filter(function(tile) 
-				{
-				var tileX = tile.X();
-				var tileY = tile.Y();
-				return (x == (tileX - distance))
-				|| (x == (tileX + distance))
-				|| (y == (tileY - distance))
-				|| (y == (tileY + distance));
-				}).sort(function (a,b) 
-					{
-					return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
-					});
-		tiles.forEach(function(tile,ind)
-			{
-			Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-			})
-		for(var i=0;i<tiles.length;i++)
-			{             
-			var closest = tiles[i]; 
-			if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
-				break;
-			}
+		DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying bandies. Halting...')
+		//RecallByGump('Main','Home');
+		Orion.LogOut();
+		Orion.PauseScript('all');
+		Orion.Wait(1000);
+		Orion.Terminate('all');
 		}
 	}
-
-function DrawSquare(minX,minY,maxX,maxY)
-	{
-	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
-		.forEach(function (tile,ind) 
-			{
-			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-			});
-	}
-
-function DrawBorder(minX,minY,maxX,maxY)
-	{
-	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
-		.forEach(function (tile,ind) 
-			{
-			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-			});
-	}
-
-function SetAvoidRadius(mobSerial,range)
-    {
-    var mobObj = Orion.FindObject(mobSerial);
-    var x = mobObj.X();
-    var y = mobObj.Y();
-    var tiles = Orion.GetTilesInRect(x - range, y - range, x + range, y + range);
-    for(var i = 0;i<tiles.length;i++)
-        {
-        var tile = tiles[i];
-        var tileX = tile.X();
-        var tileY = tile.Y();
-        var tileZ = tile.Z();
-        Orion.SetBadLocation(tileX,tileY)
-        Orion.AddFakeMapObject(i + 30000, '0x051A', 1159, tileX, tileY, tileZ);
-        }
-    }
-
-function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
-    {
-    if(z === undefined) z = 0;
-    if(distanceXY === undefined) distanceXY = 0;
-    if(distanceZ === undefined) distanceZ = 255;
-    if(chunkSize === undefined) chunkSize = 5;
-    if(run === undefined) run = 1;
-    if(openDoor === undefined) openDoor = 1;
-    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
-    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
-    //Orion.ClearFakeMapObjects();
-    if(pathTiles.length === 0)
-        return false;
-	var shortStop = pathTiles[pathTiles.length - 1];
-	var shortX = shortStop.X();
-	var shortY = shortStop.Y();
-    // pathTiles.forEach(function(tile,i)
-    //     {
-    //     Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-    //     })
-    // Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
-    if(pathTiles.length >= chunkSize)
-        var chunk = pathTiles[chunkSize - 1];
-    else
-        var chunk = shortStop;
-    var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
-    Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
-    Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
-    Orion.Wait(1);
-	if(callBackFn !== undefined)
-		callBackFn();
-    if(Orion.GetDistance(shortX,shortY) > 0)
-        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn);
-    return true;
-    }
-
-//--# Utilities
-function ________________________UTILITIES(_){}
-
-function CloseAllGumps()
-    {
-    var endTime = Orion.Now() + 3000;
-    var gump = Orion.GetGump(any);
-    while(gump && Orion.Now() < endTime)
-        {
-        Orion.Print(gump.ID());
-        gump.Select(Orion.CreateGumpHook(0));
-        Orion.Wait(100);
-        gump = Orion.GetGump(any);
-        }
-    }
 
 function RecallTithe()
 	{
@@ -1741,66 +1379,6 @@ function BuyHorse()
         }
     }
 
-function BandieBuy()
-	{
-	do {
-		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(vendor)
-			{
-			return Orion.Contains(vendor.Properties(), 'the weaver') && !Orion.Contains(vendor.Properties(), 'guild');
-			})[0];
-		Orion.Wait(1000);
-		} while(!vendors)
-    var shopnpcSerial = vendors.Serial();
-    while(!Orion.FindType('0x0F9B')[0] || !Orion.FindType('0x0F9E')[0])
-        {
-		Orion.WalkTo(vendors.X(),vendors.Y());
-        var shoplist = Orion.GetShopList('Cloth');
-        var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
-        if(!Orion.FindType('0x0F9E')[0])
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount), new ShopListItem('0x0F9E', '0x0000', '', 1)];
-        else
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount)];
-        shoplist.SetItems(items);
-        Orion.UpdateShopList(shoplist);
-        Orion.BuyHook('Cloth');
-        Orion.WaitContextMenuID(shopnpcSerial, 110);
-        Orion.RequestContextMenu(shopnpcSerial);
-        Orion.Wait(1300);
-        }
-    var scissors = Orion.FindType('0x0F9E')[0];
-    do
-		{
-		var bolts = Orion.FindType('0x0F9B')[0];
-		Orion.UseObject(scissors)
-		if(Orion.WaitForTarget(2000))
-			Orion.TargetObject(bolts);
-		Orion.Wait(2000)
-        var cloth = Orion.FindType('0x1766')[0];
-        } while(!cloth)
-    do
-        {
-		Orion.UseObject(scissors);
-		if(Orion.WaitForTarget(2000))
-			Orion.TargetObject(cloth);
-        Orion.Wait(2000);
-        var bandies = Orion.FindType('0x0E21', any, ground)[0] || Orion.FindType('0x0E21')[0];
-        } while(!bandies)
-    while(Orion.FindType('0x0E21', any, ground)[0])
-        {
-        Orion.MoveItem(bandies);
-        Orion.Wait(1300);
-        }
-     if(Player.Weight() > Player.MaxWeight())
-		{
-		DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying bandies. Halting...')
-		//RecallByGump('Main','Home');
-		Orion.LogOut();
-		Orion.PauseScript('all');
-		Orion.Wait(1000);
-		Orion.Terminate('all');
-		}
-	}
-
 function JournalScan()
 	{
 	var useDiscordPush = profile.useDiscordPush;
@@ -1865,6 +1443,387 @@ function JournalScan()
 			}
 		}
 	}
+
+//--# Helpers
+function ________________________HELPERS(_){}
+
+function UWAvoidBot(distance)
+	{
+	var distanceActual = distance || 5;
+	// if(Orion.WalkTo(6432, 1699, 0, 0))
+	// 	{
+	// 	var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
+	// 	Orion.UseObject(ladder[0]);
+	//  	Orion.Wait(500);
+	//  	}
+	//  if(Orion.WalkTo(6306, 1711, 0, 0))
+	// 	{
+	// 	Orion.Step(128, true);
+	//  	}
+
+	// Orion.Wait(500);
+	// Orion.Resend();
+	// Orion.Wait(500);
+	while(!Player.Dead())
+		{	
+        Orion.Wait(100)
+		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
+			{
+			return part.Properties().match(/Shadowlord/i);
+			});
+		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
+			{
+			return part.Properties().match(/Evil/i);
+			});
+	   	if(lord[0])
+			{
+            WalkToRadiusBorder(lord[0].Serial(), distanceActual);
+			}
+		if(corpse[0])
+    		{
+    		//BotPush('Shadowlord Dead!');
+    		Orion.Wait(Orion.Random(1,5) * 1000);   		
+    		Orion.WalkTo(corpse[0].X(),corpse[0].Y());
+    		ListLoot("BotLoot");
+    		Orion.Wait(100);
+            Orion.Terminate('all');
+    		}		
+		}
+	}
+
+function ParseWinch(_)
+	{
+	var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+	if(!winch)
+		return false;
+	var winchProps = winch.Properties();
+	var statusArr = winchProps.match(/>(\w+)</g)
+	var statusMap = statusArr.map(function(ele)
+		{
+		return ele == '>READY<'
+		})
+	Orion.Print(statusMap);
+	}
+
+function CloseAllGumps(_)
+    {
+    var endTime = Orion.Now() + 3000;
+    var gump = Orion.GetGump(any);
+    while(gump && Orion.Now() < endTime)
+        {
+        Orion.Print(gump.ID());
+        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Wait(100);
+        gump = Orion.GetGump(any);
+        }
+    }
+
+function ListLoot(findlist,ignorelist)  //v1
+    {
+    var list = Orion.FindTypeEx('0x2006', '-1', ground, '2').filter(function(part)
+    		{
+    		return (part.Properties().match(/Evil/i))
+    		});
+    if(list.length) 
+        var corpse = list[0];
+    else
+        Orion.Print('no corpse found');
+    if(corpse == null) 
+        {
+        Orion.ResetIgnoreList();
+        Orion.IgnoreReset();        
+        }
+    else 
+        {
+        Orion.UseObject(corpse.Serial());
+        Orion.Wait(1100);
+        var instancedcorpse = Orion.FindObject(Orion.GetSerial(lastcontainer))
+        var lootbag = Orion.FindObject(Orion.GetSerial(backpack));       
+        if(ignorelist)
+            Orion.UseIgnoreList(ignorelist);
+        var lootlist = Orion.FindList(findlist, instancedcorpse.Serial())
+        if(lootlist.length)
+            {
+            for(var i = 0;i<lootlist.length;i++) 
+                {            
+                if(Orion.GetDistance(corpse.Serial()) > 2)
+                    break;
+                var b = Orion.FindObject(lootlist[i]);
+                Orion.Print(b.Name());
+                Orion.MoveItem(lootlist[i], 0, lootbag.Serial());
+                Orion.Wait(1100);
+                }
+            }    
+        Orion.Ignore(corpse.Serial())       
+        }
+    }
+
+function VerifyOpenContainer(containerSerial,delay)
+    {
+    var startTime = Orion.Now();
+    var endTime = startTime + (delay || 5000);
+    while(!Orion.GumpExists('container',containerSerial))
+        {
+        if(Orion.Now() > endTime)
+            return false;
+        Orion.UseObject(containerSerial);
+        Orion.Wait(1000);
+        }
+    return true;
+    }
+
+function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
+    {
+    if(!colorID)
+        var colorID = any;
+    if(!destinationContainerSerial)
+        var destinationContainerSerial = Orion.GetSerial(backpack);
+    while(!Orion.GumpExists('container', supplyContainerSerial))
+        {
+        Orion.CharPrint(self,1159,'Opening Supply Container');
+        if(supplyContainerSerial == Player.BankSerial())
+            Orion.Say('bank')
+        else
+            Orion.UseObject(supplyContainerSerial);
+        Orion.Wait(1300);
+        }
+    while(!Orion.GumpExists('container', destinationContainerSerial))
+        {
+        Orion.UseObject(destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    var needed = amount - Orion.Count(graphicID, colorID, destinationContainerSerial, 0, false);
+    var restockItem = Orion.FindType(graphicID, colorID, supplyContainerSerial);
+    if((needed > 0 || amount == 0) && !restockItem[0])
+        {
+        TextWindow.Open();
+        TextWindow.Print("Couldn't restock item: " + itemName);
+        Orion.Wait(100);
+        return false;
+        }
+    if(amount === 0)
+        {
+        Orion.MoveItem(restockItem[0], 0, destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    else if(needed > 0)
+        {
+        Orion.MoveItem(restockItem[0], needed, destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    Orion.Wait(100);
+    return true;
+    }
+
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+	{
+	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
+	//create global scope variable runeIndex to increment through the book starting from '1'
+	//global variable numRunes declares total runes to increment through
+	if(backupBook == undefined)
+		var backupBook = bookName;
+	if(backupRune == undefined)
+		var backupRune = runeName;
+    if(rotateToggle == undefined)
+        var rotateToggle = false;
+    var x = Player.X(); //noting player start position to check later to see if recall was successful
+	var y = Player.Y();
+	var runeBook = Orion.FindTypeEx('0x22C5').filter(function(part)
+        {
+        return part.Properties().match(/.+$/) == bookName; //this is using Regex to find the last line of the item properties i.e., the runebook name
+        });
+    if(!runeBook[0])
+        {
+        Orion.Print("Runebook named '" + bookName + "' not found!");
+        return false;
+        }
+    if(Orion.SkillValue('Magery', 'base') >= 600)
+    	var startInd = 50; //recall index
+	else
+		var startInd = 75; //sacred journey index
+    Orion.CharPrint(self, 1159, "Recalling to: " + runeName + ' in Book: ' + bookName);
+	var runebookSerial = runeBook[0].Serial();
+    Orion.Wait(1300);
+	Orion.UseObject(runebookSerial);
+	var gump = WaitForSpecificGump(2000, 'generic', runebookSerial, '0x00000059');
+	if(gump)
+		{
+		var runeInd = gump.TextList().indexOf(runeName) - 2;
+		if(runeInd < 0)
+			Orion.Print("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
+		if(gump !== null)
+			{
+			gump.Select(Orion.CreateGumpHook(startInd + runeInd));
+			Orion.Wait(200);
+			}
+        Orion.CloseGump('generic', gump.Serial());
+		}
+	var startJournal = Orion.Now();
+	var endWait = startJournal + 5000;
+	while(x == Player.X() && y == Player.Y() && Orion.Now() < endWait)
+		{
+		if(Orion.InJournal('Something is blocking the location.', 'sys', 0, any, startJournal))
+			{
+	        Orion.Wait(2000);
+	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
+	            {
+	            //BotPush('Double Blocked at ' + eggIndex);
+	            var runeIndexNum = +runeIndex + 1 
+	            if(runeIndexNum <= numRunes)
+					runeIndex = String(runeIndexNum); 
+	            else
+					runeIndex = '1';
+	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
+	            }
+	        var backup = Orion.FindTypeEx('0x9C16').filter(function(part)
+	            {
+	            return part.Properties().match(/.+$/) == backupBook;
+	            })[0];
+	        if(rotateToggle && backup)
+	            return RecallByGump(backupBook, backupRune, 'skipDoubleBlocked', 'skipDoubleBlocked',rotateToggle);
+            else if(backup)
+                return RecallByGump(backupBook, backupRune, bookName, runeName);
+	        else
+	            Orion.Print("No backup runebook named '" + backupBook + "' found!");
+	        }
+	    else if(Orion.InJournal('You cannot teleport into that area.', 'sys', 0, any, startJournal))
+	        {
+	        Orion.Wait(2000);
+            if(rotateToggle)
+                {
+                var runeIndexNum = +runeIndex + 1 
+                if(runeIndexNum <= numRunes)
+                    runeIndex = String(runeIndexNum); 
+                else
+                    runeIndex = '1';
+                }
+	        return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
+	        }
+		Orion.Wait(500);
+		}
+	Orion.Wait(1000);
+	Orion.Resend();
+	Orion.Wait(200);
+	if(x == Player.X() && y == Player.Y()) 
+        return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
+	}
+
+function DiscordPush(message)
+	{
+	var bot = Shared.GetVar('discordLink',false);
+    if(!bot)
+        {
+        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
+        Shared.AddVar('discordLink',bot);
+        }
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function WalkToRadiusBorder(targetSerial, distance) 
+	{
+	var target = Orion.FindObject(targetSerial)
+	if(target) 
+		{
+		var x = target.X();
+		var y = target.Y();
+		var z = target.Z();
+	
+		var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
+			.filter(function(tile) 
+				{
+				var tileX = tile.X();
+				var tileY = tile.Y();
+				return (x == (tileX - distance))
+				|| (x == (tileX + distance))
+				|| (y == (tileY - distance))
+				|| (y == (tileY + distance));
+				}).sort(function (a,b) 
+					{
+					return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
+					});
+		tiles.forEach(function(tile,ind)
+			{
+			Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+			})
+		for(var i=0;i<tiles.length;i++)
+			{             
+			var closest = tiles[i]; 
+			if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
+				break;
+			}
+		}
+	}
+
+function DrawSquare(minX,minY,maxX,maxY)
+	{
+	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
+		.forEach(function (tile,ind) 
+			{
+			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+			});
+	}
+
+function DrawBorder(minX,minY,maxX,maxY)
+	{
+	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
+		.forEach(function (tile,ind) 
+			{
+			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+			});
+	}
+
+function SetAvoidRadius(mobSerial,range)
+    {
+    var mobObj = Orion.FindObject(mobSerial);
+    var x = mobObj.X();
+    var y = mobObj.Y();
+    var tiles = Orion.GetTilesInRect(x - range, y - range, x + range, y + range);
+    for(var i = 0;i<tiles.length;i++)
+        {
+        var tile = tiles[i];
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        var tileZ = tile.Z();
+        Orion.SetBadLocation(tileX,tileY)
+        Orion.AddFakeMapObject(i + 30000, '0x051A', 1159, tileX, tileY, tileZ);
+        }
+    }
+
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
+    {
+    if(z === undefined) z = 0;
+    if(distanceXY === undefined) distanceXY = 0;
+    if(distanceZ === undefined) distanceZ = 255;
+    if(chunkSize === undefined) chunkSize = 5;
+    if(run === undefined) run = 1;
+    if(openDoor === undefined) openDoor = 1;
+    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+    //Orion.ClearFakeMapObjects();
+    if(pathTiles.length === 0)
+        return false;
+	var shortStop = pathTiles[pathTiles.length - 1];
+	var shortX = shortStop.X();
+	var shortY = shortStop.Y();
+    // pathTiles.forEach(function(tile,i)
+    //     {
+    //     Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+    //     })
+    // Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+    if(pathTiles.length >= chunkSize)
+        var chunk = pathTiles[chunkSize - 1];
+    else
+        var chunk = shortStop;
+    var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
+    Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+    Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+    Orion.Wait(1);
+	if(callBackFn !== undefined)
+		callBackFn();
+    if(Orion.GetDistance(shortX,shortY) > 0)
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn);
+    return true;
+    }
 
 //--#Coms
 function ________________________COMS(_){}
@@ -1945,25 +1904,47 @@ function AliComLeader()
 		}
 	}
 
+
+								function UWHealBotListen()
+								{
+								if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+									var _pName = Player.Name().slice(5, Player.Name().length)
+								else
+									var _pName = Player.Name()
+								while(true)
+									{
+									var listen = Orion.WaitJournal(_pName, Orion.Now(), 0);
+									if(listen && listen.Color() == 0x03B2 && Orion.HaveTarget())
+										{
+										var listenArr = Orion.Split(listen.Text(), ':')
+										if(Orion.GetDistance(listenArr[1]) > 9)
+											{
+											Orion.PauseScript('UWMysticBot')
+											WalkToRadiusBorder(listenArr[1], 6) 
+											Orion.TargetObject(listenArr[1])
+											Orion.ResumeScript('UWMysticBot')  
+											}
+										else
+											{
+											Orion.TargetObject(listenArr[1])
+											}
+										}
+									Orion.Wait(10);
+									}
+								}
+
 function AliComFollower()
 	{
+	if(Orion.SkillValue('Archery') >= 1000)
+		var role = 'archer';
+	else if(Orion.SkillValue('Mysticism') > 700 || Orion.SkillValue('Magery') >= 700)
+		var role = 'healer';
+	else if(Orion.SkillValue('Swordsmanship') >= 1000)
+		var role = 'dexxer';
+	else
+		var role = 'misc';
+    Shared.AddVar('myRole',role);
     // Bot Commands
-    function Init()
-        {
-        Orion.Exec('JournalScan',true);
-        if(Player.Serial() == leaderSerial)
-            {
-            Orion.Exec('LeaderComs',true);
-            }
-        else if(Orion.SkillValue('Archery') >= 100)
-            {
-            Orion.Exec('ArcherComs',true);
-            Orion.Exec('AutoAttackArcher',true);
-            Orion.Exec('AutoBuffs',true);
-            Orion.Exec('BandieBot',true);
-            }
-        }
-
     function Follow(leaderSerial,distance)
         {
         do
@@ -1994,12 +1975,18 @@ function AliComFollower()
         Orion.Terminate('all','JournalScan|FollowerComs');
         }
     
+	function Target(serial)
+		{
+		Orion.TargetObject(serial);
+		}
+
     //Main Logic
     var cmdsObj = 
         {
         'Init': Init,
-        'Follow': Follow, //leaderSerial:distance
-        'TerminateAll': TerminateAll
+        'Follow': Follow, //:leaderSerial:distance
+        'TerminateAll': TerminateAll,
+		'Target': Target, //:targetSerial
         }
 	Orion.RemoveAllUdpServers();
 	var port = 39999;
@@ -2014,15 +2001,6 @@ function AliComFollower()
 		return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
 	Orion.Print('Port: ' + port);
     var playerSerial = Player.Serial();
-    if(Orion.SkillValue('Archery') >= 1000)
-        var role = 'archer';
-    else if(Orion.SkillValue('Mysticism') > 700 || Orion.SkillValue('Magery') >= 700)
-        var role = 'healer';
-    else if(Orion.SkillValue('Swordsmanship') >= 1000)
-        var role = 'dexxer';
-    else
-        var role = 'misc';
-    Shared.AddVar('myRole',role);
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
     Orion.UdpSend(42420,'Check:' + playerString + ':' + port); //[cmd,[playerSerial,playerName,role],port]
@@ -2048,7 +2026,6 @@ function AliComFollower()
     while(Orion.UdpRecv('Coms'))
         Orion.Wait(10);
     Shared.AddVar('leaderName',split[1]);
-    Shared.AddVar('leaderSerial',split[2]);
     Orion.CharPrint(self,1159,'Connected to leader: ' + split[1]);
     while(true)
         {
