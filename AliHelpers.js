@@ -253,7 +253,12 @@ function WaitForObjectTimeout()
 
 function DiscordPush(message)
 	{
-	var bot = Shared.GetVar('discordLink',"https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey);
+	var bot = Shared.GetVar('discordLink',false);
+    if(!bot)
+        {
+        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
+        Shared.AddVar('discordLink',bot);
+        }
 	Orion.HttpPost(bot, "content=" + message);
 	}
 
