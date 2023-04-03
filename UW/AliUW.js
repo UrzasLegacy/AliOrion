@@ -1,5 +1,5 @@
 //Create a findlist for autoloot named 'BotLoot'
-
+var Version = '3.5'
 var leaderSerial = '0x01DD7DAE'; //Apollo
 
 var profile = 
@@ -1948,7 +1948,7 @@ function AliGumpRenderer()
 	{
     var startTime = Orion.Now();
     var gump = Orion.CreateCustomGump(10420); 
-
+	var title = 'AliUW v' + Version;
     var rowAdj = 40;
     var characterAdj = 6;
     var buttonTextHorAdj = 32;
