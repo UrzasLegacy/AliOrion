@@ -760,7 +760,9 @@ function EquipUWSuitByBotName()
 
 function ResetPosition()
 	{
-	TerminateScripts();
+	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|ResetPosition');
+	Orion.Wait(250);
+	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|ResetPosition');
 	if(AliWalkTo(6432, 1633, 0, 0)) //uwboss area
 		{
 		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
@@ -822,7 +824,9 @@ function ResetPositionOLD()
 
 function LeaveUW()
 	{
-	TerminateScripts();
+	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|LeaveUW');
+	Orion.Wait(250);
+	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|LeaveUW');
 	if(AliWalkTo(6432, 1633, 0, 0))
 		{
 		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
@@ -1911,9 +1915,9 @@ function AliComFollower()
 
     function TerminateAll(_)
         {
-        Orion.PauseScript('all','JournalScan|FollowerComs');
+        Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
         Orion.Wait(250);
-        Orion.Terminate('all','JournalScan|FollowerComs');
+        Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
         }
     
 	function Target(serial)
