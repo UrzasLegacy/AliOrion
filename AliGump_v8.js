@@ -65,7 +65,7 @@ function AliGumpRenderer()
                     break;
                 case 'text':
                     var string = ele[1];
-                    var xAdj = ele[2];
+                    var xAdj = ele[3];
                     widthAdjust = (string.length * characterAdj) + xAdj// + 20;
                     break;
                 case 'horizontalLine':

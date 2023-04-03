@@ -23,7 +23,17 @@ var profile =
 	}
 
 Orion.Exec('JournalScan', true);
-
+//Asset Types:
+//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
+//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
+//'textInput': A text input. Args: 'storedVarName'
+//'text': Text. Args: 'textString', textColor, xAdj, yAdj
+//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
+//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
+//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
+//'xSpacer': A blank asset spacer. Args: width
+//'ySpacer': A blank row spacer. Args: height
+//'tooltip': Add a tooltip to the previous asset. Args: 'text'
 var defaultAssets = 
 	[
 		// [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
@@ -1978,7 +1988,7 @@ function AliGumpRenderer()
                     break;
                 case 'text':
                     var string = ele[1];
-                    var xAdj = ele[2];
+                    var xAdj = ele[3];
                     widthAdjust = (string.length * characterAdj) + xAdj// + 20;
                     break;
                 case 'horizontalLine':
