@@ -308,7 +308,6 @@ function RareAlert()
     var hash = {};
     var mobGraphic = '0x0115';
     var outMsg = '';
-    var outCharMsg = '';
     Orion.SetTimer('cull');
     while(true)
         {
@@ -321,6 +320,7 @@ function RareAlert()
         var mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 12, 'gray|criminal|red')
         for(var i=0;i<mobs.length;i++)
             {
+            var outCharMsg = '';
             var mob = mobs[i];
             var mobColor = mob.Color();
             var mobSerial = mob.Serial();

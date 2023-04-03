@@ -809,6 +809,16 @@ function EquipLRCSuitByBotName()
 	Orion.Dress(setname);
 	}
 
+function EquipUWSuitByBotName()
+	{
+	if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+		var _pName = Player.Name().slice(5, Player.Name().length);
+	else
+		var _pName = Player.Name()
+	var setname = _pName + ' UW Suit'
+	Orion.Dress(setname);
+	}
+
 function ResetPosition()
 	{
 	Orion.Terminate('all','ResetPosition|JournalScan');
