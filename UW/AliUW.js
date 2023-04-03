@@ -17,12 +17,13 @@ var profile =
 	useConfidence: false, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
 		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
 	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-		discordHook: '1022287622137200660', //Put Discord WebHook here
-		discordKey: 'w0Nsz8IXTJK2ZcJM0hntdlPMeeLKOLSMweHtBhWb7-0vUI8-lvZdkVUUv10r08_vUJMl', //Put Discord Bot Key here
+		discordHook: '887268637315047444', //Put Discord WebHook here
+		discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
 	journalScanType: 'GM', //'GM'
 	}
 
 Orion.Exec('JournalScan', true);
+
 //Asset Types:
 //'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
 //'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
@@ -36,9 +37,9 @@ Orion.Exec('JournalScan', true);
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 var defaultAssets = 
 	[
-		// [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
-		// [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
-		[ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1] ],
+		[ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp:',554,1,1],['text',Shared.GetVar('barrelName','Unknown'),554,1,1], ],
+		[ ['toggle','StartPositions','GoToStart','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','LeaveUW','Leave UW'], ['toggle','LootUW','Loot Boss'] ],
+		[ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
 		[ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
 		[ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
 		[ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
@@ -759,6 +760,37 @@ function EquipUWSuitByBotName()
 
 function ResetPosition()
 	{
+	TerminateScripts();
+	if(AliWalkTo(6432, 1633, 0, 0)) //uwboss area
+		{
+		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
+		Orion.UseObject(ladder[0]);
+		Orion.Wait(500);
+		}
+	if(AliWalkTo(6305, 1673, 0, 0)) //upper deck
+		{
+	 	var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
+	 	Orion.UseObject(ladder[0]);
+	 	}
+	 if(AliWalkTo(1700, 1636, 0, 0))//uw dock
+		{
+		var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
+		Orion.UseObject(whirlpool[0]);
+		Orion.Wait(1000);
+		}
+	 if(AliWalkTo(6321, 1711, 0, 0))//outside boat
+		{
+	 	Orion.Wait(500);
+	 	}
+	 if(AliWalkTo(6432, 1699, 0, 0))//below deck
+		{
+	 	Orion.Wait(10);
+	 	}
+	Orion.Wait(500);
+	}
+
+function ResetPositionOLD()
+	{
 	Orion.Terminate('all','ResetPosition|JournalScan');
 	if(Orion.WalkTo(6432, 1633, 0, 0)) //uwboss area
 		{
@@ -790,6 +822,38 @@ function ResetPosition()
 
 function LeaveUW()
 	{
+	TerminateScripts();
+	if(AliWalkTo(6432, 1633, 0, 0))
+		{
+		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
+		Orion.UseObject(ladder[0]);
+		Orion.Wait(500);
+		}
+	if(AliWalkTo(6305, 1673, 0, 0))
+		{
+	 	ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
+	 	Orion.UseObject(ladder[0]);
+	 	Orion.Wait(500);
+	 	}
+	 if(AliWalkTo(6447, 1743, 0, 0))
+		{
+	 	Orion.Wait(500);
+	 	}
+	 if(AliWalkTo(6279, 1772, 0, 0))
+		{
+	 	var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
+		Orion.UseObject(rope[0]);
+		Orion.Wait(500);
+	 	}
+	 if(AliWalkTo(1700, 1564, 0, 0))
+		{
+		Orion.Wait(10);
+	 	}
+	Orion.Wait(500);
+	}
+
+function LeaveUWOLD()
+	{
 	if(Orion.WalkTo(6432, 1633, 0, 0))
 		{
 		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
@@ -818,7 +882,6 @@ function LeaveUW()
 	 	}
 	Orion.Wait(500);
 	}
-
 function LootUW()
     {
 	ListLoot('BotLoot')
@@ -1766,8 +1829,9 @@ function AliComLeader()
                         }
                     Orion.UdpSend(+botPort,'Heard:' + Player.Name() + ':' + Player.Serial()); //send signal back to bot so they know they're connected
 					break;
-				// case '':
-				// 	break;
+				 case 'AliGumpRenderer':
+					AliGumpRenderer();
+				 	break;
 				case '':
 					break;
 				case undefined:
@@ -1864,6 +1928,7 @@ function AliComFollower()
         'Follow': Follow, //:leaderSerial:distance
         'TerminateAll': TerminateAll,
 		'Target': Target, //:targetSerial
+		'AliGumpRenderer': AliGumpRenderer,
         }
 	Orion.RemoveAllUdpServers();
 	var port = 39999;
