@@ -239,7 +239,7 @@ function ClearRoom()
             Orion.TargetObject(locker[0].Serial());
             Orion.Wait(1000);
             Orion.Print(locker[0].Name() + ':' + locker[0].Properties());
-            check = Orion.FindType('0x410B');
+            keyBackpack = Orion.FindType('0x410B');
             if(!keyBackpack)
                 break;
             }
@@ -307,6 +307,9 @@ function UWBarrelsHealSelf()
 		{
 		if(Player.Poisoned())
 			{
+			Orion.Cast('Cleanse By Fire');
+			if(Orion.WaitForTarget(3000))
+				Orion.TargetObject(self);
 			}
 		else if(Player.Hits('%') < 60)
 			{
