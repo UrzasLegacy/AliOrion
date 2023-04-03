@@ -1,10 +1,3 @@
-//#include Ali/AliUWComs.js
-//#include Ali/AliQoL.js
-//#include Ali/AliAutomation.js
-//#include Ali/AliDebug.js
-//#include Ali/AliHelpers.js
-//#include Ali/AliGumpHUD.js
-
 //Create a findlist for autoloot named 'BotLoot'
 
 var leaderSerial = '0x01DD7DAE'; //Apollo
@@ -205,7 +198,7 @@ function ClearRoom()
  	var x2 = lockerX;
 	var y2 = lockerY;
     var phase = 1;
-    while (!Player.Dead()) 
+    while(!Player.Dead()) 
     	{
     	var mobcheck = Orion.FindTypeEx('0x00D7|0x013D|0x005C|0x0018', '-1', 'ground', 'inlos', 10);
 		while(mobcheck[0] && mobcheck[0].Exists())
@@ -219,34 +212,35 @@ function ClearRoom()
 				Orion.UseAbility('primary');	
 			}
 		Orion.Wait(250);
-		if(Player.Stam()/Player.MaxStam() < 1 && Player.Hits()/Player.MaxHits() > .8)
+		if(Player.Stam() < 155 && Player.Hits()/Player.MaxHits() > .8)
             {
             Orion.Cast('Divine Fury');
             Orion.Wait(1000);
             }
-    	while(Player.Hits()/Player.MaxHits() < .8)
+    	while(Player.Hits('%') < 80)
     		{
     		Orion.Wait(100);
     		}
-		var key = Orion.FindTypeEx('0x410B', '-1', 'ground', 'fast', '10');
-		if(key[0])
+		var keyGround = Orion.FindTypeEx('0x410B', any, ground, 'fast', 14)[0];
+		while(keyGround)
 			{
-			Orion.WalkTo(key[0].X(), key[0].Y());
-			Orion.MoveItem(key[0].Serial());
+			Orion.WalkTo(keyGround.X(), keyGround.Y());
+			Orion.MoveItem(keyGround.Serial());
 			Orion.Wait(500);
+			keyGround = Orion.FindTypeEx('0x410B', any, ground, 'fast', 14)[0];
 			}
-        var check = Orion.FindType('0x410B');
-        if(check[0] && Orion.WalkTo(locker[0].X(),locker[0].Y()))
+        var keyBackpack = Orion.FindType('0x410B')[0];
+        if(keyBackpack && Orion.WalkTo(lockerX,lockerY))
             {
             Orion.Wait(1100);
-            Orion.UseObject(check[0]);
+            Orion.UseObject(keyBackpack);
             Orion.Wait(500);
             Orion.WaitForTarget();
             Orion.TargetObject(locker[0].Serial());
             Orion.Wait(1000);
             Orion.Print(locker[0].Name() + ':' + locker[0].Properties());
             check = Orion.FindType('0x410B');
-            if(!check[0])
+            if(!keyBackpack)
                 break;
             }
         switch(phase)    
@@ -270,25 +264,32 @@ function ClearRoom()
             }
     	DrawSquare(x1,y1,x2,y2);
     	Orion.SetSearchArea(x1,y1,x2,y2);
-	    var barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, 'near', '24');
+	    var barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, '', 24).sort(function(barrelA,barrelB)
+			{
+			return barrelA.Distance() - barrelB.Distance();
+			});
 	    Orion.ResetSearchArea();
 	    if(barrels[0])
 	    	{
-			if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
-				Orion.UseAbility('primary');
+			var barrelSerial = barrels[0].Serial();
+			var barrelX = barrels[0].X();
+			var barrelY = barrels[0].Y();
             if(barrels[0].Distance() > 1)
-            	if(Orion.WalkTo(barrels[0].X(), barrels[0].Y(), 0))
-               		Orion.Attack(barrels[0].Serial());
+            	if(Orion.WalkTo(barrelX,barrelY))
+               		Orion.Attack(barrelSerial);
                	else
-               		Orion.Ignore(barrels[0].Serial());
+               		Orion.Ignore(barrelSerial);
             else
-                Orion.Attack(barrels[0].Serial());
+                Orion.Attack(barrelSerial);
 	       	}
 	    else
 			{
 			Orion.IgnoreReset();
 			Orion.SetSearchArea(x1,y1,x2,y2);
-		    var barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, 'near', '24');
+		    barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, '', 24).sort(function(barrelA,barrelB)
+				{
+				return barrelA.Distance() - barrelB.Distance();
+				});
 		    Orion.ResetSearchArea();
 			Orion.ClearFakeMapObjects();
 	    	if(!barrels[0] && phase < 3)
@@ -304,19 +305,17 @@ function UWBarrelsHealSelf()
 	{
 	while(!Player.Dead()) 
 		{
-		while(Player.Hits('%') < 90 || Player.Poisoned())
+		if(Player.Poisoned())
 			{
-			if(!Orion.BuffExists('Healing Skill'))
-				{
-				var bandie = Orion.FindType('0x0E21')
-				if(bandie[0])
-					{
-					Orion.UseObject(bandie[0]);
-					Orion.WaitForTarget(3000)
-					Orion.TargetObject(self);
-					}
-				}
-			Orion.Wait(250);
+			}
+		else if(Player.Hits('%') < 60)
+			{
+			Orion.Cast('Close Wounds')
+			if(Orion.WaitForTarget(3000))
+				Orion.TargetObject(self);
+			}
+		else if(Player.Hits('%') < 90)
+			{
 			if(!Orion.BuffExists('Confidence'))
 				Orion.Cast('Confidence');
 			}
