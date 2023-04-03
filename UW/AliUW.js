@@ -774,51 +774,27 @@ function ResetPosition()
 	 	var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
 	 	Orion.UseObject(ladder[0]);
 	 	}
-	 if(AliWalkTo(1700, 1636, 0, 0))//uw dock
+	if(Player.X() < 6000)
+		{
+		EquipUWSuitByBotName();
+		Orion.Wait(1000);
+		}
+	if(AliWalkTo(1700, 1636, 0, 0))//uw dock
 		{
 		var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
 		Orion.UseObject(whirlpool[0]);
 		Orion.Wait(1000);
-		}
-	 if(AliWalkTo(6321, 1711, 0, 0))//outside boat
-		{
-	 	Orion.Wait(500);
-	 	}
-	 if(AliWalkTo(6432, 1699, 0, 0))//below deck
-		{
-	 	Orion.Wait(10);
-	 	}
-	Orion.Wait(500);
-	}
-
-function ResetPositionOLD()
-	{
-	Orion.Terminate('all','ResetPosition|JournalScan');
-	if(Orion.WalkTo(6432, 1633, 0, 0)) //uwboss area
-		{
-		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
-		Orion.UseObject(ladder[0]);
-		Orion.Wait(500);
-		}
-	if(Orion.WalkTo(6305, 1673, 0, 0)) //upper deck
-		{
-	 	var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
-	 	Orion.UseObject(ladder[0]);
-	 	}
-	 if(Orion.WalkTo(1700, 1636, 0, 0))//uw dock
-		{
-		var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
-		Orion.UseObject(whirlpool[0]);
+		EquipLuckSuitByBotName();
 		Orion.Wait(1000);
 		}
-	 if(Orion.WalkTo(6321, 1711, 0, 0))//outside boat
+	if(AliWalkTo(6321, 1711, 0, 0))//outside boat
 		{
 	 	Orion.Wait(500);
 	 	}
-	 if(Orion.WalkTo(6432, 1699, 0, 0))//below deck
+	if(AliWalkTo(6432, 1699, 0, 0))//below deck
 		{
-	 	Orion.Wait(10);
-	 	}
+		Orion.Wait(10);
+		}
 	Orion.Wait(500);
 	}
 
@@ -856,36 +832,6 @@ function LeaveUW()
 	Orion.Wait(500);
 	}
 
-function LeaveUWOLD()
-	{
-	if(Orion.WalkTo(6432, 1633, 0, 0))
-		{
-		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
-		Orion.UseObject(ladder[0]);
-		Orion.Wait(500);
-		}
-	if(Orion.WalkTo(6305, 1673, 0, 0))
-		{
-	 	ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
-	 	Orion.UseObject(ladder[0]);
-	 	Orion.Wait(500);
-	 	}
-	 if(Orion.WalkTo(6447, 1743, 0, 0))
-		{
-	 	Orion.Wait(500);
-	 	}
-	 if(Orion.WalkTo(6279, 1772, 0, 0))
-		{
-	 	var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
-		Orion.UseObject(rope[0]);
-		Orion.Wait(500);
-	 	}
-	 if(Orion.WalkTo(1700, 1564, 0, 0))
-		{
-		Orion.Wait(10);
-	 	}
-	Orion.Wait(500);
-	}
 function LootUW()
     {
 	ListLoot('BotLoot')
@@ -894,7 +840,9 @@ function LootUW()
 
 function TerminateScripts()
 	{
-	Orion.Terminate('all','JournalScan')
+	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
+	Orion.Wait(250);
+	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
 	}
 
 function RecallTithe()
@@ -1928,7 +1876,6 @@ function AliComFollower()
     //Main Logic
     var cmdsObj = 
         {
-        'Init': Init,
         'Follow': Follow, //:leaderSerial:distance
         'TerminateAll': TerminateAll,
 		'Target': Target, //:targetSerial
