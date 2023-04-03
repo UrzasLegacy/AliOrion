@@ -34,24 +34,6 @@ var defaultAssets =
 		[ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
 	];
 
-function Init()
-	{
-	Orion.Exec('JournalScan',true);
-	
-	if(Player.Serial() == leaderSerial)
-		Orion.Exec('AliComLeader',true);
-	else
-		Orion.Exec('AliComFollower',true);
-
-	if(Orion.SkillValue('Archery') >= 100)
-		{
-		Orion.Exec('ArcherComs',true);
-		Orion.Exec('AutoAttackArcher',true);
-		Orion.Exec('AutoBuffs',true);
-		Orion.Exec('BandieBot',true);
-		}
-	}
-
 function Autostart()
 	{
 	Shared.AddVar('profile',profile);
@@ -108,15 +90,6 @@ function initUWBarrels()
 	{
 	Orion.Exec('UWBarrels', true);
 	Orion.Exec('UWBarrelsHealSelf', true);
-	}
-
-function initUWArcher()
-	{
-	Orion.Exec('AutoAttackArcher', true);
-	Orion.Exec('AutoBuffs', true);
-	Orion.Exec('BandieBot', true);
-	Orion.Exec('AliComFollower', true);
-	Orion.Exec('UWAvoidBot', true, [5]);
 	}
 	
 function initUWSamp()
@@ -232,13 +205,11 @@ function ClearRoom()
         var keyBackpack = Orion.FindType('0x410B')[0];
         if(keyBackpack && Orion.WalkTo(lockerX,lockerY))
             {
-            Orion.Wait(1100);
+            Orion.Wait(1300);
             Orion.UseObject(keyBackpack);
-            Orion.Wait(500);
-            Orion.WaitForTarget();
-            Orion.TargetObject(locker[0].Serial());
-            Orion.Wait(1000);
-            Orion.Print(locker[0].Name() + ':' + locker[0].Properties());
+            if(Orion.WaitForTarget(3000))
+            	Orion.TargetObject(locker[0].Serial());
+            Orion.Wait(1300);
             keyBackpack = Orion.FindType('0x410B');
             if(!keyBackpack[0])
                 break;
@@ -408,51 +379,6 @@ function UWSamp()
     		break;
     		}		
         Orion.Wait(250);
-		}
-	}
-
-function BandieBot()
-	{
-	var useBandieOthers = profile.useBandieOthers;
-	var useBandieOtherThresholdPercent = profile.useBandieOtherThresholdPercent;
-	var useBandieSelf = profile.useBandieSelf;
-	var useBandieSelfThresholdPercent = profile.useBandieSelfThresholdPercent;
-	while(!Player.Dead())
-		{
-		while(!Player.Dead())
-			{
-			while(!Orion.GumpExists('container',backpack))
-				{
-				Orion.UseObject(backpack);
-				Orion.Wait(1300);
-				}
-			Orion.Wait(200);
-			if(Orion.HaveTarget())
-				continue;
-			var bandies = Orion.FindType('0x0E21')[0];
-			if(Orion.Count('0x0E21') < 50)
-				{
-				Orion.Wait(200);
-				if(Orion.Count('0x0E21') < 50) //with just one check, was getting false positives for some reason
-					{
-					DiscordPush(Player.Name() + ': Low on Bandies');
-					break;
-					}
-				}
-			var target = injuredCheck(2, useBandieOtherThresholdPercent, true);
-			if(useBandieOthers && target && !Orion.BuffExists('Healing Skill') && bandies)
-				{
-				Orion.UseObject(bandies);
-				if(Orion.WaitForTarget(2000))
-					Orion.TargetObject(target.Serial());
-				}
-			else if(useBandieSelf && Player.Hits('%') < useBandieSelfThresholdPercent && !Orion.BuffExists('Healing Skill') && bandies)
-				{
-				Orion.UseObject(bandies);
-				if(Orion.WaitForTarget(2000))
-					Orion.TargetObject(self);
-				}
-			}
 		}
 	}
 
@@ -892,77 +818,6 @@ function LootUW()
 function TerminateScripts()
 	{
 	Orion.Terminate('all','JournalScan')
-	}
-
-function RecallBandieBuy()
-    {
-	Orion.PauseScript('all','JournalScan|RecallBandieBuy');
-	Orion.Wait(500);
-	Orion.Terminate('all','JournalScan|RecallBandieBuy');
-    RecallByGump('Main','Bandies');
-	BandieBuy();
-	Orion.Wait(1500);
-	Orion.Exec('WalkThroughCurrentFarm');
-    }
-
-function BandieBuy()
-	{
-	do {
-		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(vendor)
-			{
-			return Orion.Contains(vendor.Properties(), 'the weaver') && !Orion.Contains(vendor.Properties(), 'guild');
-			})[0];
-		Orion.Wait(1000);
-		} while(!vendors)
-    var shopnpcSerial = vendors.Serial();
-    while(!Orion.FindType('0x0F9B')[0] || !Orion.FindType('0x0F9E')[0])
-        {
-		Orion.WalkTo(vendors.X(),vendors.Y());
-        var shoplist = Orion.GetShopList('Cloth');
-        var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
-        if(!Orion.FindType('0x0F9E')[0])
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount), new ShopListItem('0x0F9E', '0x0000', '', 1)];
-        else
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount)];
-        shoplist.SetItems(items);
-        Orion.UpdateShopList(shoplist);
-        Orion.BuyHook('Cloth');
-        Orion.WaitContextMenuID(shopnpcSerial, 110);
-        Orion.RequestContextMenu(shopnpcSerial);
-        Orion.Wait(1300);
-        }
-    var scissors = Orion.FindType('0x0F9E')[0];
-    do
-		{
-		var bolts = Orion.FindType('0x0F9B')[0];
-		Orion.UseObject(scissors)
-		if(Orion.WaitForTarget(2000))
-			Orion.TargetObject(bolts);
-		Orion.Wait(2000)
-        var cloth = Orion.FindType('0x1766')[0];
-        } while(!cloth)
-    do
-        {
-		Orion.UseObject(scissors);
-		if(Orion.WaitForTarget(2000))
-			Orion.TargetObject(cloth);
-        Orion.Wait(2000);
-        var bandies = Orion.FindType('0x0E21', any, ground)[0] || Orion.FindType('0x0E21')[0];
-        } while(!bandies)
-    while(Orion.FindType('0x0E21', any, ground)[0])
-        {
-        Orion.MoveItem(bandies);
-        Orion.Wait(1300);
-        }
-     if(Player.Weight() > Player.MaxWeight())
-		{
-		DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying bandies. Halting...')
-		//RecallByGump('Main','Home');
-		Orion.LogOut();
-		Orion.PauseScript('all');
-		Orion.Wait(1000);
-		Orion.Terminate('all');
-		}
 	}
 
 function RecallTithe()
@@ -2076,6 +1931,269 @@ function MassMessage(role,msg)
         Orion.UdpSend(roleArr[i][0],msg);
     }
 
+//--# Gump
+function ________________________GUMP(){}
+
+function AliGumpRenderer() 
+	{
+    var startTime = Orion.Now();
+    var gump = Orion.CreateCustomGump(10420); 
+
+    var rowAdj = 40;
+    var characterAdj = 6;
+    var buttonTextHorAdj = 32;
+    var buttonTextVerAdj = 3;
+    var textColor = 1159;
+	var rowStart = 35;
+	var columnStart = 25;
+
+    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues',[]);
+    //Orion.Print(gumpButtons)
+    if(!gumpButtons[0])
+        {
+        Shared.AddArray('gumpValues',defaultAssets)
+        gumpButtons = defaultAssets;
+        }
+    var heightAdjust = 0;
+    var width = Math.max.apply(Math, gumpButtons.map(function (rows)
+        {
+        var length = rows.reduce(function(sum,ele)
+            {
+            var assetType = ele[0];
+            var widthAdjust = 0
+            switch(assetType)
+                {
+                case 'button':
+                    widthAdjust = ele[2];
+                    break;
+                case 'toggle':
+                    widthAdjust = (ele[2].length * characterAdj) + buttonTextHorAdj + 20 + (ele[5] || 0);
+                    break;
+                case 'comboBox':
+                    widthAdjust = 142;
+                    heightAdjust += 3;
+                    break;
+                case 'textInput':
+                    widthAdjust = 135;
+                    break;
+                case 'text':
+                    var string = ele[1];
+                    var xAdj = ele[2];
+                    widthAdjust = (string.length * characterAdj) + xAdj// + 20;
+                    break;
+                case 'horizontalLine':
+                    widthAdjust = ele[1] + 10;
+                    break;
+                case 'verticalLine':
+                    widthAdjust = ele[5];
+                    heightAdjust += ele[1];
+                    break;
+                case 'xSpacer':
+                    widthAdjust = ele[1];
+                    break;
+                case 'ySpacer':
+                    heightAdjust += ele[1];
+                    break;
+                default:
+                    break;
+                }
+            return sum + widthAdjust;
+            },0);
+        return length + 25;
+        }));
+    var height = (gumpButtons.length * rowAdj) + rowStart + heightAdjust;
+    gump.Clear();
+    gump.SetCallback('AliGumpCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+	//gump.AddText(20,9, 554, 'Modular Gump') //title
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    
+    //Modular Assets
+    var rowPos = rowStart;
+    var colPos = columnStart;
+    var i = 1;
+    for(var r = 0;r<gumpButtons.length;r++)
+        {
+        var row = gumpButtons[r];
+        for(var c = 0;c<row.length;c++)
+            {
+            var asset = row[c];
+            var assetType = asset[0];
+            switch(assetType)
+                {
+                case 'button':
+                    var gumpOption = asset[1];
+                    var widthAdjust = asset[2];
+                    var xAdj = asset[3] || 0;
+                    var yAdj = asset[4] || 0;
+                    var buttonGraphic = asset[5] != undefined ? Orion.Split(asset[5],'|') : ['0x25FB','0x25FC','0x25FC']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+                    gump.AddButton(i, colPos + xAdj, rowPos + yAdj, buttonGraphic[0], buttonGraphic[1], buttonGraphic[2], '0x0000');
+                    colPos += widthAdjust;
+                    break;
+                case 'toggle':
+                    var gumpOption = asset[1];
+                    var gumpTitle = asset[2];
+	                var buttonOnGraphic = asset[3] != undefined ? Orion.Split(asset[3],'|') : ['0x25FB','0x25FC','0x25FC']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+	                var buttonOffGraphic = asset[4] != undefined ? Orion.Split(asset[4],'|') : ['0x25F8','0x25F9','0x25F9']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+                    var xAdj = asset[5] || 0;
+                    var yAdj = asset[6] || 0;
+                    var stateGraphic //graphic,selected,pressed
+                    Orion.ScriptRunning(gumpOption) ? stateGraphic = buttonOnGraphic : stateGraphic = buttonOffGraphic;
+                    gump.AddText(colPos + buttonTextHorAdj, rowPos + buttonTextVerAdj, textColor, gumpTitle);
+                    gump.AddButton(i, colPos + xAdj, rowPos + yAdj, stateGraphic[0], stateGraphic[1], stateGraphic[2], '0x0000');
+                    colPos += (gumpTitle.length * characterAdj) + buttonTextHorAdj + 20;
+                    break;
+                case 'comboBox': //['comboBox', 'Single Target', 'Primary', 'Secondary']
+                    var gumpOption = asset[1];
+                    var dropLength = Math.ceil((asset.length - 2));
+                    var value = Shared.GetVar(gumpOption,undefined);
+                    gump.AddComboBox(i + 300, colPos, rowPos, '0x0BB8', 0, '0x0BB8', 125, -3,dropLength);
+                    for(var j=2;j<asset.length;j++)
+                        {
+                        gump.AddComboBoxText(asset[j],0,value == asset[j] ? 1 : 0,115,'center');
+                        }
+                    gump.AddText(colPos,rowPos - 18,554,gumpOption);
+                    gump.AddColoredPolygone(colPos, rowPos, 124, 19, '#FF666600', 1, 2, 0, 0, 0);
+                    gump.AddButton(i, colPos - 9, rowPos + 1, '0x16CD', '0x16CE', '0x16CE', '0x0000');
+                    colPos += 140;
+                    break;
+                case 'textInput':
+                    var gumpOption = asset[1];
+                    gump.AddResizepic(colPos, rowPos , '0x0BB8', 100, 19);
+                    gump.AddTextEntry(i + 200, colPos + 5, rowPos - 1, 1159, Shared.GetVar(gumpOption,''), 100, 20);
+                    gump.AddText(colPos,rowPos - 18,554,gumpOption);
+                    gump.AddColoredPolygone(colPos, rowPos, 99, 19, '#FF666600', 1, 2, 0, 0, 0);
+                    gump.AddButton(i, colPos + 87, rowPos + 1, '0x16CF', '0x16D0', '0x16D0', '0x0000');
+                    gump.AddTooltip('Update');
+                    colPos += 135;
+                    break;
+                case 'text':
+                    var string = asset[1];
+                    var color = asset[2];
+                    var xAdj = asset[3];
+                    var yAdj = asset[4];
+                    gump.AddText(colPos + xAdj, rowPos + yAdj,color,string);
+                    colPos += (string.length * characterAdj) + xAdj;
+                    break;
+                case 'horizontalLine':
+                    var width = asset[1];
+                    var xAdj = asset[2];
+                    var yAdj = asset[3];
+                    var color = asset[4];
+                    var lineWidth = asset[5];
+                    gump.AddLine(colPos + xAdj,rowPos + yAdj, colPos + xAdj + width,rowPos + yAdj, color, lineWidth);
+                    colPos += width + 10;
+                    break;
+                case 'verticalLine':
+                    var height = asset[1];
+                    var xAdj = asset[2];
+                    var yAdj = asset[3];
+                    var color = asset[4];
+                    var lineWidth = asset[5];
+                    gump.AddLine(colPos + xAdj,rowPos + yAdj, colPos + xAdj,rowPos + yAdj + height, color, lineWidth);
+                    colPos += 10;
+                    break;
+                case 'xSpacer':
+                    var xAdjust = asset[1];
+                    colPos += xAdjust;
+                    break;
+                case 'ySpacer':
+                    var yAdjust = asset[1];
+                    rowPos += yAdjust;
+                    break;
+                case 'tooltip':
+                    var text = asset[1];
+                    gump.AddTooltip(text);
+                    break;
+                default:
+                    break;
+                }
+			i += 1;
+            }
+        colPos = columnStart;
+        rowPos += rowAdj;
+        }
+    //Custom Assets
+    
+    gump.Update();
+    Orion.Print('interval: ' + (Orion.Now() - startTime))
+	}
+
+function AliGumpCallback(_) 
+	{
+    var code = CustomGumpResponse.ReturnCode();
+    Orion.Print('Code: ' + code)
+    if(code == 0)
+        return;
+    else if(code == 100)
+        {
+        //Orion.Print(true);
+        }
+    else if(code == 101)
+        {
+        Orion.Terminate('all','AliGumpCallback');
+        Orion.Wait(50);
+        return AliGumpRenderer();
+        }
+    var i = 1;
+    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues');
+	for(var r = 0;r<gumpButtons.length;r++)
+        {
+        var row = gumpButtons[r];
+        for(var c = 0;c<row.length;c++)
+            {
+            var asset = row[c];
+            if(code == i)
+                {
+                var assetType = asset[0];
+                switch(assetType)
+                    {
+                    case 'toggle':
+                        var gumpOption = asset[1]; //Function name to toggle
+                        Orion.ToggleScript(gumpOption);
+                        break;
+                    case 'button':
+                        var gumpOption = asset[1]; //Function name to exec
+                        Orion.Exec(gumpOption,true);
+                        break;
+                    case 'textInput':
+                        var text = CustomGumpResponse.Text(code + 200);
+                        var gumpOption = asset[1]; //Shared Variable Name
+                        Shared.AddVar(gumpOption,text);
+                        Orion.Print(text);
+                        break;
+                    case 'comboBox':
+                        var gumpOption = asset[1];
+                        var value = CustomGumpResponse.ComboBox(i+300)
+                        if(value > -1)
+                            var parsedValue = asset[2 + value];
+                        else
+                            var parsedValue = undefined;
+                        Shared.AddVar(gumpOption,parsedValue);
+                        Orion.Print(gumpOption + ' value: ' + parsedValue)
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            i++
+            }
+        }
+    //Orion.Print(gumpButtons);
+    //Shared.AddArray('gumpValues',gumpButtons);
+    Orion.Wait(50);
+    AliGumpRenderer();
+	}
 
 //deprecated
 function ComponentDrop()
