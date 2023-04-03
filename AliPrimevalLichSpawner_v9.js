@@ -62,7 +62,7 @@ var profile = profiles.Primeval;
 var defaultAssets = 
     [ //functionName,displayName,assetType,value
         [ ['toggle','AutoAttack','AutoAttack'], ['toggle','AutoBuffs','AutoBuffs'], ['toggle','AutoEvade','AutoEvade'], ['toggle','AutoGatherMobs','AutoGatherMobs'] ],
-        [ ['toggle','Monitor','Monitor'], ['toggle','Listener','Listener'], ['toggle','DragonHeadMonitor','DragonMonitor'] ],
+        [ ['toggle','Monitor','Monitor'], ['toggle','Listener','Listener'], ['toggle','DragonHeadMonitor','DragonMonitor'], ['toggle','DemonSkullMonitor','DemonMonitor'] ],
         [ ['toggle','DecoHighlighter','DecoHighlighter'], ['toggle','RunAndHide','RunAndHide'], ['toggle','AlwaysAttackAdjacent','AlwaysAttackAdjacent'] ],
         [ ['toggle','DecoPickup','DecoPickup'], ['toggle','AutoTracker','AutoTracker'], ['toggle','ClearUdp','ClearUdp'] ],
         [ ['xSpacer', 150], ['textInput','ActiveCandle']]

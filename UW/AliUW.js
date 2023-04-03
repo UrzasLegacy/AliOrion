@@ -1840,49 +1840,12 @@ function AliComFollower()
 	else
 		var role = 'misc';
     Shared.AddVar('myRole',role);
-    // Bot Commands
-    function Follow(leaderSerial,distance)
-        {
-        do
-            {
-            var leaderObj = Orion.FindObject(leaderSerial);
-            Orion.CharPrint(self,1159,'Searching for Leader to follow...')
-            Orion.Wait(200);
-            } while(!leaderObj)
-        if(distance == undefined)
-            distance = 1;
-        while(true)
-            {
-            var toggle = Shared.GetVar('Follow');
-            if(toggle)
-                {
-                var leader = Shared.GetVar('Leader')
-                if(leader && leaderObj.Exists() && leaderObj.Distance() > distance)
-                    Orion.WalkTo(leaderObj.X(),leaderObj.Y(),leaderObj.Z(),distance,10,1,1);
-                }
-            Orion.Wait(100);
-            }
-        }
-
-    function TerminateAll(_)
-        {
-        Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
-        Orion.Wait(250);
-        Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
-        }
-    
-	function Target(serial)
-		{
-		Orion.TargetObject(serial);
-		}
-
-    //Main Logic
     var cmdsObj = 
         {
-        'Follow': Follow, //:leaderSerial:distance
-        'TerminateAll': TerminateAll,
-		'Target': Target, //:targetSerial
-		'AliGumpRenderer': AliGumpRenderer,
+        'Follow': true, //:leaderSerial:distance
+        'TerminateAll': true,
+		'Target': true, //:targetSerial
+		'AliGumpRenderer': true,
         }
 	Orion.RemoveAllUdpServers();
 	var port = 39999;
@@ -1937,11 +1900,48 @@ function AliComFollower()
             var functionString = recvSplit.shift();
             var callFunction = cmdsObj[functionString];
             if(callFunction)
-                callFunction.apply(null,recvSplit);
+                Orion.Exec(functionString,true,recvSplit)
             else
             	Orion.Print('Command unrecognized: ' + functionString)
             }
 		}
+	}
+
+
+//--# Bot Commands
+function Follow(leaderSerial,distance)
+	{
+	do
+		{
+		var leaderObj = Orion.FindObject(leaderSerial);
+		Orion.CharPrint(self,1159,'Searching for Leader to follow...')
+		Orion.Wait(200);
+		} while(!leaderObj)
+	if(distance == undefined)
+		distance = 1;
+	while(true)
+		{
+		var toggle = Shared.GetVar('Follow');
+		if(toggle)
+			{
+			var leader = Shared.GetVar('Leader')
+			if(leader && leaderObj.Exists() && leaderObj.Distance() > distance)
+				Orion.WalkTo(leaderObj.X(),leaderObj.Y(),leaderObj.Z(),distance,10,1,1);
+			}
+		Orion.Wait(100);
+		}
+	}
+
+function TerminateAll(_)
+	{
+	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
+	Orion.Wait(250);
+	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
+	}
+
+function Target(serial)
+	{
+	Orion.TargetObject(serial);
 	}
 
 
