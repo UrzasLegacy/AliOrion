@@ -799,13 +799,13 @@ function EquipLuckSuitByBotName()
 	Orion.Dress(setname);
 	}
 
-function EquipUWSuitByBotName()
+function EquipLRCSuitByBotName()
 	{
 	if(Orion.Contains(Player.Name(), 'Lady|Lord'))
 		var _pName = Player.Name().slice(5, Player.Name().length);
 	else
 		var _pName = Player.Name()
-	var setname = _pName + ' UW Suit'
+	var setname = _pName + ' LRC Suit'
 	Orion.Dress(setname);
 	}
 

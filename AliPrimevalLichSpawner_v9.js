@@ -1415,6 +1415,105 @@ function DragonHeadMonitor()
         }
     }
 
+function DemonSkullMonitor()
+    {
+	var create = Orion.CreateUdpServer('Candle', 50000);
+	if(create == 0)
+		Orion.Print('Server Creation Success');
+	else
+		return Orion.Print('Server Creation Fail');
+    Orion.RemoveDisplayTimer('revertTimer');
+    Orion.IgnoreReset();
+    var firstPass = true;
+	//TextWindow.Open();
+    while(true)
+        {
+		Orion.ResetSearchArea();
+        if(Orion.FindType('0x2251',any,ground,'',24)[4])
+            {
+			Orion.Wait(2000)
+            Orion.SetSearchArea(6995,953,6995,953);
+            var skull1 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+            Orion.SetSearchArea(7005,953,7005,953);
+            var skull2 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+            Orion.ResetSearchArea();
+			var data = 0;
+            if(Orion.DisplayTimerExists('revertTimer'))
+            if(!skull1 || !skull2)
+                {	
+				Orion.SetSearchArea(6995,953,6995,953);
+				var skull1 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+				Orion.SetSearchArea(7005,953,7005,953);
+				var skull2 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+				Orion.ResetSearchArea();
+				if(!skull1 || !skull2)
+					{	
+					DiscordPush('Shenanigans afoot. First FindType found something, but not the second');
+					Orion.Wait(1000);
+					Orion.PauseScript('DemonSkullMonitor');
+					}
+                }
+            if(skull1 && skull2 && !firstPass)
+                {
+				for(var i=50001;i<50010;i++)
+					Orion.UdpSend(i,'Retrieve');
+				Orion.AddDisplayTimer('revertTimer', 600000, 'AboveChar', 'bar', 'Candle Revert');
+                }
+            while(skull1 && skull2)
+                {
+				data = Orion.DisplayTimerGetTime('revertTimer');
+				for(var i=50001;i<50010;i++)
+					Orion.UdpSend(i,'Dragon:' + data);
+				Orion.SetSearchArea(6995,953,6995,953);
+				var skull1 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+				Orion.SetSearchArea(7005,953,7005,953);
+				var skull2 = Orion.FindType('0x2251',any,ground, '', 24)[0];
+				Orion.ResetSearchArea();
+                Orion.Wait(1000);
+				var susCheck = Orion.FindTypeEx(primevalGraphics,any,ground,'live',24).filter(function(mob)
+					{
+					return !Orion.Contains(mob.Properties(),'I AM A SAMPIRE|Disco Stu|Im With Leech|Thessaly|Pickle Chips|Ralph Waldo')
+					});
+				if(susCheck[0])
+					{
+					var outMsg = 'demonSkull detector found players: \n';
+					susCheck.forEach(function(mob) 
+						{
+						outMsg += '\t' + outMsg + mob.Name() + '\n';
+						Orion.Ignore(mob.Serial());
+						});
+					DiscordPush(outMsg);
+					}
+                }
+			Orion.AddDisplayTimer('revertTimer', 600000, 'AboveChar', 'bar', 'Candle Revert');
+			DiscordPush('Demon Skull Start!');
+			Orion.Wait(1000);
+			for(var i=50001;i<50010;i++)
+				Orion.UdpSend(i,'Progress');
+			Orion.AddDisplayTimer('revertTimer', 600000, 'AboveChar', 'bar', 'Candle Revert');
+            }
+        Orion.Wait(1000);
+		
+		data = Orion.DisplayTimerGetTime('revertTimer');
+		for(var i=50001;i<50010;i++)
+			Orion.UdpSend(i,'Dragon:' + data);
+		firstPass = false;
+		var susCheck = Orion.FindTypeEx(primevalGraphics,any,ground,'live',24).filter(function(mob)
+			{
+			return !Orion.Contains(mob.Properties(),'I AM A SAMPIRE|Disco Stu|Im With Leech|Thessaly|Pickle Chips|Ralph Waldo')
+			});
+		if(susCheck[0])
+			{
+			var outMsg = 'demonSkull detector found players: \n';
+			susCheck.forEach(function(mob) 
+				{
+				'\t' + outMsg + mob.Name() + '\n';
+				Orion.Ignore(mob.Serial());
+				});
+			DiscordPush(outMsg);
+			}
+        }
+    }
 
 function CandleMonitor()
     {
