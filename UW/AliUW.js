@@ -217,7 +217,7 @@ function ClearRoom()
             Orion.Cast('Divine Fury');
             Orion.Wait(1000);
             }
-    	while(Player.Hits('%') < 80)
+    	while(Player.Hits('%') < 70)
     		{
     		Orion.Wait(100);
     		}
@@ -240,7 +240,7 @@ function ClearRoom()
             Orion.Wait(1000);
             Orion.Print(locker[0].Name() + ':' + locker[0].Properties());
             keyBackpack = Orion.FindType('0x410B');
-            if(!keyBackpack)
+            if(!keyBackpack[0])
                 break;
             }
         switch(phase)    
@@ -311,7 +311,7 @@ function UWBarrelsHealSelf()
 			if(Orion.WaitForTarget(3000))
 				Orion.TargetObject(self);
 			}
-		else if(Player.Hits('%') < 60)
+		else if(Player.Hits('%') < 70)
 			{
 			Orion.Cast('Close Wounds')
 			if(Orion.WaitForTarget(3000))
