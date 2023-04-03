@@ -105,16 +105,12 @@ function initUWBarrels()
 	
 function initUWSamp()
 	{
-	if(UWSetup)
-		UWSampStartup();
 	Orion.Exec('UWSamp', true);
 	Orion.Exec('AutoAttack', true);
 	}
 
 function initUWMystic()
 	{
-	if(UWSetup)
-		UWHealerStartup();
 	Orion.Exec('UWMysticBot', true);
 	Orion.Exec('UWHealBotListen', true);
 	Orion.Exec('UWAvoidBot', true, [8]);
@@ -122,8 +118,6 @@ function initUWMystic()
 
 function initUWMage()
 	{
-	if(UWSetup)
-		UWHealerStartup();
 	Orion.Exec('SingleMageHealBot', true);
 	Orion.Exec('UWAvoidBot', true, [8]);
 	}
@@ -777,15 +771,24 @@ function ResetPosition()
 	if(Player.X() < 6000)
 		{
 		EquipUWSuitByBotName();
-		Orion.Wait(1000);
+		Orion.Wait(1300);
 		}
 	if(AliWalkTo(1700, 1636, 0, 0))//uw dock
 		{
 		var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
 		Orion.UseObject(whirlpool[0]);
-		Orion.Wait(1000);
+		Orion.Wait(1300);
+		var ethy = Orion.FindTypeEx(any).filter(function(item)
+			{
+			return Orion.Contains(item.Properties(),'Mount Hue:')
+			})[0];
+		if(ethy)
+			{
+			Orion.UseObject(ethy.Serial());
+			Orion.Wait(1300);
+			}
 		EquipLuckSuitByBotName();
-		Orion.Wait(1000);
+		Orion.Wait(1300);
 		}
 	if(AliWalkTo(6321, 1711, 0, 0))//outside boat
 		{
