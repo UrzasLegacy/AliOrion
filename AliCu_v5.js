@@ -572,7 +572,7 @@ function TestBlazeProtocol()
     var a = Orion.GetSerial('myTarget');
     Shared.AddVar('cuSerial',a);
     Orion.CharPrint(a,1159,a)
-    BlazeProtocol()
+    BlazeProtocol(a)
     }
 
 

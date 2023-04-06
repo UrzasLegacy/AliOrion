@@ -770,6 +770,11 @@ function ResetPosition()
 	 	}
 	if(Player.X() < 6000)
 		{
+		while(Orion.ObjectAtLayer('Mount'))
+			{
+			Orion.UseObject(self);
+			Orion.Wait(1300);
+			}
 		EquipUWSuitByBotName();
 		Orion.Wait(1300);
 		}
