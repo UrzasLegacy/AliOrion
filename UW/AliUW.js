@@ -1,5 +1,5 @@
 //Create a findlist for autoloot named 'BotLoot'
-var Version = '3.5'
+var Version = '3.11'
 var leaderSerial = '0x01DD7DAE'; //Apollo
 
 var profile = 
@@ -14,12 +14,11 @@ var profile =
 	useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
 	useConsecrateWeapon: true, //boolean. Set to true to maintain Consecrate Weapon at all times.
 	useDivineFury: true, //boolean, Set to true to maintain Divine Fury at all times.
-	useConfidence: false, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
+	useConfidence: true, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
 		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
 	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
 		discordHook: '887268637315047444', //Put Discord WebHook here
 		discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-	journalScanType: 'GM', //'GM'
 	}
 
 Orion.Exec('JournalScan', true);
@@ -107,18 +106,13 @@ function initUWSamp()
 	{
 	Orion.Exec('UWSamp', true);
 	Orion.Exec('AutoAttack', true);
-	}
-
-function initUWMystic()
-	{
-	Orion.Exec('UWMysticBot', true);
-	Orion.Exec('UWHealBotListen', true);
-	Orion.Exec('UWAvoidBot', true, [8]);
+	Orion.Exec('AutoBuffs', true);
+	Orion.Exec('AutoEvade', true);
 	}
 
 function initUWMage()
 	{
-	Orion.Exec('SingleMageHealBot', true);
+	Orion.Exec('UWHealBot', true);
 	Orion.Exec('UWAvoidBot', true, [8]);
 	}
 
@@ -303,19 +297,21 @@ function UWBarrelsHealSelf()
 	}
 
 //--#Leader
-function ________________________Leader(_){}
+function ________________________LEADER(_){}
 
 function UWHealLeader()
     {
     while(true)
         {
-        var target = injuredCheck(.8)
+        var target = injuredCheck(.8);
         if(target)
             {
-            var healer = healerArr.shift()
+			var healerArr = Shared.GetArray('healer');
+            var healer = healerArr.shift();
             healerArr.push(healer);
+			Shared.AddArray('healer');
             Orion.TargetSystemSerial(target.Serial());
-            Orion.SayGuild(healer + ':' + target.Serial())
+			Orion.UdpSend(healer[0],'HealTarget:' + healer[1]); //[botPort,botSerial,botName,botRole]
             Orion.Wait(500);
             }
         Orion.Wait(100);
@@ -389,6 +385,7 @@ function UWSamp()
 
 function AutoBuffs()
     {
+	Orion.Exec('BuffMonitor',true);
     var useConfidence = profile.useConfidence;
     var useConfidenceThresholdPercent = profile.useConfidenceThresholdPercent;
     var useEnemyOfOne = profile.useEnemyOfOne;
@@ -495,6 +492,7 @@ function AutoEvade()
 	{
 	var lowestHPPercent = 30;
 	var highestHPPercent = 50;
+	Orion.Exec('BuffMonitor',true);
 	while(!Player.Dead())
 		{
 		var count = Orion.FindType(any, any, ground, 'live|inlos|ignorefriends|ignoreself|nothuman', 20, 'gray|criminal|red').length;
@@ -524,11 +522,11 @@ function AutoAttack()
             case 0:
                 break;
             case 1:
-				if(useOnslaught & !Orion.DisplayTimerExists('onslaughtTimer'))
+				if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
 					{
 					Orion.Cast('Onslaught');
 					var startTime = Orion.Now();
-					var endTime = Orion.Now() + 3000;
+					var endTime = startTime + 3000;
 					var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
 					if(check)
 						Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
@@ -565,13 +563,6 @@ function AutoAttack()
         }
     }
 
-function AttackNearest()
-    {
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 24, 'gray|criminal|red')[0]; 
-    Orion.TargetSystemSerial(target);
-    Orion.Attack(target);
-    }
-
 function GatherMobs()
     {
     Orion.FindType(any, any, ground, 'live|inlos|ignorefriends|ignoreself|nothuman', 20, 'gray|criminal|red')
@@ -596,11 +587,10 @@ function AttackNearest()
 
 function AutoInsure() 
 	{
-	var insureFind = profile.insureFindList;
 	var searchFrequency = 1000;
 	while(!Player.Dead())
 		{
-		var items = Orion.FindList(insureFind).filter(function(ele)
+		var items = Orion.FindList('BotLoot').filter(function(ele)
 			{
 			var obj = Orion.FindObject(ele);
 			return !Orion.Contains(obj.Properties(),'insured');
@@ -621,19 +611,15 @@ function AutoInsure()
 //-#Healers
 function ________________________HEALERS(_){}
 
-function injuredCheck(range, threshold, healDead)
+function UWHealBot()
 	{
-	var flags = healDead ? 'ignoreself|mobile' : 'ignoreself|live';
-	var injurelist = Orion.FindTypeEx(any, any, ground, flags, range, 'green')
-		.filter(function(part)
-			{
-			return part.Hits('%') < threshold;
-			}).sort(function(a,b)
-				{
-				return a.Hits() - b.Hits();
-				});
-	return injurelist[0];
-    }
+	while(!Player.Dead())
+		{	
+        Orion.Wait(50)	
+		if(!Orion.HaveTarget() && !Player.Frozen())
+			Orion.Cast("Greater Heal");
+		}
+	}
 
 function SingleMageHealBot()
 	{
@@ -665,52 +651,6 @@ function SingleMageHealBot()
 				}
 			}
 		Orion.Wait(300);
-		}
-	}
-
-function UWMysticBot()
-	{
-	if(Orion.WalkTo(6432, 1699, 0, 0))
-		{
-		var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
-		Orion.UseObject(ladder[0]);
-	 	Orion.Wait(500);
-	 	}
-	if(Orion.WalkTo(6306, 1711, 0, 0))
-		{
-		Orion.Step(128, true);
-	 	}
-	Orion.Wait(500);
-	Orion.Resend();
-	Orion.Wait(500);
-	while(!Player.Dead())
-		{	
-        Orion.Wait(50)
-		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
-			{
-			return (part.Properties().match(/Shadowlord/i))
-			});
-		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
-			{
-			return (part.Properties().match(/Evil/i))
-			});
-	   	if(lord[0])
-			{
-			WalkToRadiusBorder(lord[0].Serial(), 5);
-			}
-		if(corpse[0])
-    		{
-    		//BotPush('Shadowlord Dead!');
-    		Orion.Wait(Orion.Random(1,5) * 1000);   		
-    		Orion.WalkTo(corpse[0].X(),corpse[0].Y());
-    		ListLoot("BotLoot");
-    		Orion.Wait(100);
-            Orion.Terminate('all');
-    		Orion.Wait(100);
-    		break;
-    		}		
-		if(!Orion.HaveTarget() && !Player.Frozen())
-			Orion.Cast("Cleansing Winds");
 		}
 	}
 
@@ -754,23 +694,21 @@ function EquipUWSuitByBotName()
 
 function ResetPosition()
 	{
-	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|ResetPosition');
-	Orion.Wait(250);
-	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|ResetPosition');
-	if(AliWalkTo(6432, 1633, 0, 0)) //uwboss area
+	TerminateAll('ResetPosition');
+	if(AliWalkTo(6432, 1633, 0, 0, 255, 1, 1)) //uwboss area
 		{
 		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
 		Orion.UseObject(ladder[0]);
 		Orion.Wait(500);
 		}
-	if(AliWalkTo(6305, 1673, 0, 0)) //upper deck
+	if(AliWalkTo(6305, 1673, 0, 0, 255, 1, 1)) //upper deck
 		{
 	 	var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
 	 	Orion.UseObject(ladder[0]);
 	 	}
 	if(Player.X() < 6000)
 		{
-		while(Orion.ObjectAtLayer('Mount'))
+		while(Orion.ObjAtLayer('Mount'))
 			{
 			Orion.UseObject(self);
 			Orion.Wait(1300);
@@ -778,16 +716,21 @@ function ResetPosition()
 		EquipUWSuitByBotName();
 		Orion.Wait(1300);
 		}
-	if(AliWalkTo(1700, 1636, 0, 0))//uw dock
+	if(AliWalkTo(1700, 1636, 0, 0, 255, 1, 1))//uw dock
 		{
+		var playerX = Player.X();
+		var playerY = Player.Y();
 		var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
-		Orion.UseObject(whirlpool[0]);
-		Orion.Wait(1300);
+		while(Player.X() == playerX && Player.Y() == playerY)
+			{
+			Orion.UseObject(whirlpool[0]);
+			Orion.Wait(1300);
+			}
 		var ethy = Orion.FindTypeEx(any).filter(function(item)
 			{
 			return Orion.Contains(item.Properties(),'Mount Hue:')
 			})[0];
-		if(ethy)
+		while(ethy && !Orion.ObjAtLayer('Mount'))
 			{
 			Orion.UseObject(ethy.Serial());
 			Orion.Wait(1300);
@@ -795,11 +738,11 @@ function ResetPosition()
 		EquipLuckSuitByBotName();
 		Orion.Wait(1300);
 		}
-	if(AliWalkTo(6321, 1711, 0, 0))//outside boat
+	if(AliWalkTo(6321, 1711, 0, 0, 255, 1, 1))//outside boat
 		{
 	 	Orion.Wait(500);
 	 	}
-	if(AliWalkTo(6432, 1699, 0, 0))//below deck
+	if(AliWalkTo(6432, 1699, 0, 0, 255, 1, 1))//below deck
 		{
 		Orion.Wait(10);
 		}
@@ -808,32 +751,30 @@ function ResetPosition()
 
 function LeaveUW()
 	{
-	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|LeaveUW');
-	Orion.Wait(250);
-	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|LeaveUW');
-	if(AliWalkTo(6432, 1633, 0, 0))
+	TerminateAll('LeaveUW');
+	if(AliWalkTo(6432, 1633, 0, 0, 255, 1, 1))
 		{
 		var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
 		Orion.UseObject(ladder[0]);
 		Orion.Wait(500);
 		}
-	if(AliWalkTo(6305, 1673, 0, 0))
+	if(AliWalkTo(6305, 1673, 0, 0, 255, 1, 1))
 		{
 	 	ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
 	 	Orion.UseObject(ladder[0]);
 	 	Orion.Wait(500);
 	 	}
-	 if(AliWalkTo(6447, 1743, 0, 0))
+	 if(AliWalkTo(6447, 1743, 0, 0, 255, 1, 1))
 		{
 	 	Orion.Wait(500);
 	 	}
-	 if(AliWalkTo(6279, 1772, 0, 0))
+	 if(AliWalkTo(6279, 1772, 0, 0, 255, 1, 1))
 		{
 	 	var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
 		Orion.UseObject(rope[0]);
 		Orion.Wait(500);
 	 	}
-	 if(AliWalkTo(1700, 1564, 0, 0))
+	 if(AliWalkTo(1700, 1564, 0, 0, 255, 1, 1))
 		{
 		Orion.Wait(10);
 	 	}
@@ -846,22 +787,13 @@ function LootUW()
     //ListLoot('BotLoot', "ignorelist")
     }
 
-function TerminateScripts()
-	{
-	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
-	Orion.Wait(250);
-	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
-	}
-
 function RecallTithe()
 	{
     var tithingPoints = Player.TithingPoints();
     Orion.Print('Current Tithing Points: ' + tithingPoints)
 	if(tithingPoints > 10000)
         return;
-    Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallTithe');
-    Orion.Wait(500);
-    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RecallTithe');
+	TerminateAll('RecallTithe')
     RecallByGump('Main','Tithing','Main','Tithing2');
     Tithe();
 	Orion.Wait(1500);
@@ -913,9 +845,7 @@ function Tithe()
 
 function RecallRepair()
 	{
-    Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallRepair');
-    Orion.Wait(500);
-    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RecallRepair');
+	TerminateAll('RecallRepair')
 	RecallByGump('Main', 'Home', 'Main', 'Home2');
 	Orion.WarMode(0);
 	do
@@ -1283,12 +1213,7 @@ function JournalScan()
 	{
 	var useDiscordPush = profile.useDiscordPush;
 	var useAlarmSound = true//profile.useAlarmSound;
-	var journalScanType = profile.journalScanType;
 	var msg = 'GM'
-	if(Orion.Contains(journalScanType, 'Equipment Damage'))
-		msg += '|equipment is severely';
-	if(Orion.Contains(journalScanType, 'Control Messages'))
-		msg += '|inithome|initfarm|initscripts|haltscripts|closefollow'
 	while(true)
 		{
 		var check = Orion.WaitJournal(msg, Orion.Now(), 0);
@@ -1309,34 +1234,6 @@ function JournalScan()
 					//Orion.CloseUO();
 					Orion.Wait(6000);
 					break;
-				case 'severely':
-					if(useDiscordPush)
-						DiscordPush(Player.Name() + ": Equipment is damaged")
-					//if(useAlarmSound)
-						//Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-					Orion.Terminate('all', 'JournalScan');
-					Orion.Exec('RunAndHide',true);
-					break;
-				case 'inithome':
-					Orion.Terminate('all', 'JournalScan');
-					Orion.Wait(2000);
-					Orion.Exec('RecallByGump', true, ['Main','Home']);
-					break;
-				case 'initfarm':
-					Orion.Terminate('all', 'JournalScan');
-					Orion.Exec('WalkThroughCurrentFarm', true);
-					break;
-				case 'initscripts':
-					Orion.Terminate('all', 'JournalScan');
-					initScripts();
-					break;
-				case 'haltscripts':
-					Orion.Terminate('all', 'JournalScan');
-					break;
-				case 'closefollow':
-					Orion.Terminate('all', 'JournalScan');
-					Orion.Exec('CloseFollow', true);
-					break;
 				default:
 					break;
 				}
@@ -1346,6 +1243,20 @@ function JournalScan()
 
 //--# Helpers
 function ________________________HELPERS(_){}
+
+function injuredCheck(range, threshold, healDead)
+	{
+	var flags = healDead ? 'ignoreself|mobile' : 'ignoreself|live';
+	var injurelist = Orion.FindTypeEx(any, any, ground, flags, range, 'green')
+		.filter(function(part)
+			{
+			return part.Hits('%') < threshold;
+			}).sort(function(a,b)
+				{
+				return a.Hits() - b.Hits();
+				});
+	return injurelist[0];
+    }
 
 function UWAvoidBot(distance)
 	{
@@ -1369,24 +1280,25 @@ function UWAvoidBot(distance)
         Orion.Wait(100)
 		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
 			{
-			return part.Properties().match(/Shadowlord/i);
+			return Orion.Contains(mob.Properties(),'Shadowlord');
 			});
 		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
 			{
-			return part.Properties().match(/Evil/i);
+			return Orion.Contains(mob.Properties(),'Evil');
 			});
-	   	if(lord[0])
+	   	if(lord.length)
 			{
             WalkToRadiusBorder(lord[0].Serial(), distanceActual);
 			}
-		if(corpse[0])
+		if(corpse.length)
     		{
     		//BotPush('Shadowlord Dead!');
     		Orion.Wait(Orion.Random(1,5) * 1000);   		
-    		Orion.WalkTo(corpse[0].X(),corpse[0].Y());
+    		AliWalkTo(corpse[0].X(),corpse[0].Y());
     		ListLoot("BotLoot");
     		Orion.Wait(100);
-            Orion.Terminate('all');
+            TerminateAll('UWAvoidBot')
+			break;
     		}		
 		}
 	}
@@ -1805,35 +1717,6 @@ function AliComLeader()
 		}
 	}
 
-
-								function UWHealBotListen()
-								{
-								if(Orion.Contains(Player.Name(), 'Lady|Lord'))
-									var _pName = Player.Name().slice(5, Player.Name().length)
-								else
-									var _pName = Player.Name()
-								while(true)
-									{
-									var listen = Orion.WaitJournal(_pName, Orion.Now(), 0);
-									if(listen && listen.Color() == 0x03B2 && Orion.HaveTarget())
-										{
-										var listenArr = Orion.Split(listen.Text(), ':')
-										if(Orion.GetDistance(listenArr[1]) > 9)
-											{
-											Orion.PauseScript('UWMysticBot')
-											WalkToRadiusBorder(listenArr[1], 6) 
-											Orion.TargetObject(listenArr[1])
-											Orion.ResumeScript('UWMysticBot')  
-											}
-										else
-											{
-											Orion.TargetObject(listenArr[1])
-											}
-										}
-									Orion.Wait(10);
-									}
-								}
-
 function AliComFollower()
 	{
 	if(Orion.SkillValue('Archery') >= 1000)
@@ -1937,18 +1820,34 @@ function Follow(leaderSerial,distance)
 		}
 	}
 
-function TerminateAll(_)
+function TerminateAll(additionalScripts)
 	{
-	Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader');
+	var flag = 'JournalScan|AliComFollower|AliComLeader';
+	if(additionalScripts !== undefined)
+		flag += '|' + additionalScripts;
+	Orion.PauseScript('all',flag);
 	Orion.Wait(250);
-	Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader');
+	Orion.Terminate('all',flag);
 	}
-
-function Target(serial)
+	
+function TargetHeal(serial)
 	{
-	Orion.TargetObject(serial);
+	var obj = Orion.FindObject(serial);
+	if(obj)
+		{
+		Orion.Print('Targeting: ' + obj.Name());
+		if(obj.Distance() > 9)
+			{
+			Orion.Print('Targeting: ' + obj.Name());
+			Orion.PauseScript('UWAvoidBot');
+			WalkToRadiusBorder(serial, 6);
+			Orion.TargetObject(serial);
+			Orion.ResumeScript('UWAvoidBot');
+			}
+		else
+			Orion.TargetObject(serial);
+		}
 	}
-
 
 //--# Leader Commands
 function MiscFollowMe()

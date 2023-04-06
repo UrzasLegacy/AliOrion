@@ -37,6 +37,7 @@ var profiles =
         leashLeader: 0x003DB071, //Serial number of leader
         useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
             singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+		useOnslaught: true,
         useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
             whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
         useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
