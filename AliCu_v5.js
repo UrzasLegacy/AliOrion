@@ -468,6 +468,7 @@ function LoreParser(mobSerial,mobColor)
     gump.Update()
     return [hp,cold,ener];
 	} 
+
 function AttackSpawn()
 	{
     //cu 0x0115
@@ -527,7 +528,7 @@ function AttackSpawn()
             var startTime = Orion.Now();
             var endTime = startTime + 5000;
             AppendColor(mobColor);
-            Orion.WaitJournal('corpses to loot: 0',startTime,endTime,'oa')
+            Orion.WaitJournal('corpses to loot: 0',startTime,endTime,'oa');
             //Orion.Wait(3000);
 			mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 24, 'gray|criminal|red').sort(function(a,b)
                 {
@@ -537,6 +538,8 @@ function AttackSpawn()
 		Orion.ResumeScript('WalkSpawn');
 		Orion.Wait(200);
 		}
+    DiscordPush(Player.Name() + ' Died!');
+    Orion.LogOut();
 	}
 
 function HonorTarget(targetSerial)

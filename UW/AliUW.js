@@ -1,5 +1,5 @@
 //Create a findlist for autoloot named 'BotLoot'
-var Version = '3.11'
+var Version = '3.13'
 var leaderSerial = '0x01DD7DAE'; //Apollo
 
 var profile = 
@@ -323,60 +323,46 @@ function ________________________MELEE(_){}
 
 function UWSamp()
 	{
-	if(Orion.WalkTo(6432, 1699, 0, 0))
-		{
-		var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
-		Orion.UseObject(ladder[0]);
-	 	Orion.Wait(500);
-	 	}
-	 if(Orion.WalkTo(6306, 1711, 0, 0))
-		{
-		Orion.Step(128, true);
-	 	}
-	Orion.Wait(500);
-	Orion.Resend();
-	Orion.Wait(500);
 	while(!Player.Dead())
 		{	
-		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
-				{
-				return (part.Properties().match(/Shadowlord/i))
-				});
-		var wisp = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
-				{
-				return (part.Properties().match(/wisp/i))
-				});
-		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
-				{
-				return (part.Properties().match(/Evil/i))
-				});
-	   	if(wisp[0])
+		var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(mob)
+			{
+			return Orion.Contains(mob.Properties(),'Shadowlord');
+			});
+		var wisp = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(mob)
+			{
+			return Orion.Contains(mob.Properties(),'wisp');
+			});
+		var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(mob)
+			{
+			return Orion.Contains(mob.Properties(),'Evil');
+			});
+	   	if(wisp.length)
 			{
 			wisp.forEach(function(part)
-						{
-						Orion.Attack(part.Serial());
-						Orion.Wait(50);
-						});
+				{
+				Orion.Attack(part.Serial());
+				Orion.Wait(50);
+				});
 			if(wisp[0].Distance() > 0)
 				Orion.WalkTo(wisp[0].X(),wisp[0].Y(), 0, 0);
 			else
 				Orion.Attack(wisp[0].Serial());
 			}
-	   	else if(lord[0])
+	   	else if(lord.length)
 			{
 			if(lord[0].Distance() > 1)
 				Orion.WalkTo(lord[0].X(),lord[0].Y(), 0, 1);
 			else
 				Orion.Attack(lord[0].Serial());
 			}
-		if(corpse[0])
+		if(corpse.length)
     		{
     		Orion.Wait(500);   		
-    		Orion.WalkTo(corpse[0].X(),corpse[0].Y());
+    		AliWalkTo(corpse[0].X(),corpse[0].Y());
     		ListLoot("BotLoot");
     		Orion.Wait(100);
-            Orion.Terminate('all');
-    		Orion.Wait(100);
+			TerminateAll('UWSamp');
     		break;
     		}		
         Orion.Wait(250);
