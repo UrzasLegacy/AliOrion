@@ -176,7 +176,7 @@ function AutoAttack()
     var useMomentumStrike = profile.useMomentumStrike;
     var useWhirlwind = profile.useWhirlwind;
     var whirlwindSpecial = profile.whirlwindSpecial;
-	var useOnslaught = true;
+	var useOnslaught = profile.useOnslaught;
     while(!Player.Dead())
         {
         var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 2, 'gray|red|criminal|orange');
@@ -188,11 +188,11 @@ function AutoAttack()
             case 0:
                 break;
             case 1:
-				if(useOnslaught & !Orion.DisplayTimerExists('onslaughtTimer'))
+				if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
 					{
 					Orion.Cast('Onslaught');
 					var startTime = Orion.Now();
-					var endTime = Orion.Now() + 3000;
+					var endTime = startTime + 3000;
 					var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
 					if(check)
 						Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
