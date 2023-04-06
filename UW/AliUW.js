@@ -155,19 +155,19 @@ function UWBarrels()
     }
 
 function ClearRoom()
-     {
-     Orion.IgnoreReset();
-     Orion.ClearFakeMapObjects();
+    {
+    Orion.IgnoreReset();
+    Orion.ClearFakeMapObjects();
     Orion.Exec('UWBarrelsHealSelf',true);
-     var locker = Orion.FindTypeEx(0x285E, any, ground, 'near', 24);
-     var lockerX = locker[0].X();
-     var lockerY = locker[0].Y();
-     if(Player.X() > lockerX)
-         var x1 = lockerX + 4;
-     else
-         var x1 = lockerX - 4;
-     var y1 = lockerY;
-     var x2 = lockerX;
+    var locker = Orion.FindTypeEx(0x285E, any, ground, 'near', 24);
+    var lockerX = locker[0].X();
+    var lockerY = locker[0].Y();
+    if(Player.X() > lockerX)
+        var x1 = lockerX + 4;
+    else
+        var x1 = lockerX - 4;
+    var y1 = lockerY;
+    var x2 = lockerX;
     var y2 = lockerY;
     var phase = 1;
     while(!Player.Dead()) 
@@ -689,9 +689,9 @@ function ResetPosition()
         }
     if(AliWalkTo(6305, 1673, 0, 0, 255, 1, 1)) //upper deck
         {
-         var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
-         Orion.UseObject(ladder[0]);
-         }
+        var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
+        Orion.UseObject(ladder[0]);
+        }
     if(Player.X() < 6000)
         {
         while(Orion.ObjAtLayer('Mount'))
@@ -726,8 +726,8 @@ function ResetPosition()
         }
     if(AliWalkTo(6321, 1711, 0, 0, 255, 1, 1))//outside boat
         {
-         Orion.Wait(500);
-         }
+        Orion.Wait(500);
+        }
     if(AliWalkTo(6432, 1699, 0, 0, 255, 1, 1))//below deck
         {
         Orion.Wait(10);
@@ -746,24 +746,24 @@ function LeaveUW()
         }
     if(AliWalkTo(6305, 1673, 0, 0, 255, 1, 1))
         {
-         ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
-         Orion.UseObject(ladder[0]);
-         Orion.Wait(500);
-         }
+        ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
+        Orion.UseObject(ladder[0]);
+        Orion.Wait(500);
+        }
      if(AliWalkTo(6447, 1743, 0, 0, 255, 1, 1))
         {
-         Orion.Wait(500);
-         }
+        Orion.Wait(500);
+        }
      if(AliWalkTo(6279, 1772, 0, 0, 255, 1, 1))
         {
-         var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
+        var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
         Orion.UseObject(rope[0]);
         Orion.Wait(500);
-         }
+        }
      if(AliWalkTo(1700, 1564, 0, 0, 255, 1, 1))
         {
         Orion.Wait(10);
-         }
+        }
     Orion.Wait(500);
     }
 
@@ -901,13 +901,13 @@ function RepairGear()
             if(!objDict && Orion.Contains(objProperties, 'Durability'))
                 Orion.Print('Item needs to be added: ' + obj.Graphic() + ': ' + obj.Name())
             else if(Orion.Contains(objProperties, 'Durability'))
-                  {
+                {
                 var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/)
                 var min = +dura[1];
                 var max = +dura[2];
                 if(dura[0] && min < durabilityThreshold * 2 && min < max)
                     outStrs.push(layers[obj.Layer()] + ':::' + obj.Name() + ':::' + min + ':::' + max);
-                  }
+                }
             }
           }
     if(!outStrs[0])
@@ -975,7 +975,7 @@ function RepairGear()
             var objProperties = obj.Properties();
             var objDict = repairDict[obj.Graphic()];
             if(Orion.Contains(objProperties, 'Durability') && objDict)
-                  {
+                {
                 var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/)
                 var min = +dura[1];
                 var max = +dura[2];
@@ -1011,10 +1011,10 @@ function RepairGear()
                         Orion.WaitForGump(2000);
                         }		   
                     }
-                  }
+                }
             }
         Orion.Wait(100);
-          }
+        }
     Orion.Wait(1000);
     for(var i=1;i<layers.length;i++)
         {
@@ -1295,11 +1295,11 @@ function ParseWinch(_)
     if(!winch)
         return false;
     var winchProps = winch.Properties();
-    var statusArr = winchProps.match(/>(\w+)</g)
+    var statusArr = winchProps.match(/>(\w+)</g);
     var statusMap = statusArr.map(function(ele)
         {
-        return ele == '>READY<'
-        })
+        return ele == '>READY<';
+        });
     Orion.Print(statusMap);
     }
 
@@ -1319,9 +1319,9 @@ function CloseAllGumps(_)
 function ListLoot(findlist,ignorelist)  //v1
     {
     var list = Orion.FindTypeEx('0x2006', '-1', ground, '2').filter(function(part)
-            {
-            return (part.Properties().match(/Evil/i))
-            });
+        {
+        return (part.Properties().match(/Evil/i))
+        });
     if(list.length) 
         var corpse = list[0];
     else
@@ -1525,7 +1525,6 @@ function WalkToRadiusBorder(targetSerial, distance)
         var x = target.X();
         var y = target.Y();
         var z = target.Z();
-    
         var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
             .filter(function(tile) 
                 {
@@ -2099,13 +2098,13 @@ function AliGumpCallback(_)
                         else
                             var parsedValue = undefined;
                         Shared.AddVar(gumpOption,parsedValue);
-                        Orion.Print(gumpOption + ' value: ' + parsedValue)
+                        Orion.Print(gumpOption + ' value: ' + parsedValue);
                         break;
                     default:
                         break;
                     }
                 }
-            i++
+            i++;
             }
         }
     //Orion.Print(gumpButtons);
