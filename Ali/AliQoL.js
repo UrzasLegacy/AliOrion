@@ -1103,3 +1103,90 @@ function MoveCommodityDeeds()
         Orion.Wait(1300);
         } while(commodity)
 	}
+
+function TeleportChargeCounter()
+    {
+    Orion.CharPrint(self,1159,'Target container full of rings');
+    Orion.WaitForAddObject('myTarget');
+    var container = Orion.GetSerial('myTarget');
+    while(!Orion.GumpExists('container', container))
+        {
+        Orion.UseObject(container);
+        Orion.Wait(1300);
+        }
+    var rings = Orion.FindTypeEx(any,any,container).filter(function(ring)
+        {
+        return Orion.Contains(ring.Properties(), 'Ring') && Orion.Contains(ring.Properties(), 'Teleport Charges:')
+        });
+    var charges = rings.reduce(function(sum, current)
+        {
+        var currentCharges = +((current.Properties().match(/Teleport Charges: (\d+)/) || [])[1] || 0);
+        return sum + currentCharges;
+        }, 0);
+    Orion.Print('Total charges: ' + charges);
+    Orion.Print('Average charges per ring: ' + (charges/rings.length));
+    }
+
+function VendorRepricer()
+    {
+    var adjAmount = .9; //multiply current price by this to get adjusted price
+    Orion.CancelWaitPrompt();
+    if(Orion.PromptExists())
+        Orion.SendPrompt(' ');
+    Orion.CharPrint(self,1159,'Choose vendor or container to deprice')
+    Orion.WaitForAddObject('myTarget');
+    var containerSerial = Orion.GetSerial('myTarget');
+    var containerObj = Orion.FindObject(containerSerial);
+    if(containerObj.Mobile())
+    	var vendorContainer = Orion.ObjAtLayer('backpack', containerSerial).Serial();
+    else
+    	var vendorContainer = containerSerial
+    while(!Orion.GumpExists('container', vendorContainer))
+        {
+        Orion.UseObject(vendorContainer)
+        Orion.Wait(1300);
+        }
+    var items = Orion.FindTypeEx(any,any, vendorContainer);
+    for(var i=0;i<items.length;i++)
+        {
+        var item = items[i];
+        var priceString = (item.Properties().match(/Price: ([\d,]+)/) || [])[1];
+        if(!priceString)
+            continue;
+        var itemSerial = item.Serial();
+        var itemX = item.X();
+        var itemY = item.Y();
+        var priceNumber = +priceString.replace(/,/g, '');
+        var adjPrice = Math.floor(priceNumber * adjAmount);
+        Orion.Print(item.Name());
+        Orion.Print(priceNumber + ' -> ' + adjPrice);
+        Orion.MoveItem(itemSerial);
+        Orion.Wait(1300);
+        Orion.WaitPrompt(adjPrice);
+        Orion.Wait(700);
+        Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY);
+        Orion.Wait(700);	
+        Orion.CancelWaitPrompt();
+        if(Orion.PromptExists())
+            Orion.SendPrompt(' ');
+        Orion.Wait(700);
+        }
+    }
+
+function BuyFromPlayerVendor()
+    {
+    Orion.WaitForAddObject('myTarget')
+    var itemSerial = Orion.GetSerial('myTarget');
+    Orion.WaitContextMenuID(itemSerial, 608);
+    Orion.RequestContextMenu(itemSerial);
+    if(Orion.WaitForGump(2000))
+        {
+        var gump0 = Orion.GetGump('last');
+        if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000F3E60'))
+            {
+            gump0.Select(Orion.CreateGumpHook(2));
+            Orion.Wait(100);
+            }
+        }
+    Orion.Wait(1300);
+    }
