@@ -575,7 +575,7 @@ function GMJournalScan()
                     Orion.Step('n');
 					Orion.OAOptionSet('AutoReconnect', '0');
 					Orion.Wait(2000);	
-					Orion.LogOut();		
+					//Orion.LogOut();		
 					break;	
 				default:
 					break;

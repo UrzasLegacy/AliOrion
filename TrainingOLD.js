@@ -1,178 +1,119 @@
-Orion.Exec('JournalScan',true);
 //#include Master/VarietyFunctions.oajs
 //#include Master/MonitorFunctions.oajs
 //#include Master/CallFunctions.oajs
-var gumpID = 420420
-
-function AliTrainer()
-    {
-    Shared.AddVar('Skill',skills[0][0])
-    GumpRenderer(Shared.GetVar('Skill'))
-    }
-
-function GumpRenderer(CurrentSkill,running)
-    {
-    var buttonSerial = 100;
-    var skillArr = skills.filter(function(skill)
-        {
-        return skill[0] == CurrentSkill;
-        })[0];
-    var gump = Orion.CreateCustomGump(gumpID);
-    gump.Clear();
-    gump.SetCallback('GumpCallback');
-    var bground = 'a3c';
-    gump.AddResizepic(0, 0, bground, 710, 430);
-    gump.AddText(300, 5,"0x002F", skillArr[0]);
-    gump.AddButton(100, 315, 400, '0x0EF', '0x0F0', '0x0F0', '0');
-    if(!running)
-        {
-        gump.AddComboBox(101, 20, 20, '0x0BB8', 0, '0x0BB8', 125, -3,skills.length + 1);
-        for(var i=0;i<skills.length;i++)
-            {
-            var skill = skills[i];
-            var selected = 0;
-            if(skill[0] == Shared.GetVar('Skill'))
-                selected = 1;
-            gump.AddComboBoxText(skill[0], '0', selected);
-            }
-        }
-    gump.AddHtmlGump(102, 390, 20, 300, 365, '0x0BB8', 1, 0,'1', 'Setup Instructions:\n\n' + skillArr[3]);
-
-    gump.Update();
-    }
-
-function TrackingGump(CurrentSkill)
+function TrainTracking()
 	{
-    var skillArr = skills.filter(function(skill)
-        {
-        return skill[0] == CurrentSkill;
-        })[0];
-	var startValue = Orion.SkillValue(skillArr[0]);
-	var startTime = Orion.Now();
 	while(true)
 		{
-        var gump = Orion.CreateCustomGump(gumpID);
-        gump.Clear();
-        var bground = 'a3c';
-        gump.AddResizepic(0, 0, bground, 710, 430);
-        gump.AddText(300, 5,"0x002F", skillArr[0]);
-        gump.AddButton(100, 315, 400, '0x0EF', '0x0F0', '0x0F0', '0');
-        gump.AddComboBox(101, 20, 20, '0x0BB8', 0, '0x0BB8', 125, -3,skills.length + 1);
-        for(var i=0;i<skills.length;i++)
+		if(!Player.Hidden())
+			{		
+			Orion.UseSkill('Tracking');
+			Orion.Wait(1000);
+			}
+		}
+	}
+	
+function TrainAnimalLore()
+	{
+	Orion.WaitForAddObject('myTarget')
+	var serial = Orion.GetSerial('myTarget');
+	while(true)
+		{
+		Orion.UseSkill('Animal Lore');
+		if(Orion.WaitForTarget(2000))
+			Orion.TargetObject(serial);
+		Orion.Wait(500);
+		}
+	}
+function Catalogue()
+    {
+    var safes = Orion.FindTypeEx('0x9C18|0x9C19',any,ground,'item',20)
+        .map(function(safe)
+            {   
+            var gump = Orion.GetGump(any);
+            while(gump)
+                {
+                Orion.Print('Closing gump: ' + gump.ID());
+                gump.Select(Orion.CreateGumpHook(0));
+                Orion.Wait(200);
+                gump = Orion.GetGump(any);
+                }
+            while(safe.Distance() > 2)
+                {
+                Orion.WalkTo(safe.X(),safe.Y())
+                Orion.Wait(500);
+                }
+            while(!Orion.GumpExists((any,'0x000F3ED6')))
+                {
+                Orion.UseObject(safe.Serial());
+                Orion.WaitForGump(1300);
+                }
+            var gump = Orion.GetGump(any, '0x000F3ED6');
+            var textList = gump.TextList();
+            var platBid = textList[0] || 0;
+            var goldBid = textList[1] || 0;
+            var platBuy = textList[2] || 0;
+            var goldBuy = textList[3] || 0;
+            Orion.SetSearchArea(safe.X(),safe.Y(),safe.X(),safe.Y())
+            var items = Orion.FindTypeEx('0x0FF1',any,ground,'item',20)[0];
+            var bookInd = items.filter(function(item){return item.Graphic() == '0x0FF1'})[0]
+            var saleItem = items.filter(function(item){return !Orion.Contains(item.Graphic(),'0x0FF1|0x9C18|0x9C19')})[0]
+            Orion.ResetSearchArea();
+            if(bookInd)
+                bookInd = +bookInd.Name();
+            else
+                bookInd = 'MissingIndex';
+            if(saleItem)
+                saleItem = saleItem.Properties();
+            else
+                saleItem = 'MissingItem';
+            var outStr = bookInd + '\nBid: ' + platBid + 'p ' + goldBid + 'gp\n' + 'B/O: ' + platBuy + 'p ' + goldBuy + 'gp\n' + saleItem + '\n'
+            return [bookInd, outStr]
+            })
+        .sort(function(a,b)
             {
-            var skill = skills[i];
-            var selected = 0;
-            if(skill[0] == Shared.GetVar('Skill'))
-                selected = 1;
-            gump.AddComboBoxText(skill[0], '0', selected);
-            }
-        gump.AddHtmlGump(102, 390, 20, 300, 365, '0x0BB8', 1, 0,'1', 'Setup Instructions:\n\n' + skillArr[3]);
-		var currentValue = Orion.SkillValue(skillArr[0]);
-        var sec = Orion.Now() - startTime;
-        var date = new Date(sec);
-        var time = date.toISOString().substring(11, 19);
-        gump.AddResizepic(20, 300, 0x0BB8, 100, 100);
-	    gump.AddText(15, 10, "0",'Skill: ');
-	    gump.AddText(60, 10, "0",skillArr[0]);
-	    gump.AddText(15, 30, "0",'Start: ');
-	    gump.AddText(75, 30, "0",(startValue/10).toFixed(1));
-	    gump.AddText(15, 45, "0",'Current: ');
-	    gump.AddText(75, 45, "0",(currentValue/10).toFixed(1));
-	    gump.AddText(15, 60, "0",'Gains: ');
-	    gump.AddText(75, 60, "0",((currentValue - startValue)/10).toFixed(1));
-	    gump.AddText(15, 75, "0",'Time: ');
-	    gump.AddText(75, 75, "0", time);
-	    gump.Update();
-		Orion.Wait(1000);
+            return a[0] - b[0];
+            });
+    TextWindow.Open();
+    safes.forEach(function(safe)
+        {
+        TextWindow.Print(safe[1])
+        });
+    }
+
+function drrar()
+	{
+	Orion.DropDraggedItemRelative(1,1)
+	}
+
+function OpenBook()
+	{
+	Orion.SetSearchArea(Player.X()+1,Player.Y()+1,Player.X()+1,Player.Y()+1)
+	var book = Orion.FindType('0x0FF1',any,ground)[0];
+	if(book)
+		{
+		Orion.UseObject(book);
 		}
 	}
 
-function GumpCallback(_)
-    {
-    var returnCode = CustomGumpResponse.ReturnCode();
-    if(returnCode == 0)
-        {
-
-        }
-    else if(returnCode == 100)
-        {
-        var comboCode = CustomGumpResponse.ComboBox(101);
-        Orion.Print(returnCode)
-        Orion.Print(comboCode)
-        var skill = skills[comboCode][0];
-        Shared.AddVar('Skill',skill)
-        Orion.Exec('TrackingGump',true,skill)
-        var functionString = 'Train' + skill.replace(/\s/,'');
-        Orion.Exec(functionString,true)
-        }
-    }
-
-function BuildGumpPage()
-    {
-
-    }
-
-var skills = //[skillname, categoryindex, skillindex]
-	[
-    // ["Alchemy",2,0],
-    // ["Anatomy",1,0],
-    // ["Animal Lore",4,0],
-    // ["Animal Taming",4,1],
-    // ["Archery",1,1],
-    // ["Arms Lore",0,0],
-    // ["Begging",0,1],
-    // ["Blacksmithing",2,1],
-    // ["Bushido",3,0],
-    // ["Camping",0,2],
-    // ["Carpentry",2,3],
-    // ["Cartography",0,3],
-     ["Chivalry",3,1,'Equip MR gear and FC/FCR up to 4/6\nMust have a weapon in hand for Consecrate Weapon'],
-    // ["Cooking",2,4],
-    // ["Detecting Hidden",5,0],
-    // ["Discordance",6,0],
-    // ["Eval Intelligence",3,2],
-    // ["Fencing",1,2],
-    // ["Fishing",4,2],
-    // ["Fletching",2,2],
-    // ["Focus",1,3],
-    // ["Forensics",0,4],
-     ["Healing",1,4],
-    // ["Herding",4,3],
-    // ["Hiding",5,1],
-    // ["Imbuing",3,3],
-    // ["Inscription",2,5],
-    // ["Item Identification",0,5],
-    // ["Lock Picking",5,2],
-    // ["Lumberjacking",2,6],
-    // ["Mace Fighting",1,5],
-     ["Magery",3,4],
-    // ["Meditation",3,5],
-    // ["Mining",2,7],
-    // ["Musicianship",6,1],
-    // ["Mysticism",3,6],
-    // ["Necromancy",3,7],
-    // ["Ninjitsu",3,8],
-    // ["Parrying",1,6],
-    // ["Peacemaking",6,2],
-    // ["Poisoning",5,3],
-    // ["Provocation",6,3],
-    // ["Remove Trap",5,4],
-    // ["Resisting Spells",3,9],
-    // ["Snooping",5,5],
-    // ["Spellweaving",3,10],
-    // ["Spirit Speak",3,11],
-     ["Stealing",5,6],
-     ["Stealth",5,7],
-    // ["Swordsmanship",1,7],
-    // ["Tactics",1,8],
-    // ["Tailoring",2,8],
-    // ["Taste Identification",0,6],
-    // ["Throwing",1,9],
-    // ["Tinkering",2,9],
-    // ["Tracking",4,4],
-    // ["Veterinary",4,5],
-    // ["Wrestling",1,10],
-	]
+function LowerBooks()
+	{
+	Orion.ResetSearchArea()
+	var book = Orion.FindTypeEx('0x0FF1',any,ground,'item',20).filter(function(item)
+		{
+		return item.Z() != 12;
+		})[0];
+	while(book)
+		{
+		if(Orion.WaitForTarget(1000))
+			Orion.TargetObject(book.Serial());
+		Orion.Wait(10);
+		book = Orion.FindTypeEx('0x0FF1',any,ground,'item',20).filter(function(item)
+			{
+			return item.Z() != 12;
+			})[0];
+		}
+	}
 
 function TrainingRegimen2()
 	{
@@ -198,6 +139,63 @@ function TrainingRegimen4()
 	Orion.Exec('TrainMagery');
 	}
 
+function PlayerAlert()
+	{
+	var mem = 60000; // how long to remember a player in ms
+	var ali;
+	var s;
+	var t = [];
+	var o = [];
+	var r = [];
+	Orion.IgnoreReset();
+	while (true)
+		{
+		ali = Orion.FindType('-1', '-1', ground, 'human|ignoreself', 24, 'blue|gray|orange|red|ignorefriends|criminal');
+		s = 0
+		while (!ali.length)
+			{
+			Orion.Wait(250);
+			s = s + .25;	
+			ali = Orion.FindType('-1', '-1', ground, 'human|ignoreself', 24, 'blue|gray|orange|red|ignorefriends|criminal');
+			if  (s % 1 == 0)
+				{
+				Orion.Print(t)
+				if (o[0] && o[0][1] < Orion.Now())
+					{
+					Orion.Ignore(o[0][0], false)
+					t.shift();
+					o.shift();
+					r.shift();
+					}
+				}
+			if (s % 60 == 0)
+				{
+				Orion.OpenContainer('backpack'); //opens backpack once per minute to keep character logged in
+				}
+			}
+		Orion.Wait(10);
+		ali = Orion.FindTypeEx('-1', '-1', ground, 'human|ignoreself', 24, 'blue|gray|orange|red|ignorefriends|criminal');
+		if (ali.length)
+			{
+			for (var i = 0; i < ali.length; i++)
+				{
+				Orion.Wait(10);
+				if (r.indexOf(ali[i].Serial()) === -1)
+					{
+					t.push(' ' + ali[i].Name())
+					o.push([ali[i].Serial(), Orion.Now() + mem])
+					r.push(ali[i].Serial())
+					BotPush('Player(s) Detected:' + t);
+					Orion.Ignore(ali[i].Serial())			
+					}
+				Orion.Wait(10);
+				}
+			}
+		Orion.Wait(10);
+		}
+	}
+
+
 function Healing() 
 	{
 	Orion.Print("Target the friend you'd like to heal");
@@ -215,31 +213,37 @@ function Healing()
     	}
 	}
 
+
+
 //--#Magic
+
+
+
+
 function TrainBushidoPhase1() 
 	{
 	Orion.SetArm('TrainingWeapon');
 	var skillLevel = Orion.SkillValue('Bushido');
-    while(skillLevel < 750) 
+    while (skillLevel < 750) 
       	{
       	Orion.Wait(500);
       	skillLevel = Orion.SkillValue('Bushido');
-        if(Player.Mana() < 20) 
+        if (Player.Mana() < 20) 
         	{
             Meditate();
             Orion.Arm('TrainingWeapon');
             }
-        else if(skillLevel < 300) 
+        if (skillLevel < 300) 
         	{
-        	Orion.Print('Train skill to 30.0 at an NPC first!');
+        	Orion.Print('Train skill at an NPC first!');
         	break;
         	}
-        else if(skillLevel <= 600)
+        if (skillLevel >= 300 && skillLevel <= 600)
         	{
             Orion.Cast('Confidence');
             Orion.Wait(300);
         	}
-        else if(skillLevel <= 750) 
+       	if (skillLevel > 600 && skillLevel <= 750) 
        		{
        		Orion.Cast('Counter Attack')
        		Orion.Wait(500);
@@ -258,13 +262,13 @@ function TrainBushidoPhase2()
 		{
 		starttime = Orion.Now();
     	Orion.Wait(200);
-		if(Player.Mana() > 15 && !Orion.BuffExists('Momentum Strike'))
+		if (Player.Mana() > 15 && !Orion.BuffExists('Momentum Strike'))
     		{
        		Orion.Cast('Momentum Strike');
         	Orion.Wait(100);
         	} 
         Orion.Wait(200);
-        if(Orion.InJournal('There are no valid', 'normal', 0, any, starttime, (Orion.Now()+3000)) != null)
+        if (Orion.InJournal('There are no valid', 'normal', 0, any, starttime, (Orion.Now()+3000)) != null)
 			{
 			Orion.Wait(200);
 			Orion.Attack(trainingTarget1);
@@ -277,38 +281,38 @@ function TrainBushidoPhase2()
 
 function TrainChivalry() 
 	{
+	var skillLevel = Orion.SkillValue('Chivalry');
 	var skillCap = 1000
-    var skillLevel = Orion.SkillValue('Chivalry');
-    while(skillLevel < skillCap) 
+    while (skillLevel < skillCap) 
       	{
       	Orion.Wait(500);
-        skillLevel = Orion.SkillValue('Chivalry');
-        if(skillLevel < 300) 
+      	skillLevel = Orion.SkillValue('Chivalry');
+        if (skillLevel < 300) 
         	{
         	Orion.Print('Train skill at an NPC first!');
         	break;
         	}
-        else if(skillLevel <= 450)
+        if (skillLevel >= 300 && skillLevel <= 450)
         	{
             Orion.Cast('Consecrate Weapon');
             Orion.Wait(300);
         	}
-        else if(skillLevel <= 600) 
+       	if (skillLevel > 450 && skillLevel <= 600) 
        		{
        		Orion.Cast('Divine Fury')
        		Orion.Wait(500);
        		}
-        else if(skillLevel <= 700) 
+       	if (skillLevel > 600 && skillLevel <= 700) 
        		{
        		Orion.Cast('Enemy of One')
        		Orion.Wait(500);
        		}
-        else if(skillLevel <= 900) 
+       	if (skillLevel > 700 && skillLevel <= 900) 
        		{
        		Orion.Cast('Holy Light')
        		Orion.Wait(750);
        		}
-        else if(skillLevel < 1200) 
+       	if (skillLevel > 900 && skillLevel < 1200) 
        		{
        		Orion.Cast('Noble Sacrifice')
        		Orion.Wait(500);
@@ -320,12 +324,12 @@ function TrainChivalry()
 
 function TrainEvalResist()
 	{
-	while(!Player.Dead())
+	while (!Player.Dead())
 		{
 		if (Player.Mana() < 20) 
-            {
-            Meditate();
-            }
+		     	{
+		         Meditate();
+		         }
 		 Orion.Cast('Weaken', self);
 		 Orion.Wait(800);
 		 Orion.Cast('Feeblemind', self);
@@ -337,7 +341,7 @@ function TrainEvalResist()
 
 function TrainMagery() 
 	{
-	var skillCap = 1000; //set to your target skill level. 1000 = 100.0
+	var skillCap = 1100; //set to your target skill level. 1000 = 100.0
 	Orion.Exec('SkillGump', false, ['Magery']);
 	var skillLevel = Orion.SkillValue('Magery', 'base');
 	var skillLevelreal = Orion.SkillValue('Magery');
@@ -459,10 +463,10 @@ function TrainNecro()
 	{
     var skillLevel = Orion.SkillValue('Necromancy');
     //var trainingTarget = SelectTarget().Serial();
-    while (Orion.SkillValue('Necromancy') < 1000) 
+    while (Orion.SkillValue('Necromancy') < 1001) 
     	{
         Orion.Wait(500)
-        skillLevel = Orion.SkillValue('Necromancy');
+        skillLevel =210// Orion.SkillValue('Necromancy');
         if (Player.Mana() < 20)
         	{
         	Meditate();
@@ -475,7 +479,7 @@ function TrainNecro()
         else if (skillLevel >= 200 && skillLevel <= 350) 
         	{
            	Orion.Cast('Curse Weapon');
-			Orion.Wait(500);
+			Orion.Wait(250);
         	}
         else if (skillLevel > 350 && skillLevel <= 500 && Player.Hits() > 30)
         	{
@@ -624,7 +628,7 @@ function TrainHiding()
 		Orion.PauseScript('all', 'TrainHiding|JournalScan');
 		Orion.Wait(2000);
 		Orion.CancelTarget();		
-		if (!Orion.BuffExists('Hiding') && Player.Mana() > 50)
+		if (!Orion.BuffExists('Meditation') && Player.Mana() > 50)
 			{
 			Orion.UseSkill('Hiding');
 			}

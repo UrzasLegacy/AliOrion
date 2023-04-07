@@ -745,3 +745,35 @@ function ToTTurnIns()
 			break;
 		}
 	}
+
+function MoveZeroPropItems()
+    {
+    if(Player.WarMode())
+        {
+        Orion.CharPrint(self, 1159, 'Target Source Container');
+        Orion.WaitForAddObject('sourceBag')
+        Orion.OpenContainer('sourceBag');
+        Orion.Wait(800);
+        }
+    else
+        Orion.AddObject('sourceBag', backpack);
+    var items = Orion.FindTypeEx(any, any, 'sourceBag').filter(function(item)
+        {
+        return item.Properties().match(/Archlich\n(<b>Insured<\/b>\n)*Weight: \d+ Stones*\nShard Bound\n(Physical Resist \d+%\n)*Fire Resist \d+%\nCold Resist \d+%\nPoison Resist \d+%\nEnergy Resist \d+%\n(Mage Armor\n)*Strength Requirement \d+\nDurability/)
+        });
+    Orion.CharPrint(self, 1159, items.length);
+    if(!items.length)
+        return;
+    Orion.CharPrint(self, 1159, 'Target Destination Bag');
+    Orion.WaitForAddObject('destBag');
+    while(items[0])
+        {
+        Orion.MoveItem(items[0].Serial(), 0, 'destBag')
+        Orion.Wait(1100);
+        items = Orion.FindTypeEx(any, any, 'sourceBag').filter(function(item)
+            {
+            return item.Properties().match(/Archlich\n(<b>Insured<\/b>\n)*Weight: \d+ Stones*\nShard Bound\n(Physical Resist \d+%\n)*Fire Resist \d+%\nCold Resist \d+%\nPoison Resist \d+%\nEnergy Resist \d+%\n(Mage Armor\n)*Strength Requirement \d+\nDurability/)
+            });
+        Orion.CharPrint(self, 1159, items.length);
+        }
+    }

@@ -217,8 +217,9 @@ function InitialSetup()
         }
     }
 
-function TrainSpider()
+    function TrainSpider()
     {
+    var hand = 'LeftHand'
     var bot = "https://discordapp.com/api/webhooks/"
         + '941921319463841843' //hook
         + "/"
@@ -226,12 +227,12 @@ function TrainSpider()
     var paramText = "content=" + Player.Name() + ': Durability Low';
     while(!Player.Dead())
         {
-        while(!Orion.ObjAtLayer('RightHand'))
+        while(!Orion.ObjAtLayer(hand))
             {
             Orion.CharPrint(self,1159,'Waiting for weapon...');
             Orion.Wait(2000)
             }
-        var weapon = Orion.ObjAtLayer('RightHand');
+        var weapon = Orion.ObjAtLayer(hand);
         var dura = (weapon.Properties().match(/Durability (\d+)/) || [])[1];
         if(dura && +dura < 10)
             {
@@ -244,9 +245,9 @@ function TrainSpider()
             Orion.Wait(250);
             Orion.Step('e');
             Orion.Wait(250);
-            while(Orion.ObjAtLayer('RightHand'))
+            while(Orion.ObjAtLayer(hand))
                 {
-                Orion.Unequip('RightHand');
+                Orion.Unequip(hand);
                 Orion.Wait(1300);
                 }
             }
