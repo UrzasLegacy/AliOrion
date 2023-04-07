@@ -36,11 +36,8 @@ Orion.Exec('JournalScan', true);
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 var defaultAssets = 
     [
-        [ ['text','Leader:',554,1,1],['text',Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp:',554,1,1],['text',Shared.GetVar('barrelName','Unknown'),554,1,1], ],
-        [ ['toggle','StartPositions','GoToStart','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','LeaveUW','Leave UW'], ['toggle','LootUW','Loot Boss'] ],
-        [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
-        [ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
-        [ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
+        [ ['text','Leader:' + Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp:' + Shared.GetVar('barrelName','Unknown'),554,1,1] ],
+        [ ['toggle','SmartStart','Start'], ['toggle','LeaveUW','Leave UW'], ['toggle','LootUW','Loot Boss'] ],
         [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
     ];
 
@@ -61,26 +58,33 @@ function ________________________INITS(_){}
 function SmartStart()
     {
     if(Player.Serial() == leaderSerial)
-        Orion.Exec('AliComLeader',true);
+		var role = 'leader';
+    else if(Orion.SkillValue('Magery') >= 700)
+        var role = 'healer';
+    else if(Orion.SkillValue('Swordsmanship') >= 1000)
+        var role = 'dexxer';
     else
-        Orion.Exec('AliComFollower',true);
-    Orion.Wait(300);
-    var role = Shared.GetVar('myRole','misc');
+        var role = 'misc';
+    Shared.AddVar('myRole',role);
     switch(role)
         {
         case 'leader':
+        	Orion.Exec('AliComLeader',true);
             StartPositions();
             initUWLeader();
             break;
         case 'dexxer':
+			Orion.Exec('AliComFollower',true);
             StartPositions();
             initSamp();
             break;
         case 'healer':
+			Orion.Exec('AliComFollower',true);
             StartPositions();
             initHealer();
             break;
         case 'misc':
+			Orion.Exec('AliComFollower',true);
             StartPositions();
             initMisc();
             break;
@@ -646,7 +650,16 @@ function ________________________UTILITIES(_){}
 function StartPositions()
     {
     //check if already in the start position, if not, check that if the boss is currently up, if not move to start position, otherwise exit to boss sequence
-    }
+	//search for boss, begin boss sequence if found
+	//if no boss found, ResetPosition(), leader checks 
+	//
+	
+	}
+
+function BeginBossSequence()
+	{
+	
+	}
 
 function EquipLuckSuitByBotName()
     {
@@ -1704,15 +1717,7 @@ function AliComLeader()
 
 function AliComFollower()
     {
-    if(Orion.SkillValue('Archery') >= 1000)
-        var role = 'archer';
-    else if(Orion.SkillValue('Mysticism') > 700 || Orion.SkillValue('Magery') >= 700)
-        var role = 'healer';
-    else if(Orion.SkillValue('Swordsmanship') >= 1000)
-        var role = 'dexxer';
-    else
-        var role = 'misc';
-    Shared.AddVar('myRole',role);
+	var role = Shared.GetVar('myRole','misc');
     var cmdsObj = 
         {
         'Follow': true, //:leaderSerial:distance
@@ -1807,7 +1812,7 @@ function Follow(leaderSerial,distance)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'JournalScan|AliComFollower|AliComLeader';
+    var flag = 'JournalScan|AliComFollower|AliComLeader|SmartStart';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
@@ -2041,8 +2046,10 @@ function AliGumpRenderer()
         colPos = columnStart;
         rowPos += rowAdj;
         }
-    //Custom Assets
+    //Custom Assets: Use spacers in asset array to adjust gump size as necessary
     
+
+
     gump.Update();
     Orion.Print('interval: ' + (Orion.Now() - startTime))
     }
