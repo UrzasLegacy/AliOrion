@@ -156,6 +156,7 @@ function AutoBuffs()
 
 function AutoEvade()
 	{
+	Orion.Exec('BuffMonitor',true);
 	Shared.AddVar('AutoEvade',true);
 	var lowestHPPercent = 30;
 	var highestHPPercent = 50;

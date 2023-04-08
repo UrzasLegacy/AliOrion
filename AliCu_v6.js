@@ -1,8 +1,3 @@
-//#include Ali/AliQoL.js
-//#include Ali/AliAutomation.js
-//#include Ali/AliDebug.js
-//#include Ali/AliHelpers.js
-//#include Ali/AliGumpHUD.js
 var profiles = 
     {
     Cu: 
@@ -275,7 +270,7 @@ function CuGumpCallback(_)
 
 function WalkSpawn()
 	{
-        Orion.Exec('BuffMonitor',true);
+    Orion.Exec('BuffMonitor',true);
 	DiscordPush(Player.Name() + ' progressing spawn');
     var waypoints = 
     [
@@ -408,7 +403,6 @@ function BlazeProtocol(mobSerial,outMsg)
         {
         AliWalkTo(destX,destY,0,0,255,10,1,1,300000,SlowPoke)
         Orion.Wait(500);
-        HonorSelf();
         Orion.WarMode(0);
         Orion.Wait(1000);
         DiscordPush(outMsg);
@@ -920,4 +914,409 @@ function EquipmentDamage()
 	RepairGear();
 	Orion.Wait(1500);
     }
+
+function AliAtlas(target)
+    { //[x,y,facet]
+    var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
+    var gateArr = 
+        [//location name, facet, facet# x, y
+            ['Moonglow', 'Trammel', 1, 4467, 1283],
+            ['Britain', 'Trammel', 2, 1421, 1696],
+            ['Jhelom', 'Trammel', 3, 1499, 3771],
+            ['Yew', 'Trammel', 4, 771, 752],
+            ['Minoc', 'Trammel', 5, 2701, 692],
+            ['Trinsic', 'Trammel', 6, 1828, 2948],
+            ['Skara Brae', 'Trammel', 7, 643, 2067],
+            ['New Magincia', 'Trammel', 8, 3566, 2140],
+            ['New Haven', 'Trammel', 27, 3450, 2677],
+            ['Moonglow', 'Felucca', 9, 4467, 1283],
+            ['Britain', 'Felucca', 10, 1421, 1696],
+            ['Jhelom', 'Felucca', 11, 1499, 3771],
+            ['Yew', 'Felucca', 12, 771, 752],
+            ['Minoc', 'Felucca', 13, 2701, 692],
+            ['Trinsic', 'Felucca', 14, 1828, 2948],
+            ['Skara Brae', 'Felucca', 15, 643, 2067],
+            ['New Magincia', 'Felucca', 16, 3566, 2140],
+            ['Buccaneers Den', 'Felucca', 26, 2711, 2234],
+            ['Compassion', 'Ilshenar', 17, 1215, 467],
+            ['Honesty', 'Ilshenar', 18, 772, 1366],
+            ['Honor', 'Ilshenar', 19, 744, 724],
+            ['Humility', 'Ilshenar', 20, 281, 1016],
+            ['Justice', 'Ilshenar', 21, 987, 1011],
+            ['Sacrifice', 'Ilshenar', 22, 1174, 1286],
+            ['Spirituality', 'Ilshenar', 23, 1532, 1340],
+            ['Valor', 'Ilshenar', 24, 528, 216],
+            ['Chaos', 'Ilshenar', 25, 1721, 218],
+            ['Luna', 'Malas', 28, 1015, 527],
+            ['Umbra', 'Malas', 29, 1997, 1386],
+            ['Isamu-Jima', 'TerMur', 30, 1169, 998],
+            ['Makoto-Jima', 'TerMur', 31, 802, 1204],
+            ['Homare-Jima', 'TerMur', 32, 270, 628],
+            ['Royal City', 'TerMur', 33, 850, 3525],
+            ['Valley of Eodon', 'TerMur', 34, 719, 1863],
+        ]
+
+    var x = Player.X();
+    var y = Player.Y();
+    var map = maps[Player.Map()];
+    var targetX = target[0];
+    var targetY = target[1];
+    var targetMap = target[2];
+    
+    if(Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
+        {
+        var attempt = 0
+        Orion.WarMode(1);
+        while(Orion.GetDistance(targetX, targetY) > 20 && attempt < 10)
+            {
+            attempt++;
+            Orion.WalkTo(targetX, targetY, 0,0)
+            Orion.Wait(500);
+            Orion.Print(1);
+            }
+        return;
+        }
+    var nearestGate = gateArr.filter(function(gate){return gate[1] == map})
+    	//.filter(function(gate)
+    	//{
+    	//return Orion.GetPathArray(gate[3], gate[4], 256, 0).length
+        //return Orion.GetDistance(gate[3],gate[4]) < 1000;
+        //})
+        .sort(function(a,b)
+        	{
+	        //return Orion.GetPathArray(a[3], a[4], 256, 0).length - Orion.GetPathArray(b[3], b[4], 256, 0).length
+	        return Orion.GetDistance(a[3],a[4]) - Orion.GetDistance(b[3],b[4]);
+	        })[0];
+    var destinationGate = gateArr.filter(function(gate){return gate[1] == targetMap})
+        .sort(function(a,b)
+        {
+        return DistBetweenPoints(targetX,targetY,a[3],a[4]) - DistBetweenPoints(targetX,targetY,b[3],b[4])
+        })[0];
+    Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
+    Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
+    var attempt = 0;
+    Orion.WarMode(1);
+    while(Orion.GetDistance(nearestGate[3], nearestGate[4]) > 2 && attempt < 10)
+        {
+        attempt++
+        Orion.WalkTo(nearestGate[3], nearestGate[4], 0,0);
+        Orion.Wait(500);
+        }
+    //var tempX = Player.X();
+    //var tempY = Player.Y();
+    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 2)
+        {
+        if(Orion.WaitForGump(2000))
+            {
+            var gump0 = Orion.GetGump('last');
+            if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000258'))
+                {
+                var gumpHook0 = Orion.CreateGumpHook(1);
+                gumpHook0.AddCheck(destinationGate[2], true);
+                gump0.Select(gumpHook0);
+                Orion.Wait(100);
+                }
+            }
+        else
+            {
+            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 24);
+            if(gate[0])
+                {
+                while(Orion.GetDistance(gate[0].X(), gate[0].Y()))
+                    {
+                    Orion.WalkTo(gate[0].X(),gate[0].Y(),0,0);
+                    Orion.Wait(500);
+                    }
+                Orion.Resend();
+                Orion.Wait(500);
+                Orion.UseObject(gate[0].Serial());
+                }
+            }
+        Orion.Wait(1000);
+        }
+    Orion.WarMode(1);
+    var attempt = 0;
+    while(Orion.GetDistance(targetX, targetY) > 20 && attempt < 10)
+        {
+        attempt++;
+        Orion.WalkTo(targetX, targetY, 0,0)
+        Orion.Wait(500);
+        Orion.Print(attempt);
+        }
+    var sign = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+		{
+		return Orion.Contains(item.Properties(), 'a house sign') && Orion.Contains(item.Properties(), 'Collapsing In:');
+		})[0];
+	if(!sign)
+		return Orion.CharPrint(self,1159,"Couldn't find house sign!");
+    var timeLeft = sign.Properties().match(/Collapsing In: Less Than \d+ Hours/) || [];
+    if(timeLeft[0])
+        for(var i = 0;i<10;i++)
+            {
+            Orion.PrintFast(sign.Serial(),1159,0,timeLeft[0])
+            Orion.Wait(500);
+            }
+    }
+
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
+    {
+    if(z === undefined) z = 0;
+    if(distanceXY === undefined) distanceXY = 0;
+    if(distanceZ === undefined) distanceZ = 255;
+    if(chunkSize === undefined) chunkSize = 5;
+    if(run === undefined) run = 1;
+    if(openDoor === undefined) openDoor = 1;
+    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+    //Orion.ClearFakeMapObjects();
+    if(pathTiles.length === 0)
+        return false;
+	var shortStop = pathTiles[pathTiles.length - 1];
+	var shortX = shortStop.X();
+	var shortY = shortStop.Y();
+    // pathTiles.forEach(function(tile,i)
+    //     {
+    //     Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+    //     })
+    // Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+    if(pathTiles.length >= chunkSize)
+        var chunk = pathTiles[chunkSize - 1];
+    else
+        var chunk = shortStop;
+    var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
+    Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+    Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+    Orion.Wait(1);
+	if(callBackFn !== undefined)
+		callBackFn();
+    if(Orion.GetDistance(shortX,shortY) > 0)
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn);
+    return true;
+    }
+
+function WalkToRadiusBorder(targetSerial, distance) 
+	{
+	var target = Orion.FindObject(targetSerial)
+	if(target) 
+		{
+		var x = target.X();
+		var y = target.Y();
+		var z = target.Z();
+	
+		var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
+			.filter(function(tile) 
+				{
+				var tileX = tile.X();
+				var tileY = tile.Y();
+				return (x == (tileX - distance))
+				|| (x == (tileX + distance))
+				|| (y == (tileY - distance))
+				|| (y == (tileY + distance));
+				}).sort(function (a,b) 
+					{
+					return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
+					});
+		tiles.forEach(function(tile,ind)
+			{
+			Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+			})
+		for(var i=0;i<tiles.length;i++)
+			{             
+			var closest = tiles[i]; 
+			if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
+				break;
+			}
+		}
+	}
+
+function DiscordPush(message)
+	{
+	var bot = Shared.GetVar('discordLink',false);
+    if(!bot)
+        {
+        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
+        Shared.AddVar('discordLink',bot);
+        }
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function JournalScan()
+	{
+	var useDiscordPush = profile.useDiscordPush;
+	var useAlarmSound = true//profile.useAlarmSound;
+	var journalScanType = profile.journalScanType;
+	var msg = 'GM'
+	if(Orion.Contains(journalScanType, 'Equipment Damage'))
+		msg += '|equipment is severely';
+	if(Orion.Contains(journalScanType, 'Control Messages'))
+		msg += '|inithome|initfarm|initscripts|haltscripts|closefollow'
+	while(true)
+		{
+		var check = Orion.WaitJournal(msg, Orion.Now(), 0);
+		var checkarr = Orion.Split(check.Text(), ' ')
+		for(var i = 0;i<checkarr.length;i++)
+			{
+			switch(checkarr[i])
+				{		
+				case 'GM':
+					if(useDiscordPush)
+						DiscordPush(Player.Name() + ": GM")
+					if(useAlarmSound)
+						Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+					Orion.Terminate('all', 'JournalScan');
+					Orion.Wait(1000);
+                    Orion.StopWalking();
+					Orion.OAOptionSet('AutoReconnect', '0');
+					//Orion.CloseUO();
+					Orion.Wait(6000);
+					break;
+				case 'severely':
+					if(useDiscordPush)
+						DiscordPush(Player.Name() + ": Equipment is damaged")
+					//if(useAlarmSound)
+						//Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+					Orion.Terminate('all', 'JournalScan');
+					Orion.Exec('EquipmentDamage',true);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+function BuffMonitor()
+	{
+	var color = { //[textColorHue,barColorRRGGBBAA]
+		'red': [32,'0xFF0000FF'],
+		'tangle': [1159,'0xF0FF0BFF']
+	}
+	var goodActive = color.tangle;
+	var badActive = color.red;
+
+	var buffs = [ //buffID,buffCooldown,timerPosition,timerName,xOffset,yOffset,textColor,font,backgroundColor,cooldownColorObj,dispelWarning,persistentBuff
+		['Evasion', 20000, 'underChar','Evasion', 0, 40,goodActive[0], -1, goodActive[1], badActive],
+		['Blood Oath', 0, 'aboveChar','BLOODOATH', 100, -40,badActive[0], -1, badActive[1]],
+		['Vampiric Embrace', 60000, 'aboveChar','VE Missing!', -100, 40,badActive[0], -1, '0x00000000', false, true],
+		['Hiding', 60000, 'underChar','Hidden', 100, 40,goodActive[0], -1, '0x00000000',false,false,true],
+	]
+
+	while(true)
+		{
+		//var startTime = Orion.Now();
+		Orion.Wait(100);
+		for(var i=0;i<buffs.length;i++)
+			{
+			var buff = buffs[i];
+			if(Orion.BuffExists(buff[0]))
+				{
+				if(buff[10])
+					Orion.RemoveDisplayTimer(buff[0]);
+				else if(!Orion.DisplayTimerExists(buff[0]))
+					{
+					Orion.AddDisplayTimer(buff[0], buff[1] + Orion.BuffTimeRemaining(buff[0]), buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+					if(buff[9])
+						buff[9][2] = false;
+					else if(buff[11])
+						Orion.DisplayTimerSetShowTime(buff[0], false);
+					}
+				}
+			else if(Orion.DisplayTimerExists(buff[0]))
+				{
+				if(buff[9])
+					{
+					Orion.DisplayTimerSetColorStage(buff[0], 100, buff[9][0], buff[9][1]);
+					buff[9][2] = true;
+					}
+				else if(buff[11])
+					{
+					Orion.RemoveDisplayTimer(buff[0]);
+					}
+				}
+			else if(buff[10])
+				{
+				Orion.AddDisplayTimer(buff[0], buff[1], buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+				Orion.Wait(10)
+				Orion.DisplayTimerSetShowTime(buff[0], false);
+				}
+			}
+		//Orion.Print('Interval: ' + (Orion.Now() - startTime))
+		}
+	}
+
+function AutoAttack()
+    {
+    //Orion.Exec('AutoBuffs',true);
+    var useSingleTargetSpecial = profile.useSingleTargetSpecial;
+    var singleTargetSpecial = profile.singleTargetSpecial;
+    var useMomentumStrike = profile.useMomentumStrike;
+    var useWhirlwind = profile.useWhirlwind;
+    var whirlwindSpecial = profile.whirlwindSpecial;
+	var useOnslaught = profile.useOnslaught;
+    while(!Player.Dead())
+        {
+        var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 2, 'gray|red|criminal|orange');
+        var enemyCount = enemies.length;
+        if(enemyCount)
+            Orion.Attack(enemies[0]);
+        switch(enemyCount)
+            {
+            case 0:
+                break;
+            case 1:
+				if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+					{
+					Orion.Cast('Onslaught');
+					var startTime = Orion.Now();
+					var endTime = startTime + 3000;
+					var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
+					if(check)
+						Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
+					}
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
+                    Orion.UseAbility(singleTargetSpecial);
+                break;
+            case 2:
+                if(useMomentumStrike)
+                    {
+                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                        Orion.Cast('Momentum Strike');
+                    }
+                else if(useWhirlwind)
+                    {
+                    if(!Orion.AbilityStatus(whirlwindSpecial) && Player.Mana() >= 15)
+                        Orion.UseAbility(whirlwindSpecial);
+                    }
+                break;
+            default: //more than 2 enemies
+                if(useWhirlwind)
+                    {
+                    if(!Orion.AbilityStatus(whirlwindSpecial) && Player.Mana() >= 15)
+                        Orion.UseAbility(whirlwindSpecial);
+                    }
+                else if(useMomentumStrike)
+                    {
+                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                        Orion.Cast('Momentum Strike');
+                    }
+                break;
+            }
+        Orion.Wait(500);
+        }
+    }
+
+function AutoEvade()
+	{
+	Orion.Exec('BuffMonitor',true);
+	Shared.AddVar('AutoEvade',true);
+	var lowestHPPercent = 30;
+	var highestHPPercent = 50;
+	while(!Player.Dead())
+		{
+		var count = Orion.FindType(any, any, ground, 'live|inlos|ignorefriends|ignoreself|nothuman', 20, 'gray|criminal|red').length;
+		if(!Orion.DisplayTimerExists('Evasion') && !Orion.BuffExists('Evasion') && Player.Hits('%') < Math.min((lowestHPPercent + (2 * count)), highestHPPercent))
+			Orion.Cast('Evasion');
+		Orion.Wait(100);
+		}
+	}
 //--#END
