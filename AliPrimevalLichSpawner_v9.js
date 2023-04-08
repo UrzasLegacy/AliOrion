@@ -126,6 +126,11 @@ function terminateScripts()
 	Orion.Terminate('all', 'BandieBot|JournalScan|DecoHighlighter|Listener');
 	}
 
+function EquipmentDamage()
+	{
+	RunAndHide();
+	}
+
 function StaticAutoFarm()
     {
 	var staticFarmRadius = profile.staticFarmRadius;

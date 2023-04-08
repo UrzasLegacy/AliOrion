@@ -34,7 +34,7 @@ function JournalScan()
 					//if(useAlarmSound)
 						//Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
 					Orion.Terminate('all', 'JournalScan');
-					Orion.Exec('RunAndHide',true);
+					Orion.Exec('EquipmentDamage',true);
 					break;
 				case 'inithome':
 					Orion.Terminate('all', 'JournalScan');
@@ -719,7 +719,7 @@ function FillRepairBench()
         return Orion.CharPrint(self, 1159, 'No repair bench close enough! Halting...');
     if(!supplyContainer || Orion.GetDistance(supplyContainer) > 2)
         return Orion.CharPrint(self, 1159, 'Supply container missing or too far away! Halting...');
-    Fill('Tinker', 'Tinkering', 100, '0x1EB9|0x1EBC', supplyContainer, bench, 1);
+    Fill('Tinker', 'Tinkering', 100, '0x1EB9|0x1EBC|0x1EB8', supplyContainer, bench, 1);
     Fill('Blacksmith', 'Blacksmithy', 180, '0x0FBC|0x13E3|0x0FB5', supplyContainer, bench, 3);
     Fill('Carpenter', 'Carpentry', 100, '0x10E4|0x102E|0x1030|0x1032|0x102C|0x102A|0x1034|0x1029|0x10E6|0x10E7|0x10E5', supplyContainer, bench, 5);
     Fill('Tailor', 'Tailoring', 120, '0x0F9D', supplyContainer, bench, 7);

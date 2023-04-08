@@ -13,13 +13,13 @@ var profiles =
             singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
         useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
             whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+        useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
         useEnemyOfOne: false, //true , false.
-        useCounterAttack: true, //true , false.
+        useCounterAttack: false, //true , false.
         useConsecrateWeapon: false, //true , false.
         useDivineFury: false, //true , false.
         useAutoLoot: false, //true, false.
-        useConfidence: true, //true , false.
+        useConfidence: false, //true , false.
             useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
         useBandieSelf: false, //true , false.
             useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
@@ -29,6 +29,7 @@ var profiles =
             discordHook: '887268637315047444', //Put Discord WebHook here
             discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
         journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
+        selfTame: true,
         },
     }
 
@@ -101,10 +102,8 @@ function CuGump()
     Shared.ClearVars();
     var startTime = Shared.GetVar('startTime',Orion.Now())
     Shared.AddVar('startTime',Orion.Now())
-    
-
     var y = 25;
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport' + Player.Serial() + '.json';
     var tmpFile = Orion.NewFile();
     if(tmpFile.Open(tmpFilePath))
     	{
@@ -133,67 +132,67 @@ function CuGump()
     y += yAdj;
     gump.AddText(x1,y,0,'Plain:');
     gump.AddText(x2,y,0,currentObj['0x0000'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0000'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0000'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Paragon:');
     gump.AddText(x2,y,0,currentObj['0x0501'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0501'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0501'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Dull Copper:');
     gump.AddText(x2,y,0,currentObj['0x0978'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0978'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0978'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Copper:');
     gump.AddText(x2,y,0,currentObj['0x05A7'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x05A7'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x05A7'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Bronze:');
     gump.AddText(x2,y,0,currentObj['0x08AA'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x08AA'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x08AA'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Rose:');
     gump.AddText(x2,y,0,currentObj['0x097A'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x097A'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x097A'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Grey:');
     gump.AddText(x2,y,0,currentObj['0x0901'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0901'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0901'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Echo:');
     gump.AddText(x2,y,0,currentObj['0x0527'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0527'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0527'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Valorite:');
     gump.AddText(x2,y,0,currentObj['0x08AC'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x08AC'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x08AC'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Sky:');
     gump.AddText(x2,y,0,currentObj['0x0515'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0515'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0515'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Ice:');
     gump.AddText(x2,y,0,currentObj['0x0482'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0482'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0482'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Pink:');
     gump.AddText(x2,y,0,currentObj['0x04B1'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x04B1'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x04B1'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Red:');
     gump.AddText(x2,y,0,currentObj['0x0674'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0674'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0674'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Black:');
     gump.AddText(x2,y,0,currentObj['0x0455'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0455'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0455'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'White:');
     gump.AddText(x2,y,0,currentObj['0x0481'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0481'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0481'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1,y,0,'Blaze:');
     gump.AddText(x2,y,0,currentObj['0x0489'],textWidth,s++);
-    gump.AddText(x4,y,0,totalObj['0x0489'],textWidth,s++);
+    gump.AddText(x4,y,0,totalObj['0x0489'] || 0,textWidth,s++);
     y += yAdj;
     gump.AddText(x1 + 15,y,0,'Total:');
     var totalCurrent = 0;
@@ -285,12 +284,13 @@ function WalkSpawn()
         [1406, 1258],
         [1253, 1257],
     ]
+	Orion.Exec('CuGump',true);
 	Orion.Exec('AutoAttack',true);
 	Orion.Exec('AttackSpawn',true);
-	Orion.Exec('AutoEvade',true);
+    if(Orion.SkillValue('Bushido') > 900)
+	    Orion.Exec('AutoEvade',true);
 	Orion.Exec('RareAlert',true);
 	Orion.Exec('JournalScan',true);
-	Orion.Exec('CuGump',true);
 	while(!Player.Dead())
         {
 		var waypoint = waypoints.shift();
@@ -326,11 +326,12 @@ function RareAlert()
             var mobSerial = mob.Serial();
             if(hash[mobSerial])
                 continue;
-            if(mobColor == '0x0489')
+            //if(mobColor == '0x0489')
+            if(mobColor == '0x0000')
                 {
                 outMsg = Player.Name() + ': BLAZE CU FOUND!';
                 Orion.PlayWav('BlazeCuFound.wav')
-                BlazeProtocol(mobSerial,mobColor,outMsg);
+                BlazeProtocol(mobSerial,outMsg);
                 }
             else if(Orion.Contains('0x0455|0x0481',mobColor))
                 {
@@ -341,7 +342,7 @@ function RareAlert()
                     if(parse[0] == 600 && parse[1] == 70 && parse[2] == 70)
                         {
                         outMsg = Player.Name() + ': High Intensity ' + cuHue[mobColor] + ' Cu Found!';
-                        BlazeProtocol(mobSerial,mobColor,outMsg);
+                        BlazeProtocol(mobSerial,outMsg);
                         }
                     }
                 }
@@ -354,7 +355,7 @@ function RareAlert()
             //         if(parse[0] > 598 && parse[1] < 72 && parse[2] < 72)
             //             {
             //             outMsg = Player.Name() + ': Near Perfect Common Cu Found!';
-            //             BlazeProtocol(mobSerial,mobColor,outMsg);
+            //             BlazeProtocol(mobSerial,outMsg);
             //             }
             //         }
             //     }
@@ -376,10 +377,15 @@ function testLoreParser()
     
     }
 
-function BlazeProtocol(mobSerial,mobColor,outMsg)
+function BlazeProtocol(mobSerial,outMsg)
     {
-    Orion.PlayWav('alarm.wav');
+    Orion.StopWalking();
+    Orion.PauseScript('AttackSpawn')
+    Orion.PauseScript('WalkSpawn')
+    //Orion.PauseScript('AutoAttack')
     var mob = Orion.FindObject(mobSerial);
+    Shared.AddVar('cuSerial',mobSerial);
+    Orion.Print('shared:' + Shared.GetVar('cuSerial'))
     var destX = 1349;
     var destY = 1349;
     var path = Orion.GetPathArray(destX,destY,0,0)
@@ -387,29 +393,28 @@ function BlazeProtocol(mobSerial,mobColor,outMsg)
         {
         Orion.AddFakeMapObject(ind + 10000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
         })
-    Orion.StopWalking();
-    Orion.PauseScript('AttackSpawn')
-    Orion.PauseScript('WalkSpawn')
-    Orion.PauseScript('AutoAttack')
     AliWalkTo(mob.X(),mob.Y(),mob.Z(),5)
     Orion.Attack(mobSerial);
     Orion.WarMode(0);
-    Shared.AddVar('cuSerial',mobSerial);
-    AppendColor(mobColor);
     DiscordPush(outMsg);
     Orion.Wait(100);
-    DiscordPush(outMsg);
-    Orion.Wait(100);
-    AliWalkTo(destX,destY,0,0,255,10,1,1,300000,SlowPoke)
-    Orion.Wait(500);
-    HonorSelf();
-    Orion.WarMode(0);
-    Orion.Wait(1000);
-    DiscordPush(outMsg);
-    Orion.Wait(100);
-    DiscordPush(outMsg);
-    Orion.Wait(100);
-    AliWalkTo(1252, 1218)
+    if(Orion.SkillValue('Animal Taming','base') > 1000)
+        {
+        TameCu();
+        StoreCu();
+        Orion.PauseScript('all');
+        }
+    else
+        {
+        AliWalkTo(destX,destY,0,0,255,10,1,1,300000,SlowPoke)
+        Orion.Wait(500);
+        HonorSelf();
+        Orion.WarMode(0);
+        Orion.Wait(1000);
+        DiscordPush(outMsg);
+        Orion.Wait(100);
+        AliWalkTo(1252, 1218)
+        }
     Orion.ResumeScript('all');
     }
 
@@ -490,7 +495,7 @@ function AttackSpawn()
             Orion.Wait(200);
             Orion.StopWalking();
             }
-		while(mobs.length)
+		while(!Player.Dead() && mobs.length)
 			{
             Orion.Print('Mobs: ' + mobs.length);
 			var mob = mobs[0];
@@ -499,29 +504,21 @@ function AttackSpawn()
             //Orion.AddFakeMapObject(i++, '0x3001', mobColor, mob.X(), mob.Y(), mob.Z());
             //Orion.AddFakeMapObject(i++, '0x3001', mobColor, mob.X(), mob.Y(), mob.Z());
             if(mobColor === '0')
-                {
-                TextWindow.Open()
-                TextWindow.Print('0 Hue: ' + mobSerial + ': ' + mob.Properties())
-                }
+                mobColor = '0x0501';
             Orion.ControlAgent('autoloot','BotLoot','stop');
             Orion.Wait(10);
             Orion.ControlAgent('autoloot','BotLoot','start');
             if(mob.Distance() > 6)
                 Orion.WalkTo(mob.X(),mob.Y(),0,5)
             //HonorTarget(mobSerial)
-            while(mob.Exists())
+            while(!Player.Dead() && mob.Exists())
                 {
+                var faerie = Orion.FindTypeEx('0x0080', any, ground, 'ignoreself|ignorefriends|live|inlos', 2, 'gray|criminal|red|blue')[0];
                 if(mob.Distance() > 1)
-                    {
-                    if(!Orion.WalkTo(mob.X(),mob.Y()))
-                        {
-                        Orion.Wait(10);
-                        // Orion.Wait(5000)
-                        // if(!Orion.WalkTo(mob.X(),mob.Y()))
-                        //     Orion.Ignore(mobSerial);
-                        }
-                    }
-				else
+                    Orion.WalkTo(mob.X(),mob.Y())
+				else if(faerie)
+                    Orion.Attack(faerie.Serial())
+                else
 				   Orion.Attack(mobSerial);
                 Orion.Wait(200)
                 }
@@ -585,7 +582,7 @@ function SlowPoke()
     var cuSerial = Shared.GetVar('cuSerial');
     var dist = Orion.GetDistance(cuSerial);
     Orion.Attack(cuSerial)
-    while(dist > 5)
+    while(dist > 4)
         {
         Orion.CharPrint(cuSerial,1159,dist);
         Orion.Wait(100);
@@ -603,7 +600,7 @@ function ClearShared()
     }
 function AppendColor(colorID)
     {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport' + Player.Serial() + '.json';
     var tmpFile = Orion.NewFile();
     if(tmpFile.Open(tmpFilePath))
     	{
@@ -661,7 +658,7 @@ function AppendColor(colorID)
 function CalculatePercentages()
     {
     var currentObj = Shared.GetVar('currentObj',{"0x0000":0,"0x0901":0,"0x05A7":0,"0x0501":0,"0x08AC":0,"0x0527":0,"0x097A":0,"0x0978":0,"0x08AA":0,"0x0482":0,"0x0674":0,"0x04B1":0,"0x0515":0,"0x0455":0,"0x0481":0,"0x0489":0});
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/CuColorReport' + Player.Serial() + '.json';
     var tmpFile = Orion.NewFile();
     if(tmpFile.Open(tmpFilePath))
     	{
@@ -728,9 +725,11 @@ function TameCu()
     Orion.ResetSearchArea();
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
-    Orion.WaitForAddObject('myTarget');
-    var serial = Orion.GetSerial('myTarget');
-    Shared.AddVar('cuSerial',serial)
+    //Orion.WaitForAddObject('myTarget');
+    //var serial = Orion.GetSerial('myTarget');
+    //Shared.AddVar('cuSerial',serial)
+    var serial = Shared.GetVar('cuSerial');
+    Orion.Print('serial:' + serial)
     var obj = Orion.FindObject(serial);
     var x = obj.X();
     var y = obj.Y();
@@ -752,36 +751,48 @@ function TameCu()
             //Orion.SetBadLocation(x, y);
             Orion.AddFakeMapObject(ind, '0x051A', 1159, x, y, z);
             });
-            
     Shared.AddVar('leashDistance',3)
-    while(true)
+    while(!Player.Dead())
         {
-        var leashDistance = Shared.GetVar('leashDistance',3)
-        var avoidRadius = 4;
-        var distance = obj.Distance();
-        Orion.WarMode(2);
-        
- 
-        if(distance != leashDistance)
+        var startTime = Orion.Now();
+        while(!Player.Dead() && !Orion.DisplayTimerExists('paralyze') && Orion.ScriptRunning('AsyncTame') < 1)
             {
+            Orion.PauseScript('AutoAttack');
+            if(obj.Hits('%') < 40)
+                {
+                Orion.CharPrint(self,1159,'Cu low HP! Waiting...')
+                WalkToRadiusBorder(serial,5);
+                }
+            else if(!Orion.AbilityStatus('Secondary'))
+                Orion.UseAbility('Secondary')
+            else if(obj.Distance() > 1)
+                Orion.WalkTo(obj.X(),obj.Y())
+            else
+                Orion.Attack(obj.Serial());
+            Orion.Wait(100)
+            if(Orion.InJournal('You deliver a paralyzing blow!','sys','0','any',startTime,Orion.Now()))
+                Orion.AddDisplayTimer('paralyze', 6000, 'underChar', 'bar', 'Paralyzed!', 100, 40, '1159', -1, '0xF0FF0BFF');
+            }
+        Orion.ResumeScript('AutoAttack');
+        var leashDistance = Shared.GetVar('leashDistance',3)
+        var avoidRadius = 3;
+        //Orion.WarMode(2);
             WalkToRadiusBorder(serial,leashDistance);
             Orion.Exec('AsyncTame',true,[serial]);
-            
-            }
         // else if(distance >= 4)
         //     Orion.WalkTo(obj.X(),obj.Y(),0,3);
-        Orion.Wait(100);
+        Orion.Wait(200);
         if(obj.CanChangeName())
             break;
             
-        while(Player.Hits('%') < 80)
-            {
-            WalkToRadiusBorder(serial,15);
-            Orion.Cast('Heal')
-            if(Orion.WaitForTarget(2000))
-                Orion.TargetObject(self);
-            Orion.Wait(100);
-            }
+        // while(!Player.Dead() && Player.Hits('%') < 80)
+        //     {
+        //     WalkToRadiusBorder(serial,15);
+        //     Orion.Cast('Heal')
+        //     if(Orion.WaitForTarget(2000))
+        //         Orion.TargetObject(self);
+        //     Orion.Wait(100);
+        //     }
         if(Orion.GetDistance(x,y) > enclosureRadius)
             {
             var xObj = obj.X();
@@ -800,6 +811,13 @@ function TameCu()
             }
         Orion.ClearBadLocations();
         }
+    Orion.Say('all stop');
+    Orion.Say('all stay');
+    Orion.Wait(200);
+    Orion.Say('all stop');
+    Orion.Say('all stay');
+    Orion.Wait(200);
+    Orion.Say('all follow me')
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
     }
@@ -829,5 +847,77 @@ function AsyncTame(mobSerial)
             check2 = Orion.InJournal('The animal is too angry to continue taming.|It seems to accept you as master.|You fail to tame the creature.|You are too far away to continue taming.', '', '0', 'any', startTime, Orion.Now())
             }
         }
+    }
+    
+function StoreCu()
+    {
+    var serial = Shared.GetVar('cuSerial');
+    if(!serial)
+        serial = Orion.FindType('0x0115',any,'ground','canchangename',24)[0];
+    while(Orion.ObjAtLayer('Mount'))
+        {
+        Orion.UseObject(self);
+        Orion.Wait(1300);
+        }
+    while(Orion.GetDistance(serial) > 1)
+        {
+        Orion.Say('all follow me');
+        Orion.Wait(1300);
+        }
+    while(!Orion.ObjAtLayer('Mount'))
+        {
+        Orion.UseObject(serial);
+        Orion.Wait(1300);
+        }
+    AliWalkTo(1179,1287);
+    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'item',24)[0];
+    if(gate)
+        {
+        AliWalkTo(gate.X(),gate.Y())
+        Orion.UseObject(gate.Serial());
+        if(Orion.WaitForGump(3000))
+            {
+            var gump = Orion.GetGump('any','0x00000258');
+            if(gump !== null)
+                {
+                var gumpHook = Orion.CreateGumpHook(1);
+                gumpHook.AddCheck(28, true);
+                gump.Select(gumpHook);
+                Orion.Wait(3000);
+                AliWalkTo(1024,500);
+                while(Orion.ObjAtLayer('Mount'))
+                    {
+                    Orion.UseObject(self);
+                    Orion.Wait(1300);
+                    }
+                while(Orion.FindObject(serial))
+                    {
+                    Orion.Say('stall')
+                    if(Orion.WaitForTarget(3000))
+                        {
+                        Orion.TargetObject(serial);
+                        Orion.Wait(3000);
+                        }
+                    }
+                Orion.LogOut();
+                }
+            }
+        }
+    }
+
+function EquipmentDamage()
+    {
+    AliAtlas([1040,512,'Malas'])
+    Orion.WarMode(0);
+	do
+		{
+		Orion.Step('n');
+		Orion.Wait(250);
+		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+		} while(!bench)
+	if(!Orion.WalkTo(bench.X(),bench.Y()))
+		Orion.WalkTo(bench.X(),bench.Y());
+	RepairGear();
+	Orion.Wait(1500);
     }
 //--#END
