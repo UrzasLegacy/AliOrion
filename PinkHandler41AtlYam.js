@@ -10,70 +10,70 @@ var maxCountYamato = 2
 var scrollinfoAtlantic = //[skillname, categoryindex, skillindex, bookbutton, price]
 	[
 	//0 Misc Atlantic
-		["Arms Lore",           0,  0,  1044064,    999999],
-		["Begging",             0,  1,  1044066,    3199999],
-		["Camping",             0,  2,  1044070,    29999],
-		["Cartography",         0,  3,  1044072,    7799999],
-		["Forensics",           0,  4,  1044079,    49999],
-		["Item Identification", 0,  5,  1044063,    29999],
-		["Taste Identification",0,  6,  1044096,    29999],
+		["Arms Lore",           0,  0,  1044064,    99999],
+		["Begging",             0,  1,  1044066,    1699999],
+		["Camping",             0,  2,  1044070,    30000],
+		["Cartography",         0,  3,  1044072,    1999999],
+		["Forensics",           0,  4,  1044079,    30000],
+		["Item Identification", 0,  5,  1044063,    30000],
+		["Taste Identification",0,  6,  1044096,    30000],
 	//1 Combat Atlantic
-		["Anatomy",             1,  0,  1044061,    11799999],
-		["Archery",             1,  1,  1044091,    6999999],
+		["Anatomy",             1,  0,  1044061,    3999999],
+		["Archery",             1,  1,  1044091,    3124999],
 		["Fencing",             1,  2,  1044102,    2499999],
 		["Focus",               1,  3,  1044110,    499999],
-		["Healing",             1,  4,  1044077,    7999987],
+		["Healing",             1,  4,  1044077,    3888887],
 		["Mace Fighting",       1,  5,  1044101,    999996],
-		["Parrying",            1,  6,  1044065,    8999999],
-		["Swordsmanship",       1,  7,  1044100,    14999997],
-		["Tactics",             1,  8,  1044087,    14999997],
-		["Throwing",            1,  9,  1044117,    449998],
-		["Wrestling",           1,  10, 1044103,    2999998],
+		["Parrying",            1,  6,  1044065,    4999999],
+		["Swordsmanship",       1,  7,  1044100,    6499999],
+		["Tactics",             1,  8,  1044087,    7499999],
+		["Throwing",            1,  9,  1044117,    99999],
+		["Wrestling",           1,  10, 1044103,    907499],
 	//2 Trade Skills Atlantic
-		["Alchemy",             2,  0,  1044060,    14799997],
-		["Blacksmithing",       2,  1,  1044067,    9199999],
-		["Fletching",           2,  2,  1044068,    5999999],
-		["Carpentry",           2,  3,  1044071,    7799999],
-		["Cooking",             2,  4,  1044073,    7799999],
-		["Inscription",         2,  5,  1044083,    7199999],
-		["Lumberjacking",       2,  6,  1044104,    1749993],
-		["Mining",              2,  7,  1044105,    2099999],
-		["Tailoring",           2,  8,  1044094,    8699999],
-		["Tinkering",           2,  9,  1044097,    9999999],
+		["Alchemy",             2,  0,  1044060,    4499999],
+		["Blacksmithing",       2,  1,  1044067,    4399999],
+		["Fletching",           2,  2,  1044068,    2299998],
+		["Carpentry",           2,  3,  1044071,    2299998],
+		["Cooking",             2,  4,  1044073,    799999],
+		["Inscription",         2,  5,  1044083,    5299998],
+		["Lumberjacking",       2,  6,  1044104,    349999],
+		["Mining",              2,  7,  1044105,    349999],
+		["Tailoring",           2,  8,  1044094,    3999999],
+		["Tinkering",           2,  9,  1044097,    4199998],
 	//3 Magic Atlantic
-		["Bushido",             3,  0,  1044112,    44799999], 
-		["Chivalry",            3,  1,  1044111,    8499999],
-		["Eval Intelligence",   3,  2,  1044076,    17799999],
-		["Imbuing",             3,  3,  1044116,    19999999],
-		["Magery",              3,  4,  1044085,    15999999],
-		["Meditation",          3,  5,  1044106,    399997],
-		["Mysticism",           3,  6,  1044115,    14999999],
-		["Necromancy",          3,  7,  1044109,    14888887],
-		["Ninjitsu",            3,  8,  1044113,    29799999],
-		["Resisting Spells",    3,  9,  1044086,    14799999],
-		["Spellweaving",        3,  10, 1044114,    6999999],
-		["Spirit Speak",        3,  11, 1044092,    6999999],
+		["Bushido",             3,  0,  1044112,    17999997], 
+		["Chivalry",            3,  1,  1044111,    2999998],
+		["Eval Intelligence",   3,  2,  1044076,    4999999],
+		["Imbuing",             3,  3,  1044116,    6999999],
+		["Magery",              3,  4,  1044085,    7999999],
+		["Meditation",          3,  5,  1044106,    30000],
+		["Mysticism",           3,  6,  1044115,    8999998],
+		["Necromancy",          3,  7,  1044109,    5899998],
+		["Ninjitsu",            3,  8,  1044113,    18999998],
+		["Resisting Spells",    3,  9,  1044086,    10999998],
+		["Spellweaving",        3,  10, 1044114,    3999998],
+		["Spirit Speak",        3,  11, 1044092,    2499999],
 	//4 Wilderness Atlantic
-		["Animal Lore",         4,  0,  1044062,    12999999],
-		["Animal Taming",       4,  1,  1044095,    44999999],
-		["Fishing",             4,  2,  1044078,    7799999],
-		["Herding",             4,  3,  1044080,    49999],
-		["Tracking",            4,  4,  1044098,    4999999],
-		["Veterinary",          4,  5,  1044099,    17799999],
+		["Animal Lore",         4,  0,  1044062,    2999998],
+		["Animal Taming",       4,  1,  1044095,    39499998],
+		["Fishing",             4,  2,  1044078,    2999998],
+		["Herding",             4,  3,  1044080,    30000],
+		["Tracking",            4,  4,  1044098,    1399999],
+		["Veterinary",          4,  5,  1044099,    6777776],
 	//5 Thievery Atlantic
-		["Detecting Hidden",    5,  0,  1044074,    2999999],
-		["Hiding",              5,  1,  1044081,    4999999],
-		["Lock Picking",        5,  2,  1044084,    7799999],
-		["Poisoning",           5,  3,  1044090,    29999997],
-		["Remove Trap",         5,  4,  1044108,    3999999],
-		["Snooping",            5,  5,  1044088,    49999],
-		["Stealing",            5,  6,  1044093,    4999999],
-		["Stealth",             5,  7,  1044107,    5999999],
+		["Detecting Hidden",    5,  0,  1044074,    1799999],
+		["Hiding",              5,  1,  1044081,    1999999],
+		["Lock Picking",        5,  2,  1044084,    4299998],
+		["Poisoning",           5,  3,  1044090,    16399998],
+		["Remove Trap",         5,  4,  1044108,    1399999],
+		["Snooping",            5,  5,  1044088,    30000],
+		["Stealing",            5,  6,  1044093,    2499999],
+		["Stealth",             5,  7,  1044107,    1999999],
 	//6 Bard Atlantic
-		["Discordance",         6,  0,  1044075,    29999999],
-		["Musicianship",        6,  1,  1044089,    2999997],
-		["Peacemaking",         6,  2,  1044069,    2999998],
-		["Provocation",         6,  3,  1044082,    11999998],
+		["Discordance",         6,  0,  1044075,    12499999],
+		["Musicianship",        6,  1,  1044089,    1399999],
+		["Peacemaking",         6,  2,  1044069,    899999],
+		["Provocation",         6,  3,  1044082,    4333332],
 	]
 //------------------------------------------------------------------------------------------------------------------------------YAMATO
 var scrollinfoYamato = //[skillname, categoryindex, skillindex, bookbutton, price]
@@ -545,6 +545,7 @@ function VerifyOpenVendor(vendorSerial,vendorPack,delay)
     
 function VSResultPinks()
 	{
+		Orion.RemoveDisplayTimer('searchWait');
     var pushToDiscord = false;
     var hook = '1080059761640353863';
     var key = 'eLZBOOgTXWoMxy2pFu2aEMtnlAuoP9pEV8fgDkUhCmXmBZQwlB_MwvqmAzVcTERsV0KB';
@@ -618,6 +619,7 @@ function VSResultPinks()
                 var truncMsg = outMsg + ': [ ' + truncArr[0] + '|' + truncArr[1] + '|' + truncArr[2] + '|' + truncArr[3] + '|' + truncArr[4] + '|' + truncArr[5] + ']';
                 outMsg += ' (' + resultArr.length + ':' + addArray.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,") + '): [' + formatArray + ']: Acc Total: ' + totalVSprice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
                 TextWindow.Print(outMsg);
+                if(pushToDiscord)
                     Orion.HttpPost(bot,'content=' + truncMsg);
 				}
 			}
@@ -653,8 +655,8 @@ function VSsearch(text)
 		vendorSearchGump.Select(gumpHook);
 		Orion.Wait(500);
 		}
-	Orion.AddDisplayTimer('searchWait', 360000, 'AboveChar', 'bar', 'Waiting for Vendor Search');
-	var vendorSearchGump = WaitForSpecificGump(360000, 'generic', self, '0x000F3EC8')
+	Orion.AddDisplayTimer('searchWait', 60000, 'AboveChar', 'bar', 'Waiting for Vendor Search');
+	var vendorSearchGump = WaitForSpecificGump(60000, 'generic', self, '0x000F3EC8')
 	if(vendorSearchGump)
 		{
 		var cmdList = vendorSearchGump.CommandList()
@@ -705,8 +707,8 @@ function VSsearchPageTurner(text)
 		vendorSearchGump.Select(gumpHook);
 		Orion.Wait(500);
 		}
-	Orion.AddDisplayTimer('searchWait', 360000, 'AboveChar', 'bar', 'Waiting for Vendor Search');
-	var vendorSearchGump = WaitForSpecificGump(360000, 'generic', self, '0x000F3EC8')
+	Orion.AddDisplayTimer('searchWait', 60000, 'AboveChar', 'bar', 'Waiting for Vendor Search');
+	var vendorSearchGump = WaitForSpecificGump(60000, 'generic', self, '0x000F3EC8')
 	if(vendorSearchGump)
 		{
 		var cmdList = vendorSearchGump.CommandList()

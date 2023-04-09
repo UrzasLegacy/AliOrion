@@ -212,6 +212,17 @@ function AutoAttack()
                     if(!Orion.AbilityStatus(whirlwindSpecial) && Player.Mana() >= 15)
                         Orion.UseAbility(whirlwindSpecial);
                     }
+                else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                    {
+                    Orion.Cast('Onslaught');
+                    var startTime = Orion.Now();
+                    var endTime = startTime + 3000;
+                    var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
+                    if(check)
+                        Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
+                    }
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
+                    Orion.UseAbility(singleTargetSpecial);
                 break;
             default: //more than 2 enemies
                 if(useWhirlwind)
@@ -224,6 +235,17 @@ function AutoAttack()
                     if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
                         Orion.Cast('Momentum Strike');
                     }
+                else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                    {
+                    Orion.Cast('Onslaught');
+                    var startTime = Orion.Now();
+                    var endTime = startTime + 3000;
+                    var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
+                    if(check)
+                        Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
+                    }
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
+                    Orion.UseAbility(singleTargetSpecial);
                 break;
             }
         Orion.Wait(500);

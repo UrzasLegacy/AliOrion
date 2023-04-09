@@ -661,41 +661,48 @@ function SetAvoidRadius(mobSerial,range)
         }
     }
 
-function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
-    {
-    if(z === undefined) z = 0;
-    if(distanceXY === undefined) distanceXY = 0;
-    if(distanceZ === undefined) distanceZ = 255;
-    if(chunkSize === undefined) chunkSize = 5;
-    if(run === undefined) run = 1;
-    if(openDoor === undefined) openDoor = 1;
-    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
-    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
-    //Orion.ClearFakeMapObjects();
-    if(pathTiles.length === 0)
-        return false;
-	var shortStop = pathTiles[pathTiles.length - 1];
-	var shortX = shortStop.X();
-	var shortY = shortStop.Y();
-    // pathTiles.forEach(function(tile,i)
-    //     {
-    //     Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-    //     })
-    // Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
-    if(pathTiles.length >= chunkSize)
-        var chunk = pathTiles[chunkSize - 1];
-    else
-        var chunk = shortStop;
-    var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
-    Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
-    Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
-    Orion.Wait(1);
-	if(callBackFn !== undefined)
-		callBackFn();
-    if(Orion.GetDistance(shortX,shortY) > 0)
-        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn);
-    return true;
-    }
+    function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn)
+        {
+        if(z === undefined) z = 0;
+        if(distanceXY === undefined) distanceXY = 0;
+        if(distanceZ === undefined) distanceZ = 255;
+        if(chunkSize === undefined) chunkSize = 5;
+        if(run === undefined) run = 1;
+        if(openDoor === undefined) openDoor = 1;
+        if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+        if(pathMarkers === undefined) pathMarkers = false;
+
+        var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+        if(pathMarkers)
+            Orion.ClearFakeMapObjects();
+        if(pathTiles.length === 0)
+            return false;
+        var shortStop = pathTiles[pathTiles.length - 1];
+        var shortX = shortStop.X();
+        var shortY = shortStop.Y();
+        if(pathMarkers)
+            {
+            pathTiles.forEach(function(tile,i)
+                {
+                Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+                })
+            Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+            }
+        if(pathTiles.length >= chunkSize)
+            var chunk = pathTiles[chunkSize - 1];
+        else
+            var chunk = shortStop;
+        var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
+        if(pathMarkers)
+            Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+        Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+        Orion.Wait(1);
+        if(callBackFn !== undefined)
+            callBackFn();
+        if(Orion.GetDistance(shortX,shortY) > 0)
+            return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn);
+        return true;
+        }
 
 function Fill(profString, skillString, skillValue, toolGraphic, containerSerial, benchSerial, textInd)
     {
