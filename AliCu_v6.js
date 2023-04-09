@@ -101,8 +101,9 @@ function Autostart()
     Orion.Wait(2000);
     var shards =
         {
-            "Pacific": [],
+            "Pacific": [3639,2098,'Trammel'],
             "Great Lakes": [778,746,'Trammel'],
+            "Lake Austin": [1051,543,'Malas']
         }
     var shardName = Orion.ShardName();
     var repairArr = shards[shardName];
@@ -166,7 +167,7 @@ function CuGump()
     var currentObj = Shared.GetVar('currentObj',{"0x0000":0,"0x0901":0,"0x05A7":0,"0x0501":0,"0x08AC":0,"0x0527":0,"0x097A":0,"0x0978":0,"0x08AA":0,"0x0482":0,"0x0674":0,"0x04B1":0,"0x0515":0,"0x0455":0,"0x0481":0,"0x0489":0});
     var s = 1;
     var gump = Orion.CreateCustomGump(15001);
-    gump.SetNoClose(false);
+    gump.SetNoClose(true);
     gump.SetCallback('CuGumpCallback')
     gump.Clear();
     gump.AddResizepic(0, 0, 0xDAC, 350, 500);
@@ -295,8 +296,11 @@ function CuGumpCallback(_)
     var code = CustomGumpResponse.ReturnCode();
     if(code == 0)
         {
+        Orion.PauseScript('CuGump');
         var gump = Orion.CreateCustomGump(15001);
         gump.Close();
+        Orion.Wait(500);
+        Orion.Terminate('CuGump');
         }
     else if(code == 1)
         {
@@ -971,16 +975,18 @@ function RunToRepair()
     
     AliAtlas(repairArr[0],repairArr[1],repairArr[2])
 	Orion.WarMode(0);
+    var tempX = Player.X();
+    var tempY = Player.Y();
 	do
 		{
 		Orion.Step('n');
 		Orion.Wait(250);
 		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
 		} while(!bench)
-	if(!Orion.WalkTo(bench.X(),bench.Y()))
-		Orion.WalkTo(bench.X(),bench.Y());
+    AliWalkTo(bench.X(),bench.Y(),0,1);
 	RepairGear();
 	Orion.Wait(1500);
+    AliWalkTo(tempX,tempY);
 	Orion.Exec('StartCuFarm',true);
 	}
 
@@ -1717,7 +1723,7 @@ function RepairGear()
     if(bench && gump)
         gump.Close();
 	}
-    
+
 function DropDraggedHere() //v2
     {
     var validTiles = Orion.GetTilesInRect('land', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)

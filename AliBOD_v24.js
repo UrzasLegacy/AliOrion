@@ -3196,7 +3196,11 @@ function ExcKatana()
     Orion.Exec('WeaponGump',true);
     ElementalWeapon('Katana',true);
     }
-
+function ExcScimitar()
+    {
+    Orion.Exec('WeaponGump',true);
+    Orion.Exec('ElementalWeapon',true,['Scimitar',true])
+    }
 function ExcDoubleAxe()
     {
     Orion.Exec('WeaponGump',true);
@@ -3229,6 +3233,13 @@ function NormBladedStaff()
 
 function ElementalWeapon(itemName, exceptionalBool)
     {
+    if(typeof exceptionalBool == 'string')
+        {
+        if(exceptionalBool == 'true')
+            exceptionalBool = true;
+        else
+            exceptionalBool = false;
+        }
     var weaponInfo = {
         'Katana': {
             itemGraphic: '0x13FF',
@@ -3244,6 +3255,11 @@ function ElementalWeapon(itemName, exceptionalBool)
             itemGraphic: '0x26BD',
             categoryCode: 9006,
             itemCode: 67
+            },
+        'Scimitar': {
+            itemGraphic: '0x13B6',
+            categoryCode: 9004,
+            itemCode: 49
             },
         }
     var piece = weaponInfo[itemName];
@@ -3357,7 +3373,7 @@ function ElementalWeapon(itemName, exceptionalBool)
             CloseAllGumps();
             while(!Orion.Contains(item.Properties(), 'Reforged'))
                 {
-                Orion.CharPrint(self,1159,'Reforging Plate Piece');
+                Orion.CharPrint(self,1159,'Reforging Weapon');
                 Orion.UseObject(viableRunics[0].Serial());
                 if(Orion.WaitForTarget(2000))
                     Orion.TargetObject(item.Serial());
