@@ -99,19 +99,6 @@ var textWidth = 100;
 function Autostart()
     {
     Orion.Wait(2000);
-    var shards =
-        {
-            "Pacific": [3639,2098,'Trammel'],
-            "Great Lakes": [778,746,'Trammel'],
-            "Lake Austin": [1051,543,'Malas']
-        }
-    var shardName = Orion.ShardName();
-    var repairArr = shards[shardName];
-    if(repairArr)
-        Shared.AddArray('repairArr',repairArr)
-    else
-        Orion.CharPrint(self,1159,"Looks like your shard isn't configured correctly. Don't forget to send Ali your shard's repair house coords! Instead of auto repairing, your character will die a slow and painful death!")
-    Shared.AddVar('profile',profile);
     var startTime = Orion.Now();
     var endTime = startTime + 5000;
     while(!Orion.GumpExists('container',backpack))
@@ -121,6 +108,8 @@ function Autostart()
         Orion.UseObject(backpack);
         Orion.Wait(1000);
         }
+    if(Player.Map() == 0)
+        MapDetectionFix();
     }
 
 function StartCuFarm()
@@ -378,7 +367,7 @@ function RareAlert()
                 }
             else if(Orion.Contains('0x0455|0x0481',mobColor))
                 {
-                var parse = LoreParser(mobSerial);
+                var parse = LoreParser(mobSerial,mobColor);
                 if(parse.length)
                     {
                     outCharMsg = JSON.stringify(parse);
@@ -444,18 +433,22 @@ function BlazeProtocol(mobSerial,outMsg)
     if(Orion.SkillValue('Animal Taming','base') > 1000)
         {
         TameCu();
+        Shared.AddVar('pauseStamp',Orion.Now());
+        Orion.PauseScript('CuGump')
         StoreCu();
-        Orion.PauseScript('all');
+        Orion.Terminate('all','JournalScan|CuGump');
         }
     else
         {
+        Orion.Wait(1300);
         EquipTamingSuitByBotName();
-        Orion.Wait(1000);
         if(Orion.SkillValue('Animal Taming','base') > 1000)
             {
             TameCu();
+            Shared.AddVar('pauseStamp',Orion.Now());
+            Orion.PauseScript('CuGump')
             StoreCu();
-            Orion.PauseScript('all');
+            Orion.Terminate('all','JournalScan|CuGump');
             }
         else
             {
@@ -468,7 +461,7 @@ function BlazeProtocol(mobSerial,outMsg)
             AliWalkTo(1252, 1218)
             }
         }
-    Orion.ResumeScript('all');
+    Orion.Exec("StartCuFarm",true)
     }
 
 function LoreParser(mobSerial,mobColor)
@@ -496,11 +489,11 @@ function LoreParser(mobSerial,mobColor)
 	var hp = Math.floor(+Orion.Split(textList[1].slice(17).slice(0,-6),'/')[1] / 2);
 	var stam = Math.floor(+Orion.Split(textList[2].slice(17).slice(0,-6),'/')[1] / 2);
 	var str = Math.floor(+textList[4].slice(17).slice(0,-6) / 2);
-	var dex = Math.floor(+textList[5].slice(17).slice(0,-6) / 2);
-	var phys = +textList[11].slice(17).slice(0,-7);
-	var fire = +textList[12].slice(41).slice(0,-7);
+	//var dex = Math.floor(+textList[5].slice(17).slice(0,-6) / 2);
+	//var phys = +textList[11].slice(17).slice(0,-7);
+	//var fire = +textList[12].slice(41).slice(0,-7);
 	var cold = +textList[13].slice(41).slice(0,-7);
-	var pois = +textList[14].slice(41).slice(0,-7);
+	//var pois = +textList[14].slice(41).slice(0,-7);
 	var ener = +textList[15].slice(41).slice(0,-7);
     var gump = Orion.CreateCustomGump(15001);
     var s = 1000;
@@ -965,20 +958,32 @@ function RunToRepair()
 	{
     if(Orion.ScriptRunning('TameCu') > 0)
         return;    
-    var repairArr = Shared.GetArray('repairArr',false);
+    var shards =
+        {
+            "Pacific": [3639,2098,'Trammel'],
+            "Great Lakes": [778,746,'Trammel'],
+            "Yamato": [798,755,'Trammel'],
+            "Arirang": [738,791,'Trammel'],
+            "Great Lakes": [778,746,'Trammel'],
+            "Lake Austin": [1051,543,'Malas']
+        }
+    var shardName = Orion.ShardName();
+    var repairArr = shards[shardName];
     if(!repairArr)
         return Orion.CharPrint(self,1159,"Looks like your shard isn't configured correctly. Don't forget to send Ali your shard's repair house coords! Instead of auto repairing, your character will die a slow and painful death!")
+    
+    Shared.AddVar('pauseStamp',Orion.Now());
     Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RunToRepair');
     Orion.Wait(500);
-    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RunToRepair');
+    Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RunToRepair|CuGump');
 	//RecallByGump('Main', 'Repair', 'Main', 'Repair2');
     
     AliAtlas(repairArr[0],repairArr[1],repairArr[2])
-	Orion.WarMode(0);
     var tempX = Player.X();
     var tempY = Player.Y();
 	do
 		{
+        Orion.WarMode(0);
 		Orion.Step('n');
 		Orion.Wait(250);
 		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
@@ -1030,9 +1035,11 @@ function AliAtlas(targetX,targetY,targetMap)
             ['Royal City', 'TerMur', 33, 850, 3525],
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
-    var map = maps[Player.Map()];
+
     if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
         {
+        Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
+        Orion.WarMode(1);
         AliWalkTo(targetX,targetY);
         Orion.WarMode(0);
         return;
@@ -1056,39 +1063,98 @@ function AliAtlas(targetX,targetY,targetMap)
     Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
     Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
     Orion.WarMode(1);
+    
+    Orion.CharPrint(self,1159,'Walking to nearest gate');
     AliWalkTo(nearestGate[3], nearestGate[4])
     //var tempX = Player.X();
     //var tempY = Player.Y();
-    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 2)
+    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 10)
         {
-        if(Orion.WaitForGump(2000))
+        Orion.Print('Waiting for gate gump')
+        var gump = Orion.GetGump('any','0x00000258');
+        if(gump !== null)
             {
-            var gump = Orion.GetGump('any','0x00000258');
-            if(gump !== null)
-                {
-                var gumpHook = Orion.CreateGumpHook(1);
-                gumpHook.AddCheck(destinationGate[2], true);
-                gump.Select(gumpHook);
-                Orion.Wait(100);
-                }
+            var gumpHook = Orion.CreateGumpHook(1);
+            gumpHook.AddCheck(destinationGate[2], true);
+            gump.Select(gumpHook);
+            Orion.Wait(100);
             }
         else
             {
             var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 24);
+            Orion.CharPrint(self,1159,'Searching for gate');
             if(gate[0])
                 {
+                Orion.CharPrint(self,1159,'Walking to gate');
                 AliWalkTo(gate[0].X(), gate[0].Y());
                 Orion.Wait(500);
                 Orion.Resend();
                 Orion.Wait(500);
                 Orion.UseObject(gate[0].Serial());
                 }
+            else 
+                {
+                Orion.CharPrint(self,1159,'Walking to nearest gate');
+                if(!AliWalkTo(nearestGate[3], nearestGate[4]))
+                    if(!AliWalkTo(1174, 1283))
+                        AliWalkTo(1016, 524);
+                }
             }
         Orion.Wait(1000);
         }
     Orion.WarMode(1);
+    Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
     AliWalkTo(targetX,targetY);
     Orion.WarMode(0);
+    }
+
+function MapDetectionFix()
+    {
+    Orion.CharPrint(self,1159,'Map detection bugged! Fixing by changing facets')
+    if(Orion.GetDistance(1174,1285) < 250)
+        AliWalkTo(1174,1285); //ilshenar
+    else if(Orion.GetDistance(1017,525) < 250)
+        AliWalkTo(1017,525); //luna
+    else if(Orion.GetDistance(773,750) < 250)
+        AliWalkTo(773,750); //tram yew
+    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+    if(gate)
+        {
+        AliWalkTo(gate.X(),gate.Y())
+        var gump = Orion.GetGump('any','0x00000258');
+        while(!gump)
+            {
+            Orion.UseObject(gate.Serial());
+            Orion.Wait(1300);
+            gump = Orion.GetGump('any','0x00000258');
+            }
+        var gumpHook = Orion.CreateGumpHook(1);
+        gumpHook.AddCheck(31, true);
+        gump.Select(gumpHook);
+        Orion.Wait(3000);
+        var gate2 = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+        if(gate2)
+            {
+            var gump2 = Orion.GetGump('any','0x00000258');
+            while(!gump2)
+                {
+                Orion.UseObject(gate2.Serial());
+                Orion.Wait(1300);
+                gump2 = Orion.GetGump('any','0x00000258');
+                }
+            var gumpHook2 = Orion.CreateGumpHook(1);
+            gumpHook2.AddCheck(22, true);
+            gump2.Select(gumpHook2);
+            Orion.Wait(3000);
+            }
+        }
+    if(Player.Map() !== 0)
+        Orion.CharPrint(self,1159,'Map detection fixed!');
+    else
+        {
+        Orion.CharPrint(self,1159,'Map detection still bugged! Retrying...')
+        return MapDetectionFix();
+        }
     }
 
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
@@ -1215,7 +1281,7 @@ function JournalScan()
 						DiscordPush(Player.Name() + ": Equipment is damaged")
 					//if(useAlarmSound)
 						//Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-					Orion.Terminate('all', 'JournalScan');
+					//Orion.Terminate('all', 'JournalScan');
 					Orion.Exec('RunToRepair',true);
 					break;
 				default:
@@ -1722,6 +1788,7 @@ function RepairGear()
     gump = Orion.CreateCustomGump(11420);
     if(bench && gump)
         gump.Close();
+    CloseAllGumps();
 	}
 
 function DropDraggedHere() //v2
@@ -1754,5 +1821,18 @@ function DropDraggedHere() //v2
         }
     else 
         Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    }
+
+function CloseAllGumps()
+    {
+    var endTime = Orion.Now() + 3000;
+    var gump = Orion.GetGump(any);
+    while(gump && Orion.Now() < endTime)
+        {
+        Orion.Print(gump.ID());
+        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Wait(100);
+        gump = Orion.GetGump(any);
+        }
     }
 //--#END
