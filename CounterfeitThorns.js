@@ -1,8 +1,20 @@
+var bunnyGraphic = '0x0606';
+var greenThornGraphic = '0x0F42';
+
+// Setup Instructions
+// Change x and y to the coordinates of the tile you'd like to target with the green thorns. Has to be farm land.
+// Use your characters to stam block the bunny, you only need 2 if you have a fence corner to work with.
+var x = 4642;
+var y = 1292;
+//Do not do this in guard zone in tram, you won't be able to hurt the bunnies.
+//No benefit to doing it in fel, fel luck bonus does not apply to this, confirmed by devs
+
+//Tweak these settings and don't forget to change the Discord hook and key
 var profiles = 
     {
     Thorns: 
         {
-        mobGraphic: any, //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+        mobGraphic: bunnyGraphic, //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
         useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
             singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
         useOnslaught: false,
@@ -11,31 +23,30 @@ var profiles =
         useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
         useCounterAttack: false, //true , false.
         useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '887268637315047444', //Put Discord WebHook here
-            discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+            discordHook: '88726863736875314', //Put Discord WebHook here
+            discordKey: 'SJfWniY7drrewqrvXSPb3EasdFs7VH5_qTg695utEsfasdfVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
         journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
         },
     }
 
 var profile = profiles.Thorns;
 
-var timerObj =
-    {
-    '0x05BC6E7E': '1000', //caern
-    '0x068CB859': '2000', //i am a samp
-    '0x05449675': '3000', //hot chip
-    'PlayerSerialEtc': '4000'
-    }
 Orion.Exec('JournalScan',true);
+
 function MainLoop()
     {
+    var timerObj =
+        { //'PlayerSerial: 'msString'
+        '0x068B2AA0': '1000', //marceline
+        '0x068B33C8': '2000', //Catti-brie
+        '0x068B2FB5': '3000', //marion
+        '0x05A17672': '1000',
+        '0x04B41304': '2000',
+        '0x054976B5': '3000',
+        }
     Orion.ControlAgent('autoloot','BotLoot','start')
     var playerSerial = Player.Serial();
     var timer = timerObj[playerSerial]
-    var bunnyGraphic = '0x0606';
-    var greenThornGraphic = '0x0F42';
-    var x = 4642;
-    var y = 1292;
     Orion.Exec('AutoAttack',true);
     while(!Player.Dead())
         {
@@ -57,6 +68,24 @@ function MainLoop()
         Orion.Wait(1000);
         }
     }
+
+function ToTTurnIns()
+	{ //BE VERY CAREFUL! WILL TURN IN EVERY DROP IN YOUR BACKPACK AND SUBCONTAINERS. Open turn in gump and start script
+	while(true)
+		{
+        if(Orion.WaitForGump(2000))
+			{
+			var gump = Orion.GetGump('last');
+			if((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00002336'))
+				{
+                gump.Select(Orion.CreateGumpHook(100));
+				Orion.Wait(100);
+				}
+			}
+		else
+			break;
+		}
+	}
 
 function terminateScripts()
     {
@@ -190,3 +219,27 @@ function JournalScan()
 			}
 		}
 	}
+
+function EggMover6000()
+	{
+    Orion.CharPrint(self,1159,'Target source container')
+    Orion.WaitForAddObject('myTarget');
+    var sourceContainer = Orion.GetSerial('myTarget');
+    Orion.CharPrint(self,1159,'Target destination container')
+    Orion.WaitForAddObject('myTarget');
+    var destinationContainer = Orion.GetSerial('myTarget');
+	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', any, sourceContainer)[0])
+		{
+		Orion.MoveItemType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', any, sourceContainer, 0, destinationContainer);
+		Orion.Wait(1100);
+		}
+	}	
+	
+// function RareEggMover6000() //need to add new rare hues
+// 	{
+// 	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B', sourceContainer)[0])
+// 		{
+// 		Orion.MoveType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B', sourceContainer, 0, destinationContainer);
+// 		Orion.Wait(1100);
+// 		}
+// 	}

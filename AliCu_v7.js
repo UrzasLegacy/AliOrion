@@ -1,4 +1,5 @@
 //Setup Instructions:
+//Set your Discord hook and key in your profile
 //Have a runebook named 'Main' (full of recall scrolls if you dont have chiv)
 //Put a rune named 'Moongate' set to any moongate and another rune named 'Moongate2' nearby in case the first is blocked
 //Put a rune named 'Repair' set in front of your repair house and a rune named 'Repair2' nearby in case the first is blocked
@@ -12,7 +13,7 @@ var testMode = false;
 
 var profiles = 
     {
-    Cu: 
+    Ali: 
         {
         mobGraphic: '0x0115|0x007A|0x0080', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
         useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
@@ -1184,16 +1185,31 @@ function WalkToRadiusBorder(targetSerial, distance)
 		}
 	}
 
-function DiscordPush(message)
-	{
-	var bot = Shared.GetVar('discordLink',false);
-    if(!bot)
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+function AliFile(inputString,fileNameString)
+    {
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString; //'/discordConfig.txt';
+    var tmpFile = Orion.NewFile();
+    if(tmpFile.Open(tmpFilePath))
         {
-        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
-        Shared.AddVar('discordLink',bot);
+        var fileRead = tmpFile.ReadAll();
+        if(!fileRead)
+            fileRead = '';
         }
-	Orion.HttpPost(bot, "content=" + message);
-	}
+    else
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    tmpFile.Open(tmpFilePath);
+    Orion.Print("Recording " + inputString + ' To File: ' + tmpFilePath);
+    tmpFile.Write(inputString);
+    tmpFile.Close();
+    }
 
 function JournalScan()
 	{
