@@ -538,6 +538,12 @@ function AttackSpawn()
             }
 		while(!Player.Dead() && mobs.length)
 			{
+            if(isTargetHour(11))
+                {
+                Orion.PauseScript('all','AttackSpawn')
+                AliWalkTo(1174,1285)
+                Orion.LogOut()
+                }
             Orion.Print('Mobs: ' + mobs.length);
 			var mob = mobs[0];
             var mobColor = mob.Color();
@@ -1800,4 +1806,11 @@ function CloseAllGumps()
         gump = Orion.GetGump(any);
         }
     }
+
+function isTargetHour(targetHour)
+	{
+	var now = new Date();
+	var UTCHour = now.getUTCHours();
+	return UTCHour == targetHour;
+	}
 //--#END
