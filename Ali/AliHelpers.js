@@ -1205,3 +1205,10 @@ function AliAtlas(target)
             Orion.Wait(500);
             }
     }
+
+function isPointInRectangle(x1, y1, x2, y2, x3, y3) {
+        // Check if Point3 is within the bounds of the rectangle created by Point1 and Point2
+        //x1,y1 is the northwest corner of the rectangle
+        //x2,y2 is the southeast corner
+        return x3 >= x1 && x3 <= x2 && y3 <= y1 && y3 >= y2;
+      }
