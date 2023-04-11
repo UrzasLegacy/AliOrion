@@ -235,11 +235,25 @@ function EggMover6000()
 		}
 	}	
 	
-// function RareEggMover6000() //need to add new rare hues
-// 	{
-// 	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B', sourceContainer)[0])
-// 		{
-// 		Orion.MoveType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B', sourceContainer, 0, destinationContainer);
-// 		Orion.Wait(1100);
-// 		}
-// 	}
+function RareEggMover6000() //need to add new rare hues
+	{
+	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B|0x0AA1|0x044B|0x044C', sourceContainer)[0])
+		{
+		Orion.MoveType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B|0x0AA1|0x044B|0x044C', sourceContainer, 0, destinationContainer);
+		Orion.Wait(1100);
+		}
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}

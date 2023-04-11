@@ -216,6 +216,7 @@ function ScrollListFormatter()
 
 function ScrollPriceListGump()
     {
+    var roundPrices = false;
     var cats = {
         0: 'Misc',
         1: 'Combat',
@@ -237,12 +238,17 @@ function ScrollPriceListGump()
         {
         var scroll = scrollinfo[i];
         var price = scroll[4];
-        if(price < 100000)
-        	var rounded = Math.round(price / 10000) * 10000;
-        else //if(price < 1000000)
-        	var rounded = Math.round(price / 100000) * 100000;
-        //else
-        	//var rounded = Math.round(price / 1000000) * 1000000;
+        if(roundPrices)
+            {
+            if(price < 100000)
+                var rounded = Math.round(price / 10000) * 10000;
+            else //if(price < 1000000)
+                var rounded = Math.round(price / 100000) * 100000;
+            //else
+                //var rounded = Math.round(price / 1000000) * 1000000;
+            }
+        else
+            var rounded = price;
         y += yInc;
         if(scroll[1] >= mark)
             {

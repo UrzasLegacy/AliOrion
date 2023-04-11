@@ -13,7 +13,7 @@ var testMode = false;
 
 var profiles = 
     {
-    Ali: 
+    Cu: 
         {
         mobGraphic: '0x0115|0x007A|0x0080', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
         useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
@@ -113,6 +113,8 @@ function Autostart()
 
 function StartCuFarm()
     {
+    if(Player.Map() == 0)
+        MapDetectionFix();
     if(Orion.GetDistance(1174,1285) > 250)
         AliAtlas(1174,1285,'Ilshenar');
     EquipRegularSuitByBotName();
@@ -432,18 +434,25 @@ function BlazeProtocol(mobSerial,outMsg)
     if(Orion.SkillValue('Animal Taming','base') > 1000)
         {
         TameCu();
+        Shared.AddVar('pauseStamp',Orion.Now());
+        Orion.PauseScript('CuGump')
         StoreCu();
         Orion.PauseScript('all');
         }
     else
         {
+        Orion.Wait(1300);
         EquipTamingSuitByBotName();
         Orion.Wait(1000);
         if(Orion.SkillValue('Animal Taming','base') > 1000)
             {
             TameCu();
+            Shared.AddVar('pauseStamp',Orion.Now());
+            Orion.PauseScript('CuGump')
             StoreCu();
-            Orion.PauseScript('all');
+            Orion.PauseScript('all','BlazeProtocol');
+            Orion.Wait(200)
+            Orion.Terminate('all','BlazeProtocol');
             }
         else
             {
@@ -456,7 +465,7 @@ function BlazeProtocol(mobSerial,outMsg)
             AliWalkTo(1252, 1218)
             }
         }
-    Orion.ResumeScript('all');
+    Orion.Exec("StartCuFarm",true)
     }
 
 function LoreParser(mobSerial,mobColor)
@@ -541,6 +550,9 @@ function AttackSpawn()
             if(isTargetHour(11))
                 {
                 Orion.PauseScript('all','AttackSpawn')
+                Orion.Wait(200);
+                Orion.StopWalking();
+                Orion.Wait(200);
                 AliWalkTo(1174,1285)
                 Orion.LogOut()
                 }
@@ -1037,10 +1049,6 @@ function AliAtlas(targetX,targetY,targetMap)
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
     
-    if(Player.Map() == 0)
-        var map = maps[2]
-    else
-        var map = maps[Player.Map()];
     if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
         {
         Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
@@ -1111,6 +1119,55 @@ function AliAtlas(targetX,targetY,targetMap)
     Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
     AliWalkTo(targetX,targetY);
     Orion.WarMode(0);
+    }
+
+function MapDetectionFix()
+    {
+    Orion.CharPrint(self,1159,'Map detection bugged! Fixing by changing facets')
+    if(Orion.GetDistance(1174,1285) < 250)
+        AliWalkTo(1174,1285); //ilshenar
+    else if(Orion.GetDistance(1017,525) < 250)
+        AliWalkTo(1017,525); //luna
+    else if(Orion.GetDistance(773,750) < 250)
+        AliWalkTo(773,750); //tram yew
+    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+    if(gate)
+        {
+        AliWalkTo(gate.X(),gate.Y())
+        var gump = Orion.GetGump('any','0x00000258');
+        while(!gump)
+            {
+            Orion.UseObject(gate.Serial());
+            Orion.Wait(1300);
+            gump = Orion.GetGump('any','0x00000258');
+            }
+        var gumpHook = Orion.CreateGumpHook(1);
+        gumpHook.AddCheck(31, true);
+        gump.Select(gumpHook);
+        Orion.Wait(3000);
+        var gate2 = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+        if(gate2)
+            {
+            var gump2 = Orion.GetGump('any','0x00000258');
+            while(!gump2)
+                {
+                Orion.UseObject(gate2.Serial());
+                Orion.Wait(1300);
+                gump2 = Orion.GetGump('any','0x00000258');
+                }
+            var gumpHook2 = Orion.CreateGumpHook(1);
+            gumpHook2.AddCheck(22, true);
+            gump2.Select(gumpHook2);
+            Orion.Wait(3000);
+            }
+        }
+    if(Player.Map() !== 0)
+        Orion.CharPrint(self,1159,'Map detection fixed!');
+    else
+        {
+        Orion.CharPrint(self,1159,'Map detection still bugged! Retrying...')
+        return MapDetectionFix();
+        }
     }
 
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
@@ -1191,9 +1248,16 @@ function WalkToRadiusBorder(targetSerial, distance)
 		}
 	}
 
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
 function SetDiscordRegistryEntry()
     {
     var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    Orion.Print('Setting discordConfig registry: ' + discordConfig)
     var registryName = 'discordConfig';
     Orion.RegWrite(registryName, discordConfig);
     return discordConfig;
