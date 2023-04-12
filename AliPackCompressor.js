@@ -177,6 +177,10 @@ function ConsolidateEggs()
             var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
             return aContents - bContents;
             });
+    if(containersPut.length == 0)
+            return Orion.CharPrint(self,1159,'Out of containers to put eggs into!')
+    if(containersPull.length == 0)
+            return Orion.CharPrint(self,1159,'Out of containers to pull eggs from!')
     while(containersPut.length && containersPull.length)
         {
         Orion.Print('test1')

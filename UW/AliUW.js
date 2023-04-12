@@ -1,13 +1,29 @@
+//IMPORTANT NOTES FOR MYSELF
+//Shared variable 'sync' must true to initiate 
+
+function PrintDexxerArr()
+    {
+    Shared.AddVar('sync',false);
+    var arr = Shared.GetArray('dexxer',false);
+    Orion.Print(arr)
+    }
+
+function ClearShared()
+    {
+    Shared.ClearArrays();
+    Shared.ClearVars();
+    }
+
 //Create a findlist for autoloot named 'BotLoot'
-var Version = '3.13'
-var leaderSerial = '0x01DD7DAE'; //Apollo
+var Version = '3.14'
+var leaderSerial = '0x003DB071'; //Eris
 
 var profile = 
     {
     useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
     useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
         singleTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-    useMultiTargetSpecial: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+    useMultiTargetSpecial: false, //true , false. Set to true to use a special when 2 or more mobs are nearby to attack.
         multiTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
     useMomentumStrike: true, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
     useCounterAttack: true, //boolean. Set to true to maintain Counter Attack at all times.
@@ -36,27 +52,16 @@ Orion.Exec('JournalScan', true);
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 var defaultAssets = 
     [
-        [ ['text','Leader:' + Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp:' + Shared.GetVar('barrelName','Unknown'),554,1,1] ],
+        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1] ],
         [ ['toggle','SmartStart','Start'], ['toggle','LeaveUW','Leave UW'], ['toggle','LootUW','Loot Boss'] ],
         [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
     ];
 
 function Autostart()
     {
-    Orion.Wait(2000);
-    Shared.AddVar('profile',profile);
+    Orion.Wait(1000);
+    Shared.AddVar('sync',false);
     VerifyOpenContainer(backpack);
-    if(Player.Serial() == leaderSerial)
-        Orion.Exec('AliComLeader',true);
-    else
-        Orion.Exec('AliComFollower',true);
-    }
-
-//--#Inits
-function ________________________INITS(_){}
-
-function SmartStart()
-    {
     if(Player.Serial() == leaderSerial)
 		var role = 'leader';
     else if(Orion.SkillValue('Magery') >= 700)
@@ -66,26 +71,52 @@ function SmartStart()
     else
         var role = 'misc';
     Shared.AddVar('myRole',role);
+    if(Player.Serial() == leaderSerial)
+        Orion.Exec('AliComLeader',true);
+    else
+        Orion.Exec('AliComFollower',true);
+    }
+
+//--#Inits
+function _____________INITS(_){}
+
+function SmartStart()
+    {
+    var role = Shared.GetVar('myRole',false);
     switch(role)
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
-            StartPositions();
+            DetermineBarrelSamp();
+            GoToSyncPosition();
+            WaitSyncLeader();
+            Orion.PauseScript('SmartStart');
             initUWLeader();
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
-            StartPositions();
+            GoToSyncPosition();
+            WaitSyncFollower();
+            if(Shared.GetVar('barrelSamp',false) === true)
+                initBarrels();
+            Orion.PauseScript('SmartStart');
+            GoFromSyncToReadyPosition();
             initSamp();
             break;
         case 'healer':
 			Orion.Exec('AliComFollower',true);
-            StartPositions();
+            GoToSyncPosition();
+            WaitSyncFollower();
+            Orion.PauseScript('SmartStart');
+            GoFromSyncToReadyPosition();
             initHealer();
             break;
         case 'misc':
 			Orion.Exec('AliComFollower',true);
-            StartPositions();
+            GoToSyncPosition();
+            WaitSyncFollower();
+            Orion.PauseScript('SmartStart');
+            GoFromSyncToReadyPosition();
             initMisc();
             break;
         default:
@@ -93,20 +124,97 @@ function SmartStart()
         }
     }
 
-function initUWLeader()
+function GoFromSyncToReadyPosition()
+    {//this function is to move from Sync position to Ready position
+    }
+
+function DetermineBarrelSamp()
     {
-    Orion.Exec('AliComLeader',true);
+    var samps = Shared.GetArray('dexxer',false);
+    while(!samps)
+        {
+        Orion.CharPrint(self,1159,'Waiting for samps to join...')
+        Orion.Wait(1000)
+        samps = Shared.GetArray('dexxer',false);
+        }
+    var barrelSamp = samps[Orion.Random(0,samps.length)];
+    Shared.AddVar('barrelSampName',barrelSamp[1]);
+    Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
+    }
+
+function WaitSyncLeader(errorMessage)
+    { //send individual signals to each member of the team to ensure readiness
+    if(errorMessage)
+        Orion.CharPrint(self,32,errorMessage);
+    Orion.Wait(100);
+    Shared.AddVar('syncWait',false);
+    // if(Shared.GetVar('sync',false) === false)
+    //     {
+        var healerArr = Shared.GetArray('healer',[]);
+        var sampArr = Shared.GetArray('dexxer',[]);
+        var miscArr = Shared.GetArray('misc',[]);
+        // if(healerArr.length == 0)
+        //     return WaitSyncLeader('No healers in team! Waiting...');
+        if(sampArr.length == 0)
+            return WaitSyncLeader('No samps in team! Waiting...');
+        var error = SyncCommunicate(healerArr);
+        if(error)
+            return WaitSyncLeader(error);
+        error = SyncCommunicate(sampArr);
+        if(error)
+            return WaitSyncLeader(error);
+        error = SyncCommunicate(miscArr);
+        if(error)
+            return WaitSyncLeader(error);
+        Shared.AddVar('sync',true);
+        // }
+    }
+
+function SyncCommunicate(roleArr)
+    {
+    for(var i=0;i<roleArr.length;i++)
+        {
+        var unit = roleArr[i];
+        Orion.UdpSend(unit[0],'SetSync')
+        Shared.AddVar('syncWait',true);
+        var endTime = Orion.Now() + 1000;
+        while(Shared.GetVar('syncWait') && Orion.Now() < endTime)
+            {
+            Orion.Wait(200);
+            }
+        if(Shared.GetVar('syncWait'))
+            {
+            return "Couldn't connect to: " + unit;
+            }
+        Shared.AddVar('syncWait',false);
+        };
+    return false;
+    }
+
+function WaitSyncFollower()
+    { //communicate readiness to leader
+    var sync = Shared.GetVar('sync',false);
+    while(!sync)
+        {
+        Orion.Wait(100);
+        sync = Shared.GetVar('sync',false);
+        }
+    }
+
+    
+function initLeader()
+    {
     Orion.Exec('SingleMageHealBot', true);
     Orion.Exec('UWAvoidBot', true, [8]);
     }
 
-function initUWBarrels()
+function initBarrels()
     {
     Orion.Exec('UWBarrels', true);
     Orion.Exec('UWBarrelsHealSelf', true);
     }
     
-function initUWSamp()
+function initSamp()
     {
     Orion.Exec('UWSamp', true);
     Orion.Exec('AutoAttack', true);
@@ -114,14 +222,14 @@ function initUWSamp()
     Orion.Exec('AutoEvade', true);
     }
 
-function initUWMage()
+function initHealer()
     {
     Orion.Exec('UWHealBot', true);
     Orion.Exec('UWAvoidBot', true, [8]);
     }
 
 //--#BarrelBot
-function ________________________BARRELS(_){}
+function ____________BARRELS(_){}
 
 function UWBarrels()
     {
@@ -301,7 +409,7 @@ function UWBarrelsHealSelf()
     }
 
 //--#Leader
-function ________________________LEADER(_){}
+function ____________LEADER(_){}
 
 function UWHealLeader()
     {
@@ -323,7 +431,7 @@ function UWHealLeader()
     }
 
 //--#Melee
-function ________________________MELEE(_){}
+function ____________MELEE(_){}
 
 function UWSamp()
     {
@@ -599,7 +707,7 @@ function AutoInsure()
     }
 
 //-#Healers
-function ________________________HEALERS(_){}
+function ____________HEALERS(_){}
 
 function UWHealBot()
     {
@@ -645,14 +753,14 @@ function SingleMageHealBot()
     }
 
 //--# Utilities
-function ________________________UTILITIES(_){}
+function ____________UTILITIES(_){}
 
-function StartPositions()
+function GoToSyncPosition()
     {
-    //check if already in the start position, if not, check that if the boss is currently up, if not move to start position, otherwise exit to boss sequence
-	//search for boss, begin boss sequence if found
-	//if no boss found, ResetPosition(), leader checks 
-	//
+    //search for boss and skip directly to boss sequence
+    //search for boss corpse and go directly to loot sequence
+    //check if already in sync position and go to it if not
+    //if already in sync position exit function
 	
 	}
 
@@ -691,15 +799,30 @@ function EquipUWSuitByBotName()
     Orion.Dress(setname);
     }
 
+function isPlayerInRectangle(x1, y1, x2, y2)
+    {
+    //x1,y1 is the northwest corner of the rectangle
+    //x2,y2 is the southeast corner
+    var x3 = Player.X();
+    var y3 = Player.Y();
+    return x3 >= x1 && x3 <= x2 && y3 <= y1 && y3 >= y2;
+    }
+
 function ResetPosition()
     {
     TerminateAll('ResetPosition');
+    //if already in correct position, do nothing.
+    //if within rectangle 1, do rectangle 1 things and return ResetPosition()
+    //if within rectangle 2, do rectangle 2 things and return ResetPosition() etc
+    //recurse until already in correct position
+    //if(isPlayerInRectangle(6394,1625,6439,1670))
     if(AliWalkTo(6432, 1633, 0, 0, 255, 8, 1, 1)) //uwboss area
         {
         var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
         Orion.UseObject(ladder[0]);
         Orion.Wait(500);
         }
+    //if(isPlayerInRectangle(6269,1625,6373,1791))
     if(AliWalkTo(6305, 1673, 0, 0, 255, 8, 1, 1)) //upper deck
         {
         var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
@@ -737,10 +860,12 @@ function ResetPosition()
         EquipLuckSuitByBotName();
         Orion.Wait(1300);
         }
+    //if(isPlayerInRectangle(6400,1680,6458,1802))
     if(AliWalkTo(6321, 1711, 0, 0, 255, 8, 1, 1))//outside boat
         {
         Orion.Wait(500);
         }
+    //if(isPlayerInRectangle(6394,1625,6439,1670))
     if(AliWalkTo(6432, 1699, 0, 0, 255, 8, 1, 1))//below deck
         {
         Orion.Wait(10);
@@ -1241,7 +1366,7 @@ function JournalScan()
     }
 
 //--# Helpers
-function ________________________HELPERS(_){}
+function ____________HELPERS(_){}
 
 function injuredCheck(range, threshold, healDead)
     {
@@ -1643,7 +1768,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     }
 
 //--#Coms
-function ________________________COMS(_){}
+function ____________COMS(_){}
 
 function ClearUdp()
     {
@@ -1664,6 +1789,7 @@ function AliComLeader()
         var recv = Orion.UdpRecv('Coms');
         if(recv)
             {
+            Orion.Print(recv)
             var recvSplit = Orion.Split(recv,':'); 
             switch(recvSplit[0])
                 {
@@ -1707,9 +1833,10 @@ function AliComLeader()
                     Orion.UdpSend(+botPort,'Heard:' + Player.Name() + ':' + Player.Serial()); //send signal back to bot so they know they're connected
                     break;
                  case 'AliGumpRenderer':
-                    AliGumpRenderer();
+                    Orion.Exec('AliGumpRenderer',true);
                      break;
-                case '':
+                case 'Synced':
+                    Shared.AddVar('syncWait',false);
                     break;
                 case undefined:
                     break;
@@ -1731,6 +1858,8 @@ function AliComFollower()
         'TerminateAll': true,
         'Target': true, //:targetSerial
         'AliGumpRenderer': true,
+        'SetSync': true,
+        'ResumeSmartStart': true,
         }
     Orion.RemoveAllUdpServers();
     var port = 39999;
@@ -1817,16 +1946,43 @@ function Follow(leaderSerial,distance)
         }
     }
 
+function SetSync()
+    {
+    if(Orion.ScriptRunning('SmartStart') > 0 || Shared.GetVar('sync'))
+        {
+        Shared.AddVar('sync',true);
+        Orion.UdpSend(42420,'Synced: ' + Player.Name())
+        }
+    }
+
+function ResumeSmartStart()
+    {
+    Orion.ResumeScript('SmartStart');
+    }
+
+function SetBarrelSamp()
+    {
+    Shared.AddVar('barrelSamp',true);
+    }
+
 function TerminateAll(additionalScripts)
     {
-    var flag = 'JournalScan|AliComFollower|AliComLeader|SmartStart';
+    var flag = 'TerminateAll|JournalScan|AliComFollower|AliComLeader|SmartStart';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
     Orion.Wait(250);
     Orion.Terminate('all',flag);
     }
-    
+
+function TerminateScripts()
+    {
+    var flag = 'TerminateScripts|JournalScan|AliComFollower|AliComLeader|SmartStart';
+    Orion.PauseScript('all',flag);
+    Orion.Wait(250);
+    Orion.Terminate('all',flag);
+    }
+
 function TargetHeal(serial)
     {
     var obj = Orion.FindObject(serial);
@@ -1862,7 +2018,7 @@ function MassMessage(role,msg)
     }
 
 //--# Gump
-function ________________________GUMP(){}
+function ____________GUMP(){}
 
 function AliGumpRenderer() 
     {

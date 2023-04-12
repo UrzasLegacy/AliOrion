@@ -26,8 +26,8 @@ var profiles =
         useConfidence: false, //true , false.
             useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
         useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '887268637315047444', //Put Discord WebHook here
-            discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+            discordHook: '', //Put Discord WebHook here if its your first time using one of my scripts
+            discordKey: '', //Put Discord Bot Key here if its your first time using one of my scripts
         journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
         selfTame: true,
         },
@@ -120,11 +120,11 @@ function StartCuFarm()
     EquipRegularSuitByBotName();
     Orion.Wait(1000);
     DiscordPush(Player.Name() + ' progressing spawn');
-    Orion.Exec('BuffMonitor',true);
     Orion.Exec('CuGump',true);
     Orion.Exec('AutoAttack',true);
     Orion.Exec('WalkSpawn',true);
     Orion.Exec('AttackSpawn',true);
+    Orion.Exec('PlayerDetectorCu',true);
     if(Orion.SkillValue('Bushido') > 900)
         Orion.Exec('AutoEvade',true);
     Orion.Exec('RareAlert',true);
@@ -535,7 +535,7 @@ function AttackSpawn()
 	while(!Player.Dead())
 		{
 		Orion.Wait(200);
-		var mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 24, 'gray|criminal|red').sort(function(a,b)
+		var mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 23, 'gray|criminal|red').sort(function(a,b)
             {
             return a.Distance() - b.Distance();
             });
@@ -586,7 +586,7 @@ function AttackSpawn()
             AppendColor(mobColor);
             Orion.WaitJournal('corpses to loot: 0',startTime,endTime,'oa');
             //Orion.Wait(3000);
-			mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 24, 'gray|criminal|red').sort(function(a,b)
+			mobs = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|live|inlos', 23, 'gray|criminal|red').sort(function(a,b)
                 {
                 return a.Distance() - b.Distance();
                 });
@@ -820,7 +820,9 @@ function TameCu()
             {
             Orion.PauseScript('AutoAttack');
             var nearFaerie = Orion.FindType('0x0080',any,ground,'live',1)[0];
-            if(obj.Hits('%') < 40)
+            if(nearFaerie)
+                Orion.Attack(nearFaerie);
+            else if(obj.Hits('%') < 40)
                 {
                 Orion.CharPrint(self,1159,'Cu low HP! Waiting...')
                 WalkToRadiusBorder(serial,5);
@@ -839,11 +841,11 @@ function TameCu()
         var leashDistance = Shared.GetVar('leashDistance',3)
         var avoidRadius = 3;
         //Orion.WarMode(2);
-            WalkToRadiusBorder(serial,leashDistance);
-            Orion.Exec('AsyncTame',true,[serial]);
+        WalkToRadiusBorder(serial,leashDistance);
+        Orion.Exec('AsyncTame',true,[serial]);
         // else if(distance >= 4)
         //     Orion.WalkTo(obj.X(),obj.Y(),0,3);
-        Orion.Wait(200);
+        Orion.Wait(300);
         if(obj.CanChangeName())
             break;
             
@@ -872,6 +874,10 @@ function TameCu()
             AliWalkTo(x,y,0,0,255,2,1,1,300000,false,SlowPoke);
             }
         Orion.ClearBadLocations();
+        }
+    while(Orion.DisplayTimerExists('paralyze'))
+        {
+        Orion.Wait(100);
         }
     Orion.Say('all stop');
     Orion.Say('all stay');
@@ -915,7 +921,7 @@ function StoreCu()
     {
     var serial = Shared.GetVar('cuSerial');
     if(!serial)
-        serial = Orion.FindType('0x0115',any,'ground','canchangename',24)[0];
+        serial = Orion.FindType('0x0115',any,'ground','canchangename',23)[0];
     while(Orion.ObjAtLayer('Mount'))
         {
         Orion.UseObject(self);
@@ -932,7 +938,7 @@ function StoreCu()
         Orion.Wait(1300);
         }
     AliWalkTo(1179,1287);
-    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'item',24)[0];
+    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'item',23)[0];
     if(gate)
         {
         AliWalkTo(gate.X(),gate.Y())
@@ -1048,7 +1054,7 @@ function AliAtlas(targetX,targetY,targetMap)
             ['Royal City', 'TerMur', 33, 850, 3525],
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
-    
+    var map = maps[Player.Map()]
     if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
         {
         Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
@@ -1094,7 +1100,7 @@ function AliAtlas(targetX,targetY,targetMap)
             }
         else
             {
-            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 24);
+            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 23);
             Orion.CharPrint(self,1159,'Searching for gate');
             if(gate[0])
                 {
@@ -1123,6 +1129,7 @@ function AliAtlas(targetX,targetY,targetMap)
 
 function MapDetectionFix()
     {
+    CloseAllGumps();
     Orion.CharPrint(self,1159,'Map detection bugged! Fixing by changing facets')
     if(Orion.GetDistance(1174,1285) < 250)
         AliWalkTo(1174,1285); //ilshenar
@@ -1130,7 +1137,7 @@ function MapDetectionFix()
         AliWalkTo(1017,525); //luna
     else if(Orion.GetDistance(773,750) < 250)
         AliWalkTo(773,750); //tram yew
-    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+    var gate = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',23)[0];
     if(gate)
         {
         AliWalkTo(gate.X(),gate.Y())
@@ -1145,7 +1152,8 @@ function MapDetectionFix()
         gumpHook.AddCheck(31, true);
         gump.Select(gumpHook);
         Orion.Wait(3000);
-        var gate2 = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',24)[0];
+        CloseAllGumps();
+        var gate2 = Orion.FindTypeEx('0x0F6C',any,ground,'near|item',23)[0];
         if(gate2)
             {
             var gump2 = Orion.GetGump('any','0x00000258');
@@ -1159,6 +1167,7 @@ function MapDetectionFix()
             gumpHook2.AddCheck(22, true);
             gump2.Select(gumpHook2);
             Orion.Wait(3000);
+            CloseAllGumps();
             }
         }
     if(Player.Map() !== 0)
@@ -1279,6 +1288,47 @@ function AliFile(inputString,fileNameString)
     Orion.Print("Recording " + inputString + ' To File: ' + tmpFilePath);
     tmpFile.Write(inputString);
     tmpFile.Close();
+    }
+
+function PlayerDetectorCu()
+    {
+    //0x0302 a meer mage
+    //0x0303 a meer warrior
+    //0x0304 a meer eternal
+    //0x0305 Meer Captain
+    //0x007A a unicorn
+    //0x0080 a faerie
+    while(true)
+        {
+        var player = Orion.FindTypeEx("!0x0080|!0x0302|!0x0303|!0x0304|!0x0305|!0x007A",any,ground,'live|ignoreself|fast',22,'blue')[0];
+        if(player)
+            {
+            var outMsg = Player.Name() + ': Player detected! Name: ' + player.Name()
+            var blazeCheck = Orion.FindType('0x0115','0x0489',ground,'live',23)[0];
+            if(!blazeCheck)
+                {
+                DiscordPush(outMsg + ' Leaving and waiting 10 minutes.');
+                Orion.PauseScript('all','PlayerDetectorCu');
+                Orion.Wait(200);
+                Orion.Terminate('all','PlayerDetectorCu');
+                AliAtlas(1015,527,'Malas');
+                var endTime = Orion.Now() + 600000;
+                while(Orion.Now() < endTime)
+                    {
+                    Orion.Wait(30000);
+                    Orion.UseObject(backpack);
+                    }
+                Orion.Exec('StartCuFarm',true);
+                Orion.Wait(30000);
+                }
+            else
+                {
+                DiscordPush(outMsg + ' Blaze nearby!');
+                Orion.Wait(60000);
+                }
+            }
+        Orion.Wait(1000);
+        }
     }
 
 function JournalScan()
@@ -1877,4 +1927,17 @@ function isTargetHour(targetHour)
 	var UTCHour = now.getUTCHours();
 	return UTCHour == targetHour;
 	}
+
+function CloseAllGumps()
+    {
+    var endTime = Orion.Now() + 3000;
+    var gump = Orion.GetGump(any);
+    while(gump && Orion.Now() < endTime)
+        {
+        Orion.Print(gump.ID());
+        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Wait(100);
+        gump = Orion.GetGump(any);
+        }
+    }
 //--#END
