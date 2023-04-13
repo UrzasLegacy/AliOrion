@@ -9,6 +9,7 @@ var y = 1480;
 //Do not do this in guard zone in tram, you won't be able to hurt the bunnies.
 //No benefit to doing it in fel, fel luck bonus does not apply to this, confirmed by devs
 
+
 //Tweak these settings and don't forget to change the Discord hook and key
 var profiles = 
     {
