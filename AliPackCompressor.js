@@ -1,5 +1,10 @@
-var itemGraphic = '0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18';
+
 var itemsPerContainer = 80;
+
+
+
+//----------------------
+var itemGraphic = '0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18';
 var pouchGraphic = '0x0E79';
 var backpackGraphic = '0x0E75';
 
@@ -34,7 +39,10 @@ function AliCompressor()
         {
         var currentPouch = subPouches.pop();
         if(!currentPouch)
+            {
+            Orion.UdpSend(42420,'bloop');
             return Orion.CharPrint(self,1159,'Out of pouches to fill');
+            }
         while(Orion.FindType(any,any,currentPouch).length == 1)
             Orion.Wait(100);
         while(Orion.FindType(any,any,currentPouch).length == 0)

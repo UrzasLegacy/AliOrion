@@ -4,8 +4,8 @@ var greenThornGraphic = '0x0F42';
 // Setup Instructions
 // Change x and y to the coordinates of the tile you'd like to target with the green thorns. Has to be farm land.
 // Use your characters to stam block the bunny, you only need 2 if you have a fence corner to work with.
-var x = 4642;
-var y = 1292;
+var x = 4577;
+var y = 1480;
 //Do not do this in guard zone in tram, you won't be able to hurt the bunnies.
 //No benefit to doing it in fel, fel luck bonus does not apply to this, confirmed by devs
 
@@ -59,7 +59,7 @@ function MainLoop()
             Orion.ClearJournal();
             }
         Orion.Wait(timer)
-        if(!Orion.InJournal('strange green thorn'))
+        if(!Orion.InJournal('strange green thorn') && !Orion.FindType(any,any,ground,'live','xyz: ' + x + ',' + y)[0])
             {
             Orion.UseType(greenThornGraphic)
             if(Orion.WaitForTarget(1000))

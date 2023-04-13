@@ -7,6 +7,14 @@ function SetDiscordRegistryEntry()
     Orion.RegWrite(registryName, discordConfig);
     return discordConfig;
     }
+
+function TestHue()
+    {
+    var hue = 2730;
+    Orion.WaitForAddObject('myTarget');
+    var serial = Orion.GetSerial('myTarget');
+    Orion.TestItemColor(serial, hue);
+    }
     
 function RecallRepair()
 	{
