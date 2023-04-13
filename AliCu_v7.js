@@ -1127,6 +1127,7 @@ function AliAtlas(targetX,targetY,targetMap)
     Orion.WarMode(0);
     }
 
+
 function MapDetectionFix()
     {
     CloseAllGumps();
