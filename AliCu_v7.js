@@ -1180,9 +1180,8 @@ function MapDetectionFix()
         }
     }
 
-function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn)
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn)
     {
-    var pathMarkers = false;
     if(z === undefined) z = 0;
     if(distanceXY === undefined) distanceXY = 0;
     if(distanceZ === undefined) distanceZ = 255;
@@ -1190,15 +1189,16 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     if(run === undefined) run = 1;
     if(openDoor === undefined) openDoor = 1;
     if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    if(pathMarkers === undefined) pathMarkers = false;
 
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
         Orion.ClearFakeMapObjects();
     if(pathTiles.length === 0)
         return false;
-	var shortStop = pathTiles[pathTiles.length - 1];
-	var shortX = shortStop.X();
-	var shortY = shortStop.Y();
+    var shortStop = pathTiles[pathTiles.length - 1];
+    var shortX = shortStop.X();
+    var shortY = shortStop.Y();
     if(pathMarkers)
         {
         pathTiles.forEach(function(tile,i)
@@ -1213,13 +1213,13 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
         var chunk = shortStop;
     var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
     if(pathMarkers)
-        Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+        Orion.AddFakeMapObject(10000, '0x051A', 32, x, y, Player.Z());
     Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
     Orion.Wait(1);
-	if(callBackFn !== undefined)
-		callBackFn();
+    if(callBackFn !== undefined)
+        callBackFn();
     if(Orion.GetDistance(shortX,shortY) > 0)
-        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,callBackFn);
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn);
     return true;
     }
 
@@ -1299,9 +1299,10 @@ function PlayerDetectorCu()
     //0x0305 Meer Captain
     //0x007A a unicorn
     //0x0080 a faerie
+    //0x0115 a cu sidhe
     while(true)
         {
-        var player = Orion.FindTypeEx("!0x0080|!0x0302|!0x0303|!0x0304|!0x0305|!0x007A",any,ground,'live|ignoreself|fast',22,'blue')[0];
+        var player = Orion.FindTypeEx("!0x0080|!0x0302|!0x0303|!0x0304|!0x0305|!0x007A|!0x0115",any,ground,'live|ignoreself|fast',22,'blue')[0];
         if(player)
             {
             var outMsg = Player.Name() + ': Player detected! Name: ' + player.Name()
