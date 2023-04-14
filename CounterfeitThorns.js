@@ -4,8 +4,9 @@ var greenThornGraphic = '0x0F42';
 // Setup Instructions
 // Change x and y to the coordinates of the tile you'd like to target with the green thorns. Has to be farm land.
 // Use your characters to stam block the bunny, you only need 2 if you have a fence corner to work with.
-var x = 4577;
-var y = 1480;
+
+var x = Player.X() + 1
+var y = Player.Y()
 //Do not do this in guard zone in tram, you won't be able to hurt the bunnies.
 //No benefit to doing it in fel, fel luck bonus does not apply to this, confirmed by devs
 
@@ -26,13 +27,92 @@ var profiles =
         useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
             discordHook: '88726863736875314', //Put Discord WebHook here
             discordKey: 'SJfWniY7drrewqrvXSPb3EasdFs7VH5_qTg695utEsfasdfVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
+        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'		
+        useAutoInsure: true, //true , false. Automatically insure items based on the following options:
+        useStringSearch: false, //can search name, properties, or both(inclusive; not one or the other). Will override list search.
+            checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
+            checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
+        UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
+            insureFindList: 'BotLootNoGold', //create a find list with this name and set find criteria.
+            insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
+        searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
         },
     }
 
 var profile = profiles.Thorns;
 
 Orion.Exec('JournalScan',true);
+function AutoInsure() 
+	{
+	var stringSearch = profile.useStringSearch;
+	var checkName = profile.checkNameString;
+	var checkProp = profile.checkPropString;
+	var listSearch = profile.UseListSearch;
+	var insureFind = profile.insureFindList;
+	var insureIgnore = profile.insureIgnoreList;
+	var searchFrequency = profile.searchFrequency;
+	while(stringSearch && !Player.Dead())
+		{
+		var item = Orion.FindTypeEx(any).filter(function (part) 
+					{
+					if(!Orion.Contains(part.Properties(), 'insured'))
+						{
+						if(checkName && !checkProp)
+							return Orion.Contains(part.Name(), checkName);
+						else if(checkProp && !checkName)
+							return Orion.Contains(part.Properties(), checkProp)      
+						else if(checkProp && checkName)
+							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
+						}
+					return false;
+	                })[0];
+	    if(item && !Orion.HaveTarget())
+	    	{
+			Orion.WaitContextMenuID(self, 418);
+    		Orion.RequestContextMenu(self);
+			if(Orion.WaitForTarget(2000))
+				Orion.TargetObject(item.Serial());
+			if(Orion.WaitForTarget(2000))
+				Orion.CancelTarget();
+			}
+		Orion.Wait(searchFrequency);
+		}
+	while(listSearch && !Player.Dead())
+		{
+		Orion.UseIgnoreList(insureIgnore);
+		var item = Orion.FindList(insureFind);
+		Orion.ResetIgnoreList();
+		if(item && item.length && !Orion.HaveTarget())
+	    	{
+			Orion.WaitContextMenuID(self, 418);
+			Orion.RequestContextMenu(self);
+			if(Orion.WaitForTarget(2000))
+				Orion.TargetObject(item[0]);
+			if(Orion.WaitForTarget(2000))
+				Orion.CancelTarget();
+			}
+		Orion.Wait(searchFrequency);
+		}
+	}
+
+function simpleGuards()
+    {
+    Orion.SetTimer('discordTimer', 16000);
+    while(!Player.Dead())
+        {
+        if(Player.Hits('%') < 92)
+            {
+            Orion.Say('Guards')
+            Orion.Wait(500);
+            if(Orion.Timer('discordTimer') < 15000)
+                {
+                DiscordPush(Player.Name() + ' called Guards!')
+                Orion.SetTimer('discordTimer');
+                }
+            }
+        Orion.Wait(10);
+        }
+    }
 
 function MainLoop()
     {
@@ -49,6 +129,8 @@ function MainLoop()
     var playerSerial = Player.Serial();
     var timer = timerObj[playerSerial]
     Orion.Exec('AutoAttack',true);
+    Orion.Exec('AutoInsure',true);
+    Orion.Exec('simpleGuards',true);
     while(!Player.Dead())
         {
         var bunny = Orion.FindType(bunnyGraphic,any,ground,'live',3)[0]
@@ -104,7 +186,7 @@ function AutoAttack()
 	var useOnslaught = profile.useOnslaught;
     while(!Player.Dead())
         {
-        var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 2, 'gray|red|criminal|orange');
+        var enemies = Orion.FindType(bunnyGraphic, any, ground, "live|ignoreself|ignorefriends", 2, 'gray');
         var enemyCount = enemies.length;
         if(enemyCount)
             Orion.Attack(enemies[0]);
