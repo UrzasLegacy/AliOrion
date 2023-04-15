@@ -3,11 +3,14 @@
 
 function PrintDexxerArr()
     {
-    Shared.AddVar('sync',false);
     var arr = Shared.GetArray('dexxer',false);
     Orion.Print(arr)
     }
-
+function DesyncFromGroup()
+    {
+    Orion.CharPrint(self,1159,'Desyncing')
+    Shared.AddVar('sync',false);
+    }
 function ClearShared()
     {
     Shared.ClearArrays();
@@ -16,7 +19,7 @@ function ClearShared()
 
 //Create a findlist for autoloot named 'BotLoot'
 var Version = '3.14'
-var leaderSerial = '0x003DB071'; //Eris
+var leaderSerial = '0x02F4684A'; //Alyx
 
 var profile = 
     {
@@ -47,14 +50,19 @@ Orion.Exec('JournalScan', true);
 //'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
 //'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
 //'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
-//'xSpacer': A blank asset spacer. Args: width
-//'ySpacer': A blank row spacer. Args: height
+//'xSpacer': A blank asset spacer. Args: width ,['xSpacer',0000],
+//'ySpacer': A blank row spacer. Args: height ,['ySpacer',0000],
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 var defaultAssets = 
     [
-        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1] ],
-        [ ['toggle','SmartStart','Start'], ['toggle','LeaveUW','Leave UW'], ['toggle','LootUW','Loot Boss'] ],
-        [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
+        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1], ['xSpacer',100] ],
+        [ ['toggle','SmartStart','Start'] ],
+        [ ['text','Utilities',554,1,17] ],
+        [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','HideTilHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
+        [ ['toggle','ResetPosition','Reset Position'], ['toggle','LeaveUW','Leave UW'] ],
+        [ ['toggle','RecallRepair','Recall Repair'], ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'], ['toggle','Tithe','Tithe'] ],
+
+        [ ['ySpacer',20] ],
     ];
 
 function Autostart()
@@ -87,9 +95,9 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
-            DetermineBarrelSamp();
             GoToSyncPosition();
             WaitSyncLeader();
+            DetermineBarrelSamp();
             Orion.PauseScript('SmartStart');
             initUWLeader();
             break;
@@ -97,9 +105,8 @@ function SmartStart()
 			Orion.Exec('AliComFollower',true);
             GoToSyncPosition();
             WaitSyncFollower();
-            if(Shared.GetVar('barrelSamp',false) === true)
-                initBarrels();
             Orion.PauseScript('SmartStart');
+            GetKeys();
             GoFromSyncToReadyPosition();
             initSamp();
             break;
@@ -124,23 +131,14 @@ function SmartStart()
         }
     }
 
-function GoFromSyncToReadyPosition()
-    {//this function is to move from Sync position to Ready position
-    }
-
-function DetermineBarrelSamp()
+function GoToSyncPosition()
     {
-    var samps = Shared.GetArray('dexxer',false);
-    while(!samps)
-        {
-        Orion.CharPrint(self,1159,'Waiting for samps to join...')
-        Orion.Wait(1000)
-        samps = Shared.GetArray('dexxer',false);
-        }
-    var barrelSamp = samps[Orion.Random(0,samps.length)];
-    Shared.AddVar('barrelSampName',barrelSamp[1]);
-    Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
-    }
+    //search for boss and skip directly to boss sequence
+    //search for boss corpse and go directly to loot sequence
+    //check if already in sync position and go to it if not
+    //if already in sync position exit function
+	ResetPosition();
+	}
 
 function WaitSyncLeader(errorMessage)
     { //send individual signals to each member of the team to ensure readiness
@@ -201,6 +199,35 @@ function WaitSyncFollower()
         }
     }
 
+function GetKeys()
+    {
+    if(Shared.GetVar('barrelSamp',false) === false)
+        return;
+    Orion.Exec('UWBarrelsHealSelf', true);
+    UWBarrels();
+    Orion.PauseScript('SmartStart');
+    }
+    
+function GoFromSyncToReadyPosition()
+    {//this function is to move from Sync position to Ready position
+    }
+
+function DetermineBarrelSamp()
+    {
+    var samps = Shared.GetArray('dexxer',false);
+    while(!samps)
+        {
+        Orion.CharPrint(self,1159,'Waiting for samps to join...')
+        Orion.Wait(1000)
+        samps = Shared.GetArray('dexxer',false);
+        }
+    var barrelSamp = samps[Orion.Random(0,samps.length)];
+    Shared.AddVar('barrelSampName',barrelSamp[1]);
+    Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
+    }
+
+
+
     
 function initLeader()
     {
@@ -208,11 +235,6 @@ function initLeader()
     Orion.Exec('UWAvoidBot', true, [8]);
     }
 
-function initBarrels()
-    {
-    Orion.Exec('UWBarrels', true);
-    Orion.Exec('UWBarrelsHealSelf', true);
-    }
     
 function initSamp()
     {
@@ -755,19 +777,6 @@ function SingleMageHealBot()
 //--# Utilities
 function ____________UTILITIES(_){}
 
-function GoToSyncPosition()
-    {
-    //search for boss and skip directly to boss sequence
-    //search for boss corpse and go directly to loot sequence
-    //check if already in sync position and go to it if not
-    //if already in sync position exit function
-	
-	}
-
-function BeginBossSequence()
-	{
-	
-	}
 
 function EquipLuckSuitByBotName()
     {
@@ -775,7 +784,7 @@ function EquipLuckSuitByBotName()
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
         var _pName = Player.Name()
-    var setname = _pName + ' Luck Suit'
+    var setname = _pName + ' Luck'
     Orion.Dress(setname);
     }
 
@@ -785,7 +794,7 @@ function EquipLRCSuitByBotName()
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
         var _pName = Player.Name()
-    var setname = _pName + ' LRC Suit'
+    var setname = _pName + ' LRC'
     Orion.Dress(setname);
     }
 
@@ -795,7 +804,7 @@ function EquipUWSuitByBotName()
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
         var _pName = Player.Name()
-    var setname = _pName + ' UW Suit'
+    var setname = _pName + ' UW'
     Orion.Dress(setname);
     }
 
@@ -1283,7 +1292,7 @@ function HideTilHidden()
         Orion.Wait(500)
         }
     Orion.Wait(1000);
-    if((''+ Player.X() + Player.Y()) == startTile)
+    if(('' + Player.X() + Player.Y()) == startTile)
         {
         DiscordPush(Player.Name() + ' Revealed!')
         return HideTilHidden();
@@ -1860,6 +1869,7 @@ function AliComFollower()
         'AliGumpRenderer': true,
         'SetSync': true,
         'ResumeSmartStart': true,
+        'SetBarrelSamp':true,
         }
     Orion.RemoveAllUdpServers();
     var port = 39999;
@@ -1963,6 +1973,8 @@ function ResumeSmartStart()
 function SetBarrelSamp()
     {
     Shared.AddVar('barrelSamp',true);
+    Orion.Wait(500);
+    Orion.ResumeScript('SmartStart');
     }
 
 function TerminateAll(additionalScripts)
