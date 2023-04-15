@@ -53,7 +53,7 @@ Orion.Exec('JournalScan', true);
 //'xSpacer': A blank asset spacer. Args: width ,['xSpacer',0000],
 //'ySpacer': A blank row spacer. Args: height ,['ySpacer',0000],
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
-var defaultAssets = 
+var gumpAssets = 
     [
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1], ['xSpacer',100] ],
         [ ['toggle','SmartStart','Start'] ],
@@ -95,36 +95,51 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
-            GoToSyncPosition();
-            WaitSyncLeader();
-            DetermineBarrelSamp();
-            Orion.PauseScript('SmartStart');
+            if(GoToSyncPosition())
+                {
+                WaitSyncLeader();
+                DetermineBarrelSamp();
+                Orion.PauseScript('SmartStart');
+                //get havekey signal to resume
+                ScoutAhead(); //run up and lead hydras away if necessary and check that UW is ready to start or hide by winch until it is
+                //Unpause followers
+                WaitSyncLeader();
+                //Resync at boss ready position
+                //Unpause samps, wait 3 seconds, unpause healers then init self
+                }
             initUWLeader();
+            BossSequence();
+            CleanUpPublicCorpse();
+            Orion.Exec('SmartStart');
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
-            GoToSyncPosition();
-            WaitSyncFollower();
-            Orion.PauseScript('SmartStart');
-            GetKeys();
-            GoFromSyncToReadyPosition();
-            initSamp();
+            if(GoToSyncPosition())
+                {
+                WaitSyncFollower();
+                Orion.PauseScript('SmartStart');
+                GetKeys();
+                GoFromSyncToReadyPosition();
+                WaitSyncFollower();
+                Orion.PauseScript('SmartStart');
+                }
+            initSamp(); //if above, jump down to boss area and then start boss sequence
+            BossSequence();
+            Orion.Exec('SmartStart');
             break;
         case 'healer':
 			Orion.Exec('AliComFollower',true);
-            GoToSyncPosition();
-            WaitSyncFollower();
-            Orion.PauseScript('SmartStart');
-            GoFromSyncToReadyPosition();
+            if(GoToSyncPosition())
+                {
+                WaitSyncFollower();
+                Orion.PauseScript('SmartStart');
+                GoFromSyncToReadyPosition();
+                WaitSyncFollower();
+                Orion.PauseScript('SmartStart');
+                }
             initHealer();
-            break;
-        case 'misc':
-			Orion.Exec('AliComFollower',true);
-            GoToSyncPosition();
-            WaitSyncFollower();
-            Orion.PauseScript('SmartStart');
-            GoFromSyncToReadyPosition();
-            initMisc();
+            BossSequence();
+            Orion.Exec('SmartStart');
             break;
         default:
             break;
@@ -141,35 +156,34 @@ function GoToSyncPosition()
 	}
 
 function WaitSyncLeader(errorMessage)
-    { //send individual signals to each member of the team to ensure readiness
+    { //wait for team readiness
     if(errorMessage)
-        Orion.CharPrint(self,32,errorMessage);
+        {
+        Orion.CharPrint(self,32,errorMessage + ' Waiting...');
+        Orion.Wait(1000);
+        }
     Orion.Wait(100);
     Shared.AddVar('syncWait',false);
-    // if(Shared.GetVar('sync',false) === false)
-    //     {
-        var healerArr = Shared.GetArray('healer',[]);
-        var sampArr = Shared.GetArray('dexxer',[]);
-        var miscArr = Shared.GetArray('misc',[]);
-        // if(healerArr.length == 0)
-        //     return WaitSyncLeader('No healers in team! Waiting...');
-        if(sampArr.length == 0)
-            return WaitSyncLeader('No samps in team! Waiting...');
-        var error = SyncCommunicate(healerArr);
-        if(error)
-            return WaitSyncLeader(error);
-        error = SyncCommunicate(sampArr);
-        if(error)
-            return WaitSyncLeader(error);
-        error = SyncCommunicate(miscArr);
-        if(error)
-            return WaitSyncLeader(error);
-        Shared.AddVar('sync',true);
-        // }
+    var healerArr = Shared.GetArray('healer',[]);
+    var sampArr = Shared.GetArray('dexxer',[]);
+    var miscArr = Shared.GetArray('misc',[]);
+    if(healerArr.length == 0)
+        return WaitSyncLeader('No healers in team!');
+    if(sampArr.length == 0)
+        return WaitSyncLeader('No samps in team!');
+    var error = SyncCommunicate(healerArr);
+    if(error)
+        return WaitSyncLeader(error);
+    error = SyncCommunicate(sampArr);
+    if(error)
+        return WaitSyncLeader(error);
+    error = SyncCommunicate(miscArr);
+    if(error)
+        return WaitSyncLeader(error);
     }
 
 function SyncCommunicate(roleArr)
-    {
+    {//send individual signals to each member of the team role to ensure readiness
     for(var i=0;i<roleArr.length;i++)
         {
         var unit = roleArr[i];
@@ -190,26 +204,14 @@ function SyncCommunicate(roleArr)
     }
 
 function WaitSyncFollower()
-    { //communicate readiness to leader
+    { //wait for team readiness
     var sync = Shared.GetVar('sync',false);
     while(!sync)
         {
         Orion.Wait(100);
         sync = Shared.GetVar('sync',false);
         }
-    }
-
-function GetKeys()
-    {
-    if(Shared.GetVar('barrelSamp',false) === false)
-        return;
-    Orion.Exec('UWBarrelsHealSelf', true);
-    UWBarrels();
-    Orion.PauseScript('SmartStart');
-    }
-    
-function GoFromSyncToReadyPosition()
-    {//this function is to move from Sync position to Ready position
+    Shared.AddVar('sync',false);
     }
 
 function DetermineBarrelSamp()
@@ -226,7 +228,20 @@ function DetermineBarrelSamp()
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     }
 
+function GetKeys()
+    {
+    if(Shared.GetVar('barrelSamp',false) === false)
+        return;
+    Orion.Exec('UWBarrelsHealSelf', true);
+    UWBarrels();
+    //send signal to leader
+    Orion.PauseScript('SmartStart');
+    }
+    
+function GoFromSyncToReadyPosition()
+    {//this function is to move from Sync position to Ready position
 
+    }
 
     
 function initLeader()
@@ -235,7 +250,6 @@ function initLeader()
     Orion.Exec('UWAvoidBot', true, [8]);
     }
 
-    
 function initSamp()
     {
     Orion.Exec('UWSamp', true);
@@ -2047,12 +2061,11 @@ function AliGumpRenderer()
     var rowStart = 35;
     var columnStart = 25;
 
-    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues',[]);
-    //Orion.Print(gumpButtons)
+    var gumpButtons = gumpAssets;
     if(!gumpButtons[0])
         {
-        Shared.AddArray('gumpValues',defaultAssets)
-        gumpButtons = defaultAssets;
+        Shared.AddArray('gumpValues',gumpAssets)
+        gumpButtons = gumpAssets;
         }
     var heightAdjust = 0;
     var width = Math.max.apply(Math, gumpButtons.map(function (rows)
@@ -2108,7 +2121,6 @@ function AliGumpRenderer()
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
-    //gump.AddText(20,9, 554, 'Modular Gump') //title
     gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
@@ -2225,8 +2237,6 @@ function AliGumpRenderer()
         }
     //Custom Assets: Use spacers in asset array to adjust gump size as necessary
     
-
-
     gump.Update();
     Orion.Print('interval: ' + (Orion.Now() - startTime))
     }
@@ -2248,7 +2258,7 @@ function AliGumpCallback(_)
         return AliGumpRenderer();
         }
     var i = 1;
-    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues');
+    var gumpButtons = gumpAssets;
     for(var r = 0;r<gumpButtons.length;r++)
         {
         var row = gumpButtons[r];
@@ -2291,8 +2301,6 @@ function AliGumpCallback(_)
             i++;
             }
         }
-    //Orion.Print(gumpButtons);
-    //Shared.AddArray('gumpValues',gumpButtons);
     Orion.Wait(50);
     Orion.Exec('AliGumpRenderer',true);
     }
