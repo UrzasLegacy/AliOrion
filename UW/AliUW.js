@@ -18,7 +18,7 @@ function ClearShared()
     }
 
 //Create a findlist for autoloot named 'BotLoot'
-var Version = '3.14'
+var Version = '3.2'
 var leaderSerial = '0x02F4684A'; //Alyx
 
 var profile = 
@@ -945,6 +945,8 @@ function Tithe()
             }
         var subEndTime = Orion.Now() + 5000;
         var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+        if(!ankh)
+            return Orion.CharPrint(self,1159,'No ankh found!')
         do
             {
             if(Orion.Now() > subEndTime)
@@ -2292,80 +2294,5 @@ function AliGumpCallback(_)
     //Orion.Print(gumpButtons);
     //Shared.AddArray('gumpValues',gumpButtons);
     Orion.Wait(50);
-    AliGumpRenderer();
-    }
-
-//deprecated
-function ComponentDrop()
-    {
-    var core = Orion.FindTypeEx('0x47E6');
-    var flywheel = Orion.FindTypeEx('0x46FE');
-    var bearing = Orion.FindTypeEx('0x0E74');
-    var spool = Orion.FindTypeEx('0x4CDB');
-    if(core[0])
-        {
-        Orion.DragItem(core[0].Serial())
-        Orion.DropDraggedItemRelative(1, 1);
-        Orion.Wait(1100);
-        }
-    if(flywheel[0])
-        {
-        Orion.DragItem(flywheel[0].Serial())
-        Orion.DropDraggedItemRelative(1, 1);
-        Orion.Wait(1100);
-        }	
-    if(bearing[0])
-        {
-        Orion.DragItem(bearing[0].Serial())
-        Orion.DropDraggedItemRelative(1, 1);
-        Orion.Wait(1100);
-        }	
-    if(spool[0])
-        {
-        Orion.DragItem(spool[0].Serial())
-        Orion.DropDraggedItemRelative(1, 1);
-        Orion.Wait(1100);
-        }
-    }
-
-function WinchDrop()
-    {
-    var core = Orion.FindTypeEx('0x47E6');
-    var flywheel = Orion.FindTypeEx('0x46FE');
-    var bearing = Orion.FindTypeEx('0x0E74');
-    var spool = Orion.FindTypeEx('0x4CDB');
-    var winch = Orion.FindTypeEx('0x280E', any, ground, '', 24);
-    if(winch[0])
-        Orion.WalkTo(winch[0].X(),winch[0].Y())
-    if(core[0])
-        {
-        Orion.DragItem(core[0].Serial())
-        Orion.DropDraggedItem(winch[0].Serial());
-        Orion.Wait(1200);
-        }
-    if(flywheel[0])
-        {
-        Orion.DragItem(flywheel[0].Serial())
-        Orion.DropDraggedItem(winch[0].Serial());
-        Orion.Wait(1200);
-        }	
-    if(bearing[0])
-        {
-        Orion.DragItem(bearing[0].Serial())
-        Orion.DropDraggedItem(winch[0].Serial());
-        Orion.Wait(1200);
-        }	
-    if(spool[0])
-        {
-        Orion.DragItem(spool[0].Serial())
-        Orion.DropDraggedItem(winch[0].Serial());
-        Orion.Wait(1200);
-        }
-    var lever = Orion.FindTypeEx('0x108E|0x108C', any, ground, '',24);
-    if(lever[0])
-        {
-        if(lever[0].Distance() > 2)
-            Orion.WalkTo(lever[0].X(),lever[0].Y())
-        Orion.UseObject(lever[0].Serial());
-        }
+    Orion.Exec('AliGumpRenderer',true);
     }
