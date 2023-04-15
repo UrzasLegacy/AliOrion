@@ -1,8 +1,17 @@
+//#include Ali/AliGumpHUD.js
 
-var itemsPerContainer = 80;
+var itemsPerContainer = 110;
 
-
-
+var defaultAssets = 
+[
+    [ ['toggle','AliCompressor','Compressor'], ['toggle','AliCompressorHelper','Helper'] ],
+    [ ['toggle','ConsolidateEggs','ConsolidateEggs'], ['toggle','EggMover6000','MoveEggs'],],
+    [ ['toggle','NestContainerZero','NestPouches'] ],
+];
+function ControlsGump()
+    {
+    AliGumpRenderer()
+    }
 //----------------------
 var itemGraphic = '0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18';
 var pouchGraphic = '0x0E79';
@@ -59,10 +68,11 @@ function AliCompressor()
             var loadBackpackSerial = loadBackpack.Serial();
             while(Orion.GetContainer(loadBackpackSerial) != backpackSerial)
                 {
-                Orion.CharPrint(self,1159,'Retrieving backpack from ground to load');
+                Orion.CharPrint(loadBackpackSerial,1159,'Retrieving backpack from ground to load');
                 Orion.WaitContextMenuID(loadBackpackSerial, 1012);
                 Orion.RequestContextMenu(loadBackpackSerial);
                 Orion.Wait(1300);
+                Orion.Print('Serial of Load Container: ' + Orion.GetContainer(loadBackpackSerial) + '\nSerial of Player Backpack' + backpackSerial + '\nSerial of Load' + loadBackpackSerial)
                 }
             Orion.CharPrint(self,1159,'Moving backpack to current pouch');
             Orion.MoveItem(loadBackpackSerial,0,currentPouch);
@@ -109,6 +119,7 @@ function AliCompressorHelper()
                 return Orion.CharPrint(self,1159,'Finished!');
                 }
             }
+        Orion.Wait(500)
         while(Orion.Dragging())
             {
             Orion.DropDraggedItemRelative(0,0);
@@ -161,7 +172,7 @@ function RareEggCheck(containerSerial)
 function ConsolidateEggs()
     {
     var playerX = Player.X();
-    var containers = Orion.FindTypeEx(any,any,ground,'item',2).filter(function(item)
+    var containers = Orion.FindTypeEx(any,any,ground,'item',1).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'Contents: ')
         });
@@ -178,7 +189,7 @@ function ConsolidateEggs()
     var containersPull = containers.filter(function(container)
         {
         var contents = +((container.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
-        return container.X() > playerX && contents > 0 && ((container.Graphic() == backpackGraphic && contents > itemsPerContainer) || container.Graphic() != backpackGraphic);
+        return container.X() > playerX && contents > 0;
         }).sort(function(a,b)
             {
             var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
@@ -198,8 +209,7 @@ function ConsolidateEggs()
         var currentPullContents = +((currentPull.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
         while(
             currentPutContents < itemsPerContainer 
-            && currentPullContents > 0 
-            && ((currentPull.Graphic() == backpackGraphic && currentPullContents > itemsPerContainer) || currentPull.Graphic() != backpackGraphic)
+            && currentPullContents > 0
             )
             {
                 Orion.Print('test2')
