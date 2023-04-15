@@ -133,6 +133,25 @@ function MainLoop()
     Orion.Exec('simpleGuards',true);
     while(!Player.Dead())
         {
+        var packObj = Orion.ObjAtLayer('backpack');
+        if(packObj)
+            {
+            var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
+            if(packCount > 110)
+                {
+                DiscordPush(Player.Name() + ' backpack getting full: ' + packCount + '/125')
+                Orion.Wait(5000);
+                }
+            }
+        if(Orion.Count(greenThornGraphic) < 10)
+            {
+            Orion.Wait(200);
+            if(Orion.Count(greenThornGraphic) < 10)
+                {
+                DiscordPush(Player.Name() + ' getting low on green thorns')
+                Orion.Wait(5000);
+                }
+            }
         var bunny = Orion.FindType(bunnyGraphic,any,ground,'live',3)[0]
         while(bunny)
             {
