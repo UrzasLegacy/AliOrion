@@ -60,7 +60,7 @@ var profiles =
     }
 
 var profile = profiles.Primeval;
-var defaultAssets = 
+var gumpAssets = 
     [ //functionName,displayName,assetType,value
         [ ['toggle','AutoAttack','AutoAttack'], ['toggle','AutoBuffs','AutoBuffs'], ['toggle','AutoEvade','AutoEvade'], ['toggle','AutoGatherMobs','AutoGatherMobs'] ],
         [ ['toggle','Monitor','Monitor'], ['toggle','Listener','Listener'], ['toggle','DragonHeadMonitor','DragonMonitor'], ['toggle','DemonSkullMonitor','DemonMonitor'] ],

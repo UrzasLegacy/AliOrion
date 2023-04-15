@@ -2,7 +2,7 @@
 
 var itemsPerContainer = 110;
 
-var defaultAssets = 
+var gumpAssets = 
 [
     [ ['toggle','AliCompressor','Compressor'], ['toggle','AliCompressorHelper','Helper'] ],
     [ ['toggle','ConsolidateEggs','ConsolidateEggs'], ['toggle','EggMover6000','MoveEggs'],],
