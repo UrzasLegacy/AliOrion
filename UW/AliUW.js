@@ -99,8 +99,7 @@ function SmartStart()
                 {
                 WaitSyncLeader();
                 DetermineBarrelSamp();
-                Orion.PauseScript('SmartStart');
-                //get havekey signal to resume
+                Orion.PauseScript('SmartStart'); //get HaveKeys signal to resume
                 ScoutAhead(); //run up and lead hydras away if necessary and check that UW is ready to start or hide by winch until it is
                 //Unpause followers
                 WaitSyncLeader();
@@ -144,6 +143,44 @@ function SmartStart()
         default:
             break;
         }
+    }
+
+function ScoutAhead()
+    {
+    var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
+    if(!ladder)
+        return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Orion.UseObject(ladder);
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
+        {
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+        while(!Player.Hidden())
+            {
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
+        AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true);
+        while(!Player.Hidden())
+            {
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
+        }
+    
     }
 
 function GoToSyncPosition()
@@ -240,7 +277,21 @@ function GetKeys()
     
 function GoFromSyncToReadyPosition()
     {//this function is to move from Sync position to Ready position
-
+    var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
+    if(!ladder)
+        return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Orion.UseObject(ladder);
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
+        {
+        Orion.CharPrint(self,1159,'Careful! Hydra nearby!')
+        }
+    
     }
 
     
@@ -288,18 +339,21 @@ function UWBarrels()
             continue;
         var x = loc[1];
         var y = loc[2];
-        while(Orion.GetDistance(x,y) > 0)
-            {
-            Orion.WalkTo(x,y,0,0);
-            Orion.Wait(200);
-            }
+        AliWalkTo(x,y);
         ClearRoom();
         }
-    while(Orion.GetDistance(6432,1699) > 0)
+    for(var i = 0;i<locArr.length;i++)
         {
-        Orion.WalkTo(6432, 1699, 0, 0);
-        Orion.Wait(100);
+        var loc = locArr[i];
+        var component = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),loc[0]);
+            })[0];
+        if(!component)
+            return UWBarrels();
         }
+    AliWalkTo(6432,1699);
+    Orion.UdpSend(42420,'HaveKeys');
     }
 
 function ClearRoom()
@@ -1786,10 +1840,60 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
     Orion.Wait(1);
     if(callBackFn !== undefined)
-        callBackFn();
+        {
+        if(callBackFn())
+            return 'Hydra';
+        }
     if(Orion.GetDistance(shortX,shortY) > 0)
         return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn);
     return true;
+    }
+
+function HydraCheck()
+    {
+    Orion.ClearFakeMapObjects();
+    Orion.ClearBadLocations();
+    var hydraGraphic = '0x0109';
+    var hydras = Orion.FindType(hydraGraphic,any,ground,'live',10);
+    if(hydras.length)
+        {
+        Orion.CharPrint(self,1159,'Hydra found!');
+        return true;
+        }
+    }
+
+function HydraLeash()
+    {
+    Orion.ClearFakeMapObjects();
+    Orion.ClearBadLocations();
+    var hydraGraphic = '0x0109';
+    var hydras = Orion.FindType(hydraGraphic,any,ground,'live',10);
+    hydras.forEach(function(hydra)
+        {
+        Orion.Attack(hydra);
+        });
+    var distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',10)
+    while(distanceCheck.length == 0)
+        {
+        Orion.Print(distanceCheck.length)
+        Orion.Wait(200)
+        distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',10)
+        }
+    hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',10);
+    hydras.forEach(function(hydra)
+        {
+        Orion.Attack(hydra.Serial());
+        var x = hydra.X();
+        var y = hydra.Y();
+        var avoidTiles = Orion.GetTilesInRect('land',x - 2, y - 2, x + 2, y + 2);
+        avoidTiles.forEach(function(tile,ind)
+            {
+            var tileX = tile.X();
+            var tileY = tile.Y();
+            Orion.SetBadLocation(tileX,tileY)
+            //Orion.AddFakeMapObject(ind, '0x051A', 32, tileX, tileY, tile.Z());
+            });
+        });
     }
 
 //--#Coms
@@ -1862,6 +1966,9 @@ function AliComLeader()
                      break;
                 case 'Synced':
                     Shared.AddVar('syncWait',false);
+                    break;
+                case 'HaveKeys':
+                    Orion.ResumeScript('SmartStart');
                     break;
                 case undefined:
                     break;
