@@ -125,6 +125,13 @@ function MainLoop()
         '0x04B41304': '2000',
         '0x054976B5': '3000',
         }
+    var serialListUnf = '';
+    for(prop in timerObj)
+        {
+            serialListUnf += prop + '|';
+        }
+    var serialList = serialListUnf.slice(0,-1)
+    Orion.Print(serialList)
     Orion.ControlAgent('autoloot','BotLoot','start')
     var playerSerial = Player.Serial();
     var timer = timerObj[playerSerial]
@@ -160,8 +167,8 @@ function MainLoop()
             bunny = Orion.FindType(bunnyGraphic,any,ground,'live',3)[0]
             Orion.ClearJournal();
             }
-        Orion.Wait(timer)
-        if(!Orion.InJournal('strange green thorn') && !Orion.FindType(any,any,ground,'live','xyz: ' + x + ',' + y)[0])
+        Orion.Wait(timer);
+        if(!Orion.InJournal('strange green thorn', '', serialList) && !Orion.FindType(any,any,ground,'live','xyz: ' + x + ',' + y)[0])
             {
             Orion.UseType(greenThornGraphic)
             if(Orion.WaitForTarget(1000))
