@@ -1,6 +1,12 @@
 //IMPORTANT NOTES FOR MYSELF
 //Shared variable 'sync' must true to initiate 
-
+function UltraTerminate()
+    {
+    DesyncFromGroup()
+    ClearShared()
+    Orion.Terminate('all','UltraTerminate');
+    Orion.Exec('Autostart',true)
+    }
 function PrintDexxerArr()
     {
     var arr = Shared.GetArray('dexxer',false);
@@ -97,16 +103,20 @@ function SmartStart()
         	Orion.Exec('AliComLeader',true);
             if(GoToSyncPosition())
                 {
-                WaitSyncLeader();
+                WaitSyncLeader(); //wait for resync at safe position
                 DetermineBarrelSamp();
                 Orion.PauseScript('SmartStart'); //get HaveKeys signal to resume
                 ScoutAhead(); //run up and lead hydras away if necessary and check that UW is ready to start or hide by winch until it is
-                //Unpause followers
-                WaitSyncLeader();
-                //Resync at boss ready position
-                //Unpause samps, wait 3 seconds, unpause healers then init self
+                MassAllMessage('ResumeSmartStart');
+                WaitSyncLeader(); //wait for resync at boss ready position
+                MassRoleMessage('dexxer','ResumeSmartStart');
+                Orion.Wait(2000);
+                MassRoleMessage('healer','ResumeSmartStart');
+                MassRoleMessage('misc','ResumeSmartStart');
+                Orion.Wait(1000);
                 }
-            initUWLeader();
+            GoToBossArena();
+            initScripts();
             BossSequence();
             CleanUpPublicCorpse();
             Orion.Exec('SmartStart');
@@ -116,13 +126,20 @@ function SmartStart()
             if(GoToSyncPosition())
                 {
                 WaitSyncFollower();
+                Orion.Wait(1000);
+                if(Shared.GetVar('barrelSamp',false) === true)
+                    GetKeys();
                 Orion.PauseScript('SmartStart');
-                GetKeys();
                 GoFromSyncToReadyPosition();
+                if(Shared.GetVar('barrelSamp',false) === true)
+                    {
+                    OpenUW();
+                    }
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 }
-            initSamp(); //if above, jump down to boss area and then start boss sequence
+            GoToBossArena();
+            initScripts();
             BossSequence();
             Orion.Exec('SmartStart');
             break;
@@ -132,16 +149,131 @@ function SmartStart()
                 {
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
+                Shared.AddVar('sync',false);
                 GoFromSyncToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
+                Shared.AddVar('sync',false);
                 }
-            initHealer();
+            GoToBossArena();
+            initScripts();
             BossSequence();
             Orion.Exec('SmartStart');
             break;
         default:
             break;
+        }
+    }
+
+function ParseWinch(_)
+    {
+    var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+    if(!winch)
+        return false;
+    var winchProps = winch.Properties();
+    var statusArr = winchProps.match(/>(\w+)</g);
+    var statusMap = statusArr.map(function(ele)
+        {
+        return ele == '>READY<';
+        });
+    Orion.Print(statusMap);
+    }
+
+function OpenUW()
+    {
+    var componentArr =
+        [
+            '0x46FE', // Flywheel
+            '0x4CDB', // Wire Spool
+            '0x47E6', // Power Core
+            '0x0E74', // Bearing Assembly
+        ];
+    var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+    if(!winch)
+        return Orion.CharPrint(self,1159, "Couldn't find winch!");
+    var winchSerial = winch.Serial();
+    AliWalkTo(winch.X(),winch.Y());
+    var parse = ParseWinch();
+    for(var i=0;i<parse.length;i++)
+        {
+        var currentParse = parse[i];
+        if(currentParse)
+            continue;
+        var component = Orion.FindType(componentArr[i])[0];
+        if(!component)
+            return Orion.CharPrint(self,1159,"Couldn't find component: " + i);
+        Orion.MoveItem(component,0,winchSerial)
+        Orion.Wait(1300);
+        var reParse = ParseWinch();
+        if(reParse[i] == false)
+            i--;
+        }
+    var lever = Orion.FindTypeEx('0x108C|0x108E',any,ground,'item',20)[0];
+    if(!lever)
+        return Orion.CharPrint(self,1159,'Lever not found!');
+    AliWalkTo(lever.X(),lever.Y());
+    while(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
+        {
+        Orion.UseObject(lever.Serial())
+        Orion.Wait(1300);
+        }
+    AliWalkTo(6308, 1711);
+    //finishing this function will trigger GoToBossArena();
+    }
+
+function GoToBossArena()
+    {
+    AliWalkTo(6308, 1711);
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Orion.Step('n');
+        Orion.Wait(1000);
+        }
+    }
+
+function initScripts()
+    {
+    var role = Shared.GetVar('myRole',false);
+    switch(role)
+        {
+        case 'leader':
+            Orion.Exec('SingleMageHealBot', true);
+            Orion.Exec('UWAvoidBot', true, [8]);
+            break;
+        case 'dexxer':
+            Orion.Exec('UWSamp', true);
+            Orion.Exec('AutoAttack', true);
+            Orion.Exec('AutoBuffs', true);
+            Orion.Exec('AutoEvade', true);
+            break;
+        case 'healer':
+            Orion.Exec('UWHealBot', true);
+            Orion.Exec('UWAvoidBot', true, [8]);
+            break;
+        default:
+            break;
+        }
+    }
+
+function BossSequence()
+    {
+    while(!Player.Dead())
+        {
+        var corpse = Orion.FindTypeEx('0x2006', any, ground, 'item', 23).filter(function(mob)
+            {
+            return Orion.Contains(mob.Properties(),'Evil');
+            });
+        if(corpse.length)
+            {
+            Orion.Wait(500);   		
+            AliWalkTo(corpse[0].X(),corpse[0].Y());
+            ListLoot("BotLoot");
+            Orion.Wait(100);
+            break;
+            }
+        Orion.Wait(1000);
         }
     }
 
@@ -180,7 +312,46 @@ function ScoutAhead()
                 }
             }
         }
-    
+    while(true)
+        {
+        if(HydraCheck())
+            {
+            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+            while(!Player.Hidden())
+                {
+                Orion.Cast('Invisibility');
+                if(Orion.WaitForTarget(5000))
+                    {
+                    Orion.TargetObject(self);
+                    Orion.Wait(1000);
+                    }
+                }
+            AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true);
+            while(!Player.Hidden())
+                {
+                Orion.Cast('Invisibility');
+                if(Orion.WaitForTarget(5000))
+                    {
+                    Orion.TargetObject(self);
+                    Orion.Wait(1000);
+                    }
+                }
+            }
+        while(!Player.Hidden())
+            {
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
+        if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
+            {
+            break;
+            }
+        Orion.Wait(1000);
+        }
     }
 
 function GoToSyncPosition()
@@ -190,6 +361,7 @@ function GoToSyncPosition()
     //check if already in sync position and go to it if not
     //if already in sync position exit function
 	ResetPosition();
+    return true
 	}
 
 function WaitSyncLeader(errorMessage)
@@ -264,16 +436,6 @@ function DetermineBarrelSamp()
     Shared.AddVar('barrelSampName',barrelSamp[1]);
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     }
-
-function GetKeys()
-    {
-    if(Shared.GetVar('barrelSamp',false) === false)
-        return;
-    Orion.Exec('UWBarrelsHealSelf', true);
-    UWBarrels();
-    //send signal to leader
-    Orion.PauseScript('SmartStart');
-    }
     
 function GoFromSyncToReadyPosition()
     {//this function is to move from Sync position to Ready position
@@ -287,38 +449,19 @@ function GoFromSyncToReadyPosition()
         Orion.UseObject(ladder);
         Orion.Wait(1300);
         }
-    if(AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
-        {
-        Orion.CharPrint(self,1159,'Careful! Hydra nearby!')
-        }
-    
+    if(Shared.GetVar('barrelSamp',false))
+        AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true);
+    else
+        AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true);
     }
 
     
-function initLeader()
-    {
-    Orion.Exec('SingleMageHealBot', true);
-    Orion.Exec('UWAvoidBot', true, [8]);
-    }
 
-function initSamp()
-    {
-    Orion.Exec('UWSamp', true);
-    Orion.Exec('AutoAttack', true);
-    Orion.Exec('AutoBuffs', true);
-    Orion.Exec('AutoEvade', true);
-    }
-
-function initHealer()
-    {
-    Orion.Exec('UWHealBot', true);
-    Orion.Exec('UWAvoidBot', true, [8]);
-    }
 
 //--#BarrelBot
 function ____________BARRELS(_){}
 
-function UWBarrels()
+function GetKeys()
     {
     Orion.Exec('UWBarrelsHealSelf',true);
     var locArr =
@@ -350,7 +493,7 @@ function UWBarrels()
             return Orion.Contains(item.Properties(),loc[0]);
             })[0];
         if(!component)
-            return UWBarrels();
+            return GetKeys();
         }
     AliWalkTo(6432,1699);
     Orion.UdpSend(42420,'HaveKeys');
@@ -535,11 +678,7 @@ function UWSamp()
             {
             return Orion.Contains(mob.Properties(),'wisp');
             });
-        var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(mob)
-            {
-            return Orion.Contains(mob.Properties(),'Evil');
-            });
-           if(wisp.length)
+        if(wisp.length)
             {
             wisp.forEach(function(part)
                 {
@@ -551,22 +690,13 @@ function UWSamp()
             else
                 Orion.Attack(wisp[0].Serial());
             }
-           else if(lord.length)
+        else if(lord.length)
             {
             if(lord[0].Distance() > 1)
                 Orion.WalkTo(lord[0].X(),lord[0].Y(), 0, 1);
             else
                 Orion.Attack(lord[0].Serial());
-            }
-        if(corpse.length)
-            {
-            Orion.Wait(500);   		
-            AliWalkTo(corpse[0].X(),corpse[0].Y());
-            ListLoot("BotLoot");
-            Orion.Wait(100);
-            TerminateAll('UWSamp');
-            break;
-            }		
+            }	
         Orion.Wait(250);
         }
     }
@@ -1464,45 +1594,15 @@ function injuredCheck(range, threshold, healDead)
 function UWAvoidBot(distance)
     {
     var distanceActual = distance || 5;
-    // if(Orion.WalkTo(6432, 1699, 0, 0))
-    // 	{
-    // 	var ladder = Orion.FindType(0x08A6, any, ground, '', 24);
-    // 	Orion.UseObject(ladder[0]);
-    //  	Orion.Wait(500);
-    //  	}
-    //  if(Orion.WalkTo(6306, 1711, 0, 0))
-    // 	{
-    // 	Orion.Step(128, true);
-    //  	}
-
-    // Orion.Wait(500);
-    // Orion.Resend();
-    // Orion.Wait(500);
     while(!Player.Dead())
         {	
         Orion.Wait(100)
-        var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(part)
+        var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(mob)
             {
             return Orion.Contains(mob.Properties(),'Shadowlord');
             });
-        var corpse = Orion.FindTypeEx('0x2006', any, ground, '-1', 24).filter(function(part)
-            {
-            return Orion.Contains(mob.Properties(),'Evil');
-            });
-           if(lord.length)
-            {
+        if(lord.length)
             WalkToRadiusBorder(lord[0].Serial(), distanceActual);
-            }
-        if(corpse.length)
-            {
-            //BotPush('Shadowlord Dead!');
-            Orion.Wait(Orion.Random(1,5) * 1000);   		
-            AliWalkTo(corpse[0].X(),corpse[0].Y());
-            ListLoot("BotLoot");
-            Orion.Wait(100);
-            TerminateAll('UWAvoidBot')
-            break;
-            }		
         }
     }
 
@@ -1518,6 +1618,7 @@ function ParseWinch(_)
         return ele == '>READY<';
         });
     Orion.Print(statusMap);
+    return statusMap
     }
 
 function CloseAllGumps(_)
@@ -1875,6 +1976,14 @@ function HydraLeash()
     var distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',10)
     while(distanceCheck.length == 0)
         {
+        if(Player.Hits('%') < 90)
+            {
+            Orion.Cast('Greater Heal')
+            if(Orion.WaitForTarget(3000))
+                {
+                Orion.TargetObject(self);
+                }
+            }
         Orion.Print(distanceCheck.length)
         Orion.Wait(200)
         distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',10)
@@ -2081,7 +2190,7 @@ function Follow(leaderSerial,distance)
 
 function SetSync()
     {
-    if(Orion.ScriptRunning('SmartStart') > 0 || Shared.GetVar('sync'))
+    if(Orion.ScriptRunning('SmartStart') > 0)
         {
         Shared.AddVar('sync',true);
         Orion.UdpSend(42420,'Synced: ' + Player.Name())
@@ -2096,7 +2205,6 @@ function ResumeSmartStart()
 function SetBarrelSamp()
     {
     Shared.AddVar('barrelSamp',true);
-    Orion.Wait(500);
     Orion.ResumeScript('SmartStart');
     }
 
@@ -2138,20 +2246,31 @@ function TargetHeal(serial)
     }
 
 //--# Leader Commands
-function MiscFollowMe()
+function AllFollowMe()
     {
-    MassMessage('misc','Follow:' + Player.Serial());
+    MassAllMessage('Follow:' + Player.Serial());
     }
 
-function MassMessage(role,msg)
+function MassAllMessage(msg)
+    {
+    var sampArr = Shared.GetArray('dexxer',[]);
+    var healerArr = Shared.GetArray('healer',[]);
+    var miscArr = Shared.GetArray('misc',[]);
+    var fullArr = sampArr.concat(healerArr.concat(miscArr))
+    if(fullArr.length == 0)
+        return Orion.CharPrint(self,1159,'No followers to command');
+    for(var i = 0;i<fullArr.length;i++)
+        Orion.UdpSend(fullArr[i][0],msg);
+    }
+
+function MassRoleMessage(role,msg)
     {
     var roleArr = Shared.GetArray(role,[]);  //[botPort,botSerial,botName]
-    if(!roleArr[0])
-        return Orion.CharPrint(self,1159,'No followers to command');
+    if(roleArr.length == 0)
+        return Orion.CharPrint(self,1159,'No ' + role + ' followers to command');
     for(var i = 0;i<roleArr.length;i++)
         Orion.UdpSend(roleArr[i][0],msg);
     }
-
 //--# Gump
 function ____________GUMP(){}
 
