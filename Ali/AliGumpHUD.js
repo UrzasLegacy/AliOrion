@@ -13,7 +13,7 @@
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 
 
-// var defaultAssets = 
+// var gumpAssets = 
 // [
 //     [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
 //     [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
@@ -37,13 +37,13 @@ function AliGumpRenderer()
 	var rowStart = 35;
 	var columnStart = 25;
 
-    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues',[]);
+    var gumpButtons = gumpAssets;//Shared.GetArray('gumpValues',[]);
     //Orion.Print(gumpButtons)
     if(!gumpButtons[0])
         {
         Orion.Print('Resetting to default Assets')
-        Shared.AddArray('gumpValues',defaultAssets)
-        gumpButtons = defaultAssets;
+        Shared.AddArray('gumpValues',gumpAssets)
+        gumpButtons = gumpAssets;
         }
     var heightAdjust = 0;
     var width = Math.max.apply(Math, gumpButtons.map(function (rows)
@@ -237,7 +237,7 @@ function AliGumpCallback(_)
         return AliGumpRenderer();
         }
     var i = 1;
-    var gumpButtons = defaultAssets;//Shared.GetArray('gumpValues');
+    var gumpButtons = gumpAssets;//Shared.GetArray('gumpValues');
 	for(var r = 0;r<gumpButtons.length;r++)
         {
         var row = gumpButtons[r];
@@ -336,14 +336,14 @@ function MinimizeButton()
     }
 function forceInitButtons(_)
     {
-    Shared.AddArray('gumpValues',defaultAssets);
+    Shared.AddArray('gumpValues',gumpAssets);
     }
 
 function initVars()
     {
-    for(var r = 0;r<defaultAssets.length;r++)
+    for(var r = 0;r<gumpAssets.length;r++)
         {
-        var row = defaultAssets[r];
+        var row = gumpAssets[r];
         for(var c = 0;c<row.length;c++)
             {
             var asset = row[c];
