@@ -172,7 +172,7 @@ function RareEggCheck(containerSerial)
 function ConsolidateEggs()
     {
     var playerX = Player.X();
-    var containers = Orion.FindTypeEx(any,any,ground,'item',1).filter(function(item)
+    var containers = Orion.FindTypeEx(any,any,ground,'item',2).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'Contents: ')
         });
