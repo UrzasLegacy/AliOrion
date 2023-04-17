@@ -90,9 +90,9 @@ var hueSerials = {
 }
 
 var x1 = 30;
-var x2 = 120;
+var x2 = 105;
 var x3 = 160;
-var x4 = 240;
+var x4 = 225;
 var x5 = 280;
 var yAdj = 17;
 var textWidth = 100;
