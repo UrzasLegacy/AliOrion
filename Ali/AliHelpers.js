@@ -257,6 +257,14 @@ function DiscordPush(message)
 	Orion.HttpPost(bot, "content=" + message);
 	}
 
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+    
 function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
     {
     if(!colorID)

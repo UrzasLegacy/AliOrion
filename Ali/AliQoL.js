@@ -1,12 +1,5 @@
 //--# AliQoL
 // Written by Ali
-function SetDiscordRegistryEntry()
-    {
-    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
-    var registryName = 'discordConfig';
-    Orion.RegWrite(registryName, discordConfig);
-    return discordConfig;
-    }
 
 function TestHue()
     {
