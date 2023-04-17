@@ -1,12 +1,6 @@
 //IMPORTANT NOTES FOR MYSELF
 //Shared variable 'sync' must true to initiate 
 
-function testwalktoradius()
-    {
-    Orion.Exec('UWAvoidBot',true,[8])
-
-    }
-
 function UltraTerminate()
     {
     DesyncFromGroup()
@@ -14,16 +8,13 @@ function UltraTerminate()
     Orion.Terminate('all','UltraTerminate');
     Orion.Exec('Autostart',true)
     }
+
 function PrintDexxerArr()
     {
     var arr = Shared.GetArray('dexxer',false);
     Orion.Print(arr)
     }
-function DesyncFromGroup()
-    {
-    Orion.CharPrint(self,1159,'Desyncing')
-    Shared.AddVar('sync',false);
-    }
+
 function ClearShared()
     {
     Shared.ClearArrays();
@@ -34,24 +25,23 @@ function ClearShared()
 var Version = '3.2'
 var leaderSerial = '0x02F4684A'; //Alyx
 
-var profile = 
-    {
-    useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
-    useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-        singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-    useMultiTargetSpecial: false, //true , false. Set to true to use a special when 2 or more mobs are nearby to attack.
-        multiTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-    useMomentumStrike: true, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-    useCounterAttack: true, //boolean. Set to true to maintain Counter Attack at all times.
-    useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
-    useConsecrateWeapon: true, //boolean. Set to true to maintain Consecrate Weapon at all times.
-    useDivineFury: true, //boolean, Set to true to maintain Divine Fury at all times.
-    useConfidence: true, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
-        useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-    useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-        discordHook: '887268637315047444', //Put Discord WebHook here
-        discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-    }
+var useSingleTargetSpecial = true; //true, false. Set to true to use a special when only 1 mob is nearby to attack.
+var singleTargetSpecial = true; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+var useOnslaught = false; //true , false. Set to true to use Onslaught when one or more mobs are nearby to attack.
+var useMultiTargetSpecial = false; //true, false. Set to true to use a special when only 1 mob is nearby to attack.
+var multiTargetSpecial = false; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
+var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
+var useConsecrateWeapon = true; //boolean. Set to true to maintain Consecrate Weapon at all times.
+var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
+var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
+var useConfidenceThresholdPercent = 80; //Percentage of self HP to attempt to cast confidence.
+var useRemoveCurse = true;
+var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder.
+var useDiscordPush = true; //true, false. Set to true to use Discord notifications for JournalScan
+var discordHook = '887268637315047444'; //Put your Discord WebHook here.
+var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
 Orion.Exec('JournalScan', true);
 
@@ -81,7 +71,6 @@ var gumpAssets =
 function Autostart()
     {
     Orion.Wait(1000);
-    Shared.AddVar('sync',false);
     VerifyOpenContainer(backpack);
     if(Player.Serial() == leaderSerial)
 		var role = 'leader';
@@ -157,11 +146,9 @@ function SmartStart()
                 {
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
-                Shared.AddVar('sync',false);
                 GoFromSyncToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
-                Shared.AddVar('sync',false);
                 }
             GoToBossArena();
             initScripts();
@@ -245,6 +232,7 @@ function GoToBossArena()
 
 function initScripts()
     {
+    Orion.Exec('AutoInsure',true);
     var role = Shared.GetVar('myRole',false);
     switch(role)
         {
@@ -255,10 +243,10 @@ function initScripts()
             Orion.Exec('UWAvoidBot', true, [8]);
             break;
         case 'dexxer':
-            Orion.Exec('UWSamp', true);
             Orion.Exec('AutoAttack', true);
             Orion.Exec('AutoBuffs', true);
-            Orion.Exec('AutoEvade', true);
+            Orion.Wait(200);
+            Orion.Exec('UWSampMovement', true);
             break;
         case 'healer':
             Orion.Exec('UWHealBot', true);
@@ -758,7 +746,6 @@ function UWHealLeader()
         if(target)
             {
             var healerArr = Shared.GetArray('healer');
-            Orion.Print(healerArr.length)
             var healer = healerArr.shift();
             healerArr.push(healer);
             Shared.AddArray('healer',healerArr);
@@ -773,14 +760,11 @@ function UWHealLeader()
 //--#Melee
 function ____________MELEE(_){}
 
-function UWSamp()
+function UWSampMovement()
     {
     while(!Player.Dead())
-        {	
-        var lord = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(mob)
-            {
-            return Orion.Contains(mob.Properties(),'Shadowlord');
-            });
+        {
+        var lord = Orion.FindTypeEx('0x02C0', any, ground,'live|ignoreself', 24, 'red')[0];
         var wisp = Orion.FindTypeEx(any, any, ground,'live|ignoreself', 24, 'red').filter(function(mob)
             {
             return Orion.Contains(mob.Properties(),'wisp');
@@ -794,15 +778,11 @@ function UWSamp()
                 });
             if(wisp[0].Distance() > 0)
                 Orion.WalkTo(wisp[0].X(),wisp[0].Y(), 0, 0);
-            else
-                Orion.Attack(wisp[0].Serial());
             }
         else if(lord.length)
             {
             if(lord[0].Distance() > 1)
                 Orion.WalkTo(lord[0].X(),lord[0].Y(), 0, 1);
-            else
-                Orion.Attack(lord[0].Serial());
             }	
         Orion.Wait(250);
         }
@@ -810,24 +790,40 @@ function UWSamp()
 
 function AutoBuffs()
     {
-    Orion.Exec('BuffMonitor',true);
-    var useConfidence = profile.useConfidence;
-    var useConfidenceThresholdPercent = profile.useConfidenceThresholdPercent;
-    var useEnemyOfOne = profile.useEnemyOfOne;
-    var useCounterAttack = profile.useCounterAttack;
-    var useConsecrateWeapon = profile.useConsecrateWeapon;
-    var useDivineFury = profile.useDivineFury;
     var nextSpellTime = 0;
+    var nextAppleTime = 0;
+    var nextEvadeTime = 0;
     while(!Player.Dead())
         {
-        if(Orion.Now() > nextSpellTime && Player.Mana() > 20)
+        if(useRemoveCurse && Orion.BuffExists('Blood Oath'))
             {
-            if(useConfidence && Player.Hits('%') < useConfidenceThresholdPercent && !Orion.BuffExists('Confidence'))
+            if(Orion.Now() > nextAppleTime)
+                {
+                Orion.UseType('0x2FD8');
+                nextAppleTime = Orion.Now() + 30000;
+                }
+            else
+                {
+                Orion.Cast('Remove Curse');
+                nextSpellTime = Orion.Now() + 4000;
+                if(Orion.WaitForTarget(4000))
+                    Orion.TargetObject(self);
+                }
+            }
+        else if(Orion.Now() > nextSpellTime && Player.Mana() > 20)
+            {
+            if(Orion.Now() > nextEvadeTime && !Orion.BuffExists('Evasion'))
+                {
+                Orion.Cast('Evasion');
+                nextSpellTime = Orion.Now() + 2000;
+                nextEvadeTime = Orion.Now() + 30000;
+                }
+            else if(useConfidence && Player.Hits('%') < useConfidenceThresholdPercent && !Orion.BuffExists('Confidence'))
                 {
                 Orion.Cast('Confidence');
                 nextSpellTime = Orion.Now() + 1200;
                 }
-            else if(useEnemyOfOne && !Orion.BuffExists('Enemy of One'))
+            else if(useEnemyOfOne && !Orion.Contains(Orion.BuffDescription('Enemy of One'), 'Shadowlord'))
                 {
                 Orion.Cast('Enemy of One');
                 nextSpellTime = Orion.Now() + 2000;
@@ -852,90 +848,8 @@ function AutoBuffs()
         }
     }
 
-function BuffMonitor()
-    {
-    var color =
-        { //[textColorHue,barColorRRGGBBAA]
-            'red': [32,'0xFF0000FF'],
-            'tangle': [1159,'0xF0FF0BFF']
-        }
-    var goodActive = color.tangle;
-    var badActive = color.red;
-
-    var buffs =
-        [ //buffID,buffCooldown,timerPosition,timerName,xOffset,yOffset,textColor,font,backgroundColor,cooldownColorObj,dispelWarning,persistentBuff
-            ['Evasion', 20000, 'underChar','Evasion', 0, 40,goodActive[0], -1, goodActive[1], badActive],
-            ['Blood Oath', 0, 'aboveChar','BLOODOATH', 100, -40,badActive[0], -1, badActive[1]],
-            ['Vampiric Embrace', 60000, 'aboveChar','VE Missing!', -100, 40,badActive[0], -1, '0x00000000', false, true],
-            ['Hiding', 60000, 'underChar','Hidden', 100, 40,goodActive[0], -1, '0x00000000',false,false,true],
-        ]
-
-    while(true)
-        {
-        //var startTime = Orion.Now();
-        Orion.Wait(100);
-        for(var i=0;i<buffs.length;i++)
-            {
-            var buff = buffs[i];
-            if(Orion.BuffExists(buff[0]))
-                {
-                if(buff[10])
-                    Orion.RemoveDisplayTimer(buff[0]);
-                else if(!Orion.DisplayTimerExists(buff[0]))
-                    {
-                    Orion.AddDisplayTimer(buff[0], buff[1] + Orion.BuffTimeRemaining(buff[0]), buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
-                    if(buff[9])
-                        buff[9][2] = false;
-                    else if(buff[11])
-                        Orion.DisplayTimerSetShowTime(buff[0], false);
-                    }
-                }
-            else if(Orion.DisplayTimerExists(buff[0]))
-                {
-                if(buff[9])
-                    {
-                    Orion.DisplayTimerSetColorStage(buff[0], 100, buff[9][0], buff[9][1]);
-                    buff[9][2] = true;
-                    }
-                else if(buff[11])
-                    {
-                    Orion.RemoveDisplayTimer(buff[0]);
-                    }
-                }
-            else if(buff[10])
-                {
-                Orion.AddDisplayTimer(buff[0], buff[1], buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
-                Orion.Wait(10)
-                Orion.DisplayTimerSetShowTime(buff[0], false);
-                }
-            }
-        //Orion.Print('Interval: ' + (Orion.Now() - startTime))
-        }
-    }
-
-function AutoEvade()
-    {
-    var lowestHPPercent = 30;
-    var highestHPPercent = 50;
-    Orion.Exec('BuffMonitor',true);
-    while(!Player.Dead())
-        {
-        var count = Orion.FindType(any, any, ground, 'live|inlos|ignorefriends|ignoreself|nothuman', 20, 'gray|criminal|red').length;
-        if(!Orion.DisplayTimerExists('Evasion') && !Orion.BuffExists('Evasion') && Player.Hits('%') < Math.min((lowestHPPercent + (2 * count)), highestHPPercent))
-            Orion.Cast('Evasion');
-        Orion.Wait(100);
-        }
-    }
-
 function AutoAttack()
     {
-    //Orion.Exec('AutoBuffs',true);
-    var useSingleTargetSpecial = profile.useSingleTargetSpecial;
-    var singleTargetSpecial = profile.singleTargetSpecial;
-    var useMomentumStrike = profile.useMomentumStrike;
-    var useWhirlwind = profile.useWhirlwind;
-    var whirlwindSpecial = profile.whirlwindSpecial;
-    var useOnslaught = false;
     while(!Player.Dead())
         {
         var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 2, 'gray|red|criminal|orange');
@@ -1039,10 +953,10 @@ function ____________HEALERS(_){}
 function UWHealBot()
     {
     while(!Player.Dead())
-        {	
-        Orion.Wait(50)	
+        {
         if(!Orion.HaveTarget() && !Player.Frozen())
             Orion.Cast("Greater Heal");
+        Orion.Wait(250)	
         }
     }
 
@@ -1050,18 +964,15 @@ function SingleMageHealBot()
     {
     while(!Player.Dead())
         {
-        if(!Orion.HaveTarget() && !Player.Frozen())
+        while(!Orion.HaveTarget() && !Player.Frozen())
             {
             Orion.Cast('Greater Heal')
             Orion.WaitForTarget(3000);
             }
-        var target = injuredCheck(10, 50);
+        var target = injuredCheck(10, 65);
         if(Player.Hits('%') < 80)
-            {
-            if(Orion.WaitForTarget(3000))
-                Orion.TargetObject(self);
-            }
-        else if(target)
+            Orion.TargetObject(self);
+        else if(target && Orion.HaveTarget())
             {
             if(target.Poisoned())
                 {
@@ -1070,12 +981,10 @@ function SingleMageHealBot()
                 if(Orion.WaitForTarget(3000))
                     Orion.TargetObject(target.Serial());	
                 }
-            else if(Orion.WaitForTarget(3000))
-                {
-                Orion.TargetObject(target.Serial());	
-                }
+            else
+                Orion.TargetObject(target.Serial());
             }
-        Orion.Wait(300);
+        Orion.Wait(250);
         }
     }
 
@@ -1584,8 +1493,8 @@ function HideTilHidden()
         if(!Orion.BuffExists('hiding') && enemies.length)
             {
             Orion.Attack(enemies[0]);
-            if(!Orion.AbilityStatus(profile.singleTargetSpecial) && Player.Mana() >= 15)
-                Orion.UseAbility(profile.singleTargetSpecial);
+            if(!Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
+                Orion.UseAbility(singleTargetSpecial);
             }
         }
     Orion.SetTimer('StayLoggedIn');
@@ -1651,8 +1560,6 @@ function BuyHorse()
 
 function JournalScan()
     {
-    var useDiscordPush = profile.useDiscordPush;
-    var useAlarmSound = true//profile.useAlarmSound;
     var msg = 'GM'
     while(true)
         {
@@ -1660,22 +1567,18 @@ function JournalScan()
         var checkarr = Orion.Split(check.Text(), ' ')
         for(var i = 0;i<checkarr.length;i++)
             {
-            switch(checkarr[i])
-                {		
-                case 'GM':
-                    if(useDiscordPush)
-                        DiscordPush(Player.Name() + ": GM")
-                    if(useAlarmSound)
-                        Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-                    Orion.Terminate('all', 'JournalScan');
-                    Orion.Wait(1000);
-                    Orion.StopWalking();
-                    Orion.OAOptionSet('AutoReconnect', '0');
-                    //Orion.CloseUO();
-                    Orion.Wait(6000);
-                    break;
-                default:
-                    break;
+            if(checkArr[i])
+                {
+                if(useDiscordPush)
+                    DiscordPush(Player.Name() + ": GM")
+                if(useAlarmSound)
+                    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+                Orion.Terminate('all', 'JournalScan');
+                Orion.Wait(1000);
+                Orion.StopWalking();
+                Orion.OAOptionSet('AutoReconnect', '0');
+                //Orion.CloseUO();
+                Orion.Wait(6000);
                 }
             }
         }
@@ -1930,14 +1833,17 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
     }
 
 function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
     {
-    var bot = Shared.GetVar('discordLink',false);
-    if(!bot)
-        {
-        bot = "https://discordapp.com/api/webhooks/" + profile.discordHook + "/" + profile.discordKey;
-        Shared.AddVar('discordLink',bot);
-        }
-    Orion.HttpPost(bot, "content=" + message);
+    var discordConfig = "https://discordapp.com/api/webhooks/" + discordHook + '/' + discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
     }
 
 function WalkToRadiusBorder(targetSerial, distance) 
@@ -2345,9 +2251,13 @@ function HealTarget(serial)
     if(obj)
         {
         Orion.Print('Targeting: ' + obj.Name());
+        if(obj.Poisoned())
+            {
+            Orion.Cast('Cure');
+            Orion.WaitForTarget(2000);
+            }
         if(obj.Distance() > 9)
             {
-            Orion.Print('Targeting: ' + obj.Name());
             Orion.PauseScript('UWAvoidBot');
             WalkToRadiusBorder(serial, 6);
             Orion.TargetObject(serial);
