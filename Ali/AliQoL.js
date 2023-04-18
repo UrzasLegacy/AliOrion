@@ -267,9 +267,92 @@ function SuitReader()
     gump.Update();
     }
 
-function BuyFromPlayerVendor()
+function AliVendorBuy()
     {
-    var propertyString = 'of the Archlich';
+    // QoL function to make buying from player vendors less tedious. Just target the item you'd like to purchase.
+    // Also reports your total spending during your session. Resets when you close the client completely.
+    // Set to a keybind and check the 'Run one script' checkbox.
+
+    // WARNING WARNING WARNING
+    // Will purchase whatever you target without a confirmation prompt! Do not target something you don't intend to buy!
+    // WARNING WARNING WARNING
+
+    // To avoid accidentally buying overpriced items, you can enter a maximum price here:
+    var maximumPrice = 50000000; // less than or equal to
+
+
+    //No edit
+    Orion.CharPrint(self,1159,'Select item to purchase')
+    Orion.WaitForAddObject('myTarget')
+    var itemObj = Orion.FindObject('myTarget');
+    if(!itemObj)
+        return Orion.CharPrint(self,1159,'No item selected')
+    var itemProps = itemObj.Properties();
+    var itemPrice = +((itemProps.match(/Price: ([\d,]+)/) || [])[1] || '').replace(/,/g,'');
+    if(itemPrice > maximumPrice)
+        return Orion.CharPrint(self,1159,'No deal! Item overpriced!');
+    var totalSpentThisSession = Shared.GetVar('totalSpent',0) + itemPrice;
+    var itemSerial = itemObj.Serial();
+    Orion.WaitContextMenuID(itemSerial, 608);
+    Orion.RequestContextMenu(itemSerial);
+    if(Orion.WaitForGump(2000,true))
+        {
+        var gump = Orion.GetGump(any,'0x000F3E60');
+        if(gump)
+            {
+            gump.Select(Orion.CreateGumpHook(2));
+            Shared.AddVar('totalSpent',totalSpentThisSession);
+            var formattedWithCommas = totalSpentThisSession.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+            }
+        }
+    Orion.Wait(200);
+    Orion.Print('Total Spent: ' + formattedWithCommas + 'gp');
+    }
+
+function AliVendorBuyWithComments()
+    { 
+
+    // WARNING WARNING WARNING
+    // Will purchase whatever you target instantly, do not target something you don't intend to buy!
+    // WARNING WARNING WARNING
+
+    // To avoid buying overpriced items, you can enter a maximum price here:
+    var maximumPrice = 50000000; // less than or equal to
+
+    Orion.CharPrint(self,1159,'Target item to purchase')
+    Orion.WaitForAddObject('myTarget') // this will grab the serial number of whatever you target and assign it an alias string, using FindObject or GetSerial next is a good habit
+    var itemObj = Orion.FindObject('myTarget'); // will return an Orion Object or null if you didn't click on an item. Search 'obj' in the help tab for a list of methods that can be called on Orion Objects
+    if(!itemObj)
+        return Orion.CharPrint(self,1159,'Failed to target item');
+    var itemProps = item.Properties();
+    var itemPriceMatch = itemProps.match(/Price: ([\d,]+)/); // this regular expression returns an array like this ['Price: 100,000','100,000'] or null if no match is found
+    var itemPriceMatchValidate = itemPriceMatch || []; // if itemPriceMatch is null, an empty array [] is used for the next steps instead
+    var itemPriceMatchGroup = itemPriceMatchValidate[1]; // we want the second string in the array. In JS referring to an index in an array that doesn't exist such as [][1] will return undefined.
+    var itemPriceStrValidate = itemPriceMatchGroup || ''; // use the match from the array '100,000' OR an empty string if the previous step returned an empty array
+    var itemPriceStrNoCommas = itemPriceStrValidate.replace(/,/g,''); //this regex will replace all commas with an empty string
+    var itemPriceInt = +itemPriceStrNoCommas; // or Number(itemPriceStrNoCommas) to change the previous string to an integer. An empty string will evaluate to 0.
+    if(itemPriceInt > maximumPrice)
+        {
+        Orion.CharPrint(self,1159,'No deal! Item overpriced!');
+        return; //exit the function
+        }
+    var itemSerial = itemObj.Serial();
+    Orion.WaitContextMenuID(itemSerial, 608); // sets a hook to click this context menu option on the next context menu that pops up
+    Orion.RequestContextMenu(itemSerial); // opens the context menu of the item. Create a macro and click a context menu option and then do To Script to easily grab its ID
+    if(Orion.WaitForGump(2000)) // wait up to 2 seconds until the next gump appears, in this case the purchase confirmation gump
+        {
+        var gump = Orion.GetGump(any,'0x000F3E60'); //to get a gump's ID, type _infogump in game for information about the last gump opened
+        if (gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(2)); //selects confirm in the gump. Create a macro and click button gumps to easily grab button IDs
+            Orion.Wait(200); //this is a small wait to account for server latency
+            }
+        }
+    }
+
+function AliVendorBuyAll()
+    {
+    var propertyString = 'Curiously Adorned Egg';
     var priceThreshold = 1800000;
     Orion.WaitForAddObject('myTarget')
     var vendorBackpackSerial = Orion.GetSerial('myTarget');
@@ -1179,22 +1262,4 @@ function VendorRepricer()
             Orion.SendPrompt(' ');
         Orion.Wait(700);
         }
-    }
-
-function BuyFromPlayerVendor()
-    {
-    Orion.WaitForAddObject('myTarget')
-    var itemSerial = Orion.GetSerial('myTarget');
-    Orion.WaitContextMenuID(itemSerial, 608);
-    Orion.RequestContextMenu(itemSerial);
-    if(Orion.WaitForGump(2000))
-        {
-        var gump0 = Orion.GetGump('last');
-        if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000F3E60'))
-            {
-            gump0.Select(Orion.CreateGumpHook(2));
-            Orion.Wait(100);
-            }
-        }
-    Orion.Wait(1300);
     }
