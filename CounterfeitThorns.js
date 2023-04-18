@@ -14,7 +14,7 @@ var y = Player.Y()
 //Tweak these settings and don't forget to change the Discord hook and key
 var profiles = 
     {
-    Thorns: 
+    Thorns:
         {
         mobGraphic: bunnyGraphic, //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
         useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
@@ -104,7 +104,7 @@ function simpleGuards()
             {
             Orion.Say('Guards')
             Orion.Wait(500);
-            if(Orion.Timer('discordTimer') < 15000)
+            if(Orion.Timer('discordTimer') > 15000)
                 {
                 DiscordPush(Player.Name() + ' called Guards!')
                 Orion.SetTimer('discordTimer');
@@ -131,7 +131,6 @@ function MainLoop()
             serialListUnf += prop + '|';
         }
     var serialList = serialListUnf.slice(0,-1)
-    Orion.Print(serialList)
     Orion.ControlAgent('autoloot','BotLoot','start')
     var playerSerial = Player.Serial();
     var timer = timerObj[playerSerial]
