@@ -5,8 +5,8 @@ var itemsPerContainer = 110;
 var gumpAssets = 
 [
     [ ['toggle','AliCompressor','Compressor'], ['toggle','AliCompressorHelper','Helper'] ],
-    [ ['toggle','ConsolidateEggs','ConsolidateEggs'], ['toggle','EggMover6000','MoveEggs'],],
-    [ ['toggle','NestContainerZero','NestPouches'] ],
+    [ ['toggle','ConsolidateEggs','ConsolidateEggs'], ['toggle','EggMover6000','MoveEggs'], ['toggle','CountReadyBackpacks','CountReady'],],
+    [ ['toggle','NestContainerZero','NestPouches'], ['toggle','DropHere','DropHere'] ],
 ];
 function ControlsGump()
     {
