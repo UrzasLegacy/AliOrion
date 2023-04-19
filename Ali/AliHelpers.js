@@ -5,9 +5,11 @@ function Jiggle(type)
     switch(type)
         {
         case 'Move':
-            
+
             break;
         case 'Wait':
+            break;
+        case 'Cast':
             break;
         default:
             break;
