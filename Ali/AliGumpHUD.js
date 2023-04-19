@@ -26,7 +26,7 @@
 function AliGumpRenderer() 
 	{
     var title = "Ali's Modular Gump"
-    var startTime = Orion.Now();
+    //var startTime = Orion.Now();
     var gump = Orion.CreateCustomGump(10420); 
 
     var rowAdj = 45;
@@ -113,10 +113,10 @@ function AliGumpRenderer()
     var rowPos = rowStart;
     var colPos = columnStart;
     var i = 1;
-    for(var r = 0;r<gumpButtons.length;r++)
+    for(var r = 0,lenR = gumpButtons.length;r<lenR;r++)
         {
         var row = gumpButtons[r];
-        for(var c = 0;c<row.length;c++)
+        for(var c = 0,lenC = row.length;c<lenC;c++)
             {
             var asset = row[c];
             var assetType = asset[0];
@@ -217,13 +217,13 @@ function AliGumpRenderer()
     //Custom Assets
     
     gump.Update();
-    Orion.Print('interval: ' + (Orion.Now() - startTime))
+    //Orion.Print('interval: ' + (Orion.Now() - startTime))
 	}
 
 function AliGumpCallback(_) 
 	{
     var code = CustomGumpResponse.ReturnCode();
-    Orion.Print('Code: ' + code)
+    //Orion.Print('Code: ' + code)
     if(code == 0)
         return;
     else if(code == 100)
@@ -238,10 +238,10 @@ function AliGumpCallback(_)
         }
     var i = 1;
     var gumpButtons = gumpAssets;//Shared.GetArray('gumpValues');
-	for(var r = 0;r<gumpButtons.length;r++)
+	for(var r = 0,lenR = gumpButtons.length;r<lenR;r++)
         {
         var row = gumpButtons[r];
-        for(var c = 0;c<row.length;c++)
+        for(var c = 0,lenC = row.length;c<lenC;c++)
             {
             var asset = row[c];
             if(code == i)
@@ -439,7 +439,7 @@ function BuffMonitor()
 		{
 		//var startTime = Orion.Now();
 		Orion.Wait(100);
-		for(var i=0;i<buffs.length;i++)
+		for(var i=0,len=buffs.length;i<len;i++)
 			{
 			var buff = buffs[i];
 			if(Orion.BuffExists(buff[0]))
