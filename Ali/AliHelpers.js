@@ -1,5 +1,19 @@
 //--# AliHelpers
 
+function Jiggle(type)
+    {
+    switch(type)
+        {
+        case 'Move':
+            
+            break;
+        case 'Wait':
+            break;
+        default:
+            break;
+        }
+    }
+
 function ListLoot(findlist,ignorelist)  //v1
     {
     var list = Orion.FindTypeEx('0x2006', '-1', ground, '2').filter(function(part)
