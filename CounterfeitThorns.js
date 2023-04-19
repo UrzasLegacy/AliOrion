@@ -167,7 +167,7 @@ function MainLoop()
             Orion.ClearJournal();
             }
         Orion.Wait(timer);
-        if(!Orion.InJournal('strange green thorn', '', serialList) && !Orion.FindType(any,any,ground,'live','xyz: ' + x + ',' + y)[0])
+        if(!Orion.InJournal('strange green thorn', '', serialList) && !Orion.FindType(any,any,ground,'live','xyz: ' + x + ',' + y).length)
             {
             Orion.UseType(greenThornGraphic)
             if(Orion.WaitForTarget(1000))
