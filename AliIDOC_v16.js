@@ -19,7 +19,7 @@ function Autostart()
         Orion.UseObject(backpack);
         Orion.Wait(1300);
         }
-    var outMsg = 'House Code: ' + JSON.stringify(houseCode) + '\nHouse Coords: ' + JSON.stringify(houseTargetCoords) + '\nWalk to Front: ' + walkToFront + '\nCastle Mode: ' + castleMode + '\n Relog to Pinks: ' + relogAccounts;
+    var outMsg = 'House Code: ' + JSON.stringify(houseButtons) + '\nHouse Coords: ' + JSON.stringify(houseTargetCoords) + '\nWalk to Front: ' + walkToFront + '\nCastle Mode: ' + castleMode + '\n Relog to Pinks: ' + relogAccounts;
     if(fullAuto)
         outMsg += '\nFull Auto: true\nPlacer: ' + placerName;
     Orion.Wait(2000);
