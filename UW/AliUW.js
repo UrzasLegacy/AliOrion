@@ -146,11 +146,12 @@ function SmartStart()
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
-            Orion.Exec('AutoAttack',true);
             Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
+                SelfAssessment() && CharacterMaintenance();
                 GoToSyncPosition()
+                Orion.Exec('HideTilHidden',true);
                 WaitSyncFollower(); //safe position
                 Orion.Wait(1000);
                 if(Shared.GetVar('barrelSamp',false) === true)
@@ -176,6 +177,7 @@ function SmartStart()
             if(!BossCheck())
                 {
                 GoToSyncPosition();
+                Orion.Exec('HideTilHidden',true);
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 GoFromSafeToReadyPosition();
@@ -196,6 +198,27 @@ function SmartStart()
         }
     }
 
+function CharacterMaintenance()
+    {    
+    var tithe = false;
+    var dura = false;
+    var consumable = false;
+    var pack = false;
+    var gold = false;
+    if(Orion.TithingPoints() < 30000)
+        tithe = true;
+    if(DurabilityCheck())
+        dura = true;
+    if(ConsumablesCheck())
+        consumable = true;
+    if(PackCheck())
+        pack = true;
+    if(GoldCheck())
+        gold =  true;
+    if(!tithe && !dura && !consumable && !pack && !gold)
+        return true;
+    }
+
 function SelfAssessment()
     {
     if(Orion.TithingPoints() < 30000)
@@ -206,34 +229,70 @@ function SelfAssessment()
         return true;
     if(PackCheck())
         return true;
-    
+    if(GoldCheck())
+        return true;
+    }
+
+function GoldCheck()
+    {
+
     }
 
 function DurabilityCheck()
     {
-        var durabilityThreshold = 80
-        var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
-        Orion.Print("Repair threshold set at: " + durabilityThreshold)
-        var outStrs = [];
-        for(var i=1;i<layers.length;i++)
+    var durabilityThreshold = 80
+    var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
+    Orion.Print("Repair threshold set at: " + durabilityThreshold)
+    for(var i=1;i<layers.length;i++)
+        {
+        var obj = Orion.ObjAtLayer(i);
+        if(obj)
             {
-            if(Orion.ObjAtLayer(i))
+            var objProperties = obj.Properties();
+                Orion.Print('Item needs to be added: ' + obj.Graphic() + ': ' + obj.Name())
+            if(Orion.Contains(objProperties, 'Durability'))
                 {
-                var obj = Orion.ObjAtLayer(i);
-                var objProperties = obj.Properties();
-                var objDict = repairDict[obj.Graphic()];
-                if(!objDict && Orion.Contains(objProperties, 'Durability'))
-                    Orion.Print('Item needs to be added: ' + obj.Graphic() + ': ' + obj.Name())
-                else if(Orion.Contains(objProperties, 'Durability'))
-                      {
-                    var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/)
-                    var min = +dura[1];
-                    var max = +dura[2];
-                    if(dura[0] && min < durabilityThreshold * 2 && min < max)
-                        outStrs.push(layers[obj.Layer()] + ':::' + obj.Name() + ':::' + min + ':::' + max);
-                      }
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/) || [];
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold && min < max)
+                    return true;
                 }
-              }
+            }
+        }
+    return false;
+    }
+
+function ConsumablesCheck()
+    {
+    var consumables =
+        [
+        '0x2FD8' //apple
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        if(Orion.Count(consumables[i]) < 5)
+            {
+            Orion.Wait(200);
+            if(Orion.Count(consumables[i]) < 5)
+                return true;
+            }
+        }
+    return false;
+    }
+
+function PackCheck()
+    {
+    var packObj = Orion.ObjAtLayer('backpack');
+    if(packObj)
+        {
+        var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
+        if(packCount > 100)
+            return true;
+        }
+    if(Player.Weight() > Player.MaxWeight() - 100)
+        return true;
+    return false;
     }
 
 function BossCheck()
@@ -375,6 +434,7 @@ function initScripts()
 function BossSequence()
     {
     Orion.CharPrint(self,1159,'Starting Boss Sequence!');
+    Shared.AddVar('bossStartStamp',Orion.Now());
     while(!Player.Dead())
         {
         var corpse = Orion.FindTypeEx('0x2006', any, ground, 'item', 23).filter(function(mob)
@@ -387,11 +447,12 @@ function BossSequence()
             AliWalkTo(corpse[0].X(),corpse[0].Y());
             ListLoot("BotLoot");
             Orion.Wait(100);
-            Shared.AddVar('deathStamp',Orion.Now());
+            Shared.AddVar('bossDeathStamp',Orion.Now());
             break;
             }
         Orion.Wait(1000);
         }
+    Orion.Print('Boss TTK: ' + (Shared.GetVar('bossStartStamp',0) - Shared.GetVar('bossDeathStamp',0))) + 'ms';
     Orion.Wait(Orion.Random(4,9) * 1000);
     }
 
@@ -702,6 +763,9 @@ function ____________BARRELS(_){}
 function GetKeys()
     {
     Orion.CharPrint(self,1159,'Getting keys');
+    Orion.PauseScript('HideTilHidden');
+    Orion.Wait(500);
+    Orion.Terminate('HideTilHidden');
     Orion.Exec('UWBarrelsHealSelf',true);
     var locArr =
         [
@@ -738,6 +802,8 @@ function GetKeys()
     Orion.PauseScript('UWBarrelsHealSelf');
     Orion.Wait(500);
     Orion.Terminate('UWBarrelsHealSelf');
+    Orion.Wait(500);
+    Orion.Exec('HideTilHidden',true);
     Orion.UdpSend(42420,'HaveKeys');
     }
 
@@ -900,11 +966,15 @@ function UWHealLeader()
             activeHealers.push(healer);
             Orion.TargetSystemSerial(target.Serial());
             if(target.Poisoned())
-                outMsg = 'CureTarget:' + target.Serial();
+                {
+                Orion.UdpSend(healer[0],'CureTarget:' + target.Serial());
+                Orion.Wait(1000);
+                }
             else
-                outMsg = 'HealTarget:' + target.Serial();
-            Orion.UdpSend(healer[0],outMsg); //[botPort,botSerial,botName,botRole]
-            Orion.Wait(500);
+                {
+                Orion.UdpSend(healer[0],'HealTarget:' + target.Serial());
+                Orion.Wait(500);
+                }
             }
         Orion.Wait(100);
         }
@@ -1640,7 +1710,6 @@ function StayLoggedIn()
 
 function HideTilHidden()
     {
-    Orion.Terminate('AlwaysAttackAdjacent');
     while(!Player.Dead() && !Orion.BuffExists('hiding'))
         {
         var startTile = '' + Player.X() + Player.Y();
