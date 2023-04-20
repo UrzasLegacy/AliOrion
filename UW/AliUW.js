@@ -315,12 +315,13 @@ function CleanUpPublicCorpse()
     Orion.UseObject(corpse.Serial());
     Orion.Wait(2000);
     var corpseInstanceSerial = Orion.GetSerial(lastcontainer)
+    Orion.AddDisplayTimer('publicCorpse', 5000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
     while(Orion.GumpExists('container',corpseInstanceSerial))
         {
-        Orion.CharPrint(self,1159,'Waiting for corpse to go public');
         Orion.Wait(100);
         }
-    Orion.Wait(500);
+    Orion.RemoveDisplayTimer('publicCorpse');
+    Orion.Wait(100);
     ListLoot("BotLoot");
     }
 
@@ -1371,7 +1372,9 @@ function RecallTithe()
     var tithingPoints = Player.TithingPoints();
     Orion.Print('Current Tithing Points: ' + tithingPoints)
     TerminateAll('RecallTithe')
-    var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+    if(Player.X() > 6000)
+        LeaveUW();
+    var ankh = Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
     if(!ankh)
         RecallByGump('Main','Tithing','Main','Tithing2');
     Tithe();
@@ -1427,6 +1430,8 @@ function Tithe()
 function RecallRepair()
     {
     TerminateAll('RecallRepair')
+    if(Player.X() > 6000)
+        LeaveUW();
     RecallByGump('Main', 'Home', 'Main', 'Home2');
     Orion.WarMode(0);
     do
