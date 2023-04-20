@@ -149,7 +149,7 @@ function SmartStart()
             Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
-                SelfAssessment() && CharacterMaintenance();
+                //CharacterMaintenance();
                 GoToSyncPosition()
                 Orion.Exec('HideTilHidden',true);
                 WaitSyncFollower(); //safe position
@@ -205,7 +205,7 @@ function CharacterMaintenance()
     var consumable = false;
     var pack = false;
     var gold = false;
-    if(Orion.TithingPoints() < 30000)
+    if(Player.TithingPoints() < 30000)
         tithe = true;
     if(DurabilityCheck())
         dura = true;
@@ -217,20 +217,22 @@ function CharacterMaintenance()
         gold =  true;
     if(!tithe && !dura && !consumable && !pack && !gold)
         return true;
-    }
+    if(tithe)
+        RecallTithe();
+    if(dura)
+        RecallRepair()
+    if(consumable)
+        {
+        
+        }
+    if(pack)
+        {
 
-function SelfAssessment()
-    {
-    if(Orion.TithingPoints() < 30000)
-        return true;
-    if(DurabilityCheck())
-        return true;
-    if(ConsumablesCheck())
-        return true;
-    if(PackCheck())
-        return true;
-    if(GoldCheck())
-        return true;
+        }
+    if(gold)
+        {
+
+        }
     }
 
 function GoldCheck()
@@ -470,9 +472,9 @@ function ScoutAhead(_)
         Orion.Wait(1300);
         }
     AvoidRectangle(6298,1704,6309,1719);
-    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
+    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
         {
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
         while(!Player.Hidden())
             {
             Orion.Cast('Invisibility');
@@ -497,7 +499,7 @@ function ScoutAhead(_)
         {
         Orion.SetBadLocation(6309,1711);
         Orion.SetBadLocation(6309,1712);
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
         while(!Player.Hidden())
             {
             Orion.Cast('Invisibility');
@@ -565,9 +567,9 @@ function ScoutAhead(_)
         Orion.UseObject(ladder2);
         Orion.Wait(500)
         }
-    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
+    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
         {
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
         while(!Player.Hidden())
             {
             Orion.Cast('Invisibility');
@@ -601,9 +603,8 @@ function WaitForReset()
         {
         if(HydraCheck())
             {
-            Orion.SetBadLocation(6309,1711);
-            Orion.SetBadLocation(6309,1712);
-            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
+            AvoidRectangle(6298,1704,6309,1719);
+            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
             while(!Player.Hidden())
                 {
                 Orion.Cast('Invisibility');
@@ -729,8 +730,9 @@ function DetermineBarrelSamp()
         Orion.Wait(1000)
         samps = Shared.GetArray('dexxer',false);
         }
-    samps = samps.filter(function(samp){return samp[2] == 'Genevieve'})
-    var barrelSamp = samps[Orion.Random(0,samps.length)];
+    samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
+    var barrelSamp = samps[0];
+    //var barrelSamp = samps[Orion.Random(0,samps.length)];
     Shared.AddVar('barrelSampName',barrelSamp[1]);
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     }
@@ -1365,10 +1367,10 @@ function RecallTithe()
     {
     var tithingPoints = Player.TithingPoints();
     Orion.Print('Current Tithing Points: ' + tithingPoints)
-    if(tithingPoints > 10000)
-        return;
     TerminateAll('RecallTithe')
-    RecallByGump('Main','Tithing','Main','Tithing2');
+    var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+    if(!ankh)
+        RecallByGump('Main','Tithing','Main','Tithing2');
     Tithe();
     Orion.Wait(1500);
     //Orion.Exec('WalkThroughCurrentFarm');
@@ -1392,7 +1394,7 @@ function Tithe()
             {
             if(Orion.Now() > subEndTime)
                 return DiscordPush(Player.Name() + "couldn't find ankh!")
-            Orion.WalkTo(ankh.X(),ankh.Y())
+            AliWalkTo(ankh.X(),ankh.Y(),0,1)
             Orion.Wait(500);
             } while(!Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',2)[0])
         Orion.WaitContextMenuID(ankh.Serial(), 412);
@@ -2134,7 +2136,7 @@ function AvoidRectangle(x1,y1,x2,y2)
         }
     }
 
-function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn)
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
     {
     if(z === undefined) z = 0;
     if(distanceXY === undefined) distanceXY = 0;
@@ -2145,6 +2147,10 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     if(maxWalkingTime === undefined) maxWalkingTime = 300000;
     if(pathMarkers === undefined) pathMarkers = false;
 
+    if(startCallBackFn)
+        {
+        startCallBackFn();
+        }
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
         Orion.ClearFakeMapObjects();
@@ -2167,26 +2173,29 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
         var chunk = shortStop;
     var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
     if(pathMarkers)
-        Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+        {
+        Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
+        Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
+        }
     Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
     Orion.Wait(1);
-    if(callBackFn !== undefined)
+    if(endCallBackFn)
         {
-        if(callBackFn())
+        if(endCallBackFn())
             return 'Hydra';
         }
     if(Orion.GetDistance(shortX,shortY) > 0)
-        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn);
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
     return true;
     }
 
-var hydraDistance = 10;
+
 function HydraCheck()
     {
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
     var hydraGraphic = '0x0109';
-    var hydras = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance);
+    var hydras = Orion.FindType(hydraGraphic,any,ground,'live',20);
     if(hydras.length)
         {
         Orion.CharPrint(self,1159,'Hydra found!');
@@ -2196,12 +2205,15 @@ function HydraCheck()
 
 function HydraLeash()
     {
+    var hydraDistance = 10;
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
     var hydraGraphic = '0x0109';
     var hydras = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance);
     hydras.forEach(function(hydra)
         {
+        if(Orion.GetDistance(hydra) > 7)
+            WalkToRadiusBorder(hydra,7);
         Orion.Attack(hydra);
         });
     var distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance)
@@ -2219,21 +2231,6 @@ function HydraLeash()
         Orion.Wait(200)
         distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance)
         }
-    hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance);
-    hydras.forEach(function(hydra)
-        {
-        Orion.Attack(hydra.Serial());
-        var x = hydra.X();
-        var y = hydra.Y();
-        var avoidTiles = Orion.GetTilesInRect('land',x - 2, y - 2, x + 2, y + 2);
-        avoidTiles.forEach(function(tile,ind)
-            {
-            var tileX = tile.X();
-            var tileY = tile.Y();
-            Orion.SetBadLocation(tileX,tileY)
-            //Orion.AddFakeMapObject(ind, '0x051A', 32, tileX, tileY, tile.Z());
-            });
-        });
     }
 
 function HydraAvoid()
