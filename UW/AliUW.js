@@ -69,7 +69,7 @@ var gumpAssets =
         [ ['ySpacer',20] ],
     ];
 
-function Autostart()
+function Autostart(_)
     {
     // if(Player.X() > 6000)
     //     {
@@ -118,12 +118,11 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                GoToSyncPosition();
+                GoToSafePosition();
                 var scoutWait = ScoutAhead();
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
                     {
-                    Shared.AddVar('barrelSampName','Unknown');
                     DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
                     }
@@ -150,7 +149,7 @@ function SmartStart()
             if(!BossCheck())
                 {
                 //CharacterMaintenance();
-                GoToSyncPosition()
+                GoToSafePosition()
                 Orion.Exec('StayHidden',true);
                 WaitSyncFollower(); //safe position
                 Orion.Wait(1000);
@@ -176,7 +175,7 @@ function SmartStart()
 			Orion.Exec('AliComFollower',true);
             if(!BossCheck())
                 {
-                GoToSyncPosition();
+                GoToSafePosition();
                 Orion.Exec('StayHidden',true);
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
@@ -214,13 +213,14 @@ function CharacterMaintenance()
     if(PackCheck())
         pack = true;
     if(GoldCheck())
-        gold =  true;
+        gold = true;
     if(!tithe && !dura && !consumable && !pack && !gold)
         return true;
-    if(tithe)
-        RecallTithe();
+    GoHome();
+    DropLoot();
+    RepairGear();
     if(dura)
-        RecallRepair()
+        RepairGear();
     if(consumable)
         {
         
@@ -233,6 +233,16 @@ function CharacterMaintenance()
         {
 
         }
+    if(tithe)
+        RecallTithe();
+    }
+
+function GoHome()
+    {
+    LeaveUW();
+    if(!isPlayerInRectangle(houseX - 50,houseY - 50,houseX + 50,houseY + 50))
+        RecallByGump('Main', 'Home', 'Main', 'Home2');
+    AliWalkTo(houseX,houseY);
     }
 
 function GoldCheck()
@@ -240,7 +250,7 @@ function GoldCheck()
 
     }
 
-function DurabilityCheck()
+function DurabilityCheck(_)
     {
     var durabilityThreshold = 80
     var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
@@ -265,7 +275,7 @@ function DurabilityCheck()
     return false;
     }
 
-function ConsumablesCheck()
+function ConsumablesCheck(_)
     {
     var consumables =
         [
@@ -283,7 +293,7 @@ function ConsumablesCheck()
     return false;
     }
 
-function PackCheck()
+function PackCheck(_)
     {
     var packObj = Orion.ObjAtLayer('backpack');
     if(packObj)
@@ -297,7 +307,7 @@ function PackCheck()
     return false;
     }
 
-function BossCheck()
+function BossCheck(_)
     {
     return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
     }
@@ -325,21 +335,7 @@ function CleanUpPublicCorpse()
     ListLoot("BotLoot");
     }
 
-function ParseWinch(_)
-    {
-    var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
-    if(!winch)
-        return false;
-    var winchProps = winch.Properties();
-    var statusArr = winchProps.match(/>(\w+)</g);
-    var statusMap = statusArr.map(function(ele)
-        {
-        return ele == '>READY<';
-        });
-    Orion.Print(statusMap);
-    }
-
-function OpenUW()
+function OpenUW(_)
     {
     Orion.CharPrint(self,1159,'Opening UW!');
     var componentArr =
@@ -384,7 +380,7 @@ function OpenUW()
     AliWalkTo(6308, 1711);
     }
 
-function GoToBossArena()
+function GoToBossArena(_)
     {
     Orion.CharPrint(self,1159,'Going to boss arena');
     AliWalkTo(6308, 1711);
@@ -434,7 +430,7 @@ function initScripts()
         }
     }
 
-function BossSequence()
+function BossSequence(_)
     {
     Orion.CharPrint(self,1159,'Starting Boss Sequence!');
     Shared.AddVar('bossStartStamp',Orion.Now());
@@ -599,7 +595,7 @@ function ScoutAhead(_)
     return true;
     }
 
-function WaitForReset()
+function WaitForReset(_)
     {
     Orion.ClearBadLocations();
     while(true)
@@ -647,7 +643,7 @@ function WaitForReset()
         }
     }
 
-function GoToSyncPosition()
+function GoToSafePosition()
     {
     Orion.CharPrint(self,1159,'Going to safe position');
     //search for boss and skip directly to boss sequence
@@ -658,7 +654,7 @@ function GoToSyncPosition()
     return true
 	}
 
-function WaitSyncLeader()
+function WaitSyncLeader(_)
     { //wait for team readiness
     var serialHash = {};
     var desynced = true;
@@ -690,14 +686,16 @@ function WaitSyncLeader()
             desynced = false;
             if(serialHash[unitSerial])
                 continue;
+            while(Orion.UdpRecv('Coms'))
+                Orion.Wait(100);
             Shared.AddVar('AwaitAnswer',false);
             var answer = false;
-            Orion.UdpSend(unitPort,'AwaitPing');
             var endTime = Orion.Now() + 2000;
             Orion.CharPrint(self,1159,'Pinging ' + unitName);
+            Orion.UdpSend(unitPort,'AwaitPing');
             while(!answer && Orion.Now() < endTime)
                 {
-                Orion.Wait(250);
+                Orion.Wait(500);
                 answer = Shared.GetVar('AwaitAnswer',false)
                 }
             if(answer)
@@ -711,20 +709,19 @@ function WaitSyncLeader()
     MassAllMessage('SetSync');
     }
 
-function WaitSyncFollower()
+function WaitSyncFollower(_)
     { //wait for team readiness
     Shared.AddVar('Desync',true);
-    var desync = true;
-    while(desync)
+    while(Shared.GetVar('Desync'))
         {
         Orion.CharPrint(self,1159,'Awaiting sync');
         Orion.Wait(1000);
-        desync = Shared.GetVar('Desync');
         }
     }
 
-function DetermineBarrelSamp()
+function DetermineBarrelSamp(_)
     {
+    Shared.AddVar('barrelSampName','Unknown');
     Orion.CharPrint(self,1159,'Choosing barrel samp...');
     var samps = Shared.GetArray('dexxer',false);
     while(!samps)
@@ -740,7 +737,7 @@ function DetermineBarrelSamp()
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     }
     
-function GoFromSafeToReadyPosition()
+function GoFromSafeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
@@ -1160,10 +1157,10 @@ function AutoInsure()
     var searchFrequency = 1000;
     while(!Player.Dead())
         {
-        var items = Orion.FindList('BotLoot').filter(function(item)
+        var items = Orion.FindList('BotInsure').filter(function(item)
             {
             var obj = Orion.FindObject(item);
-            return !Orion.Contains(obj.Properties(),'insured');
+            return !Orion.Contains(obj.Properties(),'insured|blessed');
             });
         if(items.length && !Orion.HaveTarget())
             {
@@ -1255,15 +1252,6 @@ function EquipUWSuitByBotName()
     Orion.Dress(setname);
     }
 
-function isPlayerInRectangle(x1, y1, x2, y2)
-    {
-    //x1,y1 is the northwest corner of the rectangle
-    //x2,y2 is the southeast corner
-    var x3 = Player.X();
-    var y3 = Player.Y();
-    return x3 >= x1 && x3 <= x2 && y3 <= y1 && y3 >= y2;
-    }
-
 function ResetPosition()
     {
     TerminateAll('ResetPosition');
@@ -1331,6 +1319,8 @@ function ResetPosition()
 
 function LeaveUW()
     {
+    if(!isPlayerInRectangle(6222, 1600, 6500, 1850))
+        return Orion.CharPrint(self,1159,'You are not in UW');
     TerminateAll('LeaveUW');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1))
         {
@@ -1377,13 +1367,6 @@ function RecallTithe()
     var ankh = Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
     if(!ankh)
         RecallByGump('Main','Tithing','Main','Tithing2');
-    Tithe();
-    Orion.Wait(1500);
-    //Orion.Exec('WalkThroughCurrentFarm');
-    }
-
-function Tithe()
-    {
     CloseAllGumps();
     var endTime = Orion.Now() + 10000;
     while(Player.TithingPoints() < 100000)
@@ -1425,6 +1408,8 @@ function Tithe()
             }
         Orion.Wait(1000);
         }
+    Orion.Wait(1500);
+    //Orion.Exec('WalkThroughCurrentFarm');
     }
 
 function RecallRepair()
@@ -1748,35 +1733,6 @@ function FindOwnCorpse()
         Orion.UseObject(body[0].Serial());
     }
 
-function BuyHorse()
-    {
-    var vendors = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(vendor)
-        {
-        return Orion.Contains(vendor.Properties(), 'the animal trainer') && !Orion.Contains(vendor.Properties(), 'guild');
-        });
-    var shopnpcSerial = vendors[0].Serial();
-    var shoplist = Orion.GetShopList('Horsey');
-    var items = [
-        new ShopListItem('0x00E4|0x00C8|0x00E2|0x00CC', '0x0000', '', 1),
-        ];
-    shoplist.SetItems(items);
-    Orion.UpdateShopList(shoplist);
-    Orion.BuyHook('Horsey');
-    Orion.WaitContextMenuID(shopnpcSerial, 110);
-    Orion.RequestContextMenu(shopnpcSerial);
-    Orion.Wait(1300);
-    var horsey = Orion.FindTypeEx(any, any, ground, 'mobile', 2, 'blue|green').filter(function(mobile)
-        {
-        return Orion.Contains(mobile.Name(), 'a horse');  
-        })[0];
-    while(!Orion.ObjAtLayer('Mount'))
-        {
-        Orion.Say('all follow me');
-        Orion.UseObject(horsey.Serial())
-        Orion.Wait(1300);
-        }
-    }
-
 function JournalScan()
     {
     var msg = 'GM'
@@ -1805,6 +1761,16 @@ function JournalScan()
 
 //--# Helpers
 function ____________HELPERS(_){}
+
+
+function isPlayerInRectangle(x1, y1, x2, y2)
+    {
+    //x1,y1 is the northwest corner of the rectangle
+    //x2,y2 is the southeast corner
+    var x3 = Player.X();
+    var y3 = Player.Y();
+    return x3 >= x1 && x3 <= x2 && y3 >= y1 && y3 <= y2;
+    }
 
 function injuredCheck(range, threshold, healDead)
     {
@@ -2054,8 +2020,10 @@ function SetDiscordRegistryEntry()
 
 function WalkToRadiusBorder(targetSerial, distance, jiggleMax) 
     {
-    if(jiggleMax === undefined) var jiggle = 0;
-    var randX = Orion.Random
+    if(jiggleMax && jiggleMax > 0)
+        var jiggle = Orion.Random(0,jiggleMax);
+    else
+        var jiggle = 0;
     var target = Orion.FindObject(targetSerial)
     if(target) 
         {
@@ -2082,7 +2050,7 @@ function WalkToRadiusBorder(targetSerial, distance, jiggleMax)
             })
         for(var i=0;i<tiles.length;i++)
             {             
-            var closest = tiles[Orion.Random(0,jiggle) * i]; 
+            var closest = tiles[jiggle]; 
             if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
                 break;
             }
@@ -2186,7 +2154,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     }
 
 
-function HydraCheck()
+function HydraCheck(_)
     {
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
@@ -2199,41 +2167,63 @@ function HydraCheck()
         }
     }
 
-function HydraLeash()
+function HydraLeash(_)
     {
     var hydraDistance = 9;
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
     var hydraGraphic = '0x0109';
-    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance);
-    hydras.forEach(function(hydra)
+    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance).sort(function(a,b)
         {
-        while(!hydra.InLos())
-            {
-            WalkToRadiusBorder(hydra,4)
-            }
-        Orion.Attack(hydra.Serial());
+        return a.Y() - b.Y();
         });
-    var distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance)
-    while(distanceCheck.length == 0)
+    var hydra = hydras[0];
+    if(!hydra)
+        return;
+    if(Shared.GetVar('leashing',false) != true)
+        {
+        switch(hydras.length)
+            {
+            case 0:
+                break;
+            case 1:
+            case 2:
+                AliWalkTo(hydra.X(),hydra.Y(),0,5);
+                var startDist = hydra.Distance();
+                var currDist = startDist;
+                var endTime = Orion.Now() + 4000;
+                Orion.Attack(hydra.Serial())
+                while(hydra.Distance() >= startDist && Orion.Now() < endTime)
+                    {
+                    Orion.Wait(100);
+                    currDist = hydra.Distance();
+                    }
+                if(currDist == startDist)
+                    return HydraLeash();
+                break
+            default:
+        
+                break;
+            }
+        Shared.AddVar('leashing',true);
+        }
+    while(hydra && hydra.Distance() > 8 && Orion.FindType(hydraGraphic,any,ground,'live',3).length == 0)
         {
         if(Player.Hits('%') < 90)
             {
+            Orion.CancelTarget();
             Orion.Cast('Greater Heal')
             if(Orion.WaitForTarget(3000))
-                {
                 Orion.TargetObject(self);
-                }
             }
         if(!Orion.HaveTarget() && !Player.Frozen())
             Orion.Cast('Invisibility');
-        Orion.Print('Distance to hydra: ' + distanceCheck.length)
+        Orion.Print('Distance to hydra: ' + hydra.Distance())
         Orion.Wait(200)
-        distanceCheck = Orion.FindType(hydraGraphic,any,ground,'live',hydraDistance)
         }
     }
 
-function HydraAvoid()
+function HydraAvoid(_)
     {
     Orion.ClearBadLocations();
     var hydraGraphic = '0x0109';
@@ -2256,7 +2246,7 @@ function HydraAvoid()
 //--#Coms
 function ____________COMS(_){}
 
-function ClearUdp()
+function ClearUdp(_)
     {
     Orion.RemoveAllUdpServers();
     }
@@ -2482,14 +2472,6 @@ function TerminateAll(additionalScripts)
     Orion.Terminate('all',flag);
     }
 
-function TerminateScripts()
-    {
-    var flag = 'TerminateScripts|JournalScan|AliComFollower|AliComLeader|SmartStart';
-    Orion.PauseScript('all',flag);
-    Orion.Wait(250);
-    Orion.Terminate('all',flag);
-    }
-
 function HealTarget(serial)
     {
     var obj = Orion.FindObject(serial);
@@ -2543,11 +2525,6 @@ function CureTarget(serial)
         }
     }
 //--# Leader Commands
-function AllFollowMe()
-    {
-    MassAllMessage('Follow:' + Player.Serial());
-    }
-
 function MassAllMessage(msg)
     {
     var sampArr = Shared.GetArray('dexxer',[]);
@@ -2568,8 +2545,9 @@ function MassRoleMessage(role,msg)
     for(var i = 0;i<roleArr.length;i++)
         Orion.UdpSend(roleArr[i][0],msg);
     }
+
 //--# Gump
-function ____________GUMP(){}
+function ____________GUMP(_){}
 
 function AliGumpRenderer() 
     {
