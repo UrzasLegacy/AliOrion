@@ -1,7 +1,7 @@
 //v16
-var houseButtons = [3, 5241];
-var houseTargetCoords = [1810,1540,0]; //x,y,z
-var placerName = 'Ghinj'; //Put placer name here. Can be multiple if separated with | 'Baccus|Cassius'
+var houseButtons = [3, 5212];
+var houseTargetCoords = [1045,510,0]; //x,y,z
+var placerName = 'Carl'; //Put placer name here. Can be multiple if separated with | 'Baccus|Cassius'
 //var domName = 'Intolephi';
 
 var placeRepeatedlyOnFailure = true;
