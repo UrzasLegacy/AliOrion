@@ -31,8 +31,8 @@ var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special
 var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
 var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
 var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
-var useConsecrateWeapon = true; //boolean. Set to true to maintain Consecrate Weapon at all times.
-var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
+var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times.
+var useDivineFury = false; //boolean, Set to true to maintain Divine Fury at all times.
 var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
 var useConfidenceThresholdPercent = 60; //Percentage of self HP to attempt to cast confidence.
 var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes below a threshold.
@@ -115,25 +115,25 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
+            Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
                 GoToSyncPosition();
                 var scoutWait = ScoutAhead();
-                WaitSyncLeader(); //wait for resync, leader at ready position, followers at safe position
+                WaitSyncLeader(); //safe position
                 if(scoutWait)
                     {
+                    Shared.AddVar('barrelSampName','Unknown');
                     DetermineBarrelSamp();
-                    WaitForReset();
+                    WaitForReset(); //wait for keys and for uw to be ready
                     }
                 Orion.Wait(3000);
-                MassAllMessage('ResumeSmartStart');
-                WaitSyncLeader(); //wait for resync all at boss ready position
+                MassAllMessage('ResumeSmartStart'); //follower safe->ready position
+                WaitSyncLeader(); //ready position
                 Orion.Wait(2000);
                 Orion.Cast('Greater Heal');
                 Orion.WaitForTarget(3000);
-                MassRoleMessage('dexxer','ResumeSmartStart');
-                MassRoleMessage('healer','ResumeSmartStart');
-                MassRoleMessage('misc','ResumeSmartStart');
+                MassAllMessage('ResumeSmartStart'); //start boss sequence
                 Orion.Wait(1000);
                 GoToBossArena();
                 }
@@ -141,31 +141,34 @@ function SmartStart()
             BossSequence();
             TerminateAll();
             CleanUpPublicCorpse();
+            Orion.Wait(500);
             Orion.Exec('SmartStart');
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
             Orion.Exec('AutoAttack',true);
+            Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
                 GoToSyncPosition()
-                WaitSyncFollower();
+                WaitSyncFollower(); //safe position
                 Orion.Wait(1000);
                 if(Shared.GetVar('barrelSamp',false) === true)
                     GetKeys();
-                Orion.PauseScript('SmartStart');
-                GoFromSyncToReadyPosition();
+                Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
+                GoFromSafeToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
                     OpenUW();
                     }
-                WaitSyncFollower();
+                WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
                 GoToBossArena();
                 }
             initScripts();
             BossSequence();
             TerminateAll();
+            Orion.Wait(500);
             Orion.Exec('SmartStart');
             break;
         case 'healer':
@@ -175,7 +178,7 @@ function SmartStart()
                 GoToSyncPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
-                GoFromSyncToReadyPosition();
+                GoFromSafeToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 Orion.Cast('Greater Heal');
@@ -185,6 +188,7 @@ function SmartStart()
             initScripts();
             BossSequence();
             TerminateAll();
+            Orion.Wait(500);
             Orion.Exec('SmartStart');
             break;
         default:
@@ -296,7 +300,10 @@ function OpenUW()
             continue;
         var component = Orion.FindType(componentArr[i])[0];
         if(!component)
-            return Orion.CharPrint(self,1159,"Couldn't find component: " + i);
+            {
+            Orion.CharPrint(self,1159,"Couldn't find component: " + i);
+            continue;
+            }
         Orion.MoveItem(component,0,winchSerial)
         Orion.Wait(1300);
         var reParse = ParseWinch();
@@ -313,7 +320,6 @@ function OpenUW()
         Orion.Wait(1300);
         }
     AliWalkTo(6308, 1711);
-    //finishing this function will trigger GoToBossArena();
     }
 
 function GoToBossArena()
@@ -402,6 +408,7 @@ function ScoutAhead(_)
         Orion.UseObject(ladder);
         Orion.Wait(1300);
         }
+    AvoidRectangle(6298,1704,6309,1719);
     if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraCheck) == 'Hydra')
         {
         AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraLeash)
@@ -461,8 +468,8 @@ function ScoutAhead(_)
         }
     if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
         {
-        Orion.CharPrint(self,1159,'UW is ready to be started! Calling team to ready position')
-        return false;
+        Orion.CharPrint(self,1159,'UW is ready to be started! Sending out Barrel Samp Check')
+        return true;
         }
     Orion.CharPrint(self,1159,'Checking if boss is up')
     while(!Orion.HaveTarget())
@@ -528,6 +535,7 @@ function ScoutAhead(_)
 
 function WaitForReset()
     {
+    Orion.ClearBadLocations();
     while(true)
         {
         if(HydraCheck())
@@ -565,7 +573,7 @@ function WaitForReset()
                 Orion.Wait(1000);
                 }
             }
-        if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
+        if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length && Shared.GetVar('HaveKeys',false))
             {
             Orion.CharPrint(self,1159,'UW is ready to be started! Calling team to ready position')
             break;
@@ -625,7 +633,7 @@ function WaitSyncLeader()
             while(!answer && Orion.Now() < endTime)
                 {
                 Orion.Wait(250);
-                answer = Shared.GetVar('AwaitAnswer' ,false)
+                answer = Shared.GetVar('AwaitAnswer',false)
                 }
             if(answer)
                 serialHash[unitSerial] = true;
@@ -634,14 +642,14 @@ function WaitSyncLeader()
             desynced = true;
             }
         }
-    Orion.Wait(1000);
+    Orion.Wait(3000);
     MassAllMessage('SetSync');
     }
 
 function WaitSyncFollower()
     { //wait for team readiness
     Shared.AddVar('Desync',true);
-    var desync = Shared.GetVar('Desync');
+    var desync = true;
     while(desync)
         {
         Orion.CharPrint(self,1159,'Awaiting sync');
@@ -666,7 +674,7 @@ function DetermineBarrelSamp()
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     }
     
-function GoFromSyncToReadyPosition()
+function GoFromSafeToReadyPosition()
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
@@ -933,7 +941,7 @@ function UWSampMovement()
         else if(lord)
             {
             Orion.Wait(rand2);
-            if(lord.Distance() > 1)
+            if(lord.Distance() != 1)
                 WalkToRadiusBorder(lord.Serial(),1)
                 //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
             }	
@@ -1188,14 +1196,14 @@ function ResetPosition()
     //if within rectangle 2, do rectangle 2 things and return ResetPosition() etc
     //recurse until already in correct position
     //if(isPlayerInRectangle(6394,1625,6439,1670))
-    if(AliWalkTo(6432, 1633, 0, 0, 255, 8, 1, 1)) //uwboss area
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
         var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
         Orion.UseObject(ladder[0]);
         Orion.Wait(500);
         }
     //if(isPlayerInRectangle(6269,1625,6373,1791))
-    if(AliWalkTo(6305, 1673, 0, 0, 255, 8, 1, 1, 50000, false, HydraAvoid)) //upper deck
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
         {
         var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
         Orion.UseObject(ladder[0]);
@@ -1210,7 +1218,7 @@ function ResetPosition()
         EquipUWSuitByBotName();
         Orion.Wait(1300);
         }
-    if(AliWalkTo(1700, 1636, 0, 0, 255, 8, 1, 1))//uw dock
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
         {
         var playerX = Player.X();
         var playerY = Player.Y();
@@ -1233,12 +1241,12 @@ function ResetPosition()
         Orion.Wait(1300);
         }
     //if(isPlayerInRectangle(6400,1680,6458,1802))
-    if(AliWalkTo(6321, 1711, 0, 0, 255, 8, 1, 1))//outside boat
+    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1))//outside boat
         {
         Orion.Wait(500);
         }
     //if(isPlayerInRectangle(6394,1625,6439,1670))
-    if(AliWalkTo(6432, 1699, 0, 0, 255, 8, 1, 1))//below deck
+    if(AliWalkTo(6432, 1699, 0, 0, 255, 4, 1, 1))//below deck
         {
         Orion.Wait(10);
         }
@@ -1248,29 +1256,29 @@ function ResetPosition()
 function LeaveUW()
     {
     TerminateAll('LeaveUW');
-    if(AliWalkTo(6432, 1633, 0, 0, 255, 8, 1, 1))
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1))
         {
         var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
         Orion.UseObject(ladder[0]);
         Orion.Wait(500);
         }
-    if(AliWalkTo(6305, 1673, 0, 0, 255, 8, 1, 1,50000,false,HydraAvoid))
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid))
         {
         ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
         Orion.UseObject(ladder[0]);
         Orion.Wait(500);
         }
-     if(AliWalkTo(6447, 1743, 0, 0, 255, 8, 1, 1))
+     if(AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1))
         {
         Orion.Wait(500);
         }
-     if(AliWalkTo(6279, 1772, 0, 0, 255, 8, 1, 1))
+     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1))
         {
         var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
         Orion.UseObject(rope[0]);
         Orion.Wait(500);
         }
-     if(AliWalkTo(1700, 1564, 0, 0, 255, 8, 1, 1))
+     if(AliWalkTo(1700, 1564, 0, 0, 255, 4, 1, 1))
         {
         Orion.Wait(10);
         }
@@ -2035,12 +2043,17 @@ function DrawBorder(minX,minY,maxX,maxY)
             });
     }
 
-function SetAvoidRadius(mobSerial,range)
+function AvoidRectangle(x1,y1,x2,y2)
     {
-    var mobObj = Orion.FindObject(mobSerial);
-    var x = mobObj.X();
-    var y = mobObj.Y();
-    var tiles = Orion.GetTilesInRect(x - range, y - range, x + range, y + range);
+    var tiles = Orion.GetTilesInRect('land', x1, y1, x2, y2).filter(function(tile) 
+        {
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        return (x1 == tileX)
+            || (x2 == tileX)
+            || (y1 == tileY)
+            || (y2 == tileY);
+        });
     for(var i = 0;i<tiles.length;i++)
         {
         var tile = tiles[i];
@@ -2157,12 +2170,12 @@ function HydraLeash()
 function HydraAvoid()
     {
     var hydraGraphic = '0x0109';
-    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',20);
+    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',23);
     hydras.forEach(function(hydra)
         {
         var x = hydra.X();
         var y = hydra.Y();
-        var avoidTiles = Orion.GetTilesInRect('land',x - 2, y - 2, x + 2, y + 2);
+        var avoidTiles = Orion.GetTilesInRect('land',x - 1, y - 1, x + 1, y + 1);
         avoidTiles.forEach(function(tile,ind)
             {
             var tileX = tile.X();
@@ -2245,15 +2258,15 @@ function AliComLeader()
                     Shared.AddVar('AwaitAnswer',true);
                     break;
                 case 'HaveKeys':
-                    Orion.ResumeScript('SmartStart');
+                    Shared.AddVar('HaveKeys',true);
                     break;
                 case 'HealTarget':
                     var targetSerial = recvSplit[1];
-                    Orion.Exec('HealTarget',targetSerial);
+                    Orion.Exec('HealTarget',true,[targetSerial]);
                     break;
                 case 'CureTarget':
                     var targetSerial = recvSplit[1];
-                    Orion.Exec('CureTarget',targetSerial);
+                    Orion.Exec('CureTarget',true,[targetSerial]);
                     break;
                 case undefined:
                     break;
