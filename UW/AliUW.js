@@ -289,7 +289,7 @@ function initScripts()
             Orion.Exec('UWHealBot', true);
             Orion.Exec('UWHealLeader',true);
             Orion.Wait(200);
-            Orion.Exec('UWAvoidBot', true, [8]);
+            Orion.Exec('UWAvoidBot', true, [6]);
             break;
         case 'dexxer':
             var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
@@ -309,7 +309,7 @@ function initScripts()
         case 'healer':
             Orion.Exec('UWHealBot', true);
             Orion.Wait(200);
-            Orion.Exec('UWAvoidBot', true, [8]);
+            Orion.Exec('UWAvoidBot', true, [6]);
             break;
         default:
             break;
@@ -416,7 +416,7 @@ function ResetPosition()
         {
         Orion.Wait(10);
         }
-    Orion.Wait(500);
+    Orion.Wait(1300);
     }
 
 function LeaveUW()
@@ -882,6 +882,7 @@ function GetKeys()
     Orion.Terminate('UWBarrelsHealSelf');
     Orion.Wait(500);
     Orion.Exec('StayHidden',true);
+    Orion.Exec('StayLoggedIn',true);
     Orion.UdpSend(42420,'HaveKeys');
     }
 
@@ -1090,7 +1091,7 @@ function UWSampMovement()
             {
             Orion.Wait(rand2);
             if(Orion.BuffExists('Blood Oath'))
-                WalkToRadiusBorder(lord.Serial(),4);
+                WalkToRadiusBorder(lord.Serial(),6);
             else if(lord.Distance() != 1)
                 WalkToRadiusBorder(lord.Serial(),1);
                 //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
@@ -1703,7 +1704,7 @@ function CleanUpPublicCorpse()
     Orion.UseObject(corpse.Serial());
     Orion.Wait(2000);
     var corpseInstanceSerial = Orion.GetSerial(lastcontainer)
-    Orion.AddDisplayTimer('publicCorpse', 5000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
+    Orion.AddDisplayTimer('publicCorpse',300000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
     while(Orion.GumpExists('container',corpseInstanceSerial))
         {
         Orion.Wait(100);
@@ -1773,7 +1774,7 @@ function UWAvoidBot(distance)
         Orion.Wait(250)
         var lord = Orion.FindType('0x02C0', any, ground,'live|ignoreself', 24, 'red');
         var lordDistance = Orion.GetDistance(lord[0])
-        if(lord.length && (lordDistance < distanceActual - 2 || lordDistance > 10))
+        if(lord.length && (lordDistance < distanceActual - 2 || lordDistance > 8))
             WalkToRadiusBorder(lord[0], distanceActual);
         }
     }
