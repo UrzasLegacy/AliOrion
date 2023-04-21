@@ -1,6 +1,6 @@
 function UltraTerminate()
     {
-    ClearShared()
+    Shared.ClearVars();
     Orion.Terminate('all','UltraTerminate');
     Orion.Exec('Autostart',true)
     }
@@ -59,7 +59,7 @@ Orion.Exec('JournalScan', true);
 var gumpAssets = 
     [
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1], ['xSpacer',100] ],
-        [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys']],
+        [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys'],['toggle','ScoutAhead','Scout']],
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
         [ ['toggle','ResetPosition','Reset Position'], ['toggle','LeaveUW','Leave UW'] ],
@@ -88,6 +88,7 @@ function SmartStart()
                     {
                     DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
+                    Orion.RemoveDisplayTimer('bossReset');
                     }
                 Orion.Wait(3000);
                 MassAllMessage('ResumeSmartStart'); //follower safe->ready position
@@ -114,6 +115,7 @@ function SmartStart()
                 //CharacterMaintenance();
                 GoToSafePosition()
                 Orion.Exec('StayHidden',true);
+                Orion.Exec('StayLoggedIn',true);
                 WaitSyncFollower(); //safe position
                 Orion.Wait(1000);
                 if(Shared.GetVar('barrelSamp',false) === true)
@@ -140,6 +142,7 @@ function SmartStart()
                 {
                 GoToSafePosition();
                 Orion.Exec('StayHidden',true);
+                Orion.Exec('StayLoggedIn',true);
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 GoFromSafeToReadyPosition();
@@ -793,7 +796,9 @@ function MoveAll()
 
 function StayLoggedIn()
     {
-    while(!Player.Dead())
+    var startX = Player.X();
+    var startY = Player.Y();
+    while(!Player.Dead() && Player.X() == startX && Player.Y() == startY)
         {
         Orion.UseObject('backpack');
         Orion.Wait(60000);
@@ -1084,8 +1089,10 @@ function UWSampMovement()
         else if(lord)
             {
             Orion.Wait(rand2);
-            if(lord.Distance() != 1)
-                WalkToRadiusBorder(lord.Serial(),1)
+            if(Orion.BuffExists('Blood Oath'))
+                WalkToRadiusBorder(lord.Serial(),4);
+            else if(lord.Distance() != 1)
+                WalkToRadiusBorder(lord.Serial(),1);
                 //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
             }	
         Orion.Wait(250);
@@ -1340,6 +1347,8 @@ function GoToSafePosition()
 
 function ScoutAhead()
     {
+        TextWindow.Clear()
+    Shared.AddVar('leashing',false)
     Orion.CharPrint(self,1159,'Scouting ahead')
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
     if(ladder)
@@ -1353,70 +1362,19 @@ function ScoutAhead()
             Orion.Wait(1300);
             }
         }
-    AvoidRectangle(6298,1704,6309,1719);
-    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
+    do
         {
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        }
-    while(HydraCheck())
-        {
-        Orion.SetBadLocation(6309,1711);
-        Orion.SetBadLocation(6309,1712);
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        }
-    while(!Player.Hidden())
-        {
-        Orion.Cast('Invisibility');
-        if(Orion.WaitForTarget(5000))
-            {
-            Orion.TargetObject(self);
-            Orion.Wait(1000);
-            }
-        }
+        Debug('HydraReset');
+        HydraReset();
+        } while(HydraCheck())
     if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
         {
         Orion.CharPrint(self,1159,'UW is ready to be started! Sending out Barrel Samp Check')
         return true;
         }
-    Orion.CharPrint(self,1159,'Checking if boss is up')
+    if(Orion.DisplayTimerExists('bossReset'))
+        return true;
+    Orion.CharPrint(self,1159,'Checking if boss is up');
     while(!Orion.HaveTarget())
         {
         Orion.Cast('Invisibility')
@@ -1449,37 +1407,54 @@ function ScoutAhead()
         Orion.UseObject(ladder2);
         Orion.Wait(500)
         }
-    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
-        {
-        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        while(!Player.Hidden())
-            {
-            Orion.Cast('Invisibility');
-            if(Orion.WaitForTarget(5000))
-                {
-                Orion.TargetObject(self);
-                Orion.Wait(1000);
-                }
-            }
-        }
+    HydraReset();
     Orion.Wait(1000);
     if(bossCheck.length)
         return false;
     return true;
     }
 
+function HydraReset()
+    {
+    AvoidRectangle(6298,1704,6309,1719);
+    Debug('Walking to ready position')
+    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
+        {
+        Debug('Hydra found. Walking to stern')
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
+        CheeseIt()
+        Debug('Walking back to ready position')
+        AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        CheeseIt()
+        }
+    Orion.ClearBadLocations();
+    }
+
+function CheeseIt()
+    {
+    Debug('CheeseIt')
+    while(!Player.Hidden())
+        {
+        if(!Orion.HaveTarget())
+            {
+            Debug('Casting invis 2');
+            Orion.Cast('Invisibility');
+            Orion.WaitForTarget(5000);
+            }
+        Orion.TargetObject(self);
+        Orion.Wait(500);
+        }
+    if(!Orion.HaveTarget())
+        {
+        Debug('Casting invis 1');
+        Orion.Cast('Invisibility');
+        Orion.WaitForTarget(5000);
+        }
+    }
+
 function WaitForReset(_)
     {
+    Shared.AddVar('leashing',false);
     Orion.ClearBadLocations();
     while(true)
         {
@@ -1489,12 +1464,14 @@ function WaitForReset(_)
             AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
             while(!Player.Hidden())
                 {
-                Orion.Cast('Invisibility');
-                if(Orion.WaitForTarget(5000))
+                if(!Orion.HaveTarget())
                     {
-                    Orion.TargetObject(self);
-                    Orion.Wait(1000);
+                    Orion.Cast('Invisibility');
+                    Orion.WaitForTarget(5000);
                     }
+                Orion.TargetObject(self);
+                Orion.Wait(50);
+                Orion.Cast('Invisibility');
                 }
             AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
             while(!Player.Hidden())
@@ -1507,7 +1484,8 @@ function WaitForReset(_)
                     }
                 }
             Orion.ClearBadLocations();
-            }
+            }  
+        Shared.AddVar('leashing',false);
         while(!Player.Hidden())
             {
             Orion.Cast('Invisibility');
@@ -1708,6 +1686,7 @@ function BossSequence(_)
         Orion.Wait(1000);
         }
     Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
+    Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset');
     Orion.Wait(Orion.Random(4,9) * 1000);
     }
 
@@ -2159,8 +2138,7 @@ function HydraCheck(_)
     {
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
-    var hydraGraphic = '0x0109';
-    var hydras = Orion.FindType(hydraGraphic,any,ground,'live',15);
+    var hydras = Orion.FindType('0x0109',any,ground,'live',15);
     if(hydras.length)
         {
         Orion.CharPrint(self,1159,'Hydra found!');
@@ -2168,47 +2146,66 @@ function HydraCheck(_)
         }
     }
 
+function Debug(msg)
+    {
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + ': ' + msg);
+    }
+
 function HydraLeash(_)
     {
-    var hydraDistance = 9;
+    var hydraDistance = 24;
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
     var hydraGraphic = '0x0109';
-    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance).sort(function(a,b)
+    
+    if(!Shared.GetVar('leashing',false))
         {
-        return a.Y() - b.Y();
-        });
-    var hydra = hydras[0];
-    if(!hydra)
-        return;
-    if(Shared.GetVar('leashing',false) != true)
-        {
+        var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance).sort(function(a,b)
+            {
+            return a.Y() - b.Y();
+            });
+        var hydra = hydras[0];
+        Debug('Attempt leash')
         switch(hydras.length)
             {
             case 0:
+                Debug('No hydras')
                 break;
             case 1:
+                Debug('1 hydra')
             case 2:
-                AliWalkTo(hydra.X(),hydra.Y(),0,5);
+                Debug('Two hydras found: Walk to northern hydra')
+                Orion.WalkTo(hydra.X(),hydra.Y(),0,5)
+                //AliWalkTo(hydra.X(),hydra.Y(),0,5);
                 var startDist = hydra.Distance();
                 var currDist = startDist;
                 var endTime = Orion.Now() + 4000;
+                Debug('Attack hydra')
                 Orion.Attack(hydra.Serial())
                 while(hydra.Distance() >= startDist && Orion.Now() < endTime)
                     {
+                    Debug('start: ' + startDist + ', curr: ' + currDist)
                     Orion.Wait(100);
                     currDist = hydra.Distance();
                     }
-                if(currDist == startDist)
-                    return HydraLeash();
+                if(currDist != startDist)
+                    {
+                    Debug('Hydra leashed')
+                    Shared.AddVar('leashing',hydra.Serial());
+                    }
                 break
             default:
-        
+                
                 break;
             }
-        Shared.AddVar('leashing',true);
         }
-    while(hydra && hydra.Distance() > 8 && Orion.FindType(hydraGraphic,any,ground,'live',3).length == 0)
+    var leash = Shared.GetVar('leashing',false)
+    Debug('leash: ' + leash)
+    if(!leash)
+        return HydraLeash()
+    while(leash && Orion.GetDistance(leash) > 8 && Orion.FindType(hydraGraphic,any,ground,'live',3).length == 0)
         {
         if(Player.Hits('%') < 90)
             {
@@ -2219,7 +2216,7 @@ function HydraLeash(_)
             }
         if(!Orion.HaveTarget() && !Player.Frozen())
             Orion.Cast('Invisibility');
-        Orion.Print('Distance to hydra: ' + hydra.Distance())
+        Debug('Distance to hydra: ' + Orion.GetDistance(leash))
         Orion.Wait(200)
         }
     }
