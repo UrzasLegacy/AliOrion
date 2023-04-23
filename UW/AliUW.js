@@ -19,8 +19,8 @@ function ClearShared()
 
 //Create a findlist for autoloot named 'BotLoot'
 var leaderSerial = '0x02F4684A'; //Alyx
-var homeX = 0;
-var homeY = 0;
+var homeX = 2521;
+var homeY = 148;
 // var numberOfSamps = 3;
 // var numberOfHealers = 2; //not including the leader
 
@@ -116,7 +116,7 @@ function SmartStart()
             Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
-                //CharacterMaintenance();
+                CharacterMaintenance();
                 GoToSafePosition()
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
@@ -192,6 +192,83 @@ function CharacterMaintenance()
         RecallTithe();
     }
 
+function DropLoot()
+    {
+    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+        {
+        return !Orion.Contains(box.Properties(),'Contents: 125')
+        }).sort(function(a,b)
+            {
+            var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+            var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+            return bContents - aContents;
+            });
+    while(woodenBoxes.length)
+        {
+        var box = woodenBoxes[0];
+        while(box.Distance() > 2)
+            AliWalkTo(box.X(),box.Y(),0,1);
+        VerifyOpenContainer(box.Serial());
+        var loot = Orion.FindList('BotLoot')[0];
+        while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
+            {
+            Orion.CharPrint(self,1159,'Moving loot');
+            Orion.MoveItem(loot,0,box.Serial());
+            Orion.Wait(1100);
+            loot = Orion.FindList('BotLoot')[0];
+            }
+        if(!loot)
+            return true;
+        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+            {
+            return !Orion.Contains(box.Properties(),'Contents: 125')
+            }).sort(function(a,b)
+                {
+                var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                return bContents - aContents;
+                });
+        }
+    DiscordPush('Out of containers to put loot!');
+    return false;
+    }
+
+function RestockConsumables()
+    {
+    var pouch = Orion.FindTypeEx('0x0E79',any,ground,'item',10)
+        .filter(function(item)
+            {
+            return !Orion.Contains(item.Properties(),'Contents: 0/');
+            })[0];
+    if(!pouch)
+        return DiscordPush('Supply pouch missing!');
+    var pouchSerial = pouch.Serial();
+    if(pouch.Distance() > 2)
+        AliWalkTo(pouch.X(),pouch.Y(),0,1);
+    VerifyOpenContainer(pouch.Serial());
+    var consumables =
+        [
+            ['0x2FD8', 10], //apple
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        var consumable = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        var count = Orion.Count(consumable)
+        if(count < restockAmount)
+            {
+            Orion.Wait(200);
+            count = Orion.Count(consumable)
+            if(count < restockAmount)
+                {
+                var needed = restockAmount - count;
+                Orion.MoveItemType(consumable, any, pouchSerial, needed);
+                i--;
+                }
+            }
+        }
+    }
+
 function GoldCheck()
     {
     Orion.CharPrint(self,1159,'Checking gold...');
@@ -202,15 +279,16 @@ function GoldCheck()
         {
         var gump = Orion.GetGump(any, '0x000F3E9F');
         var goldUnf = gump.Text(0);
-        var goldNoCommas = goldUnf.replace(/,/g,'');
-        Orion.Print('Gold: ' + goldNoCommas)
-        goldInt = +goldNoCommas;
+        var goldNoSymbols = goldUnf.replace(/[,+]/g,'');
+        Orion.Print('Gold: ' + goldNoSymbols)
+        goldInt = +goldNoSymbols;
         if(gump !== null)
             {
             gump.Select(Orion.CreateGumpHook(0));
             Orion.Wait(100);
             }
         }
+    Orion.Print(goldInt)
     return goldInt < 1000000;
     }
 
@@ -339,6 +417,15 @@ function GoHome()
     if(Orion.GetDistance(homeX,homeY) > 50)
         RecallByGump('Main', 'Home', 'Main', 'Home2');
     AliWalkTo(homeX,homeY);
+    Orion.WarMode(0);
+    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+    while(!bench)
+        {
+        Orion.Step('n');
+        Orion.Wait(250);
+        }
+    if(!Orion.WalkTo(bench.X(),bench.Y()))
+        Orion.WalkTo(bench.X(),bench.Y());
     }
 
 function EquipLuckSuitByBotName()
@@ -393,6 +480,8 @@ function ResetPosition()
         }
     if(Player.X() < 6000)
         {
+        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
+            RecallByGump('Main','UW Dock','Main','UW Dock2')
         while(Orion.ObjAtLayer('Mount'))
             {
             Orion.UseObject(self);
