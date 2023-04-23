@@ -983,7 +983,6 @@ function RunToRepair()
             "Great Lakes": [1028,568,'Malas'],
             "Yamato": [798,755,'Trammel'],
             "Arirang": [738,791,'Trammel'],
-            "Great Lakes": [778,746,'Trammel'],
             "Lake Austin": [1051,543,'Malas']
         }
     var shardName = Orion.ShardName();
