@@ -113,8 +113,8 @@ function Autostart()
 
 function StartCuFarm()
     {
-    if(Player.Map() == 0)
-        MapDetectionFix();
+    // if(Player.Map() == 0)
+    //     MapDetectionFix();
     if(Orion.GetDistance(1174,1285) > 250)
         AliAtlas(1174,1285,'Ilshenar');
     EquipRegularSuitByBotName();
@@ -1054,7 +1054,7 @@ function AliAtlas(targetX,targetY,targetMap)
             ['Royal City', 'TerMur', 33, 850, 3525],
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
-    var map = maps[Player.Map()]
+    var map = maps[Orion.ObjAtLayer('backpack').Map()]
     if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
         {
         Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
