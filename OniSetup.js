@@ -75,7 +75,7 @@ function InitialSetup()
         var shopnpcSerial = vendors[0].Serial();
         var shoplist = Orion.GetShopList('Horsey');
         var items = [
-            new ShopListItem('0x00E4', '0x0000', '', 1),
+            new ShopListItem('0x00E4|0x00C8|0x00E2|0x00CC', '0x0000', '', 1),
             ];
         shoplist.SetItems(items);
         Orion.UpdateShopList(shoplist);
@@ -94,28 +94,28 @@ function InitialSetup()
             Orion.Wait(1300);
             }
         }
-    if(Orion.SkillValue('Healing') < 400)
-        {
-        while(Player.X() != 3466 && Player.Y() != 2559)
-            {
-            Orion.WalkTo(3466, 2559, 0, 0);
-            Orion.Wait(500);
-            }
-        Orion.Wait(1300);
-        var instructor = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(instructor)
-            {
-            return Orion.Contains(instructor.Properties(), 'the Healing Instructor') && !Orion.Contains(instructor.Properties(), 'guild');
-            })[0];
-        while(Orion.SkillValue('Healing') < 400)
-            {
-            Orion.WalkTo(instructor.X(), instructor.Y());
-            Orion.RequestContextMenu(instructor.Serial());
-            Orion.WaitContextMenuID(instructor.Serial(), 217);
-            Orion.Wait(2000);
-            Orion.MoveItemType('0x0EED', '0x0000', backpack, 400, instructor.Serial());
-            Orion.Wait(2000);
-            }
-        }
+    // if(Orion.SkillValue('Healing') < 400)
+    //     {
+    //     while(Player.X() != 3466 && Player.Y() != 2559)
+    //         {
+    //         Orion.WalkTo(3466, 2559, 0, 0);
+    //         Orion.Wait(500);
+    //         }
+    //     Orion.Wait(1300);
+    //     var instructor = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(instructor)
+    //         {
+    //         return Orion.Contains(instructor.Properties(), 'the Healing Instructor') && !Orion.Contains(instructor.Properties(), 'guild');
+    //         })[0];
+    //     while(Orion.SkillValue('Healing') < 400)
+    //         {
+    //         Orion.WalkTo(instructor.X(), instructor.Y());
+    //         Orion.RequestContextMenu(instructor.Serial());
+    //         Orion.WaitContextMenuID(instructor.Serial(), 217);
+    //         Orion.Wait(2000);
+    //         Orion.MoveItemType('0x0EED', '0x0000', backpack, 400, instructor.Serial());
+    //         Orion.Wait(2000);
+    //         }
+    //     }
     if(Player.TithingPoints() < 100000)
         {
         while(Player.X() != 3526 && Player.Y() != 2517)
@@ -183,7 +183,29 @@ function InitialSetup()
         Orion.RequestContextMenu(instructorSerial);
         Orion.Wait(1300);
         }
-    if(Orion.SkillValue('Healing') >= 400 && Orion.SkillValue('Chivalry') >= 400 && Orion.FindType('0x2252')[0] && Orion.ObjAtLayer('Mount') && Player.Map() == 1 && Player.TithingPoints() == 100000)
+    if(Orion.SkillValue('Necromancy') < 400)
+        {
+        while(Player.X() != 3549 && Player.Y() != 2458)
+            {
+            Orion.WalkTo(3549, 2458, 0, 0);
+            Orion.Wait(500);
+            }
+        var instructor = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(instructor)
+            {
+            return Orion.Contains(instructor.Properties(), 'the Necromancy Instructor') && !Orion.Contains(instructor.Properties(), 'guild');
+            })[0];
+        var instructorSerial = instructor.Serial();
+        }
+    while(Orion.SkillValue('Necromancy') < 400)
+        {
+        Orion.WalkTo(instructor.X(), instructor.Y());
+        Orion.RequestContextMenu(instructorSerial);
+        Orion.WaitContextMenuID(instructorSerial, 249);
+        Orion.Wait(2000);
+        Orion.MoveItemType('0x0EED', '0x0000', backpack, 400, instructorSerial);
+        Orion.Wait(2000);
+        }
+    if(Orion.SkillValue('Necromancy') >= 400 && Orion.SkillValue('Chivalry') >= 400 && Orion.FindType('0x2252')[0] && Orion.ObjAtLayer('Mount') && Player.Map() == 1 && Player.TithingPoints() == 100000)
         {
         while(Player.X() != 3450 && Player.Y() != 2677)
             {
@@ -341,6 +363,66 @@ function TrainChivalry()
         }
     TextWindow.Open();
 	TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() + ": Chivalry Finished");    	
+	}
+
+function TrainNecro() 
+	{
+    var skillLevel = Orion.SkillValue('Necromancy');
+    //var trainingTarget = SelectTarget().Serial();
+    while (Orion.SkillValue('Necromancy') < 1001) 
+    	{
+        Orion.Wait(500)
+        skillLevel =210// Orion.SkillValue('Necromancy');
+        if (Player.Mana() < 20)
+        	{
+        	Meditate();
+        	}
+        if (skillLevel < 200)
+        	{
+        	Orion.Print('Train skill at an NPC first!');
+        	break;
+        	}
+        else if (skillLevel >= 200 && skillLevel <= 350) 
+        	{
+           	Orion.Cast('Curse Weapon');
+			Orion.Wait(250);
+        	}
+        else if (skillLevel > 350 && skillLevel <= 500 && Player.Hits() > 30)
+        	{
+            Orion.Cast('Pain Spike', self);
+            Orion.Wait(500);
+            }
+		else if (skillLevel > 500 && skillLevel <= 700)
+        	{
+            Orion.Cast('Horrific Beast');
+			Orion.Wait(1500);
+	       	}
+        else if (skillLevel > 700 && skillLevel <= 900) 
+        	{
+        	while (Orion.BuffExists('Horrific Beast'))
+        		{
+        		Orion.Cast('Horrific Beast');
+				Orion.Wait(1500)
+        		}
+            Orion.Cast('Wither');
+            Orion.Wait(750);
+        	}
+        else if (skillLevel > 900) 
+        	{
+            Orion.Cast('Lich Form', self);
+            Orion.Wait(1500);
+        	}
+        }  
+	if (skillLevel >= 1000)
+		{
+		while (Orion.BuffExists('Lich Form'))
+			{
+            Orion.Cast('Lich Form', self);
+            Orion.Wait(1500);			
+			}
+		TextWindow.Open()
+		TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() +  ": Necromancy Finished")
+		}
 	}
 
 function TrainHealing() 
