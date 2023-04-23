@@ -19,6 +19,8 @@ function ClearShared()
 
 //Create a findlist for autoloot named 'BotLoot'
 var leaderSerial = '0x02F4684A'; //Alyx
+var homeX = 0;
+var homeY = 0;
 // var numberOfSamps = 3;
 // var numberOfHealers = 2; //not including the leader
 
@@ -64,6 +66,7 @@ var gumpAssets =
         [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
         [ ['toggle','ResetPosition','Reset Position'], ['toggle','LeaveUW','Leave UW'] ],
         [ ['toggle','RecallRepair','Recall Repair'], ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'], ['toggle','Tithe','Tithe'] ],
+        [ ['toggle','CharacterMaintenance','CharMaintenance'] ],
 
         [ ['ySpacer',20] ],
     ];
@@ -78,6 +81,7 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
+            MassAllMessage('StartSmartStart');
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
@@ -168,53 +172,51 @@ function _____________CURRENT(_){}
 
 function CharacterMaintenance()
     {    
-    var tithe = false;
-    var dura = false;
-    var consumable = false;
-    var pack = false;
-    var gold = false;
-    if(Player.TithingPoints() < 30000)
-        tithe = true;
-    if(DurabilityCheck())
-        dura = true;
-    if(ConsumablesCheck())
-        consumable = true;
-    if(PackCheck())
-        pack = true;
-    if(GoldCheck())
-        gold = true;
+    Orion.CharPrint(self,1159,'Checking tithing points...');
+    var tithe = Player.TithingPoints() < 30000;
+    var dura = DurabilityCheck();
+    var consumable = ConsumablesCheck();
+    var pack = PackCheck();
+    var gold = GoldCheck();
     if(!tithe && !dura && !consumable && !pack && !gold)
-        return true;
+        return false;
     GoHome();
     DropLoot();
-    RepairGear();
     if(dura)
         RepairGear();
     if(consumable)
-        {
-        
-        }
-    if(pack)
-        {
-
-        }
+        RestockConsumables();
     if(gold)
-        {
-
-        }
+        DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
     if(tithe)
         RecallTithe();
     }
 
-
-
 function GoldCheck()
     {
-
+    Orion.CharPrint(self,1159,'Checking gold...');
+    Orion.WaitContextMenuID(self, 416);
+    Orion.RequestContextMenu(self);
+    var goldInt = 1000000;
+    if(Orion.WaitForGump(5000,true))
+        {
+        var gump = Orion.GetGump(any, '0x000F3E9F');
+        var goldUnf = gump.Text(0);
+        var goldNoCommas = goldUnf.replace(/,/g,'');
+        Orion.Print('Gold: ' + goldNoCommas)
+        goldInt = +goldNoCommas;
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(0));
+            Orion.Wait(100);
+            }
+        }
+    return goldInt < 1000000;
     }
 
 function DurabilityCheck(_)
     {
+    Orion.CharPrint(self,1159,'Checking equipment durability...');
     var durabilityThreshold = 80
     var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
     Orion.Print("Repair threshold set at: " + durabilityThreshold)
@@ -224,14 +226,16 @@ function DurabilityCheck(_)
         if(obj)
             {
             var objProperties = obj.Properties();
-                Orion.Print('Item needs to be added: ' + obj.Graphic() + ': ' + obj.Name())
             if(Orion.Contains(objProperties, 'Durability'))
                 {
                 var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/) || [];
                 var min = +dura[1];
                 var max = +dura[2];
                 if(dura[0] && min < durabilityThreshold && min < max)
+                    {
+                    Orion.Print('Repair needed!')
                     return true;
+                    }
                 }
             }
         }
@@ -240,17 +244,23 @@ function DurabilityCheck(_)
 
 function ConsumablesCheck(_)
     {
+    Orion.CharPrint(self,1159,'Checking consumables...');
     var consumables =
         [
-        '0x2FD8' //apple
+        ['0x2FD8', 10], //apple
         ]
     for(var i=0;i<consumables.length;i++)
         {
-        if(Orion.Count(consumables[i]) < 5)
+        var consumable = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        if(Orion.Count(consumable) < restockAmount)
             {
             Orion.Wait(200);
-            if(Orion.Count(consumables[i]) < 5)
+            if(Orion.Count(consumable) < restockAmount)
+                {
+                Orion.Print('Restock needed!');
                 return true;
+                }
             }
         }
     return false;
@@ -258,15 +268,22 @@ function ConsumablesCheck(_)
 
 function PackCheck(_)
     {
+    Orion.CharPrint(self,1159,'Checking backpack...');
     var packObj = Orion.ObjAtLayer('backpack');
     if(packObj)
         {
         var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
         if(packCount > 100)
+            {
+            Orion.Print('Pack overfilled: ' + packCount + '/125');
             return true;
+            }
         }
     if(Player.Weight() > Player.MaxWeight() - 100)
+        {
+        Orion.Print('Overweight!');
         return true;
+        }
     return false;
     }
 
@@ -319,9 +336,9 @@ function initScripts()
 function GoHome()
     {
     LeaveUW();
-    if(!isPlayerInRectangle(houseX - 50,houseY - 50,houseX + 50,houseY + 50))
+    if(Orion.GetDistance(homeX,homeY) > 50)
         RecallByGump('Main', 'Home', 'Main', 'Home2');
-    AliWalkTo(houseX,houseY);
+    AliWalkTo(homeX,homeY);
     }
 
 function EquipLuckSuitByBotName()
@@ -423,7 +440,7 @@ function LeaveUW()
     {
     if(!isPlayerInRectangle(6222, 1600, 6500, 1850))
         return Orion.CharPrint(self,1159,'You are not in UW');
-    TerminateAll('LeaveUW');
+    TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1))
         {
         var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
@@ -1068,8 +1085,8 @@ function UWSampMovement()
     while(!Player.Dead())
         {
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-        var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange')
-        if(wisp.length)
+        var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange');
+        if(!Shared.GetVar('barrelSamp',false) && wisp.length)
             {
             Orion.Wait(rand);
             wisp.forEach(function(mob)
@@ -1090,9 +1107,7 @@ function UWSampMovement()
         else if(lord)
             {
             Orion.Wait(rand2);
-            if(Orion.BuffExists('Blood Oath'))
-                WalkToRadiusBorder(lord.Serial(),6);
-            else if(lord.Distance() != 1)
+            if(lord.Distance() != 1)
                 WalkToRadiusBorder(lord.Serial(),1);
                 //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
             }	
@@ -1109,25 +1124,18 @@ function AutoBuffs()
     while(!Player.Dead())
         {
         timeStamp = Orion.Now();
-        if(timeStamp > nextAppleTime && Orion.FindType('0x2FD8').length)
+        if(Orion.BuffExists('Blood Oath') && timeStamp > nextAppleTime && Orion.FindType('0x2FD8').length)
             {
             Orion.UseType('0x2FD8');
             nextAppleTime = timeStamp + 30000;
             }
-        else if(useRemoveCurse && timeStamp > nextSpellTime && Orion.BuffExists('Blood Oath'))
-            {
-            Orion.Cast('Remove Curse');
-            nextSpellTime = timeStamp + 4000;
-            if(Orion.WaitForTarget(4000))
-                Orion.TargetObject(self);
-            }
-        else if(useCleanseByFire && timeStamp > nextSpellTime && Player.Poisoned())
-            {
-            Orion.Cast('Cleanse By Fire');
-            nextSpellTime = timeStamp + 2000;
-            if(Orion.WaitForTarget(2000))
-                Orion.TargetObject(self);
-            }
+        // else if(useCleanseByFire && timeStamp > nextSpellTime && Player.Poisoned())
+        //     {
+        //     Orion.Cast('Cleanse By Fire');
+        //     nextSpellTime = timeStamp + 2000;
+        //     if(Orion.WaitForTarget(2000))
+        //         Orion.TargetObject(self);
+        //     }
         timeStamp = Orion.Now();
         if(timeStamp > nextSpellTime && Player.Mana() > 20)
             {
@@ -1137,6 +1145,13 @@ function AutoBuffs()
                 nextSpellTime = timeStamp + 2000;
                 nextEvadeTime = timeStamp + 30000;
                 }
+            else if(useRemoveCurse && Orion.BuffExists('Blood Oath') && timeStamp > nextSpellTime)
+                {
+                Orion.Cast('Remove Curse');
+                nextSpellTime = timeStamp + 4000;
+                if(Orion.WaitForTarget(4000))
+                    Orion.TargetObject(self);
+                    }
             else if(useConfidence && Player.Hits('%') < useConfidenceThresholdPercent && !Orion.BuffExists('Confidence'))
                 {
                 Orion.Cast('Confidence');
@@ -1176,6 +1191,11 @@ function AutoAttack()
         var enemyCount = enemies.length;
         if(enemyCount === 0)
             continue;
+        if(Orion.BuffExists('Blood Oath'))
+            {
+            Orion.WarMode(0);
+            continue;
+            }
         AttackNearest();
         switch(enemyCount)
             {
@@ -1260,11 +1280,13 @@ function UWHealBot()
     {
     while(!Player.Dead())
         {
+        Orion.Wait(250);
+        if(Orion.FindType('0x02C0', any, ground,'live|ignoreself', 3, 'red').length)
+            continue;
         if(!Orion.HaveTarget() && !Player.Frozen())
             Orion.Cast("Greater Heal");
         else if(Player.Hits('%') < 40)
             Orion.TargetObject(self);
-        Orion.Wait(250)	
         }
     }
 
@@ -1444,12 +1466,6 @@ function CheeseIt()
             }
         Orion.TargetObject(self);
         Orion.Wait(500);
-        }
-    if(!Orion.HaveTarget())
-        {
-        Debug('Casting invis 1');
-        Orion.Cast('Invisibility');
-        Orion.WaitForTarget(5000);
         }
     }
 
@@ -1677,7 +1693,7 @@ function BossSequence(_)
             });
         if(corpse.length)
             {
-            Orion.Wait(500);   		
+            Orion.Wait(Orion.Random(2,11));
             AliWalkTo(corpse[0].X(),corpse[0].Y());
             ListLoot("BotLoot");
             Orion.Wait(100);
@@ -1687,13 +1703,14 @@ function BossSequence(_)
         Orion.Wait(1000);
         }
     Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
-    Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset');
+    Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
     Orion.Wait(Orion.Random(4,9) * 1000);
     }
 
 function CleanUpPublicCorpse()
     {
     Orion.IgnoreReset();
+    Orion.AddDisplayTimer('publicCorpse',300000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
 	var corpse = Orion.FindTypeEx('0x2006', any, ground, 23).filter(function(item)
         {
         return Orion.Contains(item.Properties(), 'An Evil One');
@@ -1704,7 +1721,6 @@ function CleanUpPublicCorpse()
     Orion.UseObject(corpse.Serial());
     Orion.Wait(2000);
     var corpseInstanceSerial = Orion.GetSerial(lastcontainer)
-    Orion.AddDisplayTimer('publicCorpse',300000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
     while(Orion.GumpExists('container',corpseInstanceSerial))
         {
         Orion.Wait(100);
@@ -1742,7 +1758,15 @@ function JournalScan()
 
 //--# Helpers
 function ____________HELPERS(_){}
-
+function WaitForSpecificGump(delay, type, serial, id)
+	{
+	var endTime = Orion.Now() + delay;
+    while(!Orion.GumpExists(type, serial, id) && Orion.Now() < endTime)
+	    Orion.Wait(10);
+	if(Orion.GumpExists(type, serial, id))
+		return Orion.GetGump(serial, id);
+	return false;
+	}
 
 function isPlayerInRectangle(x1, y1, x2, y2)
     {
@@ -1773,8 +1797,10 @@ function UWAvoidBot(distance)
         {	
         Orion.Wait(250)
         var lord = Orion.FindType('0x02C0', any, ground,'live|ignoreself', 24, 'red');
-        var lordDistance = Orion.GetDistance(lord[0])
-        if(lord.length && (lordDistance < distanceActual - 2 || lordDistance > 8))
+        if(!lord.length)
+            continue;
+        var lordDistance = Orion.GetDistance(lord[0]);
+        if(lordDistance < distanceActual - 2 || lordDistance > 8)
             WalkToRadiusBorder(lord[0], distanceActual);
         }
     }
@@ -2346,6 +2372,7 @@ function AliComFollower()
         'AliGumpRenderer': true,
         'SetSync': true,
         'ResumeSmartStart': true,
+        'StartSmartStart': true,
         'SetBarrelSamp':true,
         'AwaitPing':true,
         'CureTarget':true,
@@ -2450,6 +2477,10 @@ function SetSync(_)
     Shared.AddVar('Desync',false);
     }
 
+function StartSmartStart(_)
+    {
+    Orion.Exec('SmartStart',true);
+    }
 function ResumeSmartStart(_)
     {
     Orion.ResumeScript('SmartStart');
