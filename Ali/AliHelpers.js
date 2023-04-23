@@ -5,7 +5,7 @@ function Jiggle(type)
     switch(type)
         {
         case 'Move':
-
+            
             break;
         case 'Wait':
             break;
@@ -1117,7 +1117,7 @@ function AliAtlas(target)
 
     var x = Player.X();
     var y = Player.Y();
-    var map = maps[Player.Map()];
+    var map = maps[Orion.ObjAtLayer('backpack').Map()];
     var targetX = target[0];
     var targetY = target[1];
     var targetMap = target[2];
