@@ -364,6 +364,7 @@ function RareAlert()
                 {
                 outMsg = Player.Name() + ': BLAZE CU FOUND!';
                 Orion.PlayWav('BlazeCuFound.wav');
+                AppendColor(mobColor);
                 BlazeProtocol(mobSerial,outMsg);
                 }
             else if(Orion.Contains('0x0455|0x0481',mobColor))
@@ -375,6 +376,7 @@ function RareAlert()
                     if(parse[0] == 600 && parse[1] == 70 && parse[2] == 70)
                         {
                         outMsg = Player.Name() + ': High Intensity ' + cuHue[mobColor] + ' Cu Found!';
+                        AppendColor(mobColor);
                         BlazeProtocol(mobSerial,outMsg);
                         }
                     }
