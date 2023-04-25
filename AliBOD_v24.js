@@ -89,7 +89,7 @@ var BODGumpButtons = //xsize ysize CallBackID Text FunctionName
         [ [100, 30, serialIndex++, "PofGearInBag", 'PofGearInBag'], [100, 30, serialIndex++, "SuitReader", 'SuitReader'] ],
         [],
         [ [100, 30, serialIndex++, "ExcKatana", 'ExcKatana'], [100, 30, serialIndex++, "ExcDoubleAxe", 'ExcDoubleAxe'], [100, 30, serialIndex++, "ExcBladedStaff", 'ExcBladedStaff'] ],
-        [ [100, 30, serialIndex++, "NormKatana", 'NormKatana'], [100, 30, serialIndex++, "NormDoubleAxe", 'NormDoubleAxe'], [100, 30, serialIndex++, "NormBladedStaff", 'NormBladedStaff'] ],
+        [ [100, 30, serialIndex++, "ExcDaisho", 'ExcDaisho'], [100, 30, serialIndex++, "NormDoubleAxe", 'NormDoubleAxe'], [100, 30, serialIndex++, "NormBladedStaff", 'NormBladedStaff'] ],
         [],
         [ [100, 30, serialIndex++, "ImbueGump", "ImbueGump"] ],
     ]
@@ -3213,10 +3213,10 @@ function ExcBladedStaff()
     ElementalWeapon('BladedStaff',true);
     }
 
-function NormKatana()
+function ExcDaisho()
     {
     Orion.Exec('WeaponGump',true);
-    ElementalWeapon('Katana',false);
+    ElementalWeapon('Daisho',true);
     }
 
 function NormDoubleAxe()
@@ -3260,6 +3260,11 @@ function ElementalWeapon(itemName, exceptionalBool)
             itemGraphic: '0x13B6',
             categoryCode: 9004,
             itemCode: 49
+            },
+        'Daisho': {
+            itemGraphic: '0x27A9',
+            categoryCode: 9004,
+            itemCode: 54
             },
         }
     var piece = weaponInfo[itemName];
