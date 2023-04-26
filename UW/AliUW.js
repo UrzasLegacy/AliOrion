@@ -72,6 +72,7 @@ var gumpAssets =
         [ ['ySpacer',20] ],
     ];
 
+var luckScum = true;
 //--#Start
 function _____________START(_){}
 
@@ -1026,7 +1027,7 @@ function GetKeys()
     Orion.Wait(500);
     Orion.Exec('StayHidden',true);
     Orion.Exec('StayLoggedIn',true);
-    Orion.UdpSend(42420,'HaveKeys');
+    Orion.UdpSend(40420,'HaveKeys');
     }
 
 function ClearRoom()
@@ -1059,7 +1060,7 @@ function ClearRoom()
                 Orion.UseAbility('primary');	
             }
         Orion.Wait(250);
-        if(Player.Stam() < 155 && Player.Hits()/Player.MaxHits() > .8)
+        if(Player.Stam('%') < 100 && Player.Hits()/Player.MaxHits() > .8)
             {
             Orion.Cast('Divine Fury');
             Orion.Wait(1000);
@@ -1177,7 +1178,7 @@ function ____________LEADER(_){}
 function UWHealLeader()
     {
     var activeHealers = Shared.GetArray('healer',[]);
-    activeHealers.push([42420,Player.Serial(),Player.Name(),'leader'])
+    activeHealers.push([40420,Player.Serial(),Player.Name(),'leader'])
     while(true)
         {
         var target = injuredCheck(15,80);
@@ -1206,7 +1207,6 @@ function ____________MELEE(_){}
 
 function UWSampMovement()
     {
-    var luckScum = true;
     var rand = Orion.Random(2,6) * 50;
     var isLeadSamp = Player.Serial() == leadSampSerial;
     if(isLeadSamp)
@@ -1220,7 +1220,7 @@ function UWSampMovement()
             if(lord && lord.Hits('%') < 5)
                 {
                 WalkToRadiusBorder(lord.Serial(),4);
-                while(Player.Luck() == startLuck)
+                if(Player.Luck() < 1000)
                     {
                     Orion.Dress('LeadLuck');
                     Orion.Wait(500);
@@ -1853,17 +1853,26 @@ function BossSequence(_)
             });
         if(corpse.length)
             {
+            Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
+            Shared.AddVar('bossDeathStamp',Orion.Now());
             Orion.Wait(Orion.Random(2,11));
             AliWalkTo(corpse[0].X(),corpse[0].Y());
             ListLoot("BotLoot");
             Orion.Wait(100);
-            Shared.AddVar('bossDeathStamp',Orion.Now());
             break;
             }
         Orion.Wait(1000);
         }
     Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
-    Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
+    if(Player.Serial() == leadSampSerial)
+        {
+        var startLuck = Player.Luck();
+        while(Player.Luck() == startLuck)
+            {
+            EquipLuckSuitByBotName();
+            Orion.Wait(1300);
+            }
+        }
     Orion.Wait(Orion.Random(4,9) * 1000);
     }
 
@@ -2449,7 +2458,7 @@ function AliComLeader()
     {
     Shared.AddVar('myRole','leader');
     Orion.RemoveAllUdpServers();
-    var port = 42420;
+    var port = 40420;
     var create = Orion.CreateUdpServer('Coms', port);
     if(create != 0)
         return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
@@ -2562,7 +2571,7 @@ function AliComFollower()
     var playerSerial = Player.Serial();
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
-    Orion.UdpSend(42420,'Check:' + playerString + ':' + port); //[cmd,[playerSerial,playerName,role],port]
+    Orion.UdpSend(40420,'Check:' + playerString + ':' + port); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 5000;
     while(true)
@@ -2578,7 +2587,7 @@ function AliComFollower()
         if(Orion.Now() > pulseTime)
             {
             Orion.CharPrint(self,1159,'Retrying connection to leader');
-            Orion.UdpSend(42420,'Check:' + playerString + ':' + port);
+            Orion.UdpSend(40420,'Check:' + playerString + ':' + port);
             pulseTime = Orion.Now() + 5000;
             }
         }
@@ -2637,7 +2646,7 @@ function AwaitPing(_)
     if(Shared.GetVar('Desync',false))
         {
         Orion.CharPrint(self,1159,'Answering Call')
-        Orion.UdpSend(42420,'AnswerCall');
+        Orion.UdpSend(40420,'AnswerCall');
         }
     }
 
