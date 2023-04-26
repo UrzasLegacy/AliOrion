@@ -18,7 +18,8 @@ function ClearShared()
     }
 
 //Create a findlist for autoloot named 'BotLoot'
-var leaderSerial = '0x02F4684A'; //Alyx
+var leadHealerSerial = '0x02F4684A'; //Alyx
+var leadSampSerial = '0x003DA8B8'; //Freya
 var homeX = 2521;
 var homeY = 148;
 // var numberOfSamps = 3;
@@ -85,7 +86,8 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                GoToSafePosition();
+                if(Orion.GetDistance(6313, 1711) > 50)
+                    GoToSafePosition();
                 var scoutWait = ScoutAhead();
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
@@ -116,7 +118,7 @@ function SmartStart()
             Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
-                CharacterMaintenance();
+                //CharacterMaintenance();
                 GoToSafePosition()
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
@@ -132,6 +134,8 @@ function SmartStart()
                     }
                 WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
+                if(Player.Serial() != leadSampSerial)
+                    Orion.Wait(2000);
                 GoToBossArena();
                 }
             initScripts();
@@ -194,32 +198,38 @@ function CharacterMaintenance()
 
 function DropLoot()
     {
-    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+    var butlerMode = true;
+    if(butlerMode)
         {
-        return !Orion.Contains(box.Properties(),'Contents: 125')
-        }).sort(function(a,b)
+        var butler = Orion.FindObject(butlerSerial);
+        while(!butler)
             {
-            var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-            var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-            return bContents - aContents;
-            });
-    while(woodenBoxes.length)
-        {
-        var box = woodenBoxes[0];
-        while(box.Distance() > 2)
-            AliWalkTo(box.X(),box.Y(),0,1);
-        VerifyOpenContainer(box.Serial());
+            Orion.Wait(500);
+            butler = Orion.FindObject(butlerSerial);
+            }
+        AliWalkTo(butler.X(),butler.Y(),0,1);
         var loot = Orion.FindList('BotLoot')[0];
-        while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
+        while(loot)
             {
             Orion.CharPrint(self,1159,'Moving loot');
-            Orion.MoveItem(loot,0,box.Serial());
+            Orion.MoveItem(loot,0,butlerSerial);
             Orion.Wait(1100);
             loot = Orion.FindList('BotLoot')[0];
             }
+        while(!Orion.TradeCheckState('0','right') && Orion.TradeOpponent('0') == butlerSerial)
+            {
+            Orion.TradeCheck('0', true);
+            Orion.Wait(1300);
+            }
+        loot = Orion.FindList('BotLoot')[0];
         if(!loot)
             return true;
-        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+        else
+            return DropLoot();
+        }
+    else
+        {
+        var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
             }).sort(function(a,b)
@@ -228,9 +238,36 @@ function DropLoot()
                 var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
                 return bContents - aContents;
                 });
+        while(woodenBoxes.length)
+            {
+            var box = woodenBoxes[0];
+            var boxSerial = box.Serial();
+            while(box.Distance() > 2)
+                AliWalkTo(box.X(),box.Y(),0,1);
+            VerifyOpenContainer(boxSerial);
+            var loot = Orion.FindList('BotLoot')[0];
+            while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
+                {
+                Orion.CharPrint(self,1159,'Moving loot');
+                Orion.MoveItem(loot,0,boxSerial);
+                Orion.Wait(1100);
+                loot = Orion.FindList('BotLoot')[0];
+                }
+            if(!loot)
+                return true;
+            woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+                {
+                return !Orion.Contains(box.Properties(),'Contents: 125')
+                }).sort(function(a,b)
+                    {
+                    var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                    var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                    return bContents - aContents;
+                    });
+            }
+        DiscordPush('Out of containers to put loot!');
+        return false;
         }
-    DiscordPush('Out of containers to put loot!');
-    return false;
     }
 
 function RestockConsumables()
@@ -660,8 +697,8 @@ function RepairGear()
     
     var repairDict = 
         { //graphicString: buttonCode
-        // tinker: 2001 | tinker: 2001 | bsmith: 2002 | carpenter: 2003 | tailor: 2006 | fletcher: 2009 | masonry: 2010
-        '0x2D2D': 2002,'0x2D21': 2002,'0x0F4A': 2002,'0x0F49': 2002,'0x0F4E': 2002,'0x0F4D': 2002,'0x0F48': 2002,'0x0F47': 2002,'0x0DF0': 2003,'0x0DF1': 2003,'0x26BD': 2002,'0x26C7': 2002,'0x27A8': 2003,'0x26BB': 2002,'0x26C5': 2002,'0x13B1': 2009,'0x13B2': 2009,'0x0F5F': 2002,'0x0F5E': 2002,'0x1B72': 2002,'0x1B73': 2002,
+        // tinker: 2001 | bsmith: 2002 | carpenter: 2003 | tailor: 2006 | fletcher: 2009 | masonry: 2010
+        '0x170B': 2006,'0x2D2D': 2002,'0x2D21': 2002,'0x0F4A': 2002,'0x0F49': 2002,'0x0F4E': 2002,'0x0F4D': 2002,'0x0F48': 2002,'0x0F47': 2002,'0x0DF0': 2003,'0x0DF1': 2003,'0x26BD': 2002,'0x26C7': 2002,'0x27A8': 2003,'0x26BB': 2002,'0x26C5': 2002,'0x13B1': 2009,'0x13B2': 2009,'0x0F5F': 2002,'0x0F5E': 2002,'0x1B72': 2002,'0x1B73': 2002,
         '0x26CB': 2002,'0x13F4': 2003,'0x13F5': 2003,'0x0F50': 2009,'0x0F4F': 2009,'0x1440': 2002,'0x1441': 2002,'0x0F52': 2002,'0x0F51': 2002,'0x27A9': 2002,'0x2D30': 2002,'0x2D24': 2002,'0x0F4C': 2002,'0x0F4B': 2002,'0x26BF': 2002,'0x26C9': 2002,'0x2D2A': 2009,'0x2D1E': 2009,'0x2D35': 2002,'0x2D29': 2002,'0x2D2C': 2002,
         '0x2D20': 2002,'0x0F46': 2002,'0x0F45': 2002,'0x13F9': 2003,'0x13F8': 2003,'0x143E': 2002,'0x143F': 2002,'0x143C': 2002,'0x143D': 2002,'0x0F44': 2001,'0x0F43': 2001,'0x1B77': 2002,'0x1B76': 2002,'0x13FC': 2009,'0x13FD': 2009,'0x27AD': 2002,'0x13FE': 2002,'0x13FF': 2002,'0x1400': 2002,'0x1401': 2002,'0x27A7': 2002,
         '0x26C0': 2002,'0x26CA': 2002,'0x13FA': 2002,'0x13FB': 2002,'0x2D2E': 2002,'0x2D22': 2002,'0x0F60': 2002,'0x0F61': 2002,'0x0F5D': 2002,'0x0F5C': 2002,'0x2D2B': 2009,'0x2D1F': 2009,'0x143A': 2002,'0x143B': 2002,'0x1B75': 2002,'0x1B74': 2002,'0x1B7B': 2002,'0x27A2': 2002,'0x27AE': 2001,'0x1BC5': 2002,'0x1BC4': 2002,
@@ -1169,13 +1206,31 @@ function ____________MELEE(_){}
 
 function UWSampMovement()
     {
-    var rand = Orion.Random(2,9) * 100;
-    var rand2 = Orion.Random(2,6) * 50;
+    var luckScum = true;
+    var rand = Orion.Random(2,6) * 50;
+    var isLeadSamp = Player.Serial() == leadSampSerial;
+    if(isLeadSamp)
+        var startLuck = Player.Luck();
     while(!Player.Dead())
         {
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
+        if(isLeadSamp && luckScum && lord && lord.Hits('%') < 5 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
+            {
+            Orion.Wait(250);
+            if(lord && lord.Hits('%') < 5)
+                {
+                WalkToRadiusBorder(lord.Serial(),4);
+                while(Player.Luck() == startLuck)
+                    {
+                    Orion.Dress('LeadLuck');
+                    Orion.Wait(500);
+                    }
+                Orion.Wait(250);
+                continue;
+                }
+            }
         var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange');
-        if(!Shared.GetVar('barrelSamp',false) && wisp.length)
+        if(!isLeadSamp && wisp.length)
             {
             Orion.Wait(rand);
             wisp.forEach(function(mob)
@@ -1195,7 +1250,7 @@ function UWSampMovement()
             }
         else if(lord)
             {
-            Orion.Wait(rand2);
+            Orion.Wait(rand);
             if(lord.Distance() != 1)
                 WalkToRadiusBorder(lord.Serial(),1);
                 //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
@@ -1421,7 +1476,7 @@ function Autostart(_)
     //         }
     //     }
     Orion.Wait(1000);
-    if(Player.Serial() == leaderSerial)
+    if(Player.Serial() == leadHealerSerial)
 		var role = 'leader';
     else if(Orion.SkillValue('Magery') >= 700)
         var role = 'healer';
@@ -1430,7 +1485,7 @@ function Autostart(_)
     else
         var role = 'misc';
     Shared.AddVar('myRole',role);
-    if(Player.Serial() == leaderSerial)
+    if(Player.Serial() == leadHealerSerial)
         Orion.Exec('AliComLeader',true);
     else
         Orion.Exec('AliComFollower',true);
@@ -1459,7 +1514,7 @@ function GoToSafePosition()
 
 function ScoutAhead()
     {
-        TextWindow.Clear()
+    TextWindow.Clear()
     Shared.AddVar('leashing',false)
     Orion.CharPrint(self,1159,'Scouting ahead')
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
@@ -1530,11 +1585,15 @@ function HydraReset()
     {
     AvoidRectangle(6298,1704,6309,1719);
     Debug('Walking to ready position')
-    if(AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck) == 'Hydra')
+    var hydraresetCheck = AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck)
+    Orion.Print('HydraResetCheck: ' + hydraresetCheck)
+    if(hydraresetCheck == 'Hydra')
         {
         Debug('Hydra found. Walking to stern')
         AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
         CheeseIt()
+        Orion.Cast('Invisibility');
+        Orion.WaitForTarget(5000);
         Debug('Walking back to ready position')
         AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
         CheeseIt()
@@ -1545,6 +1604,7 @@ function HydraReset()
 function CheeseIt()
     {
     Debug('CheeseIt')
+    Orion.Wait(500);
     while(!Player.Hidden())
         {
         if(!Orion.HaveTarget())
@@ -1576,7 +1636,7 @@ function WaitForReset(_)
                     Orion.WaitForTarget(5000);
                     }
                 Orion.TargetObject(self);
-                Orion.Wait(50);
+                Orion.Wait(500);
                 Orion.Cast('Invisibility');
                 }
             AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
@@ -1706,10 +1766,14 @@ function GoFromSafeToReadyPosition(_)
         Orion.UseObject(ladder);
         Orion.Wait(1300);
         }
+    var randX = 6315 + Orion.Random(-3,4);
+    var randY = 1706 + Orion.Random(-3,4);
     if(Shared.GetVar('barrelSamp',false))
         AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-    else
+    else if(Player.Serial() == leadSampSerial)
         AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+    else
+        AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
     }
 
 function OpenUW(_)
@@ -1759,8 +1823,15 @@ function OpenUW(_)
 
 function GoToBossArena(_)
     {
+    var entryTiles = 
+        [
+            [6306,1711],
+            [6307,1711],
+            [6308,1711],
+        ]
+    var entryTile = entryTiles[Orion.Random(0,entryTiles.length)]
     Orion.CharPrint(self,1159,'Going to boss arena');
-    AliWalkTo(6308, 1711);
+    AliWalkTo(entryTile[0], entryTile[1]);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
@@ -2208,35 +2279,41 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
         {
         startCallBackFn();
         }
-
+    var playerX = Player.X();
+    var playerY = Player.Y();
+    var zeroMovement = playerX == x && playerY == y;
+    Orion.Print('zeroMovement: ' + zeroMovement)
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
         Orion.ClearFakeMapObjects();
-    if(pathTiles.length === 0)
+    if(pathTiles.length === 0 && !zeroMovement)
         return false;
-    var shortStop = pathTiles[pathTiles.length - 1];
-    var shortX = shortStop.X();
-    var shortY = shortStop.Y();
-    if(pathMarkers)
+    if(!zeroMovement)
         {
-        pathTiles.forEach(function(tile,i)
+        var shortStop = pathTiles[pathTiles.length - 1];
+        var shortX = shortStop.X();
+        var shortY = shortStop.Y();
+        if(pathMarkers)
             {
-            Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-            })
-        Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+            pathTiles.forEach(function(tile,i)
+                {
+                Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+                })
+            Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+            }
+        if(pathTiles.length >= chunkSize)
+            var chunk = pathTiles[chunkSize - 1];
+        else
+            var chunk = shortStop;
+        var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
+        if(pathMarkers)
+            {
+            Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
+            Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
+            }
+        Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+        Orion.Wait(1);
         }
-    if(pathTiles.length >= chunkSize)
-        var chunk = pathTiles[chunkSize - 1];
-    else
-        var chunk = shortStop;
-    var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
-    if(pathMarkers)
-        {
-        Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
-        Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
-        }
-    Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
-    Orion.Wait(1);
 
     if(typeof endCallBackFn == 'function')
         {
@@ -2244,7 +2321,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
             return 'Hydra';
         }
 
-    if(Orion.GetDistance(shortX,shortY) > 0)
+    if(!zeroMovement && Orion.GetDistance(shortX,shortY) > 0)
         return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
     return true;
     }
@@ -2331,7 +2408,10 @@ function HydraLeash(_)
                 Orion.TargetObject(self);
             }
         if(!Orion.HaveTarget() && !Player.Frozen())
+            {
+            Orion.Wait(200);
             Orion.Cast('Invisibility');
+            }
         Debug('Distance to hydra: ' + Orion.GetDistance(leash))
         Orion.Wait(200)
         }
@@ -2455,7 +2535,7 @@ function AliComFollower()
 	var role = Shared.GetVar('myRole','misc');
     var cmdsObj = 
         {
-        'Follow': true, //:leaderSerial:distance
+        'Follow': true, //:leadHealerSerial:distance
         'TerminateAll': true,
         'Target': true, //:targetSerial
         'AliGumpRenderer': true,
@@ -2529,11 +2609,11 @@ function AliComFollower()
 
 
 //--# Bot Commands
-function Follow(leaderSerial,distance)
+function Follow(leadHealerSerial,distance)
     {
     do
         {
-        var leaderObj = Orion.FindObject(leaderSerial);
+        var leaderObj = Orion.FindObject(leadHealerSerial);
         Orion.CharPrint(self,1159,'Searching for Leader to follow...')
         Orion.Wait(200);
         } while(!leaderObj)
