@@ -1,4 +1,4 @@
-//v41 Atl/Yamato
+//v42 Atl/Yamato
 //set maxcount to how many of each scroll you want to stock
 //set price of each scroll in the last column of scrollinfo array
 var passphrase = 'BallTableHorseShoe'; //say this near GoodWill to turn off reconnect and log out
@@ -2443,7 +2443,7 @@ function MoveAllBinders(_)
         if(toContainer == backpackSerial)
             {
             var packCheck = +(Orion.FindObject(backpack).Properties().match(/Contents: (\d*)\/125/) || [])[1];
-            if(packCheck >= 80)
+            if(packCheck >= 70)
                 {
                 Orion.CharPrint(self, 1159, 'Backpack full to threshold!');
                 //Orion.CloseGump('container', fromContainer);
