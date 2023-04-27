@@ -25,10 +25,10 @@ var homeY = 148;
 // var numberOfSamps = 3;
 // var numberOfHealers = 2; //not including the leader
 
-var useSingleTargetSpecial = true; //true, false. Set to true to use a special when only 1 mob is nearby to attack.
+var useSingleTargetSpecial = true; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var singleTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-var useOnslaught = false; //true , false. Set to true to use Onslaught when only 1 mob is nearby to attack.
-var useMultiTargetSpecial = false; //true, false. Set to true to use a special when only 1 mob is nearby to attack.
+var useOnslaught = false; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
+var useMultiTargetSpecial = false; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
 var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
 var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
@@ -39,8 +39,8 @@ var useConfidence = true; //boolean. Set to true to use Confidence when HP drops
 var useConfidenceThresholdPercent = 60; //Percentage of self HP to attempt to cast confidence.
 var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes below a threshold.
 var evasionThresholdPercent = 40; //Percentage of self HP to attempt to cast Evasion.
-var useRemoveCurse = true;
-var useCleanseByFire = true;
+var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oathed during apple cooldown
+var useCleanseByFire = true; //boolean. Attempt to self cure poison
 var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder.
 var useDiscordPush = true; //true, false. Set to true to use Discord notifications for JournalScan
 var discordHook = '887268637315047444'; //Put your Discord WebHook here.
@@ -175,238 +175,8 @@ function SmartStart()
 //--#Current
 function _____________CURRENT(_){}
 
-function CharacterMaintenance()
-    {    
-    Orion.CharPrint(self,1159,'Checking tithing points...');
-    var tithe = Player.TithingPoints() < 30000;
-    var dura = DurabilityCheck();
-    var consumable = ConsumablesCheck();
-    var pack = PackCheck();
-    var gold = GoldCheck();
-    if(!tithe && !dura && !consumable && !pack && !gold)
-        return false;
-    GoHome();
-    DropLoot();
-    if(dura)
-        RepairGear();
-    if(consumable)
-        RestockConsumables();
-    if(gold)
-        DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
-    if(tithe)
-        RecallTithe();
-    }
 
-function DropLoot()
-    {
-    var butlerMode = true;
-    if(butlerMode)
-        {
-        var butler = Orion.FindObject(butlerSerial);
-        while(!butler)
-            {
-            Orion.Wait(500);
-            butler = Orion.FindObject(butlerSerial);
-            }
-        AliWalkTo(butler.X(),butler.Y(),0,1);
-        var loot = Orion.FindList('BotLoot')[0];
-        while(loot)
-            {
-            Orion.CharPrint(self,1159,'Moving loot');
-            Orion.MoveItem(loot,0,butlerSerial);
-            Orion.Wait(1100);
-            loot = Orion.FindList('BotLoot')[0];
-            }
-        while(!Orion.TradeCheckState('0','right') && Orion.TradeOpponent('0') == butlerSerial)
-            {
-            Orion.TradeCheck('0', true);
-            Orion.Wait(1300);
-            }
-        loot = Orion.FindList('BotLoot')[0];
-        if(!loot)
-            return true;
-        else
-            return DropLoot();
-        }
-    else
-        {
-        var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
-            {
-            return !Orion.Contains(box.Properties(),'Contents: 125')
-            }).sort(function(a,b)
-                {
-                var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                return bContents - aContents;
-                });
-        while(woodenBoxes.length)
-            {
-            var box = woodenBoxes[0];
-            var boxSerial = box.Serial();
-            while(box.Distance() > 2)
-                AliWalkTo(box.X(),box.Y(),0,1);
-            VerifyOpenContainer(boxSerial);
-            var loot = Orion.FindList('BotLoot')[0];
-            while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
-                {
-                Orion.CharPrint(self,1159,'Moving loot');
-                Orion.MoveItem(loot,0,boxSerial);
-                Orion.Wait(1100);
-                loot = Orion.FindList('BotLoot')[0];
-                }
-            if(!loot)
-                return true;
-            woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
-                {
-                return !Orion.Contains(box.Properties(),'Contents: 125')
-                }).sort(function(a,b)
-                    {
-                    var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                    var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                    return bContents - aContents;
-                    });
-            }
-        DiscordPush('Out of containers to put loot!');
-        return false;
-        }
-    }
 
-function RestockConsumables()
-    {
-    var pouch = Orion.FindTypeEx('0x0E79',any,ground,'item',10)
-        .filter(function(item)
-            {
-            return !Orion.Contains(item.Properties(),'Contents: 0/');
-            })[0];
-    if(!pouch)
-        return DiscordPush('Supply pouch missing!');
-    var pouchSerial = pouch.Serial();
-    if(pouch.Distance() > 2)
-        AliWalkTo(pouch.X(),pouch.Y(),0,1);
-    VerifyOpenContainer(pouch.Serial());
-    var consumables =
-        [
-            ['0x2FD8', 10], //apple
-        ]
-    for(var i=0;i<consumables.length;i++)
-        {
-        var consumable = consumables[i][0];
-        var restockAmount = consumables[i][1];
-        var count = Orion.Count(consumable)
-        if(count < restockAmount)
-            {
-            Orion.Wait(200);
-            count = Orion.Count(consumable)
-            if(count < restockAmount)
-                {
-                var needed = restockAmount - count;
-                Orion.MoveItemType(consumable, any, pouchSerial, needed);
-                i--;
-                }
-            }
-        }
-    }
-
-function GoldCheck()
-    {
-    Orion.CharPrint(self,1159,'Checking gold...');
-    Orion.WaitContextMenuID(self, 416);
-    Orion.RequestContextMenu(self);
-    var goldInt = 1000000;
-    if(Orion.WaitForGump(5000,true))
-        {
-        var gump = Orion.GetGump(any, '0x000F3E9F');
-        var goldUnf = gump.Text(0);
-        var goldNoSymbols = goldUnf.replace(/[,+]/g,'');
-        Orion.Print('Gold: ' + goldNoSymbols)
-        goldInt = +goldNoSymbols;
-        if(gump !== null)
-            {
-            gump.Select(Orion.CreateGumpHook(0));
-            Orion.Wait(100);
-            }
-        }
-    Orion.Print(goldInt)
-    return goldInt < 1000000;
-    }
-
-function DurabilityCheck(_)
-    {
-    Orion.CharPrint(self,1159,'Checking equipment durability...');
-    var durabilityThreshold = 80
-    var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
-    Orion.Print("Repair threshold set at: " + durabilityThreshold)
-    for(var i=1;i<layers.length;i++)
-        {
-        var obj = Orion.ObjAtLayer(i);
-        if(obj)
-            {
-            var objProperties = obj.Properties();
-            if(Orion.Contains(objProperties, 'Durability'))
-                {
-                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/) || [];
-                var min = +dura[1];
-                var max = +dura[2];
-                if(dura[0] && min < durabilityThreshold && min < max)
-                    {
-                    Orion.Print('Repair needed!')
-                    return true;
-                    }
-                }
-            }
-        }
-    return false;
-    }
-
-function ConsumablesCheck(_)
-    {
-    Orion.CharPrint(self,1159,'Checking consumables...');
-    var consumables =
-        [
-        ['0x2FD8', 10], //apple
-        ]
-    for(var i=0;i<consumables.length;i++)
-        {
-        var consumable = consumables[i][0];
-        var restockAmount = consumables[i][1];
-        if(Orion.Count(consumable) < restockAmount)
-            {
-            Orion.Wait(200);
-            if(Orion.Count(consumable) < restockAmount)
-                {
-                Orion.Print('Restock needed!');
-                return true;
-                }
-            }
-        }
-    return false;
-    }
-
-function PackCheck(_)
-    {
-    Orion.CharPrint(self,1159,'Checking backpack...');
-    var packObj = Orion.ObjAtLayer('backpack');
-    if(packObj)
-        {
-        var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
-        if(packCount > 100)
-            {
-            Orion.Print('Pack overfilled: ' + packCount + '/125');
-            return true;
-            }
-        }
-    if(Player.Weight() > Player.MaxWeight() - 100)
-        {
-        Orion.Print('Overweight!');
-        return true;
-        }
-    return false;
-    }
-
-function BossCheck(_)
-    {
-    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-    }
 
 
 //--# Utilities
@@ -870,6 +640,138 @@ function RepairGear()
     gump = Orion.CreateCustomGump(11420);
     if(bench && gump)
         gump.Close();
+    }
+
+function CharacterMaintenance()
+    {    
+    Orion.CharPrint(self,1159,'Checking tithing points...');
+    var tithe = Player.TithingPoints() < 30000;
+    var dura = DurabilityCheck();
+    var consumable = ConsumablesCheck();
+    var pack = PackCheck();
+    var gold = GoldCheck();
+    if(!tithe && !dura && !consumable && !pack && !gold)
+        return false;
+    GoHome();
+    // DropLoot();
+    if(dura)
+        RepairGear();
+    // if(consumable)
+    //     RestockConsumables();
+    if(gold)
+        DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
+    if(tithe)
+        RecallTithe();
+    }
+
+function DropLoot()
+    {
+    var butlerMode = true;
+    if(butlerMode)
+        {
+        var butler = Orion.FindObject(butlerSerial);
+        while(!butler)
+            {
+            Orion.Wait(500);
+            butler = Orion.FindObject(butlerSerial);
+            }
+        AliWalkTo(butler.X(),butler.Y(),0,1);
+        var loot = Orion.FindList('BotLoot')[0];
+        while(loot)
+            {
+            Orion.CharPrint(self,1159,'Moving loot');
+            Orion.MoveItem(loot,0,butlerSerial);
+            Orion.Wait(1100);
+            loot = Orion.FindList('BotLoot')[0];
+            }
+        while(!Orion.TradeCheckState('0','right') && Orion.TradeOpponent('0') == butlerSerial)
+            {
+            Orion.TradeCheck('0', true);
+            Orion.Wait(1300);
+            }
+        loot = Orion.FindList('BotLoot')[0];
+        if(!loot)
+            return true;
+        else
+            return DropLoot();
+        }
+    else
+        {
+        var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+            {
+            return !Orion.Contains(box.Properties(),'Contents: 125')
+            }).sort(function(a,b)
+                {
+                var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                return bContents - aContents;
+                });
+        while(woodenBoxes.length)
+            {
+            var box = woodenBoxes[0];
+            var boxSerial = box.Serial();
+            while(box.Distance() > 2)
+                AliWalkTo(box.X(),box.Y(),0,1);
+            VerifyOpenContainer(boxSerial);
+            var loot = Orion.FindList('BotLoot')[0];
+            while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
+                {
+                Orion.CharPrint(self,1159,'Moving loot');
+                Orion.MoveItem(loot,0,boxSerial);
+                Orion.Wait(1100);
+                loot = Orion.FindList('BotLoot')[0];
+                }
+            if(!loot)
+                return true;
+            woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+                {
+                return !Orion.Contains(box.Properties(),'Contents: 125')
+                }).sort(function(a,b)
+                    {
+                    var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                    var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                    return bContents - aContents;
+                    });
+            }
+        DiscordPush('Out of containers to put loot!');
+        return false;
+        }
+    }
+
+function RestockConsumables()
+    {
+    var pouch = Orion.FindTypeEx('0x0E79',any,ground,'item',10)
+        .filter(function(item)
+            {
+            return !Orion.Contains(item.Properties(),'Contents: 0/');
+            })[0];
+    if(!pouch)
+        return DiscordPush('Supply pouch missing!');
+    var pouchSerial = pouch.Serial();
+    if(pouch.Distance() > 2)
+        AliWalkTo(pouch.X(),pouch.Y(),0,1);
+    VerifyOpenContainer(pouch.Serial());
+    var consumables =
+        [
+            ['0x2FD8', 10], //apple
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        var consumable = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        var count = Orion.Count(consumable)
+        if(count < restockAmount)
+            {
+            Orion.Wait(200);
+            count = Orion.Count(consumable)
+            if(count < restockAmount)
+                {
+                var needed = restockAmount - count;
+                Orion.MoveItemType(consumable, any, pouchSerial, needed);
+                i--;
+                }
+            }
+        }
     }
 
 function DropDraggedToContainer() //v2
@@ -1936,6 +1838,108 @@ function WaitForSpecificGump(delay, type, serial, id)
 		return Orion.GetGump(serial, id);
 	return false;
 	}
+
+function GoldCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking gold...');
+    Orion.WaitContextMenuID(self, 416);
+    Orion.RequestContextMenu(self);
+    var goldInt = 1000000;
+    if(Orion.WaitForGump(5000,true))
+        {
+        var gump = Orion.GetGump(any, '0x000F3E9F');
+        var goldUnf = gump.Text(0);
+        var goldNoSymbols = goldUnf.replace(/[,+]/g,'');
+        Orion.Print('Gold: ' + goldNoSymbols)
+        goldInt = +goldNoSymbols;
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(0));
+            Orion.Wait(100);
+            }
+        }
+    Orion.Print(goldInt)
+    return goldInt < 1000000;
+    }
+
+function DurabilityCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking equipment durability...');
+    var durabilityThreshold = 80
+    var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
+    Orion.Print("Repair threshold set at: " + durabilityThreshold)
+    for(var i=1;i<layers.length;i++)
+        {
+        var obj = Orion.ObjAtLayer(i);
+        if(obj)
+            {
+            var objProperties = obj.Properties();
+            if(Orion.Contains(objProperties, 'Durability'))
+                {
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/) || [];
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold && min < max)
+                    {
+                    Orion.Print('Repair needed!')
+                    return true;
+                    }
+                }
+            }
+        }
+    return false;
+    }
+
+function ConsumablesCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking consumables...');
+    var consumables =
+        [
+        ['0x2FD8', 10], //apple
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        var consumable = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        if(Orion.Count(consumable) < restockAmount)
+            {
+            Orion.Wait(200);
+            if(Orion.Count(consumable) < restockAmount)
+                {
+                Orion.Print('Restock needed!');
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
+function PackCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking backpack...');
+    var packObj = Orion.ObjAtLayer('backpack');
+    if(packObj)
+        {
+        var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
+        if(packCount > 100)
+            {
+            Orion.Print('Pack overfilled: ' + packCount + '/125');
+            return true;
+            }
+        }
+    if(Player.Weight() > Player.MaxWeight() - 100)
+        {
+        Orion.Print('Overweight!');
+        return true;
+        }
+    return false;
+    }
+
+function BossCheck(_)
+    {
+    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
+    }
+
 
 function isPlayerInRectangle(x1, y1, x2, y2)
     {
