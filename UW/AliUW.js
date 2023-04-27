@@ -1,3 +1,41 @@
+//Setup Instructions
+
+//Leaders
+    //Choose one of your healers to act as the central coordinator of the whole operation.
+    var leadHealerSerial = '0x02F4684A'; //Alyx
+    //Choose one of your samps to get honor on the boss. This samp will also ignore wisps and stick to the boss to ensure maximum damage
+    var leadSampSerial = '0x003DA8B8'; //Freya
+
+//Bots
+    //Bots will try and hide while waiting, so you'll need a small amount of hiding if you're not human
+
+//Runes
+    //Each character needs a runebook named 'Main' with runes inside named 'Home','UW Dock','Tithe'
+    //Also include duplicates of each rune named 'Home2','UW Dock2','Tithe2' a couple steps away in case the first rune is blocked
+    //Home rune should be directly south of your drop house such that walking straight north will load the contents of the house
+    //UW Dock rune should be just north of the dock into UW
+    //Tithe rune should be near any ankh.
+
+//Drop House
+    //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible.
+    //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
+    //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot in these.
+    var homeX = 2521; //This is an X coordinate near your Home recall spot
+    var homeY = 148; //This is an Y coordinate near your Home recall spot
+
+//Dress Agent
+    //Each character needs three suits set up in Agents > Dress
+    //One suit named "<character name> Boss" e.g., Freya Boss. This is your suit for killing the boss
+    //One suit named "<character name> UW" e.g., Freya UW. This is the suit pieces to enter UW
+    //One suit named "<character name> LRC" e.g., Freya LRC. This is an lrc suit to get back into vamp form
+
+//Hotkeys
+    //Recommended Hotkeys:
+        //SmartStart
+        //AliGumpRenderer
+
+    //Check the Utilites section for anything else that looks interesting to you :)
+
 function UltraTerminate()
     {
     Shared.ClearVars();
@@ -18,10 +56,6 @@ function ClearShared()
     }
 
 //Create a findlist for autoloot named 'BotLoot'
-var leadHealerSerial = '0x02F4684A'; //Alyx
-var leadSampSerial = '0x003DA8B8'; //Freya
-var homeX = 2521;
-var homeY = 148;
 // var numberOfSamps = 3;
 // var numberOfHealers = 2; //not including the leader
 
@@ -236,13 +270,13 @@ function GoHome()
         Orion.WalkTo(bench.X(),bench.Y());
     }
 
-function EquipLuckSuitByBotName()
+function EquipBossSuitByBotName()
     {
     if(Orion.Contains(Player.Name(), 'Lady|Lord'))
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
         var _pName = Player.Name()
-    var setname = _pName + ' Luck'
+    var setname = _pName + ' Boss'
     Orion.Dress(setname);
     }
 
@@ -283,7 +317,7 @@ function ResetPosition()
     //if(isPlayerInRectangle(6269,1625,6373,1791))
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
         {
-        var ladder = Orion.FindType(0x08A6, any, ground, ' ', 24);
+        var ladder = Orion.FindType(0x08A6, any, ground, 'item', 24);
         Orion.UseObject(ladder[0]);
         }
     if(Player.X() < 6000)
@@ -317,11 +351,11 @@ function ResetPosition()
             Orion.UseObject(ethy.Serial());
             Orion.Wait(1300);
             }
-        EquipLuckSuitByBotName();
+        EquipBossSuitByBotName();
         Orion.Wait(1300);
         }
     //if(isPlayerInRectangle(6400,1680,6458,1802))
-    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1))//outside boat
+    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
         {
         Orion.Wait(500);
         }
@@ -424,26 +458,6 @@ function RecallTithe()
             }
         Orion.Wait(1000);
         }
-    Orion.Wait(1500);
-    //Orion.Exec('WalkThroughCurrentFarm');
-    }
-
-function RecallRepair()
-    {
-    TerminateAll('RecallRepair')
-    if(Player.X() > 6000)
-        LeaveUW();
-    RecallByGump('Main', 'Home', 'Main', 'Home2');
-    Orion.WarMode(0);
-    do
-        {
-        Orion.Step('n');
-        Orion.Wait(250);
-        var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
-        } while(!bench)
-    if(!Orion.WalkTo(bench.X(),bench.Y()))
-        Orion.WalkTo(bench.X(),bench.Y());
-    RepairGear();
     Orion.Wait(1500);
     //Orion.Exec('WalkThroughCurrentFarm');
     }
@@ -1022,6 +1036,8 @@ function ClearRoom()
             var barrelSerial = barrels[0].Serial();
             var barrelX = barrels[0].X();
             var barrelY = barrels[0].Y();
+            if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
+                Orion.UseAbility('primary');	
             if(barrels[0].Distance() > 1)
                 if(Orion.WalkTo(barrelX,barrelY))
                        Orion.Attack(barrelSerial);
@@ -1485,7 +1501,7 @@ function ScoutAhead()
 
 function HydraReset()
     {
-    AvoidRectangle(6298,1704,6309,1719);
+    AvoidDropdowns();
     Debug('Walking to ready position')
     var hydraresetCheck = AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck)
     Orion.Print('HydraResetCheck: ' + hydraresetCheck)
@@ -1503,23 +1519,6 @@ function HydraReset()
     Orion.ClearBadLocations();
     }
 
-function CheeseIt()
-    {
-    Debug('CheeseIt')
-    Orion.Wait(500);
-    while(!Player.Hidden())
-        {
-        if(!Orion.HaveTarget())
-            {
-            Debug('Casting invis 2');
-            Orion.Cast('Invisibility');
-            Orion.WaitForTarget(5000);
-            }
-        Orion.TargetObject(self);
-        Orion.Wait(500);
-        }
-    }
-
 function WaitForReset(_)
     {
     Shared.AddVar('leashing',false);
@@ -1528,7 +1527,7 @@ function WaitForReset(_)
         {
         if(HydraCheck())
             {
-            AvoidRectangle(6298,1704,6309,1719);
+            AvoidDropdowns();
             AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
             while(!Player.Hidden())
                 {
@@ -1771,7 +1770,7 @@ function BossSequence(_)
         var startLuck = Player.Luck();
         while(Player.Luck() == startLuck)
             {
-            EquipLuckSuitByBotName();
+            EquipBossSuitByBotName();
             Orion.Wait(1300);
             }
         }
@@ -1838,6 +1837,23 @@ function WaitForSpecificGump(delay, type, serial, id)
 		return Orion.GetGump(serial, id);
 	return false;
 	}
+
+function CheeseIt(_)
+    {
+    Debug('CheeseIt')
+    Orion.Wait(500);
+    while(!Player.Hidden())
+        {
+        if(!Orion.HaveTarget())
+            {
+            Debug('Casting invis 2');
+            Orion.Cast('Invisibility');
+            Orion.WaitForTarget(5000);
+            }
+        Orion.TargetObject(self);
+        Orion.Wait(500);
+        }
+    }
 
 function GoldCheck(_)
     {
@@ -2198,19 +2214,13 @@ function SetDiscordRegistryEntry()
     return discordConfig;
     }
 
-function WalkToRadiusBorder(targetSerial, distance, jiggleMax) 
+function WalkToRadiusBorder(targetSerial, distance) 
     {
-    if(jiggleMax && jiggleMax > 0)
-        var jiggle = Orion.Random(0,jiggleMax);
-    else
-        var jiggle = 0;
     var target = Orion.FindObject(targetSerial)
     if(target) 
         {
         var x = target.X();
         var y = target.Y();
-        var z = target.Z();
-        //var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
         var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, x + distance, y + distance)
             .filter(function(tile) 
                 {
@@ -2230,7 +2240,8 @@ function WalkToRadiusBorder(targetSerial, distance, jiggleMax)
             })
         for(var i=0;i<tiles.length;i++)
             {             
-            var closest = tiles[jiggle]; 
+            var closest = tiles[i]; 
+            Orion.AddFakeMapObject(55555, '0x051A', 32, closest.X(), closest.Y(), closest.Z());
             if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
                 break;
             }
@@ -2266,15 +2277,23 @@ function AvoidRectangle(x1,y1,x2,y2)
             || (y1 == tileY)
             || (y2 == tileY);
         });
-    for(var i = 0;i<tiles.length;i++)
+    for(var i=0,len=tiles.length;i<len;i++)
         {
         var tile = tiles[i];
         var tileX = tile.X();
         var tileY = tile.Y();
         var tileZ = tile.Z();
-        Orion.SetBadLocation(tileX,tileY)
-        Orion.AddFakeMapObject(i + 30000, '0x051A', 1159, tileX, tileY, tileZ);
+        Orion.SetBadLocation(tileX,tileY);
+        Orion.AddFakeMapObject(i + 30000, '0x051A', 32, tileX, tileY, tileZ);
         }
+    }
+
+function AvoidDropdowns(_)
+    {
+    AvoidRectangle(6299,1705,6302,1710);
+    AvoidRectangle(6305,1705,6308,1710);
+    AvoidRectangle(6299,1713,6302,1718);
+    AvoidRectangle(6305,1713,6308,1718);
     }
 
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
@@ -2433,30 +2452,55 @@ function HydraLeash(_)
 function HydraAvoid(_)
     {
     Orion.ClearBadLocations();
-    var hydraGraphic = '0x0109';
-    var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',23);
-    hydras.forEach(function(hydra)
+    var ind = 20000;
+    var mobGraphic = '0x0109';
+    var avoidRadius = 1;
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',23);
+    mobs.forEach(function(mob)
         {
-        var x = hydra.X();
-        var y = hydra.Y();
-        var avoidTiles = Orion.GetTilesInRect('land',x - 1, y - 1, x + 1, y + 1);
-        avoidTiles.forEach(function(tile,ind)
+        var x = mob.X();
+        var y = mob.Y();
+        if(Orion.GetDistance(x,y) > avoidRadius)
             {
-            var tileX = tile.X();
-            var tileY = tile.Y();
-            Orion.SetBadLocation(tileX,tileY)
-            Orion.AddFakeMapObject(ind, '0x051A', 32, tileX, tileY, tile.Z());
-            });
+            var avoidTiles = Orion.GetTilesInRect('land',x - avoidRadius, y - avoidRadius, x + avoidRadius, y + avoidRadius)
+            avoidTiles.forEach(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                Orion.SetBadLocation(tileX,tileY)
+                Orion.AddFakeMapObject(ind++, '0x051A', 32, tileX, tileY, tile.Z());
+                });
+            }
+        });
+    }
+
+function SeaweedAvoid(_)
+    {
+    Orion.ClearBadLocations();
+    var ind = 20000;
+    var mobGraphic = '0x0008';
+    var avoidRadius = 3;
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',23);
+    mobs.forEach(function(mob)
+        {
+        var x = mob.X();
+        var y = mob.Y();
+        if(Orion.GetDistance(x,y) > avoidRadius)
+            {
+            var avoidTiles = Orion.GetTilesInRect('land',x - avoidRadius, y - avoidRadius, x + avoidRadius, y + avoidRadius)
+            avoidTiles.forEach(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                Orion.SetBadLocation(tileX,tileY)
+                Orion.AddFakeMapObject(ind++, '0x051A', 32, tileX, tileY, tile.Z());
+                });
+            }
         });
     }
 
 //--#Coms
 function ____________COMS(_){}
-
-function ClearUdp(_)
-    {
-    Orion.RemoveAllUdpServers();
-    }
 
 function AliComLeader()
     {
@@ -2621,6 +2665,10 @@ function AliComFollower()
     }
 
 
+function ClearUdp(_)
+    {
+    Orion.RemoveAllUdpServers();
+    }
 //--# Bot Commands
 function Follow(leadHealerSerial,distance)
     {
