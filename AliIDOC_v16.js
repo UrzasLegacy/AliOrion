@@ -1826,6 +1826,22 @@ function BuyHorse()
             }
         }
     }
+    
+function TrackBlockerHouseSign()
+    {
+    var bot = "https://discordapp.com/api/webhooks/"
+    + '941921319463841843' //hook
+    + "/"
+    + '7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI'; //key
+    Orion.WaitForAddObject("myTarget")
+    var a = Orion.FindObject('myTarget');
+    while(a)
+        {
+        Orion.Wait(250);
+        a = Orion.FindObject('myTarget');
+        }
+    Orion.HttpPost(bot, "content=House fell!");
+    }
 
 function GMJournalScan()
 	{
