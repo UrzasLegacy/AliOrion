@@ -123,6 +123,7 @@ function SmartStart()
                 {
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoToSafePosition();
+                EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead();
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
@@ -157,6 +158,7 @@ function SmartStart()
                 GoToSafePosition()
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
+                EquipBossSuitByBotName();
                 WaitSyncFollower(); //safe position
                 Orion.Wait(1000);
                 if(Shared.GetVar('barrelSamp',false) === true)
@@ -186,6 +188,7 @@ function SmartStart()
                 GoToSafePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
+                EquipBossSuitByBotName();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 GoFromSafeToReadyPosition();
@@ -310,9 +313,17 @@ function ResetPosition()
     //if(isPlayerInRectangle(6394,1625,6439,1670))
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
-        var ladder = Orion.FindType(0x08A4, any, ground, ' ', 24);
-        Orion.UseObject(ladder[0]);
-        Orion.Wait(500);
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
+        if(ladder.Distance() > 2)
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var playerX = Player.X();
+        var playerY = Player.Y();
+        var ladderSerial = ladder.Serial();
+        while(Player.X() == playerX && Player.Y() == playerY)
+            {
+            Orion.UseObject(ladderSerial);
+            Orion.Wait(1300);
+            }
         }
     //if(isPlayerInRectangle(6269,1625,6373,1791))
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
@@ -1719,7 +1730,7 @@ function OpenUW(_)
         Orion.UseObject(lever.Serial())
         Orion.Wait(1300);
         }
-    AliWalkTo(6308, 1711);
+    
     }
 
 function GoToBossArena(_)
@@ -1765,15 +1776,6 @@ function BossSequence(_)
         Orion.Wait(1000);
         }
     Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
-    if(Player.Serial() == leadSampSerial)
-        {
-        var startLuck = Player.Luck();
-        while(Player.Luck() == startLuck)
-            {
-            EquipBossSuitByBotName();
-            Orion.Wait(1300);
-            }
-        }
     Orion.Wait(Orion.Random(4,9) * 1000);
     }
 
