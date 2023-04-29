@@ -1,5 +1,85 @@
 //Setup Instructions
+function LegendaryCount()
+    {
+    Orion.WaitForAddObject('myTarget');
+    var corpseSerial = Orion.GetSerial('myTarget');
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    
+    var totals = {};
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0)
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            return;
+            }
+        else
+            {
+            for(var i=0;i<instanceSerials.length;i++)
+                {
+                var corpseInstance = instanceSerials[i];
+                var items = Orion.FindTypeEx(any,any,corpseInstance);
+                for(var j=0;j<items.length;j++)
+                    {
+                    var item = items[j];
+                    var itemProps = item.Properties();
+                    var lastLine = itemProps.match(/.+$/) || '';
+                    Orion.Print(lastLine)
 
+                    if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
+                        {
+                        continue;
+                        }
+                    if(totals[lastLine])
+                        totals[lastLine]++;
+                    else
+                        totals[lastLine] = 1;
+                    }
+                }
+            }
+        }
+    TextWindow.Open();
+    TextWindow.Clear();
+    TextWindow.Print(JSON.stringify(totals))
+    AppendMagic(totals)
+    }
+
+function AppendMagic(inputTotals)
+    {
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/UWLuckReport' + Player.Serial() + '.json';
+    var tmpFile = Orion.NewFile();
+    if(tmpFile.Open(tmpFilePath))
+    	{
+    	var fileJSON = tmpFile.ReadAll();
+    	if(fileJSON)
+        	var logObj = JSON.parse(fileJSON);
+        else
+        	var logObj = {};
+        }
+    else
+        {
+        TextWindow.Open();
+        TextWindow.Print('Unrecorded: ' + colorID);
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create log file')
+        }
+    tmpFile.Open(tmpFilePath);
+    for(prop in inputTotals)
+        {
+        if(logObj[prop])
+            logObj[prop] += inputTotals[prop];
+        else
+            logObj[prop] = inputTotals[prop];
+        }
+    tmpFile.Write(JSON.stringify(logObj));
+    tmpFile.Close();
+    }
 //Leaders
     //Choose one of your healers to act as the central coordinator of the whole operation.
     var leadHealerSerial = '0x02F4684A'; //Alyx
@@ -139,6 +219,7 @@ function SmartStart()
                 Orion.Cast('Greater Heal');
                 Orion.WaitForTarget(3000);
                 MassAllMessage('ResumeSmartStart'); //start boss sequence
+                Orion.ClearBadLocations(); 
                 Orion.Wait(1000);
                 GoToBossArena();
                 }
@@ -168,6 +249,7 @@ function SmartStart()
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
                     OpenUW();
+                    EquipBossSuitByBotName();
                     }
                 WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
@@ -916,6 +998,7 @@ function GetKeys()
     Orion.Wait(500);
     Orion.Terminate('StayHidden');
     Orion.Exec('UWBarrelsHealSelf',true);
+    SwitchToBarrelWep();
     var locArr =
         [
             ['Flywheel',6426,1733], //0x46FE
@@ -952,6 +1035,7 @@ function GetKeys()
     Orion.Wait(500);
     Orion.Terminate('UWBarrelsHealSelf');
     Orion.Wait(500);
+    EquipBossSuitByBotName();
     Orion.Exec('StayHidden',true);
     Orion.Exec('StayLoggedIn',true);
     Orion.UdpSend(40420,'HaveKeys');
@@ -1146,7 +1230,7 @@ function UWSampMovement()
         if(isLeadSamp && luckScum && lord && lord.Hits('%') < 5 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
             {
             Orion.Wait(250);
-            if(lord && lord.Hits('%') < 5)
+            if(lord && lord.Hits() <= 1)
                 {
                 WalkToRadiusBorder(lord.Serial(),4);
                 if(Player.Luck() < 1000)
@@ -1505,6 +1589,22 @@ function ScoutAhead()
         }
     HydraReset();
     Orion.Wait(1000);
+    while(!Player.Hidden())
+        {
+        if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+            {
+            Orion.UseSkill('Hiding');
+            Orion.Wait(500);
+            hideCooldown = Orion.Now() + 10000;
+            break;
+            }
+        Orion.Cast('Invisibility');
+        if(Orion.WaitForTarget(5000))
+            {
+            Orion.TargetObject(self);
+            Orion.Wait(1000);
+            }
+        }
     if(bossCheck.length)
         return false;
     return true;
@@ -1534,6 +1634,7 @@ function WaitForReset(_)
     {
     Shared.AddVar('leashing',false);
     Orion.ClearBadLocations();
+    var hideCooldown = Orion.Now();
     while(true)
         {
         if(HydraCheck())
@@ -1566,6 +1667,13 @@ function WaitForReset(_)
         Shared.AddVar('leashing',false);
         while(!Player.Hidden())
             {
+            if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+                {
+                Orion.UseSkill('Hiding');
+                Orion.Wait(500);
+                hideCooldown = Orion.Now() + 10000;
+                break;
+                }
             Orion.Cast('Invisibility');
             if(Orion.WaitForTarget(5000))
                 {
@@ -1730,7 +1838,7 @@ function OpenUW(_)
         Orion.UseObject(lever.Serial())
         Orion.Wait(1300);
         }
-    
+    Orion.Wait(1000);
     }
 
 function GoToBossArena(_)
@@ -1767,7 +1875,8 @@ function BossSequence(_)
             {
             Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
             Shared.AddVar('bossDeathStamp',Orion.Now());
-            Orion.Wait(Orion.Random(2,11));
+            if(Player.Serial() != leadSampSerial)
+                Orion.Wait(Orion.Random(5,11) * 500);
             AliWalkTo(corpse[0].X(),corpse[0].Y());
             ListLoot("BotLoot");
             Orion.Wait(100);
@@ -1840,9 +1949,30 @@ function WaitForSpecificGump(delay, type, serial, id)
 	return false;
 	}
 
+function SwitchToBarrelWep()
+    {
+    var barrelWepGraphics = '0x0F4B';
+    var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'imbued');
+        })[0];
+    if(barrelWep)
+        {
+        var barrelWepSerial = barrelWep.Serial();
+        var leftHand = Orion.ObjAtLayer('LeftHand')
+        while(!leftHand || leftHand.Serial() != barrelWepSerial)
+            {
+            Orion.Equip(barrelWepSerial);
+            Orion.Wait(1100);
+            leftHand = Orion.ObjAtLayer('LeftHand');
+            }
+        }
+    }
+
 function CheeseIt(_)
     {
     Debug('CheeseIt')
+    Shared.AddVar('leashing',false);
     Orion.Wait(500);
     while(!Player.Hidden())
         {
@@ -2025,6 +2155,75 @@ function CloseAllGumps(_)
     }
 
 function ListLoot(findlist,ignorelist)  //v2
+    {
+    var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(), 'An Evil One');
+        })[0];
+    if(!corpse)
+        return Orion.CharPrint(self,1159,'No corpse found');
+    var corpseSerial = corpse.Serial();
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0)
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            var corpseInstanceSerial = corpseSerial;
+            }
+        else
+            {
+            if(Player.Serial() == leadSampSerial)
+                {
+                var totals = {};
+                for(var i=0;i<instanceSerials.length;i++)
+                    {
+                    var corpseInstance = instanceSerials[i];
+                    var items = Orion.FindTypeEx(any,any,corpseInstance);
+                    for(var j=0;j<items.length;j++)
+                        {
+                        var item = items[j];
+                        var itemProps = item.Properties();
+                        var lastLine = itemProps.match(/.+$/) || '';
+                        if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
+                            continue;
+                        if(totals[lastLine])
+                            totals[lastLine]++;
+                        else
+                            totals[lastLine] = 1;
+                        }
+                    }
+                TextWindow.Open();
+                TextWindow.Clear();
+                TextWindow.Print(JSON.stringify(totals))
+                AppendMagic(totals)
+                }
+            var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+            }
+        }
+    if(ignorelist)
+        Orion.UseIgnoreList(ignorelist);
+    var lootlist = Orion.FindList(findlist, corpseInstanceSerial);
+    Orion.ResetIgnoreList();
+    for(var i=0;i<lootlist.length;i++) 
+        {            
+        if(Orion.GetDistance(corpseSerial) > 2)
+            break;
+        var itemObj = Orion.FindObject(lootlist[i]);
+        Orion.Print(itemObj.Name());
+        Orion.MoveItem(lootlist[i]);
+        Orion.Wait(1200);
+        }   
+    }
+function ListLoot2(findlist,ignorelist)  //v2
     {
     var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
         {
@@ -2385,6 +2584,7 @@ function HydraLeash(_)
     var hydraDistance = 24;
     Orion.ClearFakeMapObjects();
     Orion.ClearBadLocations();
+    AvoidDropdowns();
     var hydraGraphic = '0x0109';
     
     if(!Shared.GetVar('leashing',false))
@@ -2449,11 +2649,13 @@ function HydraLeash(_)
         Debug('Distance to hydra: ' + Orion.GetDistance(leash))
         Orion.Wait(200)
         }
+    Orion.ClearBadLocations();    
     }
 
 function HydraAvoid(_)
     {
     Orion.ClearBadLocations();
+    AvoidDropdowns();
     var ind = 20000;
     var mobGraphic = '0x0109';
     var avoidRadius = 1;
