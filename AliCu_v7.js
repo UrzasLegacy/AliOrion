@@ -1306,8 +1306,8 @@ function PlayerDetectorCu()
         var player = Orion.FindTypeEx("!0x0080|!0x0302|!0x0303|!0x0304|!0x0305|!0x007A|!0x0115",any,ground,'live|ignoreself|fast',22,'blue')[0];
         if(player)
             {
-            var outMsg = Player.Name() + ': Player detected! Name: ' + player.Name()
-            var blazeCheck = Orion.FindType('0x0115','0x0489',ground,'live',23)[0];
+            var outMsg = Player.Name() + ': Player detected! Name: ' + player.Name();
+            var blazeCheck = Orion.FindType('0x0115','0x0489',ground,'live',23,'gray')[0];
             if(!blazeCheck)
                 {
                 DiscordPush(outMsg + ' Leaving and waiting 10 minutes.');
