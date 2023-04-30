@@ -497,7 +497,7 @@ function LeaveUW()
 
 function LootUW()
     {
-    ListLoot('BotLoot')
+    ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed")
     //ListLoot('BotLoot', "ignorelist")
     }
 
@@ -1896,7 +1896,7 @@ function BossSequence(_)
             if(Player.Serial() != leadSampSerial)
                 Orion.Wait(Orion.Random(5,11) * 500);
             AliWalkTo(corpse[0].X(),corpse[0].Y());
-            ListLoot("BotLoot");
+            ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed");
             Orion.Wait(100);
             break;
             }
@@ -1926,7 +1926,7 @@ function CleanUpPublicCorpse()
         }
     Orion.RemoveDisplayTimer('publicCorpse');
     Orion.Wait(100);
-    ListLoot("BotLoot");
+    ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed");
     }
 
 function JournalScan()
@@ -2172,7 +2172,7 @@ function CloseAllGumps(_)
         }
     }
 
-function ListLoot(findlist,ignorelist)  //v2
+function ListLoot(findList)  //v2
     {
     var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
         {
@@ -2182,7 +2182,6 @@ function ListLoot(findlist,ignorelist)  //v2
         return Orion.CharPrint(self,1159,'No corpse found');
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
-    
     do
         {
         Orion.UseObject(corpseSerial);
@@ -2227,19 +2226,22 @@ function ListLoot(findlist,ignorelist)  //v2
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
         }
-    if(ignorelist)
-        Orion.UseIgnoreList(ignorelist);
-    var lootlist = Orion.FindList(findlist, corpseInstanceSerial);
-    Orion.ResetIgnoreList();
-    for(var i=0;i<lootlist.length;i++) 
-        {            
-        if(Orion.GetDistance(corpseSerial) > 2)
-            break;
-        var itemObj = Orion.FindObject(lootlist[i]);
+    else
+        return Orion.CharPrint(self,1159,'Corpse is empty')
+    var lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
+    while(lootList)
+        {
+        while(corpse.Distance() > 2)
+            {
+            Orion.WalkTo(corpse.X(),corpse.Y())
+            Orion.Wait(250);
+            }
+        var itemObj = Orion.FindObject(lootList[i]);
         Orion.Print(itemObj.Name());
-        Orion.MoveItem(lootlist[i]);
+        Orion.MoveItem(lootList[0]);
         Orion.Wait(1200);
-        }   
+        lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
+        }
     }
 function ListLoot2(findlist,ignorelist)  //v2
     {
