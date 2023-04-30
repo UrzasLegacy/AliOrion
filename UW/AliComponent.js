@@ -1,3 +1,13 @@
+function StayLoggedIn()
+	{
+	Orion.RemoveDisplayTimer('all')
+	while (true)
+		{
+		Orion.OpenContainer('backpack');
+		Orion.Wait(60000);
+		}
+	}
+
 function NPCComponent()
 	{
 	Orion.WaitForAddObject('myTarget')
@@ -37,7 +47,7 @@ function NPCComponent()
             {
             stealable = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
                 {
-                return Orion.Contains(item.Properties(),'Weight: 1 S');
+                return Orion.Contains(item.Properties(),'Weight: 1 S') || Orion.Contains(item.Properties(),'Weight: 2 S');
                 })[0]
             component = false;
             } 
@@ -80,10 +90,16 @@ function NPCComponent()
                     }
                 }
             Orion.CloseGump('container',containerSerial);
-            watchcontainer(containerSerial)
+            timercontainer(containerSerial)
             }
 		}
 	}
+
+function timercontainer(serial)
+    {
+    Orion.AddDisplayTimer(serial, 10000000, 'AboveChar','Line');
+    Orion.DisplayTimerSetObject(serial,serial)
+    }
 
 function watchcontainer(serial)
     {
