@@ -982,7 +982,7 @@ function RunToRepair()
     var shards =
         {
             "Pacific": [1040,512,'Malas'],
-            "Great Lakes": [1028,568,'Malas'],
+            "Great Lakes": [932,495,'Malas'],
             "Yamato": [798,755,'Trammel'],
             "Arirang": [738,791,'Trammel'],
             "Lake Austin": [1051,543,'Malas']
