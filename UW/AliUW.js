@@ -1,3 +1,4 @@
+var debug = true;
 //Setup Instructions
 function LegendaryCount()
     {
@@ -1227,9 +1228,9 @@ function UWSampMovement()
     while(!Player.Dead())
         {
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-        if(isLeadSamp && luckScum && lord && lord.Hits('%') < 5 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
+        if(isLeadSamp && luckScum && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
             {
-            Orion.Wait(250);
+            Orion.Wait(500);
             if(lord && lord.Hits() <= 1)
                 {
                 WalkToRadiusBorder(lord.Serial(),4);
@@ -1489,6 +1490,7 @@ function Autostart(_)
     //         }
     //     }
     Orion.Wait(1000);
+    Shared.AddVar('debug',debug);
     if(Player.Serial() == leadHealerSerial)
 		var role = 'leader';
     else if(Orion.SkillValue('Magery') >= 700)
@@ -1530,6 +1532,8 @@ function ScoutAhead()
     TextWindow.Clear()
     Shared.AddVar('leashing',false)
     Orion.CharPrint(self,1159,'Scouting ahead')
+    
+    var hideCooldown = Orion.Now();
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
     if(ladder)
         {
@@ -1635,6 +1639,7 @@ function WaitForReset(_)
     Shared.AddVar('leashing',false);
     Orion.ClearBadLocations();
     var hideCooldown = Orion.Now();
+    var stayLoggedTimer = Orion.Now();
     while(true)
         {
         if(HydraCheck())
@@ -1663,7 +1668,13 @@ function WaitForReset(_)
                     }
                 }
             Orion.ClearBadLocations();
-            }  
+            }
+        else if(Orion.Now() > stayLoggedTimer)
+            {
+            Orion.UseObject(backpack)
+            stayLoggedTimer = Orion.Now() + 60000
+            Orion.Wait(1200);
+            }
         Shared.AddVar('leashing',false);
         while(!Player.Hidden())
             {
@@ -1692,14 +1703,15 @@ function WaitForReset(_)
 
 function WaitSyncLeader(_)
     { //wait for team readiness
+    var healerArr = Shared.GetArray('healer',[]);
+    var sampArr = Shared.GetArray('dexxer',[]);
+    var miscArr = Shared.GetArray('misc',[]);
+    var fullArr = healerArr.concat(sampArr.concat(miscArr));
     var serialHash = {};
     var desynced = true;
     while(desynced)
         {
         Orion.Wait(100);
-        var healerArr = Shared.GetArray('healer',[]);
-        var sampArr = Shared.GetArray('dexxer',[]);
-        var miscArr = Shared.GetArray('misc',[]);
         if(healerArr.length == 0)
             {
             Orion.CharPrint(self,1159,'No healers in team!')
@@ -1708,11 +1720,10 @@ function WaitSyncLeader(_)
             }
         if(sampArr.length == 0)
             {
-            Orion.CharPrint(self,1159,'No samps in team!')
+            Orion.CharPrint(self,1159,'No dexxers in team!')
             Orion.Wait(1000);
             continue;
             }
-        var fullArr = healerArr.concat(sampArr.concat(miscArr));
         for(var i=0;i<fullArr.length;i++)
             {
             var unit = fullArr[i];
@@ -1720,25 +1731,32 @@ function WaitSyncLeader(_)
             var unitSerial = unit[1];
             var unitName = unit[2];
             desynced = false;
+            Debug('serialHash: ' + unitName + ': ' + serialHash[unitSerial])
             if(serialHash[unitSerial])
+                {
                 continue;
+                }
             while(Orion.UdpRecv('Coms'))
                 Orion.Wait(100);
-            Shared.AddVar('AwaitAnswer',false);
-            var answer = false;
-            var endTime = Orion.Now() + 2000;
+            var endTime = Orion.Now() + 1000;
             Orion.CharPrint(self,1159,'Pinging ' + unitName);
             Orion.UdpSend(unitPort,'AwaitPing');
-            while(!answer && Orion.Now() < endTime)
+            Shared.AddVar('AwaitAnswer',false);
+            var answer = Shared.GetVar('AwaitAnswer',false);
+            while(answer !== unitSerial && Orion.Now() < endTime)
                 {
-                Orion.Wait(500);
+                Orion.Wait(200);
                 answer = Shared.GetVar('AwaitAnswer',false)
                 }
-            if(answer)
+            if(answer === unitSerial)
+                {
+                Orion.CharPrint(self,1159,unitName + ' Answered');
                 serialHash[unitSerial] = true;
+                }
             while(Orion.UdpRecv('Coms'))
                 Orion.Wait(100);
             desynced = true;
+            break;
             }
         }
     Orion.Wait(3000);
@@ -2574,6 +2592,8 @@ function HydraCheck(_)
 
 function Debug(msg)
     {
+    if(Shared.GetVar('debug',false) !== true)
+        return;
     if(!TextWindow.IsOpened())
         TextWindow.Open();
     TextWindow.Print(Orion.Time() + ': ' + msg);
@@ -2720,7 +2740,7 @@ function AliComLeader()
         var recv = Orion.UdpRecv('Coms');
         if(recv)
             {
-            Orion.Print(recv)
+            Debug(recv)
             var recvSplit = Orion.Split(recv,':'); 
             switch(recvSplit[0])
                 {
@@ -2767,7 +2787,7 @@ function AliComLeader()
                     Orion.Exec('AliGumpRenderer',true);
                      break;
                 case 'AnswerCall':
-                    Shared.AddVar('AwaitAnswer',true);
+                    Shared.AddVar('AwaitAnswer',recvSplit[1]);
                     break;
                 case 'HaveKeys':
                     Shared.AddVar('HaveKeys',true);
@@ -2902,13 +2922,14 @@ function AwaitPing(_)
     if(Shared.GetVar('Desync',false))
         {
         Orion.CharPrint(self,1159,'Answering Call')
-        Orion.UdpSend(40420,'AnswerCall');
+        Orion.UdpSend(40420,'AnswerCall:' + Player.Serial());
         }
     }
 
 function SetSync(_)
     {
     Shared.AddVar('Desync',false);
+    Orion.Print('Desync: false');
     }
 
 function StartSmartStart(_)
