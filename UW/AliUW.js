@@ -1759,7 +1759,7 @@ function WaitSyncLeader(_)
             break;
             }
         }
-    Orion.Wait(3000);
+    //Orion.Wait(3000);
     MassAllMessage('SetSync');
     }
 
