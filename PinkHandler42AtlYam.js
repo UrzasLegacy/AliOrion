@@ -5,7 +5,7 @@ var passphrase = 'BallTableHorseShoe'; //say this near GoodWill to turn off reco
 
 var maxCountAtlantic = 5
 var maxCountYamato = 2
-
+Shared.AddVar('debug',true);
 //------------------------------------------------------------------------------------------------------------------------------ATLANTIC
 var scrollinfoAtlantic = //[skillname, categoryindex, skillindex, bookbutton, price]
 	[
@@ -1869,6 +1869,7 @@ function ComboCategories()
             Orion.Wait(100);
             if(Orion.InJournal('This scroll does not match the type currently being bound.'))
                 {
+                Debug('ComboCategories: Scroll mismatch')
                 Orion.ClearJournal('This scroll does not match the type currently being bound.');
                 TextWindow.Open();
                 TextWindow.Print('Mismatched scroll binder in pack! Halting...');
@@ -1879,7 +1880,7 @@ function ComboCategories()
         Orion.Wait(1300);
         ResetPinkBook();
         PutAway5s(combinedParentContainer,currentSkillIndex);
-        var pinkBook = Orion.FindTypeEx('0x577E')[0]
+        var pinkBook = Orion.FindTypeEx('0x577E')[0];
         while(pinkBook)
             {
             if(fullBooks[1])
@@ -1888,6 +1889,7 @@ function ComboCategories()
                     {
                     Orion.Wait(1300);
                     EmptyPinkBook();
+                    Debug('ComboCategories: EmptyPinkBook')
                     Orion.Wait(1300);
                     }
                 Orion.MoveItem(pinkBook.Serial(), any, uncombinedParentContainer);
@@ -1895,6 +1897,7 @@ function ComboCategories()
                 }
             else
                 {
+                Debug('ComboCategories: Putting away last book of this skill')
                 var lastPinkBook = pinkBook.Serial();
                 Orion.MoveItem(lastPinkBook, any, combinedParentContainer);
                 Orion.Wait(1300);
@@ -1903,6 +1906,7 @@ function ComboCategories()
             }
         if(!fullBooks[1])
             {
+            Debug('ComboCategories: Putting away last of the pinks of this skill')
             var lowScroll = Orion.FindType('0x14EF','0x0490')[0];
             while(lowScroll)
                 {
@@ -1926,6 +1930,7 @@ function testputaway()
 
 function PutAway5s(combinedParentContainer,currentSkillIndex)
     {
+    Debug('PutAway5s')
     VerifyOpenContainer(combinedParentContainer);
     if(currentSkillIndex == 0 || currentSkillIndex == 1 || currentSkillIndex == 2)
         var combinedPouchString = 'Engraved: One';
@@ -2047,7 +2052,7 @@ function DoCombo()
     if(!OpenBook())
         return Orion.Print('Book empty! Halting...');
     Orion.PrintFast(self, 1159, 0, 'Checking 5.0 combos');
-    var tempArr = PrunedComboArray();//Shared.GetArray('combo50');
+    var tempArr = PrunedComboArray();
     // while(tempArr == false)
     //     tempArr = PrunedComboArray();
     for(var i=0,len=tempArr.length;i<len;i++)
@@ -2143,7 +2148,7 @@ function PrepCombo(fullComboArr)
                 {
                 targetPink = pink[i].shift();
                 var valueCheck = SumValues(binder[0],targetPink)
-                //Orion.Print('valueCheck = ' + valueCheck)
+                Debug('PrepCombo: valueCheck = ' + valueCheck);
                 if(valueCheck == '2.0')
                     {
                     var oldPink = Orion.FindTypeEx('0x14EF','0x0490').filter(function(part){return Orion.Contains(part.Properties(), '2.0')});
@@ -2195,37 +2200,45 @@ function ArrCombiner(arr1,arr2)
 
 function OpenBook(_)
     {
+    CloseAllGumps();
     var book = Orion.FindTypeEx('0x577E', '0x0490').filter(function(part)
         {
         return !Orion.Contains(part.Properties(), 'Scrolls In Book: 0/300')
-        }); 
-    if(book[0])
-		{
-		Orion.UseObject(book[0].Serial());
-        Orion.Wait(500);
-		if(Orion.WaitForGump(3000))
-			{
-			var gump = Orion.GetGump('last');
-			if((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x000023C5'))
-				{
-				updScrollInfo = scrollinfo.filter(function(part)
-                    {
-                    return Orion.Contains(gump.ButtonList(), part[3])
-                    });
-                gump.Select(Orion.CreateGumpHook(updScrollInfo[0][3]));
-                Orion.Wait(500);
-                }
-			}
+        })[0]; 
+    if(!book)
+        return false;
+    Orion.UseObject(book.Serial());
+    if(Orion.WaitForGump(5000,true))
+        {
+        var gump = Orion.GetGump('any','0x000023C5');
+        if(gump !== null)
+            {
+            updScrollInfo = scrollinfo.filter(function(part)
+                {
+                return Orion.Contains(gump.ButtonList(), part[3])
+                });
+            gump.Select(Orion.CreateGumpHook(updScrollInfo[0][3]));
+            Orion.Wait(500);
+            }
         else
+            {
+            Debug('OpenBook: Gump didnt match')
             return OpenBook();
-		Orion.Wait(1500);
-        return true;
+            }
         }
-    return false;
+    else
+        {
+        Debug('OpenBook: Gump didnt appear')
+        return OpenBook();
+        }
+    Orion.Wait(1500);
+    Debug('OpenBook: Book opened')
+    return true;
     }
 
 function ResetPinkBook(_)
     {
+    Debug('ResetPinkBook');
     PinkGumpButton(3,500);
     PinkGumpButton(1,500);
     PinkGumpButton(0,500);
@@ -2315,12 +2328,18 @@ function VerifyCombination(binder,pink)
     if(Orion.WaitForTarget(2000))
         Orion.TargetObject(pink.Serial());
     Orion.Wait(1100);
+    
+    Debug("VerifyCombination:\n" + binder.Properties());
     if(!Orion.Contains(binder.Properties(), sumString))
         {
+        Debug("VerifyCombination: Rechecking Binder Tooltip");
         Orion.MoveItem(binder.Serial());
         Orion.Wait(1100);
         if(!Orion.Contains(binder.Properties(), sumString))
+            {
+            Debug("VerifyCombination: Rechecking Binder Tooltip AGAIN");
             return VerifyCombination(binder,pink);
+            }
         }
     }
 
@@ -2334,7 +2353,17 @@ function SumValues(binder,pink)
     var pinkValue = +(pinkProps.match(/Skill: [a-zA-Z ]+([\d.]+)/) || [])[1];
     var sumValue = binderValue + pinkValue;
     var sumString = String(sumValue.toFixed(1));
+    Debug("SumValues: " + binderValue + " + " + pinkValue + " = " + sumString);
     return sumString
+    }
+
+function Debug(msg)
+    {
+    if(Shared.GetVar('debug',false) !== true)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + ': ' + msg);
     }
 
 function CountInPack(_)
