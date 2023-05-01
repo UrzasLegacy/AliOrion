@@ -2330,12 +2330,12 @@ function VerifyCombination(binder,pink)
     Orion.Wait(1100);
     
     Debug("VerifyCombination:\n" + binder.Properties());
-    if(!Orion.Contains(binder.Properties(), sumString))
+    if(!Orion.Contains(binder.Properties(), ' ' + sumString))
         {
         Debug("VerifyCombination: Rechecking Binder Tooltip");
         Orion.MoveItem(binder.Serial());
         Orion.Wait(1100);
-        if(!Orion.Contains(binder.Properties(), sumString))
+        if(!Orion.Contains(binder.Properties(), ' ' + sumString))
             {
             Debug("VerifyCombination: Rechecking Binder Tooltip AGAIN");
             return VerifyCombination(binder,pink);
