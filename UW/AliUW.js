@@ -52,7 +52,7 @@ function LegendaryCount()
     AppendMagic(totals)
     }
 
-function AppendMagic(inputTotals)
+function ReadAndOverwriteMagic(inputTotals)
     {
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/UWLuckReport' + Player.Serial() + '.json';
     var tmpFile = Orion.NewFile();
@@ -81,6 +81,20 @@ function AppendMagic(inputTotals)
     tmpFile.Write(JSON.stringify(logObj));
     tmpFile.Close();
     }
+
+function AppendMagic(input,fileNameString)
+    {
+    var fileNameString = 'AliUWTracker.txt';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Append(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or append file: ' + fileNameString);
+    var inputString = JSON.stringify(input);
+    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
+    tmpFile.Write(JSON.stringify(inputString) + '\n');
+    tmpFile.Close();
+    }
+
 //Leaders
     //Choose one of your healers to act as the central coordinator of the whole operation.
     var leadHealerSerial = '0x02F4684A'; //Alyx
@@ -149,7 +163,7 @@ var useMomentumStrike = true; //boolean. Set to true to use momentum strike when
 var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
 var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
 var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times.
-var useDivineFury = false; //boolean, Set to true to maintain Divine Fury at all times.
+var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
 var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
 var useConfidenceThresholdPercent = 60; //Percentage of self HP to attempt to cast confidence.
 var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes below a threshold.
@@ -236,7 +250,7 @@ function SmartStart()
             Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
-                //CharacterMaintenance();
+                CharacterMaintenance();
                 GoToSafePosition()
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
@@ -316,14 +330,14 @@ function initScripts()
             break;
         case 'dexxer':
             var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-            if(lord)
-                {
-                if(lord.Distance() > 5)
-                    Orion.WalkTo(lord.X(),lord.Y(),0,5);
-                Orion.InvokeVirtue('honor');
-                if(Orion.WaitForTarget(2000))
-                    Orion.TargetObject(lord.Serial());
-                }
+            // if(lord)
+            //     {
+            //     if(lord.Distance() > 5)
+            //         Orion.WalkTo(lord.X(),lord.Y(),0,5);
+            //     Orion.InvokeVirtue('honor');
+            //     if(Orion.WaitForTarget(2000))
+            //         Orion.TargetObject(lord.Serial());
+            //     }
             Orion.Exec('AutoAttack', true);
             Orion.Exec('AutoBuffs', true);
             Orion.Wait(200);
@@ -351,6 +365,7 @@ function GoHome()
         {
         Orion.Step('n');
         Orion.Wait(250);
+        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
         }
     if(!Orion.WalkTo(bench.X(),bench.Y()))
         Orion.WalkTo(bench.X(),bench.Y());
@@ -764,8 +779,8 @@ function CharacterMaintenance()
     // DropLoot();
     if(dura)
         RepairGear();
-    // if(consumable)
-    //     RestockConsumables();
+    if(consumable)
+         RestockConsumables();
     if(gold)
         DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
     if(tithe)
@@ -1223,26 +1238,24 @@ function UWSampMovement()
     {
     var rand = Orion.Random(2,6) * 50;
     var isLeadSamp = Player.Serial() == leadSampSerial;
-    if(isLeadSamp)
-        var startLuck = Player.Luck();
     while(!Player.Dead())
         {
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-        if(isLeadSamp && luckScum && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
-            {
-            Orion.Wait(500);
-            if(lord && lord.Hits() <= 1)
-                {
-                WalkToRadiusBorder(lord.Serial(),4);
-                if(Player.Luck() < 1000)
-                    {
-                    Orion.Dress('LeadLuck');
-                    Orion.Wait(500);
-                    }
-                Orion.Wait(250);
-                continue;
-                }
-            }
+        // if(isLeadSamp && luckScum && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
+        //     {
+        //     Orion.Wait(500);
+        //     if(lord && lord.Hits() <= 1)
+        //         {
+        //         WalkToRadiusBorder(lord.Serial(),4);
+        //         if(Player.Luck() < 1000)
+        //             {
+        //             Orion.Dress('LeadLuck');
+        //             Orion.Wait(500);
+        //             }
+        //         Orion.Wait(250);
+        //         continue;
+        //         }
+        //     }
         var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange');
         if(!isLeadSamp && wisp.length)
             {
