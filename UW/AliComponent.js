@@ -20,6 +20,11 @@ function NPCComponent()
 	//	})[0];
 	if(lockpick && container)
 		{
+        while(container.Distance() > 1)
+            {
+            Orion.WalkTo(container.X(),container.Y());
+            Orion.Wait(100);
+            }
 		var containerSerial = container.Serial();
         var check = false;
         while(!check)
