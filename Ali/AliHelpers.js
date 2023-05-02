@@ -166,6 +166,62 @@ function ShallowCopy(arr)
     return JSON.parse(json);
     }
 
+function AliAppendFile(inputString,fileNameString)
+    { //'test1','AppendTest.txt'
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Append(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or append file: ' + fileNameString);
+    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
+    tmpFile.Write(JSON.stringify(inputString) + '\n');
+    tmpFile.Close();
+    }
+
+function AliReadAndOverwriteFile(inputString,fileNameString)
+    { //"[1,2,3]","ReadAndOverwriteTest.txt"
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    var fileRead = tmpFile.ReadAll();
+    if(!fileRead)
+        fileRead = "[]";
+    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
+    var fileArr = JSON.parse(fileRead) || [];
+    var inputArr = JSON.parse(inputString) || [];
+    var outputArr = [];
+    for(var i=0;i<inputArr.length;i++)
+        {
+        var inputEle = +inputArr[i];
+        var fileEle = +fileArr[i];
+        var sum = inputEle + fileEle
+        Orion.Print(inputEle + '+' + fileEle + '=' + sum)
+        outputArr[i] = sum;
+        }
+    var outputStr = JSON.stringify(outputArr)
+    tmpFile.Remove();
+    tmpFile.Open(tmpFilePath)
+    tmpFile.Write(outputStr);
+    tmpFile.Close();
+    }
+
+function AliOverwriteFile(inputString,fileNameString)
+    { //"[1,2,3]","OverwriteTest.txt"
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(tmpFile.Open(tmpFilePath))
+        {
+        var fileRead = tmpFile.ReadAll();
+        if(!fileRead)
+            fileRead = '';
+        }
+    else
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    Orion.Print("Recording " + inputString + ' To File: ' + tmpFilePath);
+    tmpFile.Write(inputString);
+    tmpFile.Close();
+    }
+
 function CloseAllGumps()
     {
     var endTime = Orion.Now() + 3000;
