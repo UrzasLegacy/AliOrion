@@ -88,8 +88,8 @@ function AppendMagic(input,fileNameString)
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
     var tmpFile = Orion.NewFile();
     if(!tmpFile.Append(tmpFilePath))
-        return Orion.CharPrint(self,1159,'Something went wrong trying to read or append file: ' + fileNameString);
-    var inputString = JSON.stringify(input);
+        return Orion.CharPrint(self,1159,'Something went wrong trying to append file: ' + fileNameString);
+    var inputString = '[' + Player.Luck() + ',' + JSON.stringify(input);
     Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
     tmpFile.Write(JSON.stringify(inputString) + '\n');
     tmpFile.Close();
@@ -770,8 +770,8 @@ function CharacterMaintenance()
     Orion.CharPrint(self,1159,'Checking tithing points...');
     var tithe = Player.TithingPoints() < 30000;
     var dura = DurabilityCheck();
-    var consumable = ConsumablesCheck();
-    var pack = PackCheck();
+    var consumable = false//ConsumablesCheck();
+    var pack = false// PackCheck();
     var gold = GoldCheck();
     if(!tithe && !dura && !consumable && !pack && !gold)
         return false;
@@ -1213,17 +1213,20 @@ function UWHealLeader()
         var target = injuredCheck(15,80);
         if(target)
             {
+            var targetSerial = target.Serial();
             var healer = activeHealers.shift();
             activeHealers.push(healer);
             Orion.TargetSystemSerial(target.Serial());
             if(target.Poisoned())
                 {
-                Orion.UdpSend(healer[0],'CureTarget:' + target.Serial());
-                Orion.Wait(1000);
+                Orion.UdpSend(healer[0],'CureTarget:' + targetSerial);
+                Debug('Send //CureTarget: ' + targetSerial);
+                Orion.Wait(1100);
                 }
             else
                 {
-                Orion.UdpSend(healer[0],'HealTarget:' + target.Serial());
+                Orion.UdpSend(healer[0],'HealTarget:' + targetSerial);
+                Debug('Send //HealTarget: ' + targetSerial);
                 Orion.Wait(500);
                 }
             }
@@ -1754,6 +1757,7 @@ function WaitSyncLeader(_)
             var endTime = Orion.Now() + 1000;
             Orion.CharPrint(self,1159,'Pinging ' + unitName);
             Orion.UdpSend(unitPort,'AwaitPing');
+            Debug('Send //AwaitPing: ' + unitName);
             Shared.AddVar('AwaitAnswer',false);
             var answer = Shared.GetVar('AwaitAnswer',false);
             while(answer !== unitSerial && Orion.Now() < endTime)
@@ -1802,6 +1806,7 @@ function DetermineBarrelSamp(_)
     //var barrelSamp = samps[Orion.Random(0,samps.length)];
     Shared.AddVar('barrelSampName',barrelSamp[1]);
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
+    Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
     }
     
 function GoFromSafeToReadyPosition(_)
@@ -2043,7 +2048,7 @@ function GoldCheck(_)
 
 function DurabilityCheck(_)
     {
-    Orion.CharPrint(self,1159,'Checking equipment durability...');
+    //Orion.CharPrint(self,1159,'Checking equipment durability...');
     var durabilityThreshold = 80
     var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
     Orion.Print("Repair threshold set at: " + durabilityThreshold)
@@ -2066,6 +2071,7 @@ function DurabilityCheck(_)
                 }
             }
         }
+    //Orion.CharPrint(self,)
     return false;
     }
 
@@ -2249,9 +2255,9 @@ function ListLoot(findList)  //v2
             Orion.WalkTo(corpse.X(),corpse.Y())
             Orion.Wait(250);
             }
-        var itemObj = Orion.FindObject(lootList[i]);
+        var itemObj = Orion.FindObject(lootList);
         Orion.Print(itemObj.Name());
-        Orion.MoveItem(lootList[0]);
+        Orion.MoveItem(lootList);
         Orion.Wait(1200);
         lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
         }
@@ -2755,7 +2761,7 @@ function AliComLeader()
         var recv = Orion.UdpRecv('Coms');
         if(recv)
             {
-            Debug(recv)
+            Debug(recv);
             var recvSplit = Orion.Split(recv,':'); 
             switch(recvSplit[0])
                 {
@@ -2796,11 +2802,13 @@ function AliComLeader()
                         roleArr.push([botPort,botSerial,botName,botRole]);
                         Shared.AddArray(botRole,roleArr);
                         }
-                    Orion.UdpSend(+botPort,'Heard:' + Player.Name() + ':' + Player.Serial()); //send signal back to bot so they know they're connected
+                    var outStr = 'Heard:' + Player.Name() + ':' + Player.Serial();
+                    Orion.UdpSend(+botPort,outStr); //send signal back to bot so they know they're connected
+                    Debug('Send  //' + outStr);
                     break;
                  case 'AliGumpRenderer':
                     Orion.Exec('AliGumpRenderer',true);
-                     break;
+                    break;
                 case 'AnswerCall':
                     Shared.AddVar('AwaitAnswer',recvSplit[1]);
                     break;
@@ -2858,7 +2866,8 @@ function AliComFollower()
     var playerSerial = Player.Serial();
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
-    Orion.UdpSend(40420,'Check:' + playerString + ':' + port); //[cmd,[playerSerial,playerName,role],port]
+    var outStr = 'Check:' + playerString + ':' + port;
+    Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 5000;
     while(true)
@@ -3027,6 +3036,7 @@ function CureTarget(serial)
 //--# Leader Commands
 function MassAllMessage(msg)
     {
+    Debug('MassAllMessage //' + msg);
     var sampArr = Shared.GetArray('dexxer',[]);
     var healerArr = Shared.GetArray('healer',[]);
     var miscArr = Shared.GetArray('misc',[]);
@@ -3039,6 +3049,7 @@ function MassAllMessage(msg)
 
 function MassRoleMessage(role,msg)
     {
+    Debug('MassRoleMessage //' + role + ': ' + msg);
     var roleArr = Shared.GetArray(role,[]);  //[botPort,botSerial,botName]
     if(roleArr.length == 0)
         return Orion.CharPrint(self,1159,'No ' + role + ' followers to command');
