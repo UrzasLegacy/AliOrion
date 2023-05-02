@@ -515,6 +515,12 @@ function FindOwnCorpse()
 	return true;
     }
 
+function SacredJourneyWithSuit()
+	{
+	Orion.Dress('Luna Lance');
+	Orion.Cast('Sacred Journey');
+	}
+
 function WalkThroughRepair()
     {
     var x = 6993;
