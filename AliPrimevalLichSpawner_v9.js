@@ -101,7 +101,7 @@ function initVars()
 
 function initScripts()
 	{
-	Orion.ResetIgnore();
+	Orion.IgnoreReset();
 	Orion.OAOptionSet('AutoReconnect', '1');
 	Orion.Exec(profile.journalScanType, true);
 	Orion.Exec('DecoHighlighter', true);
@@ -128,7 +128,7 @@ function terminateScripts()
 
 function EquipmentDamage()
 	{
-	RunAndHide();
+	WalkThroughRepair();
 	}
 
 function StaticAutoFarm()
@@ -250,11 +250,6 @@ function MobileAutoFarm()
         }
     }	
 
-function SacredJourneyWithSuit()
-	{
-	Orion.Cast('Sacred Journey');
-	Orion.Dress('Luna Lance');
-	}
 
 function DropDraggedHere()
     {
@@ -529,25 +524,35 @@ function WalkThroughRepair()
         {
         if(distance > 998)
             {
-            Orion.CharPrint(self,1159,'Skipping WalkTo: ' + x +',' + y)
+            Orion.CharPrint(self,1159,'Skipping WalkTo: ' + x +',' + y);
             break;
             }
         Orion.WalkTo(x,y,0,0);
         Orion.Wait(1);
         distance = Orion.GetDistance(x,y);
         }
+	Orion.PauseScript('DecoHighlighter');
     Orion.Wait(1000);
-    SacredJourneyWithSuit();
-    if(Orion.WaitForTarget(5000))
-        {
-        var runebook = Orion.FindTypeEx('0x22C5').filter(function(item)
-            {
-            var name = item.Properties().match(/.+$/);
-            return name == 'Samp';
-            })[0];
-        Orion.TargetObject(runebook.Serial());
-        }
-    Orion.Wait(6000);
+	Orion.Terminate('DecoHighlighter');
+	var tempX = Player.X();
+	var tempY = Player.Y();
+	while(tempX == Player.X() && tempY == Player.Y())
+		{
+		Orion.Dress('Luna Lance');
+		Orion.Cast('Sacred Journey');
+		if(Orion.WaitForTarget(5000))
+			{
+			var runebook = Orion.FindTypeEx('0x22C5').filter(function(item)
+				{
+				Orion.Print('test')
+				var name = item.Properties().match(/.+$/);
+				Orion.Print('name:' + name)
+				return name == 'Samp';
+				})[0];
+			Orion.TargetObject(runebook.Serial());
+			}
+		Orion.Wait(6000);
+		}
 	Orion.Dress('Armor');
     Orion.WarMode(0);
     do
@@ -565,7 +570,7 @@ function WalkThroughRepair()
     Orion.Exec('WalkThroughCurrentFarm');
     }
 
-    function WalkThroughCurrentFarm()
+function WalkThroughCurrentFarm()
 	{
 	Orion.Terminate('all', 'WalkThroughCurrentFarm|JournalScan');
 	if(profile.walkThrough == 'Oni')
@@ -576,11 +581,7 @@ function WalkThroughRepair()
 	else if(profile.walkThrough == 'Primeval')
 		{	
 		RecallByGump('Aaron','Aaron');
-		while(Orion.GetDistance(957,561) > 0)
-			{
-			Orion.WalkTo(957,561,0,0);
-			Orion.Wait(500);
-			}
+		AliWalkTo(957,561)
 		while(Orion.GetDistance(957,561) == 0)
 			{
 			Orion.Wait(1000);
@@ -590,7 +591,7 @@ function WalkThroughRepair()
 		WalkThrough([[513, 584, false, '6994:1370:s'],[6936, 1092]]);
 		}
 	Orion.Wait(100);
-	Orion.Exec('initScripts', true);
+	Orion.Exec('WalkSpawn', true);
 	}
 
 function WalkThrough(ali)
