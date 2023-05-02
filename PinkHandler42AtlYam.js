@@ -1810,6 +1810,7 @@ function RepeatCombo()
 
 function ComboCategories()
 	{
+    Debug('ComboCategories //Start')
     Orion.ClearJournal('This scroll does not match the type currently being bound.');
     Orion.CharPrint(self,1159,'Target container with uncombined books');
     Orion.WaitForAddObject('myTarget');
@@ -1835,17 +1836,22 @@ function ComboCategories()
             }
         if(currentSkillIndex === false)
             {
+            Debug('ComboCategories //Out of uncombined books');
             Orion.PlayWav('Alarm.wav');
             return Orion.CharPrint(self,1159,'Out of uncombined books! Halting...');
             }
+        Debug('ComboCategories //currentSkillIndex: ' + currentSkillIndex)
         var uncombinedContainer = uncombinedContainerObj.Serial();
         VerifyOpenContainer(uncombinedParentContainer);
         VerifyOpenContainer(uncombinedContainer);
         var fullBooks = Orion.FindType('0x577E',any,uncombinedContainer);
+        Debug('ComboCategories //fullbooks: ' + fullBooks.length + '\nbook[1]: ' + fullBooks[1])
         while(!Orion.FindType('0x577E')[0])
             {
+            Debug('ComboCategories //Grabbing full uncombined book');
             if(!fullBooks[0])
                 {
+                Debug('ComboCategories //Something went wrong! Out of full books!');
                 Orion.PlayWav('Alarm.wav');
                 return Orion.CharPrint(self,1159,'Something went wrong! Out of full books! Halting...');
                 }
@@ -1869,7 +1875,7 @@ function ComboCategories()
             Orion.Wait(100);
             if(Orion.InJournal('This scroll does not match the type currently being bound.'))
                 {
-                Debug('ComboCategories: Scroll mismatch')
+                Debug('ComboCategories //Scroll mismatch')
                 Orion.ClearJournal('This scroll does not match the type currently being bound.');
                 TextWindow.Open();
                 TextWindow.Print('Mismatched scroll binder in pack! Halting...');
@@ -1885,11 +1891,12 @@ function ComboCategories()
             {
             if(fullBooks[1])
                 {
+                Debug('ComboCategories //Another full book is available to grab');
                 while(!Orion.Contains(pinkBook.Properties(), 'Scrolls In Book: 0/300'))
                     {
                     Orion.Wait(1300);
                     EmptyPinkBook();
-                    Debug('ComboCategories: EmptyPinkBook')
+                    Debug('ComboCategories //EmptyPinkBook')
                     Orion.Wait(1300);
                     }
                 Orion.MoveItem(pinkBook.Serial(), any, uncombinedParentContainer);
@@ -1897,7 +1904,7 @@ function ComboCategories()
                 }
             else
                 {
-                Debug('ComboCategories: Putting away last book of this skill')
+                Debug('ComboCategories //Putting away last book of this skill')
                 var lastPinkBook = pinkBook.Serial();
                 Orion.MoveItem(lastPinkBook, any, combinedParentContainer);
                 Orion.Wait(1300);
@@ -1906,7 +1913,7 @@ function ComboCategories()
             }
         if(!fullBooks[1])
             {
-            Debug('ComboCategories: Putting away last of the pinks of this skill')
+            Debug('ComboCategories //Putting away last of the pinks of this skill')
             var lowScroll = Orion.FindType('0x14EF','0x0490')[0];
             while(lowScroll)
                 {
@@ -2034,6 +2041,7 @@ function ArrayFormat(arr)
 
 function DoCombo()
     {
+    Debug('DoCombo');
     var binder = Orion.FindTypeEx('0x14EF','0x0664').filter(function(part)
         {
         return !Orion.Contains(part.Properties(), 'Transcendence:');
@@ -2094,7 +2102,7 @@ function PrunedComboArray()
     Orion.Print(candidates)
     var tempArr = CombinationCall(candidates,50);
     var returnArr = tempArr.reverse();
-    Orion.Print(returnArr.length)
+    Debug('PrunedComboArray //length: ' + tempArr.length);
     return returnArr
     }
 
@@ -2108,6 +2116,7 @@ function PrepCombo(fullComboArr)
     Orion.Print(fullComboArr)
     if(CheckInBook(fullComboArr))
         {
+        Debug('PrepCombo //Passed: ' + fullComboArr);
         var fullComboArrClone = ArrayClone(fullComboArr);
         Orion.CharPrint(self,1159, '' + fullComboArr);
         var binder = Orion.FindTypeEx('0x14EF','0x0664').filter(function(part)
@@ -2148,7 +2157,7 @@ function PrepCombo(fullComboArr)
                 {
                 targetPink = pink[i].shift();
                 var valueCheck = SumValues(binder[0],targetPink)
-                Debug('PrepCombo: valueCheck = ' + valueCheck);
+                Debug('PrepCombo //valueCheck = ' + valueCheck);
                 if(valueCheck == '2.0')
                     {
                     var oldPink = Orion.FindTypeEx('0x14EF','0x0490').filter(function(part){return Orion.Contains(part.Properties(), '2.0')});
@@ -2200,6 +2209,9 @@ function ArrCombiner(arr1,arr2)
 
 function OpenBook(_)
     {
+    var gumpCheck = Orion.GetGump('last');
+    if((gumpCheck !== null) && (!gumpCheck.Replayed()) && (gumpCheck.ID() === '0x000023C5'))
+        return true;
     CloseAllGumps();
     var book = Orion.FindTypeEx('0x577E', '0x0490').filter(function(part)
         {
@@ -2222,17 +2234,17 @@ function OpenBook(_)
             }
         else
             {
-            Debug('OpenBook: Gump didnt match')
+            Debug('OpenBook //Gump didnt match')
             return OpenBook();
             }
         }
     else
         {
-        Debug('OpenBook: Gump didnt appear')
+        Debug('OpenBook //Gump didnt appear')
         return OpenBook();
         }
+    Debug('OpenBook //Book opened')
     Orion.Wait(1500);
-    Debug('OpenBook: Book opened')
     return true;
     }
 
@@ -2246,6 +2258,7 @@ function ResetPinkBook(_)
 
 function FindNeededPinks(requestArr)
     {
+    Debug('FindNeededPinks //' + requestArr);
     var valueArr = ['0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','2.0'];
     var neededArr = requestArr.map(function(part,ind)
         {
@@ -2262,6 +2275,7 @@ function FindNeededPinks(requestArr)
 
 function CheckInBook(requestArr)
     {
+    Debug('CheckInBook //' + requestArr);
     var updRequestArr = FindNeededPinks(requestArr);
     //var gump = Orion.GetGump(any, '0x000023C5');
     var gump = Orion.GetGump('last');
@@ -2279,7 +2293,9 @@ function CheckInBook(requestArr)
 
 function PullFromBook(arr)
     {
+    Debug('PullFromBook //' + arr);
     //[.1,.2,.3,.4,.5,.6,.7,.8,.9,1.0,2.0] 
+    OpenBook();
     if(Orion.WaitForGump(2000))
 		{
 		var gump = Orion.GetGump('last');
@@ -2308,6 +2324,7 @@ function PullFromBook(arr)
 
 function VerifyPinks(arr)
     {
+    Debug('VerifyPinks //' + arr);
     var valueArr = ['0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1.0','2.0'];
     for(var v=0;v<arr.length;v++)
         {
@@ -2329,15 +2346,15 @@ function VerifyCombination(binder,pink)
         Orion.TargetObject(pink.Serial());
     Orion.Wait(1100);
     
-    Debug("VerifyCombination:\n" + binder.Properties());
+    Debug("VerifyCombination\n" + binder.Properties());
     if(!Orion.Contains(binder.Properties(), ' ' + sumString))
         {
-        Debug("VerifyCombination: Rechecking Binder Tooltip");
+        Debug("VerifyCombination //Rechecking Binder Tooltip\n" + binder.Properties());
         Orion.MoveItem(binder.Serial());
         Orion.Wait(1100);
         if(!Orion.Contains(binder.Properties(), ' ' + sumString))
             {
-            Debug("VerifyCombination: Rechecking Binder Tooltip AGAIN");
+            Debug("VerifyCombination //Rechecking Binder Tooltip AGAIN:\n" + binder.Properties());
             return VerifyCombination(binder,pink);
             }
         }
@@ -2353,7 +2370,7 @@ function SumValues(binder,pink)
     var pinkValue = +(pinkProps.match(/Skill: [a-zA-Z ]+([\d.]+)/) || [])[1];
     var sumValue = binderValue + pinkValue;
     var sumString = String(sumValue.toFixed(1));
-    Debug("SumValues: " + binderValue + " + " + pinkValue + " = " + sumString);
+    Debug("SumValues //" + binderValue + " + " + pinkValue + " = " + sumString);
     return sumString
     }
 
@@ -2432,6 +2449,7 @@ function MoveAll5sInPack(_)
 
 function MoveAllBinders(_)
 	{
+    Debug('MoveAllBinders');
     var modeToggle = true;
     var backpackSerial = Orion.GetSerial(backpack);
     if(Player.WarMode())
