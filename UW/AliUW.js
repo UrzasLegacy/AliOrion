@@ -1398,7 +1398,7 @@ function AutoInsure()
     var searchFrequency = 1000;
     while(!Player.Dead())
         {
-        var items = Orion.FindList('BotInsure').filter(function(item)
+        var items = Orion.FindList('UWLoot').filter(function(item)
             {
             var obj = Orion.FindObject(item);
             return !Orion.Contains(obj.Properties(),'insured|blessed');
@@ -1935,7 +1935,7 @@ function CleanUpPublicCorpse()
 
 function JournalScan()
     {
-    var msg = 'GM'
+    var msg = 'GM';
     while(true)
         {
         var check = Orion.WaitJournal(msg, Orion.Now(), 0);
@@ -2028,7 +2028,6 @@ function GoldCheck(_)
             Orion.Wait(100);
             }
         }
-    Orion.Print(goldInt)
     return goldInt < 1000000;
     }
 
@@ -2110,7 +2109,6 @@ function BossCheck(_)
     {
     return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
     }
-
 
 function isPlayerInRectangle(x1, y1, x2, y2)
     {
@@ -2747,7 +2745,7 @@ function AliComLeader()
         var recv = Orion.UdpRecv('Coms');
         if(recv)
             {
-            Debug(recv);
+            Debug('Receive //' + recv);
             var recvSplit = Orion.Split(recv,':'); 
             switch(recvSplit[0])
                 {
