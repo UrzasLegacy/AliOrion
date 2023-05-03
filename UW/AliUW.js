@@ -183,7 +183,7 @@ var gumpAssets =
         [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys'],['toggle','ScoutAhead','Scout']],
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
-        [ ['toggle','ResetPosition','Reset Position'], ['toggle','LeaveUW','Leave UW'] ],
+        [ ['toggle','ResetPosition','Reset Position'], ['toggle','GoHome','GoHome'] ],
         [ ['toggle','RecallRepair','Recall Repair'], ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'], ['toggle','Tithe','Tithe'] ],
         [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
 
@@ -1712,11 +1712,11 @@ function WaitSyncLeader(_)
                 {
                 Orion.TargetObject(self);
                 Orion.Wait(1000);
-                }
+                }jb
             }
         if(healerArr.length == 0)
             {
-            Orion.CharPrint(self,1159,'No healers in team!')
+            Orion.CharPrint(self,1159,'No healers in team!');
             Orion.Wait(1000);
             continue;
             }
