@@ -15,20 +15,6 @@ function ManualIgnore()
 	Orion.AddIgnoreListObject('PlayerDetectorIgnoreList',Orion.GetSerial('myTarget'));
     }
 
-function AddNPCsToIgnore()
-    {
-	var npcs = Orion.FindTypeEx(any,any,ground,'human|live|ignoreself',24,'blue|green|red|orange|gray')
-	.filter(function(npcCheck)
-		{
-		Orion.GetProfile(npcCheck.Serial());
-		return !npcCheck.ProfileReceived();
-		});
-	npcs.forEach(function(npc)
-		{
-		Orion.AddIgnoreListObject('PlayerDetectorIgnoreList',npc.Serial());
-		});
-    }
-
 function ClearIgnoreList()
     {
     Orion.ClearIgnoreList('PlayerDetectorIgnoreList');
@@ -36,7 +22,7 @@ function ClearIgnoreList()
 
 function PrintSharedArray()
     {
-    var arr = Shared.GetArray('BlockPoints');
+    var arr = Shared.GetArray('BlockPoints',[]);
     TextWindow.Open();
     arr.forEach(function(points)
         {
@@ -44,13 +30,7 @@ function PrintSharedArray()
         });
     }
 
-function InitializeArray()
-	{
-	var arr = [];
-	Shared.AddArray('BlockPoints', arr);
-	}
-
-function PlayerDetector()
+function PlayerDetectorStationary()
 	{
 	var memoryMS = 60000; //how long to ignore a player after detecting them.
 	var scanFrequencyMS = 100; //how often to scan for players.
@@ -66,7 +46,7 @@ function PlayerDetector()
 		{
 		var startTime = Orion.Now();
 		Orion.UseIgnoreList('PlayerDetectorIgnoreList');
-		var players = Orion.FindTypeEx(any,any,ground,'human|live|ignoreself',24,'blue|green|red|orange|gray')
+		var players = Orion.FindTypeEx('0x0190|0x0191|0x0192|0x0193|0x03DB|0x03DF|0x03E2|0x0084|0x00F6|0x00DC|0x0051|0x00D9|0x007A|0x0019|0x00DB|0x0015|0x00C9|0x00EE|0x00CD|0x04E6|0x0059|0x00B7|0x00B8|0x00B9|0x00BA|0x025D|0x025E|0x025F|0x0260|0x029A|0x029B|0x02B6|0x02B7|0x03DB|0x03DF|0x03E2',any,ground,'live|ignoreself',24,'blue|green|red|orange|gray')
 			.filter(function(npcCheck)
 				{
 				if(!npcCheck.ProfileReceived())
@@ -85,11 +65,12 @@ function PlayerDetector()
 		var deltaPlayers = [];
 		for(var i=0;i<players.length;i++)
 			{
-			var playerSerial = players[i].Serial();
-			var playerName = players[i].Name();
-			var playerX = players[i].X();
-			var playerY = players[i].Y();
-			if(!playersDetected[playerSerial])
+			var player = players[i];
+			var playerSerial = player.Serial();
+			var playerName = player.Name();
+			var playerX = player.X();
+			var playerY = player.Y();
+			if(!playersDetected[playerSerial] && CheckStandStill(playerSerial,playerX,playerY))
 				{
 				playersDetected[playerSerial] = [playerName, nowTime + memoryMS, playerX, playerY];
 				deltaPlayers.push(playerX + ':' + playerY);
@@ -117,7 +98,7 @@ function PlayerDetector()
 		
 		if(deltaPlayers[0])
 			{
-            var checkArr = Shared.GetArray('BlockPoints');
+            var checkArr = Shared.GetArray('BlockPoints',[]);
 			deltaPlayers.forEach(function(player)
 				{
 				if(checkArr.indexOf(player) == -1)
@@ -133,21 +114,28 @@ function PlayerDetector()
 		}
 	}
 
+function CheckStandingStill(mobSerial,mobX,mobY)
+    {
+    Orion.Wait(750);
+	var mob = Orion.FindObject(mobSerial);
+    if(mob && mob.X() == mobX && mob.Y() == mobY)
+        return true;
+    return false;
+    }
+
 function BotBlocker()
     {
-    var blockItems = '0x0F36';
+    var blockItems = '0x0F36'; //
     while(!Player.Dead())
         {
-        var blockArr = Shared.GetArray('BlockPoints');
+        var blockArr = Shared.GetArray('BlockPoints',[]);
         for(var i=0;i<blockArr.length;i++)
             {
             var coordString = blockArr[i];
             var splitString = Orion.Split(coordString, ':');
             var xCoord = splitString[0];
             var yCoord = splitString[1];
-            Orion.SetSearchArea(xCoord,yCoord,xCoord,yCoord);
-            var blockCheck = Orion.FindType(blockItems,any,ground,'item',24)[0];
-            Orion.ResetSearchArea();
+            var blockCheck = Orion.FindType(blockItems,any,ground,'item','xyz: ' + xCoord + ',' + yCoord)[0];
             if(blockCheck)
                 continue;
             while(!blockCheck && Orion.GetDistance(xCoord,yCoord) <= 20)
