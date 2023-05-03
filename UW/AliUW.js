@@ -785,13 +785,13 @@ function MoveLoot(destinationContainerSerial)
         destinationContainerSerial = Orion.GetSerial('myTarget');
         }
     var containerObj = Orion.FindObject(destinationContainerSerial);
-    var loot = Orion.FindList('BotLoot')[0];
+    var loot = Orion.FindList('UWLoot')[0];
     while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
         {
         Orion.CharPrint(self,1159,'Moving loot');
         Orion.MoveItem(loot,0,destinationContainerSerial);
         Orion.Wait(1100);
-        loot = Orion.FindList('BotLoot')[0];
+        loot = Orion.FindList('UWLoot')[0];
         }
     if(!loot)
         return true;
@@ -1694,9 +1694,26 @@ function WaitSyncLeader(_)
     var fullArr = healerArr.concat(sampArr.concat(miscArr));
     var serialHash = {};
     var desynced = true;
+    var hideCooldown = 0;
     while(desynced)
         {
         Orion.Wait(100);
+        while(!Player.Hidden())
+            {
+            if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+                {
+                Orion.UseSkill('Hiding');
+                Orion.Wait(500);
+                hideCooldown = Orion.Now() + 10000;
+                continue;
+                }
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
         if(healerArr.length == 0)
             {
             Orion.CharPrint(self,1159,'No healers in team!')
@@ -2835,7 +2852,7 @@ function AliComFollower()
     var playerSerial = Player.Serial();
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
-    var outStr = 'Check:' + playerString + ':' + port;
+    var outStr = 'Send //Check:' + playerString + ':' + port;
     Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 5000;
