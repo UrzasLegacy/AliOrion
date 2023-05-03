@@ -424,6 +424,31 @@ function FullSetPrice()
 	Orion.Print('Set of 5.0s price: ' + '\n' + 'Gold: ' + goldPriceFormatted + '\n' + 'USD ($' + platPrice + ' per plat): $' + usdPriceFormatted + '\n\n' + '99 sets: $' + fullPriceFormatted);
 	}
 
+function LockBook()
+	{
+	Orion.WaitForAddObject('myTarget');
+	var a = Orion.FindObject('myTarget');
+	var aSerial = a.Serial();
+	Orion.Say('i wish to secure this')
+	if (Orion.WaitForTarget(3000))
+		Orion.TargetObject(aSerial);
+	Orion.WaitContextMenuID(aSerial, 600);
+	Orion.RequestContextMenu(aSerial);
+	if (Orion.WaitForGump(1000))
+		{
+		var gump0 = Orion.GetGump('last');
+		if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000295'))
+			{
+			gump0.Select(Orion.CreateGumpHook(2));
+			var startTime = Orion.Now();
+			var endTime = startTime + 2000;
+			var check = Orion.WaitJournal('New access level set.',startTime,endTime)
+			if(check)
+				Orion.CharPrint(self,1159,'Book access set!');
+			}
+		}
+	}
+
 function UnlockBooks()
     {
     Orion.ResetSearchArea()
