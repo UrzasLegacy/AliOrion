@@ -2855,7 +2855,7 @@ function AliComFollower()
     var outStr = 'Send //Check:' + playerString + ':' + port;
     Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
-    var pulseTime = Orion.Now() + 5000;
+    var pulseTime = Orion.Now() + 2000;
     while(true)
         {
         recv = Orion.UdpRecv('Coms');
