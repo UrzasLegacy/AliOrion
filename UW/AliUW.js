@@ -128,6 +128,7 @@ function AppendMagic(input,fileNameString)
     //Recommended Hotkeys:
         //SmartStart
         //AliGumpRenderer
+        //MoveLoot
 
     //Check the Utilites section for anything else that looks interesting to you :)
 
@@ -136,18 +137,6 @@ function UltraTerminate()
     Shared.ClearVars();
     Orion.Terminate('all','UltraTerminate');
     Orion.Exec('Autostart',true)
-    }
-
-function PrintDexxerArr()
-    {
-    var arr = Shared.GetArray('dexxer',false);
-    Orion.Print(arr)
-    }
-
-function ClearShared()
-    {
-    Shared.ClearArrays();
-    Shared.ClearVars();
     }
 
 //Create a findlist for autoloot named 'BotLoot'
@@ -196,7 +185,7 @@ var gumpAssets =
         [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
         [ ['toggle','ResetPosition','Reset Position'], ['toggle','LeaveUW','Leave UW'] ],
         [ ['toggle','RecallRepair','Recall Repair'], ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'], ['toggle','Tithe','Tithe'] ],
-        [ ['toggle','CharacterMaintenance','CharMaintenance'] ],
+        [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
 
         [ ['ySpacer',20] ],
     ];
