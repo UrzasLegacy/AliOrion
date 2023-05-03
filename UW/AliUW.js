@@ -520,12 +520,12 @@ function RecallTithe()
     {
     var tithingPoints = Player.TithingPoints();
     Orion.Print('Current Tithing Points: ' + tithingPoints)
-    TerminateAll('RecallTithe')
+    TerminateAll('RecallTithe|CharacterMaintenance')
     if(Player.X() > 6000)
         LeaveUW();
     var ankh = Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
     if(!ankh)
-        RecallByGump('Main','Tithing','Main','Tithing2');
+        RecallByGump('Main','Tithe','Main','Tithe2');
     CloseAllGumps();
     var endTime = Orion.Now() + 10000;
     while(Player.TithingPoints() < 100000)
@@ -787,40 +787,47 @@ function CharacterMaintenance()
         RecallTithe();
     }
 
+function MoveLoot(destinationContainerSerial)
+    {
+    if(destinationContainerSerial == undefined)
+        {
+        Orion.CharPrint(self,1159,'Target Destination Container');
+        Orion.WaitForAddObject('myTarget');
+        destinationContainerSerial = Orion.GetSerial('myTarget');
+        }
+    var containerObj = Orion.FindObject(destinationContainerSerial);
+    var loot = Orion.FindList('BotLoot')[0];
+    while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
+        {
+        Orion.CharPrint(self,1159,'Moving loot');
+        Orion.MoveItem(loot,0,destinationContainerSerial);
+        Orion.Wait(1100);
+        loot = Orion.FindList('BotLoot')[0];
+        }
+    if(!loot)
+        return true;
+    }
+
 function DropLoot()
     {
-    var butlerMode = true;
-    if(butlerMode)
+    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
         {
-        var butler = Orion.FindObject(butlerSerial);
-        while(!butler)
+        return !Orion.Contains(box.Properties(),'Contents: 125')
+        }).sort(function(a,b)
             {
-            Orion.Wait(500);
-            butler = Orion.FindObject(butlerSerial);
-            }
-        AliWalkTo(butler.X(),butler.Y(),0,1);
-        var loot = Orion.FindList('BotLoot')[0];
-        while(loot)
-            {
-            Orion.CharPrint(self,1159,'Moving loot');
-            Orion.MoveItem(loot,0,butlerSerial);
-            Orion.Wait(1100);
-            loot = Orion.FindList('BotLoot')[0];
-            }
-        while(!Orion.TradeCheckState('0','right') && Orion.TradeOpponent('0') == butlerSerial)
-            {
-            Orion.TradeCheck('0', true);
-            Orion.Wait(1300);
-            }
-        loot = Orion.FindList('BotLoot')[0];
-        if(!loot)
+            var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+            var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+            return bContents - aContents;
+            });
+    while(woodenBoxes.length)
+        {
+        var box = woodenBoxes[0];
+        var boxSerial = box.Serial();
+        AliWalkTo(box.X(),box.Y(),0,1);
+        VerifyOpenContainer(boxSerial);
+        if(MoveLoot())
             return true;
-        else
-            return DropLoot();
-        }
-    else
-        {
-        var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
             }).sort(function(a,b)
@@ -829,36 +836,9 @@ function DropLoot()
                 var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
                 return bContents - aContents;
                 });
-        while(woodenBoxes.length)
-            {
-            var box = woodenBoxes[0];
-            var boxSerial = box.Serial();
-            while(box.Distance() > 2)
-                AliWalkTo(box.X(),box.Y(),0,1);
-            VerifyOpenContainer(boxSerial);
-            var loot = Orion.FindList('BotLoot')[0];
-            while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
-                {
-                Orion.CharPrint(self,1159,'Moving loot');
-                Orion.MoveItem(loot,0,boxSerial);
-                Orion.Wait(1100);
-                loot = Orion.FindList('BotLoot')[0];
-                }
-            if(!loot)
-                return true;
-            woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
-                {
-                return !Orion.Contains(box.Properties(),'Contents: 125')
-                }).sort(function(a,b)
-                    {
-                    var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                    var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                    return bContents - aContents;
-                    });
-            }
-        DiscordPush('Out of containers to put loot!');
-        return false;
         }
+    DiscordPush('Out of containers to put loot!');
+    return false;
     }
 
 function RestockConsumables()
