@@ -208,7 +208,7 @@ function SmartStart()
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoToSafePosition();
                 EquipBossSuitByBotName();
-                var scoutWait = ScoutAhead();
+                var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
                     {
@@ -240,7 +240,7 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                GoToSafePosition()
+                GoToSafePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
@@ -307,7 +307,7 @@ function ____________UTILITIES(_){}
 
 function initScripts()
     {
-    //Orion.Exec('AutoInsure',true);
+    Orion.Exec('AutoInsure',true);
     var role = Shared.GetVar('myRole',false);
     switch(role)
         {
@@ -340,24 +340,6 @@ function initScripts()
         default:
             break;
         }
-    }
-
-function GoHome()
-    {
-    LeaveUW();
-    if(Orion.GetDistance(homeX,homeY) > 50)
-        RecallByGump('Main', 'Home', 'Main', 'Home2');
-    AliWalkTo(homeX,homeY);
-    Orion.WarMode(0);
-    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
-    while(!bench)
-        {
-        Orion.Step('n');
-        Orion.Wait(250);
-        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
-        }
-    if(!Orion.WalkTo(bench.X(),bench.Y()))
-        Orion.WalkTo(bench.X(),bench.Y());
     }
 
 function EquipBossSuitByBotName()
@@ -393,11 +375,6 @@ function EquipUWSuitByBotName()
 function ResetPosition()
     {
     TerminateAll('ResetPosition');
-    //if already in correct position, do nothing.
-    //if within rectangle 1, do rectangle 1 things and return ResetPosition()
-    //if within rectangle 2, do rectangle 2 things and return ResetPosition() etc
-    //recurse until already in correct position
-    //if(isPlayerInRectangle(6394,1625,6439,1670))
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
         var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
@@ -412,7 +389,6 @@ function ResetPosition()
             Orion.Wait(1300);
             }
         }
-    //if(isPlayerInRectangle(6269,1625,6373,1791))
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
         {
         var ladder = Orion.FindType(0x08A6, any, ground, 'item', 24);
@@ -452,12 +428,10 @@ function ResetPosition()
         EquipBossSuitByBotName();
         Orion.Wait(1300);
         }
-    //if(isPlayerInRectangle(6400,1680,6458,1802))
     if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
         {
         Orion.Wait(500);
         }
-    //if(isPlayerInRectangle(6394,1625,6439,1670))
     if(AliWalkTo(6432, 1699, 0, 0, 255, 4, 1, 1))//below deck
         {
         Orion.Wait(10);
@@ -497,6 +471,24 @@ function LeaveUW()
         Orion.Wait(10);
         }
     Orion.Wait(500);
+    }
+
+function GoHome()
+    {
+    LeaveUW();
+    if(Orion.GetDistance(homeX,homeY) > 50)
+        RecallByGump('Main', 'Home', 'Main', 'Home2');
+    Orion.WarMode(0);
+    AliWalkTo(homeX,homeY);
+    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+    while(!bench)
+        {
+        Orion.Step('n');
+        Orion.Wait(250);
+        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+        }
+    if(!Orion.WalkTo(bench.X(),bench.Y()))
+        Orion.WalkTo(bench.X(),bench.Y());
     }
 
 function LootUW()
@@ -1512,6 +1504,74 @@ function GoToSafePosition()
     return true
 	}
 
+function GoToLadderPosition()
+    {
+    Orion.CharPrint(self,1159,'Going to Ladder position');
+	TerminateAll('ResetPosition');
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
+        {
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
+        if(ladder.Distance() > 2)
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var playerX = Player.X();
+        var playerY = Player.Y();
+        var ladderSerial = ladder.Serial();
+        while(Player.X() == playerX && Player.Y() == playerY)
+            {
+            Orion.UseObject(ladderSerial);
+            Orion.Wait(1300);
+            }
+        }
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
+        {
+        var ladder = Orion.FindType(0x08A6, any, ground, 'item', 24);
+        Orion.UseObject(ladder[0]);
+        }
+    if(Player.X() < 6000)
+        {
+        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
+            RecallByGump('Main','UW Dock','Main','UW Dock2')
+        while(Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(self);
+            Orion.Wait(1300);
+            }
+        EquipUWSuitByBotName();
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
+        {
+        var playerX = Player.X();
+        var playerY = Player.Y();
+        var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
+        while(Player.X() == playerX && Player.Y() == playerY)
+            {
+            Orion.UseObject(whirlpool[0]);
+            Orion.Wait(1300);
+            }
+        var ethy = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'Mount Hue:')
+            })[0];
+        while(ethy && !Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(ethy.Serial());
+            Orion.Wait(1300);
+            }
+        EquipBossSuitByBotName();
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
+        {
+        Orion.Wait(500);
+        }
+    if(AliWalkTo(6432, 1699, 0, 0, 255, 4, 1, 1))//below deck
+        {
+        Orion.Wait(10);
+        }
+    Orion.Wait(1300);
+	}
+
 function ScoutAhead()
     {
     TextWindow.Clear()
@@ -1976,7 +2036,7 @@ function SwitchToBarrelWep()
     var barrelWepGraphics = '0x0F4B';
     var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
         {
-        return Orion.Contains(item.Properties(),'imbued');
+        return Orion.Contains(item.Properties(),'imbued|self repair');
         })[0];
     if(barrelWep)
         {
@@ -2221,10 +2281,14 @@ function ListLoot(findList)  //v2
                             totals[lastLine] = 1;
                         }
                     }
+                totals['Run Type'] = 'All No Luck';
+                totals['Team Size'] = 6;
+                totals['Luck Leader'] = Player.Luck();
+                totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
                 TextWindow.Open();
                 TextWindow.Clear();
                 TextWindow.Print(JSON.stringify(totals))
-                AppendMagic(totals)
+                AppendMagic(totals,'UWLootTracker.txt')
                 }
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
@@ -2850,7 +2914,7 @@ function AliComFollower()
     var playerSerial = Player.Serial();
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
-    var outStr = 'Send //Check:' + playerString + ':' + port;
+    var outStr = 'Check:' + playerString + ':' + port;
     Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 2000;
@@ -2957,7 +3021,7 @@ function SetBarrelSamp(_)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'TerminateAll|JournalScan|AliComFollower|AliComLeader|SmartStart';
+    var flag = 'TerminateAll|JournalScan|AliComFollower|AliComLeader|SmartStart|AutoInsure';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
