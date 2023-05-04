@@ -19,6 +19,7 @@ function Autostart()
         Orion.UseObject(backpack);
         Orion.Wait(1300);
         }
+    Orion.ClientViewRange(24);
     var outMsg = 'House Code: ' + JSON.stringify(houseButtons) + '\nHouse Coords: ' + JSON.stringify(houseTargetCoords) + '\nWalk to Front: ' + walkToFront + '\nCastle Mode: ' + castleMode + '\n Relog to Pinks: ' + relogAccounts;
     if(fullAuto)
         outMsg += '\nFull Auto: true\nPlacer: ' + placerName;
@@ -594,6 +595,7 @@ function IDOC_SignMonitorOLD(_test)
 //--#Barrels
 function IDOCBarrels()
  	{
+    Orion.ClientViewRange(24);
     var dragItems = '0x14F6';
  	var barrels = Orion.FindTypeEx('0x0FAE|0x0E77|0x1EB5', any, ground, ' ', '24').filter(function(barrel)
         {
@@ -723,6 +725,7 @@ function IDOCBarrels()
         }
     else
         Gump();
+    Orion.ClientViewRange(5);
 	}
 
 function DropGarbageHere(_ExecOnly)

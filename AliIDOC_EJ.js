@@ -9,12 +9,14 @@ function Autostart()
         Orion.UseObject(backpack);
         Orion.Wait(1300);
         }
+    Orion.ClientViewRange(24);
     Orion.Wait(2000);
     Orion.Exec('GMJournalScan',true);
     while(Orion.GetDistance(3686,1362) < 20)
         {
         AutoGate();
         }
+    Orion.ClientViewRange(5);
     Orion.Exec('SubEthyChecker',true);
 	}
 
