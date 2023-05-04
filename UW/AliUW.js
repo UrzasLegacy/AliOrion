@@ -99,7 +99,7 @@ function AppendMagic(input,fileNameString)
     //Choose one of your healers to act as the central coordinator of the whole operation.
     var leadHealerSerial = '0x02F4684A'; //Alyx
     //Choose one of your samps to get honor on the boss. This samp will also ignore wisps and stick to the boss to ensure maximum damage
-    var leadSampSerial = '0x003DA8B8'; //Freya
+    var leadSampSerial = '0x039C4F69'; //Freya
 
 //Bots
     //Bots will try and hide while waiting, so you'll need a small amount of hiding if you're not human
