@@ -124,7 +124,7 @@ var discordHook = '887268637315047444'; //Put your Discord WebHook here.
 var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
 Orion.Exec('JournalScan', true);
-
+var debug = true;
 var luckScum = true;
 //--#Start
 function _____________START(_){}
@@ -429,12 +429,12 @@ function GoHome()
         RecallByGump('Main', 'Home', 'Main', 'Home2');
     Orion.WarMode(0);
     AliWalkTo(homeX,homeY);
-    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 20)[0];
     while(!bench)
         {
         Orion.Step('n');
         Orion.Wait(250);
-        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 20)[0];
         }
     var benchX = bench.X();
     var benchY = bench.Y();
