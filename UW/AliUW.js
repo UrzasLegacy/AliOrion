@@ -2111,22 +2111,7 @@ function ConsumablesCheck(_)
 function PackCheck(_)
     {
     Orion.CharPrint(self,1159,'Checking backpack...');
-    var packObj = Orion.ObjAtLayer('backpack');
-    if(packObj)
-        {
-        var packCount = +(packObj.Properties().match(/Contents: (\d+)/) || [])[1] || 125;
-        if(packCount > 100)
-            {
-            Orion.Print('Pack overfilled: ' + packCount + '/125');
-            return true;
-            }
-        }
-    if(Player.Weight() > Player.MaxWeight() - 100)
-        {
-        Orion.Print('Overweight!');
-        return true;
-        }
-    return false;
+    return Orion.FindList('UWLoot').length;
     }
 
 function BossCheck(_)
