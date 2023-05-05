@@ -141,7 +141,7 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                CharacterMaintenance();
+                    CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
@@ -187,7 +187,7 @@ function SmartStart()
                     GetKeys();
                 Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
                 GoToLadderPosition()
-                GoFromSafeToReadyPosition();
+                GoFromHomeToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
                     OpenUW();
@@ -214,9 +214,9 @@ function SmartStart()
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
-                WaitSyncFollower();
+                WaitSyncFollower(); //Home position
                 Orion.PauseScript('SmartStart');
-                GoFromSafeToReadyPosition();
+                GoFromHomeToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 Orion.Cast('Greater Heal');
@@ -914,7 +914,7 @@ function GetKeys()
         if(!component)
             return GetKeys();
         }
-    AliWalkTo(6432,1699);
+    CharacterMaintenance();
     Orion.PauseScript('UWBarrelsHealSelf');
     Orion.Wait(500);
     Orion.Terminate('UWBarrelsHealSelf');
@@ -1759,7 +1759,7 @@ function DetermineBarrelSamp(_)
     Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
     }
     
-function GoFromSafeToReadyPosition(_)
+function GoFromHomeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
@@ -3075,7 +3075,7 @@ function ____________GUMP(_){}
 var gumpAssets = 
     [
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
-        [ ['toggle','SmartStart','Start'] ],
+        [ ['toggle','SmartStart','Start'],['toggle','SmartStart','Start'] ],
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','GoToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
         [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
