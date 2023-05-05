@@ -765,6 +765,8 @@ function DropLoot()
             Orion.Wait(1100);
             loot = Orion.FindList('UWLoot')[0];
             }
+        if(!loot)
+            return true;
         woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
