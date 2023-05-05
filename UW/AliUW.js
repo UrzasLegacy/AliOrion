@@ -2196,7 +2196,7 @@ function ListLoot(findList)  //v2
                 totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
                 TextWindow.Open();
                 TextWindow.Clear();
-                TextWindow.Print(totals)
+                TextWindow.Print(JSON.stringify(totals))
                 AppendMagic(totals)
                 }
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
