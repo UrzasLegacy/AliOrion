@@ -744,7 +744,7 @@ function RestockConsumables()
             if(count < restockAmount)
                 {
                 var needed = restockAmount - count;
-                var consumable = Orion.FindType(consumable,any,pouchSerial)[0];
+                var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
                 if(!consumable)
                     DiscordPush('UW House is out of ' + consumableName);
                 else
