@@ -1823,10 +1823,11 @@ function GoToLadderPosition()
         Orion.Wait(1300);
         }
     AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)//outside boat
+    Orion.Wait(2000);
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
     AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
-    Orion.Wait(1300);
+    Orion.Wait(2000);
 	}
 
 function GoFromHomeToReadyPosition(_)
