@@ -359,6 +359,7 @@ function LeaveUW()
             }
         }
      AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1); //Below Deck
+     Orion.Wait(2000);
      if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1)) //Outside boat
         {
         var rope = Orion.FindTypeEx(0x14FA, any, ground, ' ', 2)[0];
