@@ -125,7 +125,7 @@ var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gw
 
 Orion.Exec('JournalScan', true);
 var debug = true;
-var luckScum = true;
+var luckScum = false;
 //--#Start
 function _____________START(_){}
 
@@ -703,7 +703,10 @@ function DropLoot()
             }
         Orion.CloseGump('container',boxSerial);
         if(!loot)
+            {
+            Trash();
             return true;
+            }
         woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
@@ -716,6 +719,29 @@ function DropLoot()
         }
     DiscordPush('Out of containers to put loot!');
     return false;
+    }
+
+function Trash()
+    {
+    var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+        {
+        return !Orion.Contains(item.Properties(),'III')
+        })[0];
+    var trashCan = Orion.FindTypeEx(any,any,'ground',10).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Trash')
+        })[0];
+    if(!primer || !trashCan)
+        return;
+    while(primer)
+        {
+        Orion.MoveItem(primer.Serial(),0,trashCan.Serial());
+        Orion.Wait(1100);
+        primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+            {
+            return !Orion.Contains(item.Properties(),'III')
+            })[0];
+        }
     }
 
 function RestockConsumables()
@@ -1194,13 +1220,6 @@ function AutoBuffs()
             Orion.UseType('0x2FD8');
             nextAppleTime = timeStamp + 30000;
             }
-        // else if(useCleanseByFire && timeStamp > nextSpellTime && Player.Poisoned())
-        //     {
-        //     Orion.Cast('Cleanse By Fire');
-        //     nextSpellTime = timeStamp + 2000;
-        //     if(Orion.WaitForTarget(2000))
-        //         Orion.TargetObject(self);
-        //     }
         timeStamp = Orion.Now();
         if(timeStamp > nextSpellTime && Player.Mana() > 20)
             {
@@ -2763,7 +2782,7 @@ function AppendMagic(input)
         return Orion.CharPrint(self,1159,'Something went wrong trying to append file: ' + fileNameString);
     var inputString = JSON.stringify(input);
     Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
-    tmpFile.Write(JSON.stringify(inputString) + '\n');
+    tmpFile.Write(Orion.Time() + ': ' + inputString + '\n');
     tmpFile.Close();
     }
 
