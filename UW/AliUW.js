@@ -1796,10 +1796,10 @@ function GoToLadderPosition()
         }
     if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
         {
+        var whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
+        AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
         var tempX = Player.X();
         var tempY = Player.Y();
-        var whirlpool = Orion.FindTypeEx(0x3789, any, ground, ' ', 24)[0];
-        AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
         while(Player.X() == tempX && Player.Y() == tempY)
             {
             Orion.UseObject(whirlpool.Serial());
