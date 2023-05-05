@@ -141,7 +141,7 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                    CharacterMaintenance();
+                CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
@@ -177,7 +177,7 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                //GoToHomePosition();
+
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
@@ -210,7 +210,6 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                GoToHomePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
