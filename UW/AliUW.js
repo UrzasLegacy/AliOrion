@@ -746,8 +746,8 @@ function DropLoot()
         return !Orion.Contains(box.Properties(),'Contents: 125')
         }).sort(function(a,b)
             {
-            var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-            var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+            var aContents = (a.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+            var bContents = (b.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
             return bContents - aContents;
             });
     while(woodenBoxes.length)
