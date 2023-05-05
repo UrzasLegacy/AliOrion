@@ -146,7 +146,7 @@ function SmartStart()
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
-                WaitSyncLeader(); //safe position
+                WaitSyncLeader(); //Home position
                 if(scoutWait)
                     {
                     DetermineBarrelSamp();
@@ -154,7 +154,7 @@ function SmartStart()
                     Orion.RemoveDisplayTimer('bossReset');
                     }
                 Orion.Wait(3000);
-                MassAllMessage('ResumeSmartStart'); //follower safe->ready position
+                MassAllMessage('ResumeSmartStart'); //follower Home>Ready position
                 WaitSyncLeader(); //ready position
                 Orion.Wait(2000);
                 Orion.Cast('Greater Heal');
@@ -177,15 +177,16 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                GoToHomePosition();
+                //GoToHomePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
-                WaitSyncFollower(); //safe position
+                WaitSyncFollower(); //Home position
                 Orion.Wait(1000);
                 if(Shared.GetVar('barrelSamp',false) === true)
                     GetKeys();
                 Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
+                GoToLadderPosition()
                 GoFromSafeToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
@@ -317,73 +318,6 @@ function EquipUWSuitByBotName()
         var _pName = Player.Name()
     var setname = _pName + ' UW'
     Orion.Dress(setname);
-    }
-
-function ResetPosition()
-    {
-    TerminateAll('ResetPosition');
-    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
-        {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
-        if(ladder.Distance() > 2)
-            AliWalkTo(ladder.X(),ladder.Y(),0,1);
-        var playerX = Player.X();
-        var playerY = Player.Y();
-        var ladderSerial = ladder.Serial();
-        while(Player.X() == playerX && Player.Y() == playerY)
-            {
-            Orion.UseObject(ladderSerial);
-            Orion.Wait(1300);
-            }
-        }
-    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
-        {
-        var ladder = Orion.FindType(0x08A6, any, ground, 'item', 24);
-        Orion.UseObject(ladder[0]);
-        }
-    if(Player.X() < 6000)
-        {
-        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
-            RecallByGump('Main','UW Dock','Main','UW Dock2')
-        while(Orion.ObjAtLayer('Mount'))
-            {
-            Orion.UseObject(self);
-            Orion.Wait(1300);
-            }
-        EquipUWSuitByBotName();
-        Orion.Wait(1300);
-        }
-    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
-        {
-        var playerX = Player.X();
-        var playerY = Player.Y();
-        var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
-        while(Player.X() == playerX && Player.Y() == playerY)
-            {
-            Orion.UseObject(whirlpool[0]);
-            Orion.Wait(1300);
-            }
-        var ethy = Orion.FindTypeEx(any).filter(function(item)
-            {
-            return Orion.Contains(item.Properties(),'Mount Hue:')
-            })[0];
-        while(ethy && !Orion.ObjAtLayer('Mount'))
-            {
-            Orion.UseObject(ethy.Serial());
-            Orion.Wait(1300);
-            }
-        EquipBossSuitByBotName();
-        Orion.Wait(1300);
-        }
-    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
-        {
-        Orion.Wait(500);
-        }
-    if(AliWalkTo(6432, 1699, 0, 0, 255, 4, 1, 1))//below deck
-        {
-        Orion.Wait(10);
-        }
-    Orion.Wait(1300);
     }
 
 function LeaveUW()
@@ -696,7 +630,7 @@ function RepairGear()
 function CharacterMaintenance()
     {
     if(isTargetHour(11))
-        Orion.LogOut()
+        Orion.LogOut();
     LeaveUW();
     if(Player.TithingPoints() < 30000)
         Tithe();
@@ -796,22 +730,29 @@ function RestockConsumables()
     VerifyOpenContainer(pouch.Serial());
     var consumables =
         [
-            ['0x2FD8', 10], //apple
+            ['0x2FD8', 10, 'Enchanted Apples'],
         ]
     for(var i=0;i<consumables.length;i++)
         {
-        var consumable = consumables[i][0];
+        var consumableGraphic = consumables[i][0];
         var restockAmount = consumables[i][1];
-        var count = Orion.Count(consumable)
+        var consumableName = consumables[i][2];
+        var count = Orion.Count(consumableGraphic)
         if(count < restockAmount)
             {
             Orion.Wait(200);
-            count = Orion.Count(consumable)
+            count = Orion.Count(consumableGraphic)
             if(count < restockAmount)
                 {
                 var needed = restockAmount - count;
-                Orion.MoveItemType(consumable, any, pouchSerial, needed);
-                i--;
+                var consumable = Orion.FindType(consumable,any,pouchSerial)[0];
+                if(!consumable)
+                    DiscordPush('UW House is out of ' + consumableName);
+                else
+                    {
+                    Orion.MoveItem(consumableGraphic, any, pouchSerial, needed);
+                    i--;
+                    }
                 }
             }
         }
@@ -1462,11 +1403,7 @@ function Autostart(_)
 function GoToHomePosition()
     {
     Orion.CharPrint(self,1159,'Going to Home position');
-	TerminateAll('GoToLadderPosition');
-    //search for boss and skip directly to boss sequence
-    //search for boss corpse and go directly to loot sequence
-    //check if already in sync position and go to it if not
-    //if already in sync position exit function
+	TerminateAll('GoToHomePosition');
 	ResetPosition();
     return true
 	}
@@ -3138,12 +3075,11 @@ function ____________GUMP(_){}
 var gumpAssets = 
     [
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
-        [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys'] ],
+        [ ['toggle','SmartStart','Start'] ],
         [ ['text','Utilities',554,1,17] ],
-        [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
-        [ ['toggle','ResetPosition','Reset Position'], ['toggle','GoHome','GoHome'] ],
-        [ ['toggle','RepairGear','Repair Gear'], ['toggle','Tithe','Recall Tithe'] ],
-        [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
+        [ ['toggle','GoToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
+        [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
+        [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'], ],
 
         [ ['ySpacer',20] ],
     ];
