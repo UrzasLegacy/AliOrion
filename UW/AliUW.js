@@ -1,136 +1,106 @@
-var debug = true;
-//Setup Instructions
-function LegendaryCount()
-    {
-    Orion.WaitForAddObject('myTarget');
-    var corpseSerial = Orion.GetSerial('myTarget');
-    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+//Settings and Pregame Setup
+    //I will walk you through all of this as necessary, but I wanted to write everything down for you as well.
+
+    //Leaders
+        //Choose one of your healers to act as the central coordinator of the whole operation. Type "_info" ingame without the quotes and target your character to get your serial number
+        var leadHealerSerial = '0x02F4684A';
+        //Choose one of your samps to get honor on the boss. This samp will also ignore wisps and stick to the boss to ensure maximum damage
+        var leadSampSerial = '0x039C4F69';
+
+    //Discord
+        //You will need to set up a private Discord server for your notifications. Once you have this set up, you will go to the settings for your server:
+        //Settings > Integrations > View Webhooks > New Webhook > Click the newly created webhook > Copy Webhook URL
+        //You will paste that URL somewhere and it will look similar to this:
+        //https://discord.com/api/webhooks/1103791296381976606/stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
+        //You'll need to grab your hook number, in this example it is 1103791296381976606
+        //and your key, in this example it is stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
+        var discordHook = '1103791296381976606' //Change this to your hook
+        var discordKey = 'stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx' //Change this to your key
+
+    //Profiles
+        //There are two types of profiles, ingame profile and Orion Assistant profile. You can set up one ingame profile and one OA profile and all characters can share them.
+        //Saving profiles in Orion can be finicky with more than one client open, so it is recommended to only have ONE client running when changing and saving settings.
+        //I've created a function that will automatically change most settings to their recommended states, so once you create an OA profile and ingame profile,
+        //you can just run the AutoSettings() function (in Utilities) once at the beginning and then save your profiles to avoid needing to fiddle with a bunch of individual options.
+        //Once you have profiles created and set up, you will need to log in to each character individually, change them to the correct profiles, then log out and close the client.
+        //OA Profile
+            //Name doesn't matter. You'll want to set some hotkeys, Find lists and Dress lists. More info on these in the sections below.
+        //Ingame Profile
+            //Name doesn't matter. The AutoSettings() function should handle most of the options for the ingame profile.
+
+    //Hotkeys
+        //Recommended Hotkeys:
+            //SmartStart
+            //AliGumpRenderer
+        //Check the Utilites section for anything else that looks interesting to you :)
+
+    //Dress Agent
+        //Each samp needs three suits set up in Agents > Dress. Healers only need Boss and UW suits
+        //One suit named "<character name> Boss" e.g., Freya Boss. This is your suit for killing the boss
+        //One suit named "<character name> UW" e.g., Freya UW. This is the suit pieces to enter UW
+        //One suit named "<character name> LRC" e.g., Freya LRC. This is an lrc suit to get back into vamp form
+
+    //Loot Lists
+        //Create a Find list named "UWLoot" and an Ignore list named "UWIgnore"
+            //Use the Lists tab of the Orion Assistant to set up a Find list of the criteria for the items you would like to loot.
+            //You can use Ignore lists to exclude certain types of items such as Cursed or 50 stone.
+            //I will get you set up with everything you need to know to customize your loot lists, and I'll share mine as a starting point,
+            //but ultimately it is up to you to decide what you'd like to loot.
+
+//Ingame Setup
+    //Runes
+        //Each character needs a runebook named 'Main' with runes inside named 'Home','UW Dock', and 'Tithe'
+        //Also include duplicates of each rune named 'Home2','UW Dock2','Tithe2' a couple steps away in case the first rune is blocked by a mob
+            //Home rune should be directly south of your drop house such that walking straight north will load the contents of the house
+            //UW Dock rune should be just north of the dock into UW
+            //Tithe rune should be near any ankh. Choose one that doesn't have difficult hostile mobs nearby
+        //My recall function only cares about the name of the rune, position in the book does not matter.
+
+    //Drop House
+        //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible.
+        //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
+        //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
+        var homeX = 2521; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
+        var homeY = 148; //Change this to a Y coordinate near your Home recall spot
     
-    var totals = {};
-    do
-        {
-        Orion.UseObject(corpseSerial);
-        Orion.Wait(1300);
-        instanceSerials = Orion.FindType(any,any,corpseSerial);
-        } while(instanceSerials.length == 0)
-    if(instanceSerials.length)
-        {
-        var test = Orion.FindObject(instanceSerials[0]);
-        if(test && test.Graphic() !== '0x2006')
-            {
-            Orion.CharPrint(self,1159,'Corpse is public');
-            return;
-            }
-        else
-            {
-            for(var i=0;i<instanceSerials.length;i++)
-                {
-                var corpseInstance = instanceSerials[i];
-                var items = Orion.FindTypeEx(any,any,corpseInstance);
-                for(var j=0;j<items.length;j++)
-                    {
-                    var item = items[j];
-                    var itemProps = item.Properties();
-                    var lastLine = itemProps.match(/.+$/) || '';
-                    Orion.Print(lastLine)
+    //Misc Tips
+        //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
+            //self repair. It doesn't need to have any special stats besides that. Double strike will knock the barrels out faster, so you can choose a weapon with that
+            //as the Primary ability, but it's not really necessary with as much down time as there is between runs.
+        
+        
+//Starting Instructions
+    //Once all of the setup is complete, the routine for starting the script is simple.
+    //Everything is set so that you just have to log all your characters in, wait a short while for the leader and followers to sync up, and then
+    //start the SmartStart function on your leader. All characters should then check their status (durability, restock, tithing points, gold, etc)
+    //and then go to their starting positions. The leader will lure hydras to the stern of the ship. 
+    //Next, the leader will check if the boss is already up or if UW is ready to be keyed and started. If the boss is already up, everyone 
+    //will regroup and just go in and fight, otherwise a barrel samp will be chosen randomly and everyone will wait at your drop house until keys are 
+    //ready. Then they'll regroup in UW and start the encounter. The lead samp will go in first and grab honor followed shortly after by the rest of your group.
+    //Once the boss is killed, your characters will loot according to your loot list and then leave UW, go home, check their status, and wait for the next cycle.
+    //The heal leader will stay behind and wait for the corpse to go public, loot it once it does, and then reset the cycle, standing in front of UW hidden,
+    //monitoring until UW resets.
 
-                    if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
-                        {
-                        continue;
-                        }
-                    if(totals[lastLine])
-                        totals[lastLine]++;
-                    else
-                        totals[lastLine] = 1;
-                    }
-                }
-            }
-        }
-    TextWindow.Open();
-    TextWindow.Clear();
-    TextWindow.Print(JSON.stringify(totals))
-    AppendMagic(totals)
-    }
+//Disclaimers
+    //I've taken pains to plan for every contingency I could think of, but having done large projects like this for people in the past, I know that inevitably
+    //some things will need to be tweaked to your liking or an unexpected bug might occur. Rest assured that I will work hard to have a quick turn around on any
+    //changes that might be needed and provide an updated version of the script to you. If a bug does occur, I ask that you try to take note of any circumstances
+    //or information that might help me. This can include searching your journal for any error messages (they'll show up as red text) or just details about what your 
+    //character was doing at the time the issue occurs. I'm confident that any issues that do arise will be remedied within the agreed upon 2 month support.
 
-function ReadAndOverwriteMagic(inputTotals)
-    {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/UWLuckReport' + Player.Serial() + '.json';
-    var tmpFile = Orion.NewFile();
-    if(tmpFile.Open(tmpFilePath))
-    	{
-    	var fileJSON = tmpFile.ReadAll();
-    	if(fileJSON)
-        	var logObj = JSON.parse(fileJSON);
-        else
-        	var logObj = {};
-        }
-    else
-        {
-        TextWindow.Open();
-        TextWindow.Print('Unrecorded: ' + colorID);
-        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create log file')
-        }
-    tmpFile.Open(tmpFilePath);
-    for(prop in inputTotals)
-        {
-        if(logObj[prop])
-            logObj[prop] += inputTotals[prop];
-        else
-            logObj[prop] = inputTotals[prop];
-        }
-    tmpFile.Write(JSON.stringify(logObj));
-    tmpFile.Close();
-    }
+    //This script is designed to be run completely AFK, but there's a chance a character could die and halt things. Your loot auto insures so there is no loss aside
+    //from the potential farming time missed until you notice and reset.
 
-function AppendMagic(input,fileNameString)
-    {
-    var fileNameString = 'AliUWTracker.txt';
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
-    var tmpFile = Orion.NewFile();
-    if(!tmpFile.Append(tmpFilePath))
-        return Orion.CharPrint(self,1159,'Something went wrong trying to append file: ' + fileNameString);
-    var inputString = '[' + Player.Luck() + ',' + JSON.stringify(input);
-    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
-    tmpFile.Write(JSON.stringify(inputString) + '\n');
-    tmpFile.Close();
-    }
-
-//Leaders
-    //Choose one of your healers to act as the central coordinator of the whole operation.
-    var leadHealerSerial = '0x02F4684A'; //Alyx
-    //Choose one of your samps to get honor on the boss. This samp will also ignore wisps and stick to the boss to ensure maximum damage
-    var leadSampSerial = '0x039C4F69'; //Freya
-
-//Bots
-    //Bots will try and hide while waiting, so you'll need a small amount of hiding if you're not human
-
-//Runes
-    //Each character needs a runebook named 'Main' with runes inside named 'Home','UW Dock','Tithe'
-    //Also include duplicates of each rune named 'Home2','UW Dock2','Tithe2' a couple steps away in case the first rune is blocked
-    //Home rune should be directly south of your drop house such that walking straight north will load the contents of the house
-    //UW Dock rune should be just north of the dock into UW
-    //Tithe rune should be near any ankh.
-
-//Drop House
-    //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible.
-    //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
-    //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot in these.
-    var homeX = 2521; //This is an X coordinate near your Home recall spot
-    var homeY = 148; //This is an Y coordinate near your Home recall spot
-
-//Dress Agent
-    //Each character needs three suits set up in Agents > Dress
-    //One suit named "<character name> Boss" e.g., Freya Boss. This is your suit for killing the boss
-    //One suit named "<character name> UW" e.g., Freya UW. This is the suit pieces to enter UW
-    //One suit named "<character name> LRC" e.g., Freya LRC. This is an lrc suit to get back into vamp form
-
-//Hotkeys
-    //Recommended Hotkeys:
-        //SmartStart
-        //AliGumpRenderer
-        //MoveLoot
-
-    //Check the Utilites section for anything else that looks interesting to you :)
+    //I believe you mentioned that you will be running this on Atlantic. It is my recommendation that you consider moving your operation to a less populated shard
+    //if you have access to shard shields or are close to someone that can transfer loot for you. I've added behaviors that should give your characters less of
+    //a 'bot-like' appearance, but given enough time and repetitions, people will catch on and either page on you or, worse, try to interrupt you themselves in
+    //any number of ways that I can not predict. I've done farms similar to this for years and have had my fair share of technical arms races against
+    //trolls and vigilantes some of whom will, themselves, be scripters. It can become a full time job countering someone dedicated to being a thorn in your side.
+    
+    //As for GMs, if you are using paid accounts you are much more likely to be given leniency for being afk. Generally there is a three strike system before
+    //a permanent ban with strikes removed a year later. If you are able to get to your computer and respond to their simple questions, you'll likely never
+    //have a problem. Further, GMs are rarely active between 9pm and 6am Eastern, so running overnight is usually safe. I obviously cannot guarantee anything though.
+    //As a precaution, I recommend using accounts that are not tied to your main Mythic accounts in any way!
 
 function UltraTerminate()
     {
@@ -166,30 +136,6 @@ var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gw
 
 Orion.Exec('JournalScan', true);
 
-//Asset Types:
-//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
-//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
-//'textInput': A text input. Args: 'storedVarName'
-//'text': Text. Args: 'textString', textColor, xAdj, yAdj
-//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
-//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
-//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
-//'xSpacer': A blank asset spacer. Args: width ,['xSpacer',0000],
-//'ySpacer': A blank row spacer. Args: height ,['ySpacer',0000],
-//'tooltip': Add a tooltip to the previous asset. Args: 'text'
-var gumpAssets = 
-    [
-        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelName','Unknown'),554,1,1], ['xSpacer',100] ],
-        [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys'],['toggle','ScoutAhead','Scout']],
-        [ ['text','Utilities',554,1,17] ],
-        [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
-        [ ['toggle','ResetPosition','Reset Position'], ['toggle','GoHome','GoHome'] ],
-        [ ['toggle','RecallRepair','Recall Repair'], ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'], ['toggle','Tithe','Tithe'] ],
-        [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
-
-        [ ['ySpacer',20] ],
-    ];
-
 var luckScum = true;
 //--#Start
 function _____________START(_){}
@@ -205,8 +151,9 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
+                CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
-                    GoToSafePosition();
+                    GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 WaitSyncLeader(); //safe position
@@ -304,6 +251,23 @@ function _____________CURRENT(_){}
 
 //--# Utilities
 function ____________UTILITIES(_){}
+
+function AutoSettings()
+    {
+    Orion.ClientOptionSet('ReduceFPSUnactiveWindow', 1); 
+    Orion.ClientOptionSet('AutoOpenDoorsMode', 1);       
+    Orion.ClientOptionSet('SmoothOpenDoors', 1);
+    Orion.ClientOptionSet('BlockRunWhileHidden', 0);
+    Orion.ClientOptionSet('AlwaysRun', 1);
+    Orion.ClientOptionSet('AutoAvoidObstacles', 1);
+    Orion.ClientOptionSet('FixStatusbarOSI  ', 1);
+    Orion.ClientOptionSet('ShowTimeInJournal', 1);       
+    Orion.ClientOptionSet('EnableLegibleJournal', 1);
+   
+    Orion.OAOptionSet('FastRotation', 1);
+    Orion.OAOptionSet('DressUseNewEquipPackets', 1);
+    Orion.OAOptionSet('JournalEcho', 1); 
+    }
 
 function initScripts()
     {
@@ -493,7 +457,7 @@ function GoHome()
 
 function LootUW()
     {
-    ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed")
+    ListLoot("UWLoot|Gold|ignoreLists|UWIgnore")
     //ListLoot('BotLoot', "ignorelist")
     }
 
@@ -555,7 +519,7 @@ function RecallTithe()
 function RepairGear()
     {//v1
     Orion.ResetSearchArea();
-    var durabilityThreshold = 80; //Durability below which to repair
+    var durabilityThreshold = 50; //Durability below which to repair
     //Equipment with less than 2 * durabilityThreshold will appear in yellow
 
     var tinkerLowAlarm = true; //Leave false to ignore this repair type for the alarm
@@ -568,7 +532,7 @@ function RepairGear()
     
     var alarmThreshold = 20; //If the repair bench gets below this number of scrolls for a repair type, send a discord message
 
-    var flavorText = true; //adds overhead emotes describing the amount of items you need to repair
+    var flavorText = false; //adds overhead emotes describing the amount of items you need to repair
     
     var repairDict = 
         { //graphicString: buttonCode
@@ -747,7 +711,9 @@ function RepairGear()
     }
 
 function CharacterMaintenance()
-    {    
+    {
+    if(isTargetHour(11))
+        Orion.LogOut()
     Orion.CharPrint(self,1159,'Checking tithing points...');
     var tithe = Player.TithingPoints() < 30000;
     var dura = DurabilityCheck();
@@ -767,6 +733,13 @@ function CharacterMaintenance()
     if(tithe)
         RecallTithe();
     }
+
+function isTargetHour(targetHour)
+	{
+	var now = new Date();
+	var UTCHour = now.getUTCHours();
+	return UTCHour == targetHour;
+	}
 
 function MoveLoot(destinationContainerSerial)
     {
@@ -1392,12 +1365,12 @@ function AutoInsure()
         {
         var items = Orion.FindList('UWLoot').filter(function(item)
             {
-            var obj = Orion.FindObject(item);
-            return !Orion.Contains(obj.Properties(),'insured|blessed');
+            var obj = Orion.FindObject(item) || false;
+            return obj && !Orion.Contains(obj.Properties(),'insured|blessed');
             });
         if(items.length && !Orion.HaveTarget())
             {
-            Orion.WaitContextMenuID(self, 418);
+            Orion.WaitContextMenuID(self, 418); 
             Orion.RequestContextMenu(self);
             if(Orion.WaitForTarget(2000))
                 Orion.TargetObject(items[0]);
@@ -1960,7 +1933,7 @@ function BossSequence(_)
             if(Player.Serial() != leadSampSerial)
                 Orion.Wait(Orion.Random(5,11) * 500);
             AliWalkTo(corpse[0].X(),corpse[0].Y());
-            ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed");
+            ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
             Orion.Wait(100);
             break;
             }
@@ -1990,7 +1963,7 @@ function CleanUpPublicCorpse()
         }
     Orion.RemoveDisplayTimer('publicCorpse');
     Orion.Wait(100);
-    ListLoot("UWLoot|Gold|ignoreLists|IgnoreCursed");
+    ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
     }
 
 function JournalScan()
@@ -2287,8 +2260,8 @@ function ListLoot(findList)  //v2
                 totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
                 TextWindow.Open();
                 TextWindow.Clear();
-                TextWindow.Print(JSON.stringify(totals))
-                AppendMagic(totals,'UWLootTracker.txt')
+                TextWindow.Print(totals)
+                AppendMagic(totals)
                 }
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
@@ -2792,6 +2765,68 @@ function SeaweedAvoid(_)
         });
     }
 
+function LegendaryCount(_)
+    {
+    Orion.WaitForAddObject('myTarget');
+    var corpseSerial = Orion.GetSerial('myTarget');
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    
+    var totals = {};
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0)
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            return;
+            }
+        else
+            {
+            for(var i=0;i<instanceSerials.length;i++)
+                {
+                var corpseInstance = instanceSerials[i];
+                var items = Orion.FindTypeEx(any,any,corpseInstance);
+                for(var j=0;j<items.length;j++)
+                    {
+                    var item = items[j];
+                    var itemProps = item.Properties();
+                    var lastLine = itemProps.match(/.+$/) || '';
+                    if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
+                        {
+                        continue;
+                        }
+                    if(totals[lastLine])
+                        totals[lastLine]++;
+                    else
+                        totals[lastLine] = 1;
+                    }
+                }
+            }
+        }
+    TextWindow.Open();
+    TextWindow.Clear();
+    TextWindow.Print(JSON.stringify(totals))
+    AppendMagic(totals)
+    }
+
+function AppendMagic(input)
+    {
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliUWTracker.txt';
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Append(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to append file: ' + fileNameString);
+    var inputString = JSON.stringify(input);
+    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
+    tmpFile.Write(JSON.stringify(inputString) + '\n');
+    tmpFile.Close();
+    }
+
 //--#Coms
 function ____________COMS(_){}
 
@@ -2965,6 +3000,7 @@ function ClearUdp(_)
     {
     Orion.RemoveAllUdpServers();
     }
+
 //--# Bot Commands
 function Follow(leadHealerSerial,distance)
     {
@@ -3107,6 +3143,30 @@ function MassRoleMessage(role,msg)
 
 //--# Gump
 function ____________GUMP(_){}
+
+//Asset Types:
+//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
+//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
+//'textInput': A text input. Args: 'storedVarName'
+//'text': Text. Args: 'textString', textColor, xAdj, yAdj
+//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
+//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
+//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
+//'xSpacer': A blank asset spacer. Args: width ,['xSpacer',0000],
+//'ySpacer': A blank row spacer. Args: height ,['ySpacer',0000],
+//'tooltip': Add a tooltip to the previous asset. Args: 'text'
+var gumpAssets = 
+    [
+        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
+        [ ['toggle','SmartStart','Start'],['toggle','GetKeys','Get Keys'] ],
+        [ ['text','Utilities',554,1,17] ],
+        [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
+        [ ['toggle','ResetPosition','Reset Position'], ['toggle','GoHome','GoHome'] ],
+        [ ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'] ],
+        [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
+
+        [ ['ySpacer',20] ],
+    ];
 
 function AliGumpRenderer() 
     {
