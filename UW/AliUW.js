@@ -756,6 +756,7 @@ function RestockConsumables()
                 }
             }
         }
+    Orion.CloseGump('container',pouchSerial);
     }
 
 function DropDraggedToContainer() //v2
