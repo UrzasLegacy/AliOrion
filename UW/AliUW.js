@@ -60,8 +60,8 @@
         //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
         //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
-        var homeX = 2521; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
-        var homeY = 148; //Change this to a Y coordinate near your Home recall spot
+        var homeX = 4415; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
+        var homeY = 1499; //Change this to a Y coordinate near your Home recall spot
     
     //Misc Tips
         //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
