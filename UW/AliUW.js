@@ -754,17 +754,24 @@ function DropLoot()
         {
         var box = woodenBoxes[0];
         var boxSerial = box.Serial();
+        var boxProperties = box.Properties();
         AliWalkTo(box.X(),box.Y(),0,1);
         VerifyOpenContainer(boxSerial);
-        if(MoveLoot())
-            return true;
+        var loot = Orion.FindList('UWLoot')[0];
+        while(loot && !Orion.Contains(boxProperties,'Contents: 125'))
+            {
+            Orion.CharPrint(self,1159,'Moving loot');
+            Orion.MoveItem(loot,0,boxSerial);
+            Orion.Wait(1100);
+            loot = Orion.FindList('UWLoot')[0];
+            }
         woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
             }).sort(function(a,b)
                 {
-                var aContents = (a.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
-                var bContents = (b.Properties.match(/Contents: (\d+)/) || [])[1] || 0;
+                var aContents = (a.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+                var bContents = (b.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
                 return bContents - aContents;
                 });
         }
