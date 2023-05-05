@@ -329,7 +329,7 @@ function LeaveUW()
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //Boss area
         {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'near', 10)[0];
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'near', 10)[0];
         if(ladder)
             {
             AliWalkTo(ladder.X(),ladder.Y(),0,1);
@@ -344,10 +344,10 @@ function LeaveUW()
         }
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid)) //Upper deck
         {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'near', 10)[0];
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6|0x08A6', any, ground, 'near', 10)[0];
+        Orion.Print('test')
         if(ladder)
             {
-            Orion.Print('test')
             AliWalkTo(ladder.X(),ladder.Y(),0,1);
             var tempX = Player.X();
             var tempY = Player.Y();
@@ -1759,7 +1759,7 @@ function GoToLadderPosition()
     Orion.Wait(Orion.Random(0,10) * 1000);
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'item', 24)[0];
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'item', 24)[0];
         AliWalkTo(ladder.X(),ladder.Y(),0,1);
         var tempX = Player.X();
         var tempY = Player.Y();
@@ -1772,7 +1772,7 @@ function GoToLadderPosition()
         }
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
         {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'item', 24)[0];
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'item', 24)[0];
         AliWalkTo(ladder.X(),ladder.Y(),0,1);
         var tempX = Player.X();
         var tempY = Player.Y();
