@@ -876,6 +876,7 @@ function ____________BARRELS(_){}
 
 function GetKeys()
     {
+    GoToLadderPosition();
     Orion.CharPrint(self,1159,'Getting keys');
     Orion.PauseScript('StayHidden');
     Orion.Wait(500);
