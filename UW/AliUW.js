@@ -624,6 +624,9 @@ function RepairGear()
     gump = Orion.CreateCustomGump(11420);
     if(bench && gump)
         gump.Close();
+    repairGump = Orion.GetGump(any, '0x00002415');
+    if(repairGump)
+        repairGump.Close();
     }
 
 function CharacterMaintenance()
