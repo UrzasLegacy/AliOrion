@@ -789,7 +789,7 @@ function RestockConsumables()
             return !Orion.Contains(item.Properties(),'Contents: 0/');
             })[0];
     if(!pouch)
-        return DiscordPush('Supply pouch missing!');
+        return DiscordPush('Supply pouch missing or empty!');
     var pouchSerial = pouch.Serial();
     if(pouch.Distance() > 2)
         AliWalkTo(pouch.X(),pouch.Y(),0,1);
