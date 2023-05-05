@@ -146,8 +146,6 @@ function SmartStart()
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
-                Orion.Exec('StayHidden',true);
-                Orion.Exec('StayLoggedIn',true);
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
                     {
@@ -424,7 +422,6 @@ function LeaveUW()
 
 function GoHome()
     {
-    LeaveUW();
     if(Orion.GetDistance(homeX,homeY) > 50)
         RecallByGump('Main', 'Home', 'Main', 'Home2');
     Orion.WarMode(0);
@@ -449,6 +446,8 @@ function LootUW()
 
 function Tithe()
     {
+    if(Orion.SkillValue('Chivalry') < 500)
+        return;
     var tithingPoints = Player.TithingPoints();
     Orion.Print('Current Tithing Points: ' + tithingPoints);
     TerminateAll('Tithe|CharacterMaintenance');
@@ -698,23 +697,16 @@ function CharacterMaintenance()
     {
     if(isTargetHour(11))
         Orion.LogOut()
-    GoHome();
-    Orion.CharPrint(self,1159,'Checking tithing points...');
-    var tithe = Player.TithingPoints() < 30000;
-    var dura = DurabilityCheck();
-    var consumable = false//ConsumablesCheck();
-    var pack = false// PackCheck();
-    var gold = GoldCheck();
-    if(pack)
-        DropLoot();
-    if(dura)
-        RepairGear();
-    if(consumable)
-         RestockConsumables();
-    if(gold)
-        DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
-    if(tithe)
+    LeaveUW();
+    if(Player.TithingPoints() < 30000)
         Tithe();
+    GoHome();
+    GoldCheck();
+    DropLoot();
+    if(DurabilityCheck())
+        RepairGear();
+    if(ConsumablesCheck())
+         RestockConsumables();
     }
 
 function isTargetHour(targetHour)
@@ -747,6 +739,8 @@ function MoveLoot(destinationContainerSerial)
 
 function DropLoot()
     {
+    if(Orion.FindList('UWLoot').length == 0)
+        return;
     var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
         {
         return !Orion.Contains(box.Properties(),'Contents: 125')
@@ -2052,7 +2046,8 @@ function GoldCheck(_)
             Orion.Wait(100);
             }
         }
-    return goldInt < 1000000;
+    if(goldInt < 1000000)
+        DiscordPush(Player.Name() + ' running low on gold. Restock soon!');
     }
 
 function DurabilityCheck(_)
