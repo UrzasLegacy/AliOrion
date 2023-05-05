@@ -674,7 +674,7 @@ function DropLoot()
     {
     if(Orion.FindList('UWLoot').length == 0)
         return;
-    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
         {
         return !Orion.Contains(box.Properties(),'Contents: 125')
         }).sort(function(a,b)
@@ -701,7 +701,7 @@ function DropLoot()
         Orion.CloseGump('container',boxSerial);
         if(!loot)
             return true;
-        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',10).filter(function(box)
+        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
             {
             return !Orion.Contains(box.Properties(),'Contents: 125')
             }).sort(function(a,b)
@@ -1774,7 +1774,7 @@ function DetermineBarrelSamp(_)
     //samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
     //var barrelSamp = samps[0];
     var barrelSamp = samps[Orion.Random(0,samps.length)];
-    Shared.AddVar('barrelSampName',barrelSamp[1]);
+    Shared.AddVar('barrelSampName',barrelSamp[2]);
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
     }
