@@ -177,7 +177,6 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
@@ -186,7 +185,7 @@ function SmartStart()
                 if(Shared.GetVar('barrelSamp',false) === true)
                     GetKeys();
                 Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
-                GoToLadderPosition()
+                GoToLadderPosition();
                 GoFromHomeToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
@@ -215,6 +214,7 @@ function SmartStart()
                 EquipBossSuitByBotName();
                 WaitSyncFollower(); //Home position
                 Orion.PauseScript('SmartStart');
+                GoToLadderPosition();
                 GoFromHomeToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
