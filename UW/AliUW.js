@@ -749,7 +749,7 @@ function RestockConsumables()
                     DiscordPush('UW House is out of ' + consumableName);
                 else
                     {
-                    Orion.MoveItem(consumableGraphic, any, pouchSerial, needed);
+                    Orion.MoveItem(consumable, any, pouchSerial, needed);
                     i--;
                     }
                 }
