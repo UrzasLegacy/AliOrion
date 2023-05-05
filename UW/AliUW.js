@@ -878,13 +878,6 @@ function ____________BARRELS(_){}
 
 function GetKeys()
     {
-    GoToLadderPosition();
-    Orion.CharPrint(self,1159,'Getting keys');
-    Orion.PauseScript('StayHidden');
-    Orion.Wait(500);
-    Orion.Terminate('StayHidden');
-    Orion.Exec('UWBarrelsHealSelf',true);
-    SwitchToBarrelWep();
     var locArr =
         [
             ['Flywheel',6426,1733], //0x46FE
@@ -892,6 +885,7 @@ function GetKeys()
             ['Wire Spool',6426,1753],//0x4CDB
             ['Power Core',6436,1753]//0x47E6
         ];
+    var barrelCheck = false;
     for(var i=0;i<locArr.length;i++)
         {
         var loc = locArr[i];
@@ -899,27 +893,50 @@ function GetKeys()
             {
             return Orion.Contains(item.Properties(),loc[0]);
             })[0];
-        if(component)
-            continue;
-        var x = loc[1];
-        var y = loc[2];
-        AliWalkTo(x,y);
-        ClearRoom();
-        }
-    for(var i = 0;i<locArr.length;i++)
-        {
-        var loc = locArr[i];
-        var component = Orion.FindTypeEx(any).filter(function(item)
-            {
-            return Orion.Contains(item.Properties(),loc[0]);
-            })[0];
         if(!component)
-            return GetKeys();
+            {
+            barrelCheck = true;;
+            break;
+            }
+        }
+    if(barrelCheck)
+        {
+        GoToLadderPosition();
+        Orion.PauseScript('StayHidden');
+        Orion.Wait(500);
+        Orion.Terminate('StayHidden');
+        SwitchToBarrelWep();
+        Orion.Exec('UWBarrelsHealSelf',true);
+        Orion.CharPrint(self,1159,'Getting keys');
+        for(var i=0;i<locArr.length;i++)
+            {
+            var loc = locArr[i];
+            var component = Orion.FindTypeEx(any).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),loc[0]);
+                })[0];
+            if(component)
+                continue;
+            var x = loc[1];
+            var y = loc[2];
+            AliWalkTo(x,y);
+            ClearRoom();
+            }
+        for(var i = 0;i<locArr.length;i++)
+            {
+            var loc = locArr[i];
+            var component = Orion.FindTypeEx(any).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),loc[0]);
+                })[0];
+            if(!component)
+                return GetKeys();
+            }
+        Orion.PauseScript('UWBarrelsHealSelf');
+        Orion.Wait(500);
+        Orion.Terminate('UWBarrelsHealSelf');
         }
     CharacterMaintenance();
-    Orion.PauseScript('UWBarrelsHealSelf');
-    Orion.Wait(500);
-    Orion.Terminate('UWBarrelsHealSelf');
     Orion.Wait(500);
     EquipBossSuitByBotName();
     Orion.Exec('StayHidden',true);
