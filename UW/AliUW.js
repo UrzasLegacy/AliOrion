@@ -376,7 +376,7 @@ function LeaveUW()
             }
         }
     var randX = 1700 + Orion.Random(-3,4);
-    var randY = 1564 + Orion.Random(-3,4);
+    var randY = 1560 + Orion.Random(-3,4);
     AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//Umbra
     Orion.Wait(500);
     }
@@ -718,11 +718,10 @@ function DropLoot()
         {
         var box = woodenBoxes[0];
         var boxSerial = box.Serial();
-        var boxProperties = box.Properties();
         AliWalkTo(box.X(),box.Y(),0,1);
         VerifyOpenContainer(boxSerial);
         var loot = Orion.FindList('UWLoot')[0];
-        while(loot && !Orion.Contains(boxProperties,'Contents: 125'))
+        while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
             {
             Orion.CharPrint(self,1159,'Moving loot');
             Orion.MoveItem(loot,0,boxSerial);
