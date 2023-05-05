@@ -57,7 +57,7 @@
         //My recall function only cares about the name of the rune, position in the book does not matter.
 
     //Drop House
-        //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible.
+        //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
         //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
         var homeX = 2521; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
@@ -102,23 +102,12 @@
     //have a problem. Further, GMs are rarely active between 9pm and 6am Eastern, so running overnight is usually safe. I obviously cannot guarantee anything though.
     //As a precaution, I recommend using accounts that are not tied to your main Mythic accounts in any way!
 
-function UltraTerminate()
-    {
-    Shared.ClearVars();
-    Orion.Terminate('all','UltraTerminate');
-    Orion.Exec('Autostart',true)
-    }
-
-//Create a findlist for autoloot named 'BotLoot'
-// var numberOfSamps = 3;
-// var numberOfHealers = 2; //not including the leader
-
 var useSingleTargetSpecial = true; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var singleTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
 var useOnslaught = false; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
 var useMultiTargetSpecial = false; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby. If MultiTargeSpecial is false 2 or more mobs.
 var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
 var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
 var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times.
@@ -143,6 +132,7 @@ function _____________START(_){}
 function SmartStart()
     {
     var role = Shared.GetVar('myRole',false);
+    Orion.Exec('AutoInsure',true);
     switch(role)
         {
         case 'leader':
@@ -156,6 +146,8 @@ function SmartStart()
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
+                Orion.Exec('StayHidden',true);
+                Orion.Exec('StayLoggedIn',true);
                 WaitSyncLeader(); //safe position
                 if(scoutWait)
                     {
@@ -187,7 +179,7 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                GoToSafePosition();
+                GoToHomePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
@@ -218,7 +210,8 @@ function SmartStart()
 			Orion.Exec('AliComFollower',true);
             if(!BossCheck())
                 {
-                GoToSafePosition();
+                CharacterMaintenance();
+                GoToHomePosition();
                 Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
@@ -242,13 +235,6 @@ function SmartStart()
         }
     }
 
-//--#Current
-function _____________CURRENT(_){}
-
-
-
-
-
 //--# Utilities
 function ____________UTILITIES(_){}
 
@@ -271,7 +257,6 @@ function AutoSettings()
 
 function initScripts()
     {
-    Orion.Exec('AutoInsure',true);
     var role = Shared.GetVar('myRole',false);
     switch(role)
         {
@@ -406,7 +391,7 @@ function ResetPosition()
 function LeaveUW()
     {
     if(!isPlayerInRectangle(6222, 1600, 6500, 1850))
-        return Orion.CharPrint(self,1159,'You are not in UW');
+        return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1))
         {
@@ -451,8 +436,9 @@ function GoHome()
         Orion.Wait(250);
         bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
         }
-    if(!Orion.WalkTo(bench.X(),bench.Y()))
-        Orion.WalkTo(bench.X(),bench.Y());
+    var benchX = bench.X();
+    var benchY = bench.Y();
+    AliWalkTo(benchX,benchY,0,1);
     }
 
 function LootUW()
@@ -461,11 +447,11 @@ function LootUW()
     //ListLoot('BotLoot', "ignorelist")
     }
 
-function RecallTithe()
+function Tithe()
     {
     var tithingPoints = Player.TithingPoints();
-    Orion.Print('Current Tithing Points: ' + tithingPoints)
-    TerminateAll('RecallTithe|CharacterMaintenance')
+    Orion.Print('Current Tithing Points: ' + tithingPoints);
+    TerminateAll('Tithe|CharacterMaintenance');
     if(Player.X() > 6000)
         LeaveUW();
     var ankh = Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
@@ -476,9 +462,7 @@ function RecallTithe()
     while(Player.TithingPoints() < 100000)
         {
         if(Orion.Now() > endTime)
-            {
-            return DiscordPush(Player.Name() + "couldn't tithe to 100,000")
-            }
+            return DiscordPush(Player.Name() + "couldn't tithe to 100,000");
         var subEndTime = Orion.Now() + 5000;
         var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
         if(!ankh)
@@ -714,16 +698,15 @@ function CharacterMaintenance()
     {
     if(isTargetHour(11))
         Orion.LogOut()
+    GoHome();
     Orion.CharPrint(self,1159,'Checking tithing points...');
     var tithe = Player.TithingPoints() < 30000;
     var dura = DurabilityCheck();
     var consumable = false//ConsumablesCheck();
     var pack = false// PackCheck();
     var gold = GoldCheck();
-    if(!tithe && !dura && !consumable && !pack && !gold)
-        return false;
-    GoHome();
-    // DropLoot();
+    if(pack)
+        DropLoot();
     if(dura)
         RepairGear();
     if(consumable)
@@ -731,7 +714,7 @@ function CharacterMaintenance()
     if(gold)
         DiscordPush(Player.Name() + ' running low on gold. Restock soon!')
     if(tithe)
-        RecallTithe();
+        Tithe();
     }
 
 function isTargetHour(targetHour)
@@ -936,6 +919,13 @@ function FindOwnCorpse()
         });
     if(Orion.WalkTo(body[0].X(), body[0].Y()))
         Orion.UseObject(body[0].Serial());
+    }
+
+function UltraTerminate()
+    { //for debugging
+    Shared.ClearVars();
+    Orion.Terminate('all','UltraTerminate');
+    Orion.Exec('Autostart',true)
     }
 
 //--#BarrelBot
@@ -1466,9 +1456,10 @@ function Autostart(_)
     //     }
     }
 
-function GoToSafePosition()
+function GoToHomePosition()
     {
-    Orion.CharPrint(self,1159,'Going to safe position');
+    Orion.CharPrint(self,1159,'Going to Home position');
+	TerminateAll('GoToLadderPosition');
     //search for boss and skip directly to boss sequence
     //search for boss corpse and go directly to loot sequence
     //check if already in sync position and go to it if not
@@ -1480,7 +1471,7 @@ function GoToSafePosition()
 function GoToLadderPosition()
     {
     Orion.CharPrint(self,1159,'Going to Ladder position');
-	TerminateAll('ResetPosition');
+	TerminateAll('GoToLadderPosition');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
         var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
@@ -1820,9 +1811,9 @@ function DetermineBarrelSamp(_)
         Orion.Wait(1000)
         samps = Shared.GetArray('dexxer',false);
         }
-    samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
-    var barrelSamp = samps[0];
-    //var barrelSamp = samps[Orion.Random(0,samps.length)];
+    //samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
+    //var barrelSamp = samps[0];
+    var barrelSamp = samps[Orion.Random(0,samps.length)];
     Shared.AddVar('barrelSampName',barrelSamp[1]);
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
@@ -2140,7 +2131,7 @@ function PackCheck(_)
 
 function BossCheck(_)
     {
-    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
+    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length;
     }
 
 function isPlayerInRectangle(x1, y1, x2, y2)
@@ -3162,7 +3153,7 @@ var gumpAssets =
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','FindOwnCorpse','Get Own Corpse'], ['toggle','StayHidden','Hide Til Hidden'], ['toggle','LootUW','Loot Boss'] ],
         [ ['toggle','ResetPosition','Reset Position'], ['toggle','GoHome','GoHome'] ],
-        [ ['toggle','RepairGear','Repair Gear'], ['toggle','RecallTithe','Recall Tithe'] ],
+        [ ['toggle','RepairGear','Repair Gear'], ['toggle','Tithe','Recall Tithe'] ],
         [ ['toggle','CharacterMaintenance','CharMaintenance'],['toggle','MoveLoot','MoveLoot']  ],
 
         [ ['ySpacer',20] ],
