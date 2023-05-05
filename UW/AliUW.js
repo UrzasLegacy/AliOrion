@@ -154,7 +154,8 @@ function SmartStart()
                     Orion.RemoveDisplayTimer('bossReset');
                     }
                 Orion.Wait(3000);
-                MassAllMessage('ResumeSmartStart'); //follower Home>Ready position
+                MassAllMessage('ResumeSmartStart'); //follower Home>Ladder position
+                WaitSyncLeader(); //ready position
                 WaitSyncLeader(); //ready position
                 Orion.Wait(2000);
                 Orion.Cast('Greater Heal');
@@ -186,6 +187,7 @@ function SmartStart()
                     GetKeys();
                 Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
                 GoToLadderPosition();
+                WaitSyncFollower(); //Ladder position
                 GoFromHomeToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
@@ -215,6 +217,7 @@ function SmartStart()
                 WaitSyncFollower(); //Home position
                 Orion.PauseScript('SmartStart');
                 GoToLadderPosition();
+                WaitSyncFollower(); //Ladder position
                 GoFromHomeToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
@@ -324,32 +327,55 @@ function LeaveUW()
     if(!isPlayerInRectangle(6222, 1600, 6500, 1850))
         return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
-    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1))
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //Boss area
         {
-        var ladder = Orion.FindType(0x08A4, any, ground, ' ', 2);
-        Orion.UseObject(ladder[0]);
-        Orion.Wait(500);
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, ' ', 10)[0];
+        if(ladder)
+            {
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(ladder.Serial());
+                Orion.Wait(500);
+                }
+            }
         }
-    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid))
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid)) //Upper deck
         {
-        ladder = Orion.FindType(0x08A6, any, ground, ' ', 2);
-        Orion.UseObject(ladder[0]);
-        Orion.Wait(500);
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, ' ', 10)[0];
+        if(ladder)
+            {
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(ladder.Serial());
+                Orion.Wait(500);
+                }
+            }
         }
-     if(AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1))
+     AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1); //Below Deck
+     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1)) //Outside boat
         {
-        Orion.Wait(500);
+        var rope = Orion.FindTypeEx(0x14FA, any, ground, ' ', 2)[0];
+        if(rope)
+            {
+            AliWalkTo(rope.X(),rope.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(rope.Serial());
+                Orion.Wait(500);
+                }
+            }
         }
-     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1))
-        {
-        var rope = Orion.FindType(0x14FA, any, ground, ' ', 2);
-        Orion.UseObject(rope[0]);
-        Orion.Wait(500);
-        }
-     if(AliWalkTo(1700, 1564, 0, 0, 255, 4, 1, 1))
-        {
-        Orion.Wait(10);
-        }
+    var randX = 1700 + Orion.Random(-3,4);
+    var randY = 1564 + Orion.Random(-3,4);
+    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//Umbra
     Orion.Wait(500);
     }
 
@@ -1442,82 +1468,6 @@ function Autostart(_)
     //     }
     }
 
-function GoToHomePosition()
-    {
-    Orion.CharPrint(self,1159,'Going to Home position');
-	TerminateAll('GoToHomePosition');
-	ResetPosition();
-    return true
-	}
-
-function GoToLadderPosition()
-    {
-    Orion.CharPrint(self,1159,'Going to Ladder position');
-	TerminateAll('GoToLadderPosition');
-    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
-        {
-        var ladder = Orion.FindTypeEx('0x08A4', any, ground, '', 24)[0];
-        if(ladder.Distance() > 2)
-            AliWalkTo(ladder.X(),ladder.Y(),0,1);
-        var playerX = Player.X();
-        var playerY = Player.Y();
-        var ladderSerial = ladder.Serial();
-        while(Player.X() == playerX && Player.Y() == playerY)
-            {
-            Orion.UseObject(ladderSerial);
-            Orion.Wait(1300);
-            }
-        }
-    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
-        {
-        var ladder = Orion.FindType(0x08A6, any, ground, 'item', 24);
-        Orion.UseObject(ladder[0]);
-        }
-    if(Player.X() < 6000)
-        {
-        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
-            RecallByGump('Main','UW Dock','Main','UW Dock2')
-        while(Orion.ObjAtLayer('Mount'))
-            {
-            Orion.UseObject(self);
-            Orion.Wait(1300);
-            }
-        EquipUWSuitByBotName();
-        Orion.Wait(1300);
-        }
-    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
-        {
-        var playerX = Player.X();
-        var playerY = Player.Y();
-        var whirlpool = Orion.FindType(0x3789, any, ground, ' ', 24);
-        while(Player.X() == playerX && Player.Y() == playerY)
-            {
-            Orion.UseObject(whirlpool[0]);
-            Orion.Wait(1300);
-            }
-        var ethy = Orion.FindTypeEx(any).filter(function(item)
-            {
-            return Orion.Contains(item.Properties(),'Mount Hue:')
-            })[0];
-        while(ethy && !Orion.ObjAtLayer('Mount'))
-            {
-            Orion.UseObject(ethy.Serial());
-            Orion.Wait(1300);
-            }
-        EquipBossSuitByBotName();
-        Orion.Wait(1300);
-        }
-    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
-        {
-        Orion.Wait(500);
-        }
-    if(AliWalkTo(6432, 1699, 0, 0, 255, 4, 1, 1))//below deck
-        {
-        Orion.Wait(10);
-        }
-    Orion.Wait(1300);
-	}
-
 function ScoutAhead()
     {
     TextWindow.Clear()
@@ -1801,17 +1751,96 @@ function DetermineBarrelSamp(_)
     Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
     }
     
+function GoToLadderPosition()
+    {
+    Orion.CharPrint(self,1159,'Going to Ladder position');
+	TerminateAll('GoToLadderPosition');
+    Orion.Wait(Orion.Random(0,10) * 1000);
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
+        {
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'item', 24)[0];
+        AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        var ladderSerial = ladder.Serial();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(ladderSerial);
+            Orion.Wait(1300);
+            }
+        }
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
+        {
+        var ladder = Orion.FindTypeEx('0x08A4', any, ground, 'item', 24)[0];
+        AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(ladder.Serial());
+            Orion.Wait(500);    
+            }
+        }
+    if(Player.X() < 6000)
+        {
+        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
+            RecallByGump('Main','UW Dock','Main','UW Dock2')
+        while(Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(self);
+            Orion.Wait(500);
+            }
+        EquipUWSuitByBotName();
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
+        {
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        var whirlpool = Orion.FindTypeEx(0x3789, any, ground, ' ', 24)[0];
+        AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(whirlpool.Serial());
+            Orion.Wait(1300);
+            }
+        var ethy = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'Mount Hue:')
+            })[0];
+        if(ethy)
+            {
+            Orion.UseObject(ethy.Serial());
+            Orion.Wait(1300);
+            }
+        EquipBossSuitByBotName();
+        while(ethy && !Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(ethy.Serial());
+            Orion.Wait(1300);
+            }
+        Orion.Wait(1300);
+        }
+    AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)//outside boat
+    var randX = 6432 + Orion.Random(-1,2);
+    var randY = 1699 + Orion.Random(-1,2);
+    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
+    Orion.Wait(1300);
+	}
+
 function GoFromHomeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
-    var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
+    Orion.Wait(Orion.Random(0,10) * 500);
+    var ladder = Orion.FindTypeEx('0x08A6',any,ground,'item',2)[0];
     if(!ladder)
         return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+    AliWalkTo(ladder.X(),ladder.Y(),0,1);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
         {
-        Orion.UseObject(ladder);
+        Orion.UseObject(ladder.Serial());
         Orion.Wait(1300);
         }
     var randX = 6315 + Orion.Random(-3,4);
@@ -1919,7 +1948,7 @@ function BossSequence(_)
 function CleanUpPublicCorpse()
     {
     Orion.IgnoreReset();
-    Orion.AddDisplayTimer('publicCorpse',300000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
+    Orion.AddDisplayTimer('publicCorpse',200000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
 	var corpse = Orion.FindTypeEx('0x2006', any, ground, 23).filter(function(item)
         {
         return Orion.Contains(item.Properties(), 'An Evil One');
