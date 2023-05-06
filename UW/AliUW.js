@@ -142,7 +142,8 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                CharacterMaintenance();
+                if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
+                    CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
@@ -193,7 +194,12 @@ function SmartStart()
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
                     OpenUW();
-                    EquipBossSuitByBotName();
+                    var wepInHand = Orion.ObjAtLayer('RightHand') || Orion.ObjAtLayer('LeftHand');
+                    if(wepInHand && Orion.Contains(wepInHand.Properties(),'Self Repair'))
+                        {
+                        Orion.Wait(1300);
+                        EquipBossSuitByBotName();
+                        }
                     }
                 WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
@@ -659,7 +665,7 @@ function RepairGear()
     }
 
 function CharacterMaintenance()
-    {
+    { 
     if(isTargetHour(11))
         Orion.LogOut();
     LeaveUW();
@@ -706,7 +712,7 @@ function DropLoot()
     {
     if(Orion.FindList('UWLoot').length == 0)
         {
-        Debug(': No loot to drop');
+        Debug2(': No loot to drop');
         return;
         }
     var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
@@ -742,7 +748,7 @@ function DropLoot()
             })[0];
         while(primer && !Orion.Contains(box.Properties(),'Contents: 125'))
             {
-            Debug('moving ' + primer.Name());
+            Debug2('moving ' + primer.Name());
             Orion.CharPrint(self,1159,'Moving Primer III');
             Orion.MoveItem(primer.Serial(),0,boxSerial);
             Orion.Wait(1100);
@@ -1808,12 +1814,27 @@ function DetermineBarrelSamp(_)
         Orion.Wait(1000)
         samps = Shared.GetArray('dexxer',false);
         }
+    for(var i=0;i<samps.length;i++)
+        {
+        var samp = samps[i];
+        Orion.UdpSend(samp[0],'KeyCheck');
+        }
+    Orion.Wait(2000);
     //samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
     //var barrelSamp = samps[0];
-    var barrelSamp = samps[Orion.Random(0,samps.length)];
-    Shared.AddVar('barrelSampName',barrelSamp[2]);
+    var keyCheck = Shared.GetVar('barrelSampName');
+    if(keyCheck == 'Unknown')
+        {
+        var barrelSamp = samps[Orion.Random(0,samps.length)];
+        Shared.AddVar('barrelSampName',barrelSamp[2]);
+        }
+    else
+        {
+        samps = samps.filter(function(samp){return Orion.Contains(samp[2], keyCheck)})
+        //var barrelSamp = samps[0];
+        }
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
-    Debug('Send //SetBarrelSamp: ' + barrelSamp[1])
+    Debug('Send //SetBarrelSamp: ' + barrelSamp[2]);
     }
     
 function GoToLadderPosition()
@@ -1988,9 +2009,8 @@ function OpenUW(_)
         {
         Debug2('using lever');
         Orion.UseObject(lever.Serial())
-        Orion.Wait(1300);
+        Orion.Wait(500);
         }
-    Orion.Wait(1000);
     }
 
 function GoToBossArena(_)
