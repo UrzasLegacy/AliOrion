@@ -711,7 +711,7 @@ function DropLoot()
     {
     if(Orion.FindList('UWLoot').length == 0)
         {
-        Debug2(': No loot to drop');
+        Debug2('No loot to drop');
         return;
         }
     var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
@@ -735,7 +735,7 @@ function DropLoot()
             var lootObj = Orion.FindObject(loot);
             var lootName = lootObj.Name();
             if(lootObj)
-                Debug('moving ' + lootName);
+                Debug2('Moving ' + lootName);
             Orion.CharPrint(self,1159,'Moving loot: ' + lootName);
             Orion.MoveItem(loot,0,boxSerial);
             Orion.Wait(1100);
@@ -747,7 +747,7 @@ function DropLoot()
             })[0];
         while(primer && !Orion.Contains(box.Properties(),'Contents: 125'))
             {
-            Debug2('moving ' + primer.Name());
+            Debug2('Moving ' + primer.Name());
             Orion.CharPrint(self,1159,'Moving Primer III');
             Orion.MoveItem(primer.Serial(),0,boxSerial);
             Orion.Wait(1100);
@@ -793,13 +793,13 @@ function Trash()
         })[0];
     if(!trashCan)
         {
-        Debug2('trash can missing');
+        Debug2('Trash can missing');
         return Orion.CharPrint(self,1159,'Trash can missing');
         }
     while(primer)
         {
         AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
-        Debug2('trashing: ' + primer.Name());
+        Debug2('Trashing: ' + primer.Name());
         Orion.MoveItem(primer.Serial(),0,trashCan.Serial());
         Orion.Wait(1100);
         primer = Orion.FindTypeEx('0x1E22').filter(function(item)
@@ -810,7 +810,7 @@ function Trash()
     while(artifact)
         {
         AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
-        Debug2('trashing ' + artifact.Name());
+        Debug2('Trashing ' + artifact.Name());
         Orion.MoveItem(artifact.Serial(),0,trashCan.Serial());
         Orion.Wait(1100);
         artifact = Orion.FindTypeEx(any).filter(function(item)
@@ -1497,22 +1497,22 @@ function Autostart(_)
     if(Player.Serial() == leadHealerSerial)
         {
 		var role = 'leader';
-        Debug2('chosen as Leader');
+        Debug2('Chosen as Leader');
         }
     else if(Orion.SkillValue('Magery') >= 700)
         {
         var role = 'healer';
-        Debug2('chosen as Healer');
+        Debug2('Chosen as Healer');
         }
     else if(Orion.SkillValue('Swordsmanship') >= 1000)
         {
         var role = 'dexxer';
-        Debug2('chosen as Dexxer');
+        Debug2('Chosen as Dexxer');
         }
     else
         {
         var role = 'misc';
-        Debug2('chosen as Misc');
+        Debug2('Chosen as Misc');
         }
     Shared.AddVar('myRole',role);
     if(Player.Serial() == leadHealerSerial)
@@ -1831,7 +1831,7 @@ function KeyCheck()
             var _pName = Player.Name().slice(5, Player.Name().length);
         else
             var _pName = Player.Name();
-        Debug2('sends ' + keyCheck + ' Keycheck: ' + _pName);
+        Debug2('Sends ' + keyCheck + ' Keycheck: ' + _pName);
         Orion.UdpSend(40420,'KeyCheck:' + _pName);
         }
     }
@@ -1979,21 +1979,21 @@ function UWSuitJournalCheck()
 function GoFromHomeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
-    Debug2('moving from safe to ready position');
+    Debug2('Moving from safe to ready position');
     Orion.Wait(Orion.Random(0,10) * 500);
     var ladder = Orion.FindTypeEx('0x08A6',any,ground,'item',2)[0];
     if(!ladder)
         {
-        Debug2("couldn't find rope ladder!");
+        Debug2("Couldn't find rope ladder!");
         return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
         }
-    Debug2("moving to rope ladder");
+    Debug2("Moving to rope ladder");
     AliWalkTo(ladder.X(),ladder.Y(),0,1);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
         {
-        Debug2("using ladder");
+        Debug2("Using ladder");
         Orion.UseObject(ladder.Serial());
         Orion.Wait(1300);
         }
@@ -2001,17 +2001,17 @@ function GoFromHomeToReadyPosition(_)
     var randY = 1706 + Orion.Random(-3,4);
     if(Shared.GetVar('barrelSamp',false))
         {
-        Debug2("walking to Winch Assembly");
+        Debug2("Walking to Winch Assembly");
         AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
         }
     else if(Player.Serial() == leadSampSerial)
         {
-        Debug2("walking to Lead Samp Position");
+        Debug2("Walking to Lead Samp Position");
         AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
         }
     else
         {
-        Debug2("walking to Ready Position");
+        Debug2("Walking to Ready Position");
         AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
         }
     }
@@ -2052,7 +2052,7 @@ function OpenUW(_)
             continue;
             }
         Orion.CharPrint(self,1159, 'Inserting ' + nameArr[i]);
-        Debug2('inserting ' + nameArr[i])
+        Debug2('Inserting ' + nameArr[i])
         Orion.MoveItem(component,0,winchSerial)
         Orion.Wait(1300);
         var reParse = ParseWinch();
@@ -2068,7 +2068,7 @@ function OpenUW(_)
     AliWalkTo(lever.X(),lever.Y());
     while(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
         {
-        Debug2('using lever');
+        Debug2('Using lever');
         Orion.UseObject(lever.Serial())
         Orion.Wait(500);
         }
@@ -2084,13 +2084,13 @@ function GoToBossArena(_)
         ]
     var entryTile = entryTiles[Orion.Random(0,entryTiles.length)]
     Orion.CharPrint(self,1159,'Going to boss arena');
-    Debug2('going to boss arena')
+    Debug2('Going to boss arena')
     AliWalkTo(entryTile[0], entryTile[1]);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
         {
-        Debug2('stepping into boss arena')
+        Debug2('Stepping into boss arena')
         Orion.Step('n');
         Orion.Wait(500);
         }
@@ -2278,7 +2278,7 @@ function DurabilityCheck(_)
 function ConsumablesCheck(_)
     {
     Orion.CharPrint(self,1159,'Checking consumables...');
-    Debug2('checking consumables...');
+    Debug2('Checking consumables...');
     var consumables =
         [
         ['0x2FD8', 10], //apple
@@ -2354,7 +2354,7 @@ function ParseWinch(_)
         return ele == '>READY<';
         });
     Orion.Print(statusMap);
-    Debug2('parsing winch: ' + statusMap);
+    Debug2('Parsing winch: ' + statusMap);
     return statusMap
     }
 
@@ -2459,13 +2459,13 @@ function VerifyOpenContainer(containerSerial,delay)
         {
         if(Orion.Now() > endTime)
             {
-            Debug2("couldn't open container!");
+            Debug2("Couldn't open container!");
             return false;
             }
         Orion.UseObject(containerSerial);
         Orion.Wait(1000);
         }
-    Debug2("opened container");
+    Debug2("Opened container");
     return true;
     }
 
@@ -2488,7 +2488,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         });
     if(!runeBook[0])
         {
-        Debug2("runebook named '" + bookName + "' not found!")
+        Debug2("Runebook named '" + bookName + "' not found!")
         Orion.Print("Runebook named '" + bookName + "' not found!");
         return false;
         }
@@ -2496,7 +2496,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         var startInd = 50; //recall index
     else
         var startInd = 75; //sacred journey index
-    Debug2("recalling to: " + runeName + ' in Book: ' + bookName);
+    Debug2("Recalling to: " + runeName + ' in Book: ' + bookName);
     Orion.CharPrint(self, 1159, "Recalling to: " + runeName + ' in Book: ' + bookName);
     var runebookSerial = runeBook[0].Serial();
     Orion.Wait(1300);
@@ -2507,7 +2507,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         var runeInd = gump.TextList().indexOf(runeName) - 2;
         if(runeInd < 0)
             {
-            Debug2("can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
+            Debug2("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
             Orion.Print("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
             }
         if(gump !== null)
@@ -2565,7 +2565,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
     Orion.Wait(200);
     if(x == Player.X() && y == Player.Y())
         {
-        Debug2('retrying recall');
+        Debug2('Retrying recall');
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
         }
     }
@@ -3027,7 +3027,7 @@ function AliComFollower()
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
     var outStr = 'Check:' + playerString + ':' + port;
-    Debug2('sending signal to leader: ' + JSON.stringify(outStr));
+    Debug2('Sending signal to leader: ' + JSON.stringify(outStr));
     Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 2000;
@@ -3036,7 +3036,7 @@ function AliComFollower()
         recv = Orion.UdpRecv('Coms');
         if(recv)
             {
-            Debug2('recv: ' + recv);
+            Debug2('CommandString: ' + recv);
             var split = Orion.Split(recv,':');
             if(split[0] == 'Heard')
                 break;
@@ -3044,7 +3044,7 @@ function AliComFollower()
         Orion.Wait(100);
         if(Orion.Now() > pulseTime)
             {
-            Debug2('retrying connection to leader: ' + JSON.stringify(outStr));
+            Debug2('Retrying connection to leader: ' + JSON.stringify(outStr));
             Orion.CharPrint(self,1159,'Retrying connection to leader');
             Orion.UdpSend(40420,outStr);
             pulseTime = Orion.Now() + 5000;
