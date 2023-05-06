@@ -124,7 +124,7 @@ var discordHook = '887268637315047444'; //Put your Discord WebHook here.
 var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
 Orion.Exec('JournalScan', true);
-var debug = false;
+var debug = true;
 var debug2 = true
 var luckScum = false;
 //--#Start
@@ -1847,6 +1847,7 @@ function DetermineBarrelSamp(_)
         Orion.Wait(1000)
         samps = Shared.GetArray('dexxer',false);
         }
+    Debug('Sending KeyChecks')
     for(var i=0;i<samps.length;i++)
         {
         var samp = samps[i];
