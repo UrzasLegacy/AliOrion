@@ -1909,11 +1909,10 @@ function GoToLadderPosition()
             Orion.UseObject(self);
             Orion.Wait(1300);
             }
-        // Orion.Wait(Orion.Random(1,6) * 500);
-        // EquipUWSuitByBotName();
-        // Orion.Wait(Orion.Random(1,6) * 500);
+        Orion.Wait(Orion.Random(1,6) * 500);
+        Orion.Exec('UWSuitJournalCheck',true);
         }
-    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1,50000,false,UWSuitJournalCheck))//uw dock
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
         {
         var whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
         AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
@@ -1951,23 +1950,28 @@ function GoToLadderPosition()
 
 function UWSuitJournalCheck()
     {
-    var check = Orion.InJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!",'sys')
-    if(check)
+    var endTime = Orion.Now() + 10000;
+    while(Player.Y() < 1570 && Orion.Now() < endTime)
         {
-        if(check.Text() == "You couldn't hope to survive proceeding without the proper equipment...")
-            EquipBossSuitByBotName();
-        else if(check.Text() == "You cannot proceed while mounted or flying!")
+        var check = Orion.InJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!",'sys')
+        if(check)
             {
-            while(Orion.ObjAtLayer("Mount"))
+            if(check.Text() == "You couldn't hope to survive proceeding without the proper equipment...")
+                EquipBossSuitByBotName();
+            else if(check.Text() == "You cannot proceed while mounted or flying!")
                 {
-                Orion.UseObject(self);
-                Orion.Wait(500);
+                while(Orion.ObjAtLayer("Mount"))
+                    {
+                    Orion.UseObject(self);
+                    Orion.Wait(500);
+                    }
                 }
+            Orion.Wait(100);
+            Orion.ClearJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!")
             }
-        Orion.Wait(100);
-        Orion.ClearJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!")
+        Orion.Wait(500);
         }
-        
+    EquipBossSuitByBotName();
     }
 
 function GoFromHomeToReadyPosition(_)
