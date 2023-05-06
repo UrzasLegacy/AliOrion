@@ -1907,12 +1907,13 @@ function GoToLadderPosition()
         while(Orion.ObjAtLayer('Mount'))
             {
             Orion.UseObject(self);
-            Orion.Wait(500);
+            Orion.Wait(1300);
             }
-        EquipUWSuitByBotName();
-        Orion.Wait(1300);
+        // Orion.Wait(Orion.Random(1,6) * 500);
+        // EquipUWSuitByBotName();
+        // Orion.Wait(Orion.Random(1,6) * 500);
         }
-    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1,50000,false,UWSuitJournalCheck))//uw dock
         {
         var whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
         AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
@@ -1947,6 +1948,27 @@ function GoToLadderPosition()
     AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
     Orion.Wait(1300);
 	}
+
+function UWSuitJournalCheck()
+    {
+    var check = Orion.InJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!",'sys')
+    if(check)
+        {
+        if(check.Text() == "You couldn't hope to survive proceeding without the proper equipment...")
+            EquipBossSuitByBotName();
+        else if(check.Text() == "You cannot proceed while mounted or flying!")
+            {
+            while(Orion.ObjAtLayer("Mount"))
+                {
+                Orion.UseObject(self);
+                Orion.Wait(500);
+                }
+            }
+        Orion.Wait(100);
+        Orion.ClearJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!")
+        }
+        
+    }
 
 function GoFromHomeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
@@ -2121,7 +2143,7 @@ function CleanUpPublicCorpse()
 
 function JournalScan()
     {
-    var msg = 'GM';
+    var msg = "GM";
     while(true)
         {
         var check = Orion.WaitJournal(msg, Orion.Now(), 0);
