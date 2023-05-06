@@ -157,9 +157,8 @@ function SmartStart()
                     }
                 Orion.Wait(3000);
                 MassAllMessage('ResumeSmartStart'); //follower Home>Ladder position
-                WaitSyncLeader(); //ready position
-                WaitSyncLeader(); //ready position
-                Orion.Wait(2000);
+                WaitSyncLeader(); //Ladder position
+                WaitSyncLeader(); //Ready position
                 Orion.Cast('Greater Heal');
                 Orion.WaitForTarget(3000);
                 MassAllMessage('ResumeSmartStart'); //start boss sequence
