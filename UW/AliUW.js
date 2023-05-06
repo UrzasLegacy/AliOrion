@@ -1957,7 +1957,7 @@ function UWSuitJournalCheck()
         if(check)
             {
             if(check.Text() == "You couldn't hope to survive proceeding without the proper equipment...")
-                EquipBossSuitByBotName();
+                EquipUWSuitByBotName();
             else if(check.Text() == "You cannot proceed while mounted or flying!")
                 {
                 while(Orion.ObjAtLayer("Mount"))
@@ -1971,6 +1971,7 @@ function UWSuitJournalCheck()
             }
         Orion.Wait(500);
         }
+    Orion.Wait(1500);
     EquipBossSuitByBotName();
     }
 
