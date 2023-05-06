@@ -148,10 +148,10 @@ function SmartStart()
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
+                DetermineBarrelSamp();
                 WaitSyncLeader(); //Home position
                 if(scoutWait)
                     {
-                    DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
