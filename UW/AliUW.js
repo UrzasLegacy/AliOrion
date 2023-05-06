@@ -1803,6 +1803,39 @@ function WaitSyncFollower(_)
         }
     }
 
+function KeyCheck()
+    {
+    var locArr =
+        [
+            ['Flywheel',6426,1733], //0x46FE
+            ['Bearing Assembly',6436,1733],//0x0E74
+            ['Wire Spool',6426,1753],//0x4CDB
+            ['Power Core',6436,1753]//0x47E6
+        ];
+    var keyCheck = true;
+    for(var i=0;i<locArr.length;i++)
+        {
+        var loc = locArr[i];
+        var component = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),loc[0]);
+            })[0];
+        if(!component)
+            {
+            keyCheck = false;;
+            break;
+            }
+        }
+    if(keyCheck)
+        {
+        if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+            var _pName = Player.Name().slice(5, Player.Name().length);
+        else
+            var _pName = Player.Name();
+        Orion.UdpSend(40420,'KeyCheck:' + _pName);
+        }
+    }
+
 function DetermineBarrelSamp(_)
     {
     Shared.AddVar('barrelSampName','Unknown');
@@ -1831,7 +1864,7 @@ function DetermineBarrelSamp(_)
     else
         {
         samps = samps.filter(function(samp){return Orion.Contains(samp[2], keyCheck)})
-        //var barrelSamp = samps[0];
+        var barrelSamp = samps[0];
         }
     Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
     Debug('Send //SetBarrelSamp: ' + barrelSamp[2]);
@@ -2912,6 +2945,10 @@ function AliComLeader()
                 case 'CureTarget':
                     var targetSerial = recvSplit[1];
                     Orion.Exec('CureTarget',true,[targetSerial]);
+                    break;
+                case 'KeyCheck':
+                    var barrelSampName = recvSplit[1];
+                    Shared.AddVar('barrelSampName',barrelSampName);
                     break;
                 case undefined:
                     break;
