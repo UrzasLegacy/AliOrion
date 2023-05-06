@@ -124,7 +124,8 @@ var discordHook = '887268637315047444'; //Put your Discord WebHook here.
 var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
 Orion.Exec('JournalScan', true);
-var debug = true;
+var debug = false;
+var debug2 = true
 var luckScum = false;
 //--#Start
 function _____________START(_){}
@@ -1444,37 +1445,57 @@ function Autostart(_)
     //     }
     Orion.Wait(1000);
     Shared.AddVar('debug',debug);
+    Shared.AddVar('debug2',debug2);
     if(Player.Serial() == leadHealerSerial)
+        {
 		var role = 'leader';
+        Debug2('chosen as Leader');
+        }
     else if(Orion.SkillValue('Magery') >= 700)
+        {
         var role = 'healer';
+        Debug2('chosen as Healer');
+        }
     else if(Orion.SkillValue('Swordsmanship') >= 1000)
+        {
         var role = 'dexxer';
+        Debug2('chosen as Dexxer');
+        }
     else
+        {
         var role = 'misc';
+        Debug2('chosen as Misc');
+        }
     Shared.AddVar('myRole',role);
     if(Player.Serial() == leadHealerSerial)
         Orion.Exec('AliComLeader',true);
     else
         Orion.Exec('AliComFollower',true);
     VerifyOpenContainer(backpack);
-    // var ethy = Orion.FindTypeEx(any).filter(function(item)
-    //     {
-    //     return Orion.Contains(item.Properties(),'Mount Hue:');
-    //     })[0];
-    // while(ethy && !Orion.ObjAtLayer('mount'))
-    //     {
-    //     Orion.UseObject(ethy.Serial());
-    //     Orion.Wait(1300);
-    //     }
+    while(ethy && Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Dismounting to avoid Dismount debuff');
+        Orion.UseObject(self);
+        Orion.Wait(1300);
+        }
+    Orion.Wait(1000);
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
     }
 
 function ScoutAhead()
     {
     TextWindow.Clear()
     Shared.AddVar('leashing',false)
-    Orion.CharPrint(self,1159,'Scouting ahead')
-    
+    Orion.CharPrint(self,1159,'Scouting ahead')    
     var hideCooldown = Orion.Now();
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
     if(ladder)
@@ -1755,7 +1776,7 @@ function DetermineBarrelSamp(_)
 function GoToLadderPosition()
     {
     Orion.CharPrint(self,1159,'Going to Ladder position');
-	TerminateAll('GoToLadderPosition');
+	TerminateAll('GoToLadderPosition|GetKeys');
     Orion.Wait(Orion.Random(0,10) * 1000);
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
@@ -1823,47 +1844,70 @@ function GoToLadderPosition()
         Orion.Wait(1300);
         }
     AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)//outside boat
-    Orion.Wait(2000);
+    Orion.Wait(1300);
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
     AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
-    Orion.Wait(2000);
+    Orion.Wait(1300);
 	}
 
 function GoFromHomeToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
+    Debug2('moving from safe to ready position');
     Orion.Wait(Orion.Random(0,10) * 500);
     var ladder = Orion.FindTypeEx('0x08A6',any,ground,'item',2)[0];
     if(!ladder)
+        {
+        Debug2("couldn't find rope ladder!");
         return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+        }
+    Debug2("moving to rope ladder");
     AliWalkTo(ladder.X(),ladder.Y(),0,1);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
         {
+        Debug2("using ladder");
         Orion.UseObject(ladder.Serial());
         Orion.Wait(1300);
         }
     var randX = 6315 + Orion.Random(-3,4);
     var randY = 1706 + Orion.Random(-3,4);
     if(Shared.GetVar('barrelSamp',false))
+        {
+        Debug2("walking to Winch Assembly");
         AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        }
     else if(Player.Serial() == leadSampSerial)
+        {
+        Debug2("walking to Lead Samp Position");
         AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        }
     else
+        {
+        Debug2("walking to Ready Position");
         AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        }
     }
 
 function OpenUW(_)
     {
     Orion.CharPrint(self,1159,'Opening UW!');
+    Debug2("Opening UW!");
     var componentArr =
         [
-            '0x46FE', // Flywheel
-            '0x4CDB', // Wire Spool
-            '0x47E6', // Power Core
-            '0x0E74', // Bearing Assembly
+            '0x46FE',
+            '0x4CDB',
+            '0x47E6',
+            '0x0E74',
+        ];
+    var nameArr =
+        [
+            'Flywheel',
+            'Wire Spool',
+            'Power Core',
+            'Bearing Assembly',
         ];
     var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
     if(!winch)
@@ -1879,9 +1923,11 @@ function OpenUW(_)
         var component = Orion.FindType(componentArr[i])[0];
         if(!component)
             {
-            Orion.CharPrint(self,1159,"Couldn't find component: " + i);
+            Orion.CharPrint(self,1159,"Couldn't find component: " + nameArr[i]);
             continue;
             }
+        Orion.CharPrint(self,1159, 'Inserting ' + nameArr[i]);
+        Debug2('inserting ' + nameArr[i])
         Orion.MoveItem(component,0,winchSerial)
         Orion.Wait(1300);
         var reParse = ParseWinch();
@@ -1890,10 +1936,14 @@ function OpenUW(_)
         }
     var lever = Orion.FindTypeEx('0x108C|0x108E',any,ground,'item',20)[0];
     if(!lever)
+        {
+        Debug2('Lever not found!');
         return Orion.CharPrint(self,1159,'Lever not found!');
+        }
     AliWalkTo(lever.X(),lever.Y());
     while(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
         {
+        Debug2('using lever');
         Orion.UseObject(lever.Serial())
         Orion.Wait(1300);
         }
@@ -1910,11 +1960,13 @@ function GoToBossArena(_)
         ]
     var entryTile = entryTiles[Orion.Random(0,entryTiles.length)]
     Orion.CharPrint(self,1159,'Going to boss arena');
+    Debug2('going to boss arena')
     AliWalkTo(entryTile[0], entryTile[1]);
     var tempX = Player.X();
     var tempY = Player.Y();
     while(Player.X() == tempX && Player.Y() == tempY)
         {
+        Debug2('stepping into boss arena')
         Orion.Step('n');
         Orion.Wait(500);
         }
@@ -1923,6 +1975,7 @@ function GoToBossArena(_)
 function BossSequence(_)
     {
     Orion.CharPrint(self,1159,'Starting Boss Sequence!');
+    Debug2('Starting Boss Sequence!');
     Shared.AddVar('bossStartStamp',Orion.Now());
     while(!Player.Dead())
         {
@@ -2101,6 +2154,7 @@ function DurabilityCheck(_)
 function ConsumablesCheck(_)
     {
     Orion.CharPrint(self,1159,'Checking consumables...');
+    Debug2('checking consumables...');
     var consumables =
         [
         ['0x2FD8', 10], //apple
@@ -2120,12 +2174,6 @@ function ConsumablesCheck(_)
             }
         }
     return false;
-    }
-
-function PackCheck(_)
-    {
-    Orion.CharPrint(self,1159,'Checking backpack...');
-    return Orion.FindList('UWLoot').length;
     }
 
 function BossCheck(_)
@@ -2182,6 +2230,7 @@ function ParseWinch(_)
         return ele == '>READY<';
         });
     Orion.Print(statusMap);
+    Debug2('parsing winch: ' + statusMap);
     return statusMap
     }
 
@@ -2205,7 +2254,10 @@ function ListLoot(findList)  //v2
         return Orion.Contains(item.Properties(), 'An Evil One');
         })[0];
     if(!corpse)
+        {
+        Debug2('No corpse found');
         return Orion.CharPrint(self,1159,'No corpse found');
+        }
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
     do
@@ -2250,6 +2302,7 @@ function ListLoot(findList)  //v2
                 totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
                 TextWindow.Open();
                 TextWindow.Clear();
+                var outMsg = 'a'
                 TextWindow.Print(JSON.stringify(totals))
                 AppendMagic(totals)
                 }
@@ -2267,38 +2320,11 @@ function ListLoot(findList)  //v2
             Orion.Wait(250);
             }
         var itemObj = Orion.FindObject(lootList);
-        Orion.Print(itemObj.Name());
+        Orion.Print('Looting: ' + itemObj.Name());
         Orion.MoveItem(lootList);
         Orion.Wait(1200);
         lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
         }
-    }
-function ListLoot2(findlist,ignorelist)  //v2
-    {
-    var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
-        {
-        return Orion.Contains(item.Properties(), 'An Evil One');
-        })[0];
-    if(!corpse)
-        return Orion.CharPrint(self,1159,'No corpse found');
-    var corpseSerial = corpse.Serial();
-    Orion.UseObject(corpseSerial);
-    Orion.Wait(2000);
-    var corpseInstanceSerial = Orion.GetSerial(lastcontainer); 
-    Orion.Print(corpseInstanceSerial); 
-    if(ignorelist)
-        Orion.UseIgnoreList(ignorelist);
-    var lootlist = Orion.FindList(findlist, corpseInstanceSerial);
-    Orion.ResetIgnoreList();
-    for(var i=0;i<lootlist.length;i++) 
-        {            
-        if(Orion.GetDistance(corpseSerial) > 2)
-            break;
-        var itemObj = Orion.FindObject(lootlist[i]);
-        Orion.Print(itemObj.Name());
-        Orion.MoveItem(lootlist[i]);
-        Orion.Wait(1200);
-        }   
     }
 
 function VerifyOpenContainer(containerSerial,delay)
@@ -2308,53 +2334,14 @@ function VerifyOpenContainer(containerSerial,delay)
     while(!Orion.GumpExists('container',containerSerial))
         {
         if(Orion.Now() > endTime)
+            {
+            Debug2("couldn't open container!");
             return false;
+            }
         Orion.UseObject(containerSerial);
         Orion.Wait(1000);
         }
-    return true;
-    }
-
-function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
-    {
-    if(!colorID)
-        var colorID = any;
-    if(!destinationContainerSerial)
-        var destinationContainerSerial = Orion.GetSerial(backpack);
-    while(!Orion.GumpExists('container', supplyContainerSerial))
-        {
-        Orion.CharPrint(self,1159,'Opening Supply Container');
-        if(supplyContainerSerial == Player.BankSerial())
-            Orion.Say('bank')
-        else
-            Orion.UseObject(supplyContainerSerial);
-        Orion.Wait(1300);
-        }
-    while(!Orion.GumpExists('container', destinationContainerSerial))
-        {
-        Orion.UseObject(destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    var needed = amount - Orion.Count(graphicID, colorID, destinationContainerSerial, 0, false);
-    var restockItem = Orion.FindType(graphicID, colorID, supplyContainerSerial);
-    if((needed > 0 || amount == 0) && !restockItem[0])
-        {
-        TextWindow.Open();
-        TextWindow.Print("Couldn't restock item: " + itemName);
-        Orion.Wait(100);
-        return false;
-        }
-    if(amount === 0)
-        {
-        Orion.MoveItem(restockItem[0], 0, destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    else if(needed > 0)
-        {
-        Orion.MoveItem(restockItem[0], needed, destinationContainerSerial);
-        Orion.Wait(1300);
-        }
-    Orion.Wait(100);
+    Debug2("opened container");
     return true;
     }
 
@@ -2377,6 +2364,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         });
     if(!runeBook[0])
         {
+        Debug2("runebook named '" + bookName + "' not found!")
         Orion.Print("Runebook named '" + bookName + "' not found!");
         return false;
         }
@@ -2384,6 +2372,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         var startInd = 50; //recall index
     else
         var startInd = 75; //sacred journey index
+    Debug2("recalling to: " + runeName + ' in Book: ' + bookName);
     Orion.CharPrint(self, 1159, "Recalling to: " + runeName + ' in Book: ' + bookName);
     var runebookSerial = runeBook[0].Serial();
     Orion.Wait(1300);
@@ -2393,7 +2382,10 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
         {
         var runeInd = gump.TextList().indexOf(runeName) - 2;
         if(runeInd < 0)
+            {
+            Debug2("can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
             Orion.Print("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
+            }
         if(gump !== null)
             {
             gump.Select(Orion.CreateGumpHook(startInd + runeInd));
@@ -2447,8 +2439,11 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
     Orion.Wait(1000);
     Orion.Resend();
     Orion.Wait(200);
-    if(x == Player.X() && y == Player.Y()) 
+    if(x == Player.X() && y == Player.Y())
+        {
+        Debug2('retrying recall');
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
+        }
     }
 
 function DiscordPush(message)
@@ -2631,6 +2626,15 @@ function Debug(msg)
     TextWindow.Print(Orion.Time() + ': ' + msg);
     }
 
+function Debug2(msg)
+    {
+    if(Shared.GetVar('debug2',false) !== true)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + '  ' + Player.Name() +': ' + msg);
+    }
+
 function HydraLeash(_)
     {
     var hydraDistance = 24;
@@ -2753,56 +2757,6 @@ function SeaweedAvoid(_)
                 });
             }
         });
-    }
-
-function LegendaryCount(_)
-    {
-    Orion.WaitForAddObject('myTarget');
-    var corpseSerial = Orion.GetSerial('myTarget');
-    var instanceSerials = Orion.FindType(any,any,corpseSerial);
-    
-    var totals = {};
-    do
-        {
-        Orion.UseObject(corpseSerial);
-        Orion.Wait(1300);
-        instanceSerials = Orion.FindType(any,any,corpseSerial);
-        } while(instanceSerials.length == 0)
-    if(instanceSerials.length)
-        {
-        var test = Orion.FindObject(instanceSerials[0]);
-        if(test && test.Graphic() !== '0x2006')
-            {
-            Orion.CharPrint(self,1159,'Corpse is public');
-            return;
-            }
-        else
-            {
-            for(var i=0;i<instanceSerials.length;i++)
-                {
-                var corpseInstance = instanceSerials[i];
-                var items = Orion.FindTypeEx(any,any,corpseInstance);
-                for(var j=0;j<items.length;j++)
-                    {
-                    var item = items[j];
-                    var itemProps = item.Properties();
-                    var lastLine = itemProps.match(/.+$/) || '';
-                    if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
-                        {
-                        continue;
-                        }
-                    if(totals[lastLine])
-                        totals[lastLine]++;
-                    else
-                        totals[lastLine] = 1;
-                    }
-                }
-            }
-        }
-    TextWindow.Open();
-    TextWindow.Clear();
-    TextWindow.Print(JSON.stringify(totals))
-    AppendMagic(totals)
     }
 
 function AppendMagic(input)
@@ -2934,12 +2888,17 @@ function AliComFollower()
         Orion.Wait(10);
         }
     if(create != 0)
+        {
+        Debug2('Server Creation Failed: ' + create)
         return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
+        }
+    Debug2('Port: ' + port)
     Orion.Print('Port: ' + port);
     var playerSerial = Player.Serial();
     var playerString = playerSerial + '!' + Player.Name() + '!' + role;
     Orion.CharPrint(self,1159,'Sending signal to leader');
     var outStr = 'Check:' + playerString + ':' + port;
+    Debug2('sending signal to leader: ' + JSON.stringify(outStr));
     Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 2000;
@@ -2948,6 +2907,7 @@ function AliComFollower()
         recv = Orion.UdpRecv('Coms');
         if(recv)
             {
+            Debug2('recv: ' + recv);
             var split = Orion.Split(recv,':');
             if(split[0] == 'Heard')
                 break;
@@ -2955,8 +2915,9 @@ function AliComFollower()
         Orion.Wait(100);
         if(Orion.Now() > pulseTime)
             {
+            Debug2('retrying connection to leader: ' + JSON.stringify(outStr));
             Orion.CharPrint(self,1159,'Retrying connection to leader');
-            Orion.UdpSend(40420,'Check:' + playerString + ':' + port);
+            Orion.UdpSend(40420,outStr);
             pulseTime = Orion.Now() + 5000;
             }
         }
@@ -2971,6 +2932,7 @@ function AliComFollower()
         if(recv)
             {
             Orion.Print('CommandString: ' + recv) //'cmd:arg1:arg2:arg3:etc'
+            Debug2('CommandString: ' + recv);
             var recvSplit = Orion.Split(recv,':');
             if(!recvSplit.length)
                 continue;
@@ -2978,9 +2940,9 @@ function AliComFollower()
             var functionString = recvSplit.shift();
             var callFunction = cmdsObj[functionString];
             if(callFunction)
-                Orion.Exec(functionString,true,recvSplit)
+                Orion.Exec(functionString,true,recvSplit);
             else
-                Orion.Print('Command unrecognized: ' + functionString)
+                Debug2('Command unrecognized: ' + functionString);
             }
         }
     }
@@ -2992,29 +2954,6 @@ function ClearUdp(_)
     }
 
 //--# Bot Commands
-function Follow(leadHealerSerial,distance)
-    {
-    do
-        {
-        var leaderObj = Orion.FindObject(leadHealerSerial);
-        Orion.CharPrint(self,1159,'Searching for Leader to follow...')
-        Orion.Wait(200);
-        } while(!leaderObj)
-    if(distance == undefined)
-        distance = 1;
-    while(true)
-        {
-        var toggle = Shared.GetVar('Follow');
-        if(toggle)
-            {
-            var leader = Shared.GetVar('Leader')
-            if(leader && leaderObj.Exists() && leaderObj.Distance() > distance)
-                Orion.WalkTo(leaderObj.X(),leaderObj.Y(),leaderObj.Z(),distance,10,1,1);
-            }
-        Orion.Wait(100);
-        }
-    }
-
 function AwaitPing(_)
     {
     if(Shared.GetVar('Desync',false))
@@ -3034,6 +2973,7 @@ function StartSmartStart(_)
     {
     Orion.Exec('SmartStart',true);
     }
+
 function ResumeSmartStart(_)
     {
     Orion.ResumeScript('SmartStart');
@@ -3047,7 +2987,7 @@ function SetBarrelSamp(_)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'TerminateAll|JournalScan|AliComFollower|AliComLeader|SmartStart|AutoInsure';
+    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
@@ -3107,6 +3047,7 @@ function CureTarget(serial)
             }
         }
     }
+
 //--# Leader Commands
 function MassAllMessage(msg)
     {
