@@ -778,7 +778,7 @@ function DropLoot()
 
 function Trash()
     {
-    var artifactString = "Captain John's Blade|Pincer|Equivocation|Abhorrence|Craven";
+    var artifactString = "Captain Johne's Blade|Pincer|Equivocation|Abhorrence|Craven";
     var artifact = Orion.FindTypeEx(any).filter(function(item)
         {
         return Orion.Contains(item.Properties(),artifactString)
