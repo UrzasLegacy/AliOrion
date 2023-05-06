@@ -1832,6 +1832,7 @@ function KeyCheck()
             var _pName = Player.Name().slice(5, Player.Name().length);
         else
             var _pName = Player.Name();
+        Debug2('sends ' + keyCheck + ' Keycheck: ' + _pName);
         Orion.UdpSend(40420,'KeyCheck:' + _pName);
         }
     }
