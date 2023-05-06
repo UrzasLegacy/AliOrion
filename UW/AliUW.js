@@ -705,7 +705,10 @@ function MoveLoot(destinationContainerSerial)
 function DropLoot()
     {
     if(Orion.FindList('UWLoot').length == 0)
+        {
+        Debug(': No loot to drop');
         return;
+        }
     var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
         {
         return !Orion.Contains(box.Properties(),'Contents: 125')
@@ -724,13 +727,32 @@ function DropLoot()
         var loot = Orion.FindList('UWLoot')[0];
         while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
             {
-            Orion.CharPrint(self,1159,'Moving loot');
+            var lootObj = Orion.FindObject(loot);
+            var lootName = lootObj.Name();
+            if(lootObj)
+                Debug('moving ' + lootName);
+            Orion.CharPrint(self,1159,'Moving loot: ' + lootName);
             Orion.MoveItem(loot,0,boxSerial);
             Orion.Wait(1100);
             loot = Orion.FindList('UWLoot')[0];
             }
+        var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'III')
+            })[0];
+        while(primer && !Orion.Contains(box.Properties(),'Contents: 125'))
+            {
+            Debug('moving ' + primer.Name());
+            Orion.CharPrint(self,1159,'Moving Primer III');
+            Orion.MoveItem(primer.Serial(),0,boxSerial);
+            Orion.Wait(1100);
+            primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),'III')
+                })[0];
+            }
         Orion.CloseGump('container',boxSerial);
-        if(!loot)
+        if(!loot && !primer)
             {
             Trash();
             return true;
@@ -751,6 +773,11 @@ function DropLoot()
 
 function Trash()
     {
+    var artifactString = "Captain John's Blade|Pincer|Equivocation|Abhorrence|Craven";
+    var artifact = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),artifactString)
+        })[0];
     var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
         {
         return !Orion.Contains(item.Properties(),'III')
@@ -759,15 +786,31 @@ function Trash()
         {
         return Orion.Contains(item.Properties(),'Trash')
         })[0];
-    if(!primer || !trashCan)
-        return;
+    if(!trashCan)
+        {
+        Debug2('trash can missing');
+        return Orion.CharPrint(self,1159,'Trash can missing');
+        }
     while(primer)
         {
+        AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
+        Debug2('trashing: ' + primer.Name());
         Orion.MoveItem(primer.Serial(),0,trashCan.Serial());
         Orion.Wait(1100);
         primer = Orion.FindTypeEx('0x1E22').filter(function(item)
             {
             return !Orion.Contains(item.Properties(),'III')
+            })[0];
+        }
+    while(artifact)
+        {
+        AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
+        Debug2('trashing ' + artifact.Name());
+        Orion.MoveItem(artifact.Serial(),0,trashCan.Serial());
+        Orion.Wait(1100);
+        artifact = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),artifactString)
             })[0];
         }
     }
@@ -1189,21 +1232,21 @@ function UWSampMovement()
     while(!Player.Dead())
         {
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-        // if(isLeadSamp && luckScum && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
-        //     {
-        //     Orion.Wait(500);
-        //     if(lord && lord.Hits() <= 1)
-        //         {
-        //         WalkToRadiusBorder(lord.Serial(),4);
-        //         if(Player.Luck() < 1000)
-        //             {
-        //             Orion.Dress('LeadLuck');
-        //             Orion.Wait(500);
-        //             }
-        //         Orion.Wait(250);
-        //         continue;
-        //         }
-        //     }
+        if(luckScum && isLeadSamp && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
+            {
+            Orion.Wait(500);
+            if(lord.Hits() <= 1)
+                {
+                WalkToRadiusBorder(lord.Serial(),4);
+                if(Player.Luck() < 1000)
+                    {
+                    Orion.Dress('LeadLuck');
+                    Orion.Wait(500);
+                    }
+                Orion.Wait(250);
+                continue;
+                }
+            }
         var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange');
         if(!isLeadSamp && wisp.length)
             {
