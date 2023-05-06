@@ -3003,7 +3003,8 @@ function AliComFollower()
         'SetBarrelSamp':true,
         'AwaitPing':true,
         'CureTarget':true,
-        'HealTarget':true
+        'HealTarget':true,
+        'KeyCheck':true
         }
     Orion.RemoveAllUdpServers();
     var port = 39999;
