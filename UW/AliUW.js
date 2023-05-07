@@ -709,6 +709,10 @@ function MoveLoot(destinationContainerSerial)
 
 function DropLoot()
     {
+    Orion.Wait(1000);
+    EquipBossSuitByBotName();
+    Orion.Wait(1000);
+    EquipBossSuitByBotName();
     if(Orion.FindList('UWLoot').length == 0)
         {
         Debug2('No loot to drop');
@@ -1483,14 +1487,14 @@ function ____________PHASES(_){}
 
 function Autostart(_)
     {
-    // if(Player.X() > 6000)
-    //     {
-    //     while(Orion.ObjAtLayer('mount'))
-    //         {
-    //         Orion.UseObject(self)
-    //         Orion.Wait(500);
-    //         }
-    //     }
+    if(Player.X() > 6000)
+        {
+        while(Orion.ObjAtLayer('mount'))
+            {
+            Orion.UseObject(self)
+            Orion.Wait(500);
+            }
+        }
     Orion.Wait(1000);
     Shared.AddVar('debug',debug);
     Shared.AddVar('debug2',debug2);
@@ -1738,7 +1742,7 @@ function WaitSyncLeader(_)
                 {
                 Orion.TargetObject(self);
                 Orion.Wait(1000);
-                }jb
+                }
             }
         if(healerArr.length == 0)
             {
