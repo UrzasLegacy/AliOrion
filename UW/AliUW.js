@@ -148,7 +148,8 @@ function SmartStart()
                     GoToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
-                DetermineBarrelSamp();
+                if(scoutWait)
+                    DetermineBarrelSamp();
                 WaitSyncLeader(); //Home position
                 if(scoutWait)
                     {
@@ -330,7 +331,7 @@ function EquipUWSuitByBotName()
 
 function LeaveUW()
     {
-    if(!isPlayerInRectangle(6222, 1600, 6500, 1850))
+    if(!isPlayerInRectangle(6222, 1600, 6500, 1850) || AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1))
         return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //Boss area
@@ -381,9 +382,11 @@ function LeaveUW()
                 }
             }
         }
+    Orion.Wait(1000);
     var randX = 1700 + Orion.Random(-3,4);
     var randY = 1560 + Orion.Random(-3,4);
-    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//Umbra
+    if(!AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1))//Umbra
+        return LeaveUW();
     Orion.Wait(500);
     }
 
@@ -1524,23 +1527,23 @@ function Autostart(_)
     else
         Orion.Exec('AliComFollower',true);
     VerifyOpenContainer(backpack);
-    while(ethy && Orion.ObjAtLayer('mount'))
-        {
-        Orion.CharPrint(self,1159,'Dismounting to avoid Dismount debuff');
-        Orion.UseObject(self);
-        Orion.Wait(1300);
-        }
-    Orion.Wait(1000);
-    var ethy = Orion.FindTypeEx(any).filter(function(item)
-        {
-        return Orion.Contains(item.Properties(),'Mount Hue:');
-        })[0];
-    while(ethy && !Orion.ObjAtLayer('mount'))
-        {
-        Orion.CharPrint(self,1159,'Remounting');
-        Orion.UseObject(ethy.Serial());
-        Orion.Wait(1300);
-        }
+    // while(ethy && Orion.ObjAtLayer('mount'))
+    //     {
+    //     Orion.CharPrint(self,1159,'Dismounting to avoid Dismount debuff');
+    //     Orion.UseObject(self);
+    //     Orion.Wait(1300);
+    //     }
+    // Orion.Wait(1000);
+    // var ethy = Orion.FindTypeEx(any).filter(function(item)
+    //     {
+    //     return Orion.Contains(item.Properties(),'Mount Hue:');
+    //     })[0];
+    // while(ethy && !Orion.ObjAtLayer('mount'))
+    //     {
+    //     Orion.CharPrint(self,1159,'Remounting');
+    //     Orion.UseObject(ethy.Serial());
+    //     Orion.Wait(1300);
+    //     }
     }
 
 function ScoutAhead()
@@ -2117,6 +2120,7 @@ function BossSequence(_)
             Shared.AddVar('bossDeathStamp',Orion.Now());
             if(Player.Serial() != leadSampSerial)
                 Orion.Wait(Orion.Random(5,11) * 500);
+            TerminateAll('BossSequence');
             AliWalkTo(corpse[0].X(),corpse[0].Y());
             ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
             Orion.Wait(100);
