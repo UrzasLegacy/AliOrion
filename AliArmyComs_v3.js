@@ -4,6 +4,22 @@
 //#include Ali/AliHelpers.js
 //#include Ali/AliGumpHUD.js
 var leaderSerial = '0x02F4684A';
+
+function followme()
+	{
+	FollowerMassMessage('Follow:0');
+	}
+
+function allinit()
+	{
+	FollowerMassMessage('Init');
+	}
+    
+function allterminate()
+	{
+	FollowerMassMessage('TerminateAll');
+	}
+    
 var profiles = 
     {
     Primeval: 
@@ -203,20 +219,6 @@ var cmdsObj = {
     'TerminateAll': TerminateAll
 }
 
-function followme()
-	{
-	FollowerMassMessage('Follow:0');
-	}
-
-function allinit()
-	{
-	FollowerMassMessage('Init');
-	}
-    
-function allterminate()
-	{
-	FollowerMassMessage('TerminateAll');
-	}
 function FollowerMassMessage(msg)
 	{
 	var followerArr = Shared.GetArray('followerArr',[]);  //[botPort,botSerial,botName]
