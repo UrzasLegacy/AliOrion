@@ -1056,7 +1056,7 @@ function AliAtlas(targetX,targetY,targetMap)
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
     var map = maps[Orion.ObjAtLayer('backpack').Map()]
-    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
+    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[map] == targetMap)
         {
         Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
         Orion.WarMode(1);
