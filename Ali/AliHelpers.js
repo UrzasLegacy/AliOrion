@@ -5,11 +5,31 @@ function Jiggle(type)
     switch(type)
         {
         case 'Move':
-            
+            var playerX = Player.X();
+            var playerY = Player.Y();
+            var tiles = Orion.GetTilesInRect('land',playerX - 2,playerY - 2,playerX + 2,playerY + 2);
+            var tile = tiles[Orion.Random(0,tiles.length)];
+            Orion.WalkTo(tile.X(),tile.Y(),0,0);
+            Orion.Wait(200);
+            break;
+        case 'Turn':
+            Orion.Turn(Orion.Random(0,8))
+            Orion.Wait(200);
             break;
         case 'Wait':
+            Orion.Wait(100 * Orion.Random(1,30))
             break;
-        case 'Cast':
+        case 'CastMage':
+            var spells =
+                [
+                'Create Food',
+                'Heal',
+                ]
+            var spell = spells[Orion.Random(0,spells.length)];
+            Orion.Cast(spell);
+            if(Orion.WaitForTarget(1300))
+                Orion.TargetObject(self);
+            Orion.Wait(200);
             break;
         default:
             break;
@@ -667,39 +687,38 @@ function BorderEdge(x, y, p2, range)
 	}
 
 function WalkToRadiusBorder(targetSerial, distance) 
-	{
-	var target = Orion.FindObject(targetSerial)
-	if(target) 
-		{
-		var x = target.X();
-		var y = target.Y();
-		var z = target.Z();
-	
-		var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
-			.filter(function(tile) 
-				{
-				var tileX = tile.X();
-				var tileY = tile.Y();
-				return (x == (tileX - distance))
-				|| (x == (tileX + distance))
-				|| (y == (tileY - distance))
-				|| (y == (tileY + distance));
-				}).sort(function (a,b) 
-					{
-					return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
-					});
-		tiles.forEach(function(tile,ind)
-			{
-			Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-			})
-		for(var i=0;i<tiles.length;i++)
-			{             
-			var closest = tiles[i]; 
-			if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
-				break;
-			}
-		}
-	}
+    {
+    var target = Orion.FindObject(targetSerial)
+    if(target) 
+        {
+        var x = target.X();
+        var y = target.Y();
+        var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, x + distance, y + distance)
+            .filter(function(tile) 
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                return (x == (tileX - distance))
+                || (x == (tileX + distance))
+                || (y == (tileY - distance))
+                || (y == (tileY + distance));
+                }).sort(function (a,b) 
+                    {
+                    return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
+                    });
+        tiles.forEach(function(tile,ind)
+            {
+            Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            })
+        for(var i=0;i<tiles.length;i++)
+            {             
+            var closest = tiles[i]; 
+            Orion.AddFakeMapObject(55555, '0x051A', 32, closest.X(), closest.Y(), closest.Z());
+            if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
+                break;
+            }
+        }
+    }
 
 function DrawSquare(minX,minY,maxX,maxY)
 	{
@@ -736,22 +755,32 @@ function SetAvoidRadius(mobSerial,range)
         }
     }
 
-    function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn)
-        {
-        if(z === undefined) z = 0;
-        if(distanceXY === undefined) distanceXY = 0;
-        if(distanceZ === undefined) distanceZ = 255;
-        if(chunkSize === undefined) chunkSize = 5;
-        if(run === undefined) run = 1;
-        if(openDoor === undefined) openDoor = 1;
-        if(maxWalkingTime === undefined) maxWalkingTime = 300000;
-        if(pathMarkers === undefined) pathMarkers = false;
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
+    {
+    if(z === undefined) z = 0;
+    if(distanceXY === undefined) distanceXY = 0;
+    if(distanceZ === undefined) distanceZ = 255;
+    if(chunkSize === undefined) chunkSize = 5;
+    if(run === undefined) run = 1;
+    if(openDoor === undefined) openDoor = 1;
+    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    if(pathMarkers === undefined) pathMarkers = false;
 
-        var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
-        if(pathMarkers)
-            Orion.ClearFakeMapObjects();
-        if(pathTiles.length === 0)
-            return false;
+    if(typeof startCallBackFn == 'function')
+        {
+        startCallBackFn();
+        }
+    var playerX = Player.X();
+    var playerY = Player.Y();
+    var zeroMovement = playerX == x && playerY == y;
+    Orion.Print('zeroMovement: ' + zeroMovement)
+    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+    if(pathMarkers)
+        Orion.ClearFakeMapObjects();
+    if(pathTiles.length === 0 && !zeroMovement)
+        return false;
+    if(!zeroMovement)
+        {
         var shortStop = pathTiles[pathTiles.length - 1];
         var shortX = shortStop.X();
         var shortY = shortStop.Y();
@@ -769,15 +798,24 @@ function SetAvoidRadius(mobSerial,range)
             var chunk = shortStop;
         var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
         if(pathMarkers)
-            Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,Player.Z());
+            {
+            Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
+            Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
+            }
         Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
         Orion.Wait(1);
-        if(callBackFn !== undefined)
-            callBackFn();
-        if(Orion.GetDistance(shortX,shortY) > 0)
-            return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,callBackFn);
-        return true;
         }
+
+    if(typeof endCallBackFn == 'function')
+        {
+        if(endCallBackFn())
+            return 'Hydra';
+        }
+
+    if(!zeroMovement && Orion.GetDistance(shortX,shortY) > 0)
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
+    return true;
+    }
 
 function Fill(profString, skillString, skillValue, toolGraphic, containerSerial, benchSerial, textInd)
     {
@@ -1130,7 +1168,7 @@ function Commodify(graphicSerial, colorCode, containerSerial, stackCount)
         }
     }
 
-function AliAtlas(target)
+    function AliAtlas(targetX,targetY,targetMap)
     { //[x,y,facet]
     var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
     var gateArr = 
@@ -1170,38 +1208,20 @@ function AliAtlas(target)
             ['Royal City', 'TerMur', 33, 850, 3525],
             ['Valley of Eodon', 'TerMur', 34, 719, 1863],
         ]
-
-    var x = Player.X();
-    var y = Player.Y();
-    var map = maps[Orion.ObjAtLayer('backpack').Map()];
-    var targetX = target[0];
-    var targetY = target[1];
-    var targetMap = target[2];
-    
-    if(Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[Player.Map()] == targetMap)
+    var map = maps[Orion.ObjAtLayer('backpack').Map()]
+    Orion.Print(map)
+    if(Orion.GetDistance(targetX,targetY) == 0)
         {
-        var attempt = 0
+        Orion.CharPrint(self,1159,'Already at destination: ' + targetX + ',' + targetY + ' in ' + targetMap);
+        Orion.WarMode(0);
+        return;
+        }
+    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[map] == targetMap)
+        {
+        Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
         Orion.WarMode(1);
-        while(Orion.GetDistance(targetX, targetY) > 20 && attempt < 10)
-            {
-            attempt++;
-            Orion.WalkTo(targetX, targetY, 0,0)
-            Orion.Wait(500);
-            Orion.Print(1);
-            }
-        var sign = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-            {
-            return Orion.Contains(item.Properties(), 'a house sign') && Orion.Contains(item.Properties(), 'Collapsing In:');
-            })[0];
-        if(!sign)
-            return Orion.CharPrint(self,1159,"Couldn't find house sign!");
-        var timeLeft = sign.Properties().match(/Collapsing In: Less Than \d+ Hours/) || [];
-        if(timeLeft[0])
-            for(var i = 0;i<10;i++)
-                {
-                Orion.PrintFast(sign.Serial(),1159,0,timeLeft[0])
-                Orion.Wait(500);
-                }
+        AliWalkTo(targetX,targetY);
+        Orion.WarMode(0);
         return;
         }
     var nearestGate = gateArr.filter(function(gate){return gate[1] == map})
@@ -1222,68 +1242,50 @@ function AliAtlas(target)
         })[0];
     Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
     Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
-    var attempt = 0;
     Orion.WarMode(1);
-    while(Orion.GetDistance(nearestGate[3], nearestGate[4]) > 2 && attempt < 10)
-        {
-        attempt++
-        Orion.WalkTo(nearestGate[3], nearestGate[4], 0,0);
-        Orion.Wait(500);
-        }
+    
+    Orion.CharPrint(self,1159,'Walking to nearest gate');
+    AliWalkTo(nearestGate[3], nearestGate[4])
     //var tempX = Player.X();
     //var tempY = Player.Y();
-    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 2)
+    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 10)
         {
-        if(Orion.WaitForGump(2000))
+        Orion.Print('Waiting for gate gump')
+        var gump = Orion.GetGump('any','0x00000258');
+        if(gump !== null)
             {
-            var gump0 = Orion.GetGump('last');
-            if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000258'))
-                {
-                var gumpHook0 = Orion.CreateGumpHook(1);
-                gumpHook0.AddCheck(destinationGate[2], true);
-                gump0.Select(gumpHook0);
-                Orion.Wait(100);
-                }
+            var gumpHook = Orion.CreateGumpHook(1);
+            gumpHook.AddCheck(destinationGate[2], true);
+            gump.Select(gumpHook);
+            Orion.Wait(100);
             }
         else
             {
-            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 24);
+            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 23);
+            Orion.CharPrint(self,1159,'Searching for gate');
             if(gate[0])
                 {
-                while(Orion.GetDistance(gate[0].X(), gate[0].Y()))
-                    {
-                    Orion.WalkTo(gate[0].X(),gate[0].Y(),0,0);
-                    Orion.Wait(500);
-                    }
+                Orion.CharPrint(self,1159,'Walking to gate');
+                AliWalkTo(gate[0].X(), gate[0].Y());
+                Orion.Wait(500);
                 Orion.Resend();
                 Orion.Wait(500);
                 Orion.UseObject(gate[0].Serial());
+                }
+            else 
+                {
+                Orion.CharPrint(self,1159,'Walking to nearest gate');
+                if(!AliWalkTo(nearestGate[3], nearestGate[4]))
+                    if(!AliWalkTo(1174, 1283))
+                        AliWalkTo(1016, 524);
                 }
             }
         Orion.Wait(1000);
         }
     Orion.WarMode(1);
-    var attempt = 0;
-    while(Orion.GetDistance(targetX, targetY) > 20 && attempt < 10)
-        {
-        attempt++;
-        Orion.WalkTo(targetX, targetY, 0,0)
-        Orion.Wait(500);
-        Orion.Print(attempt);
-        }
-    var sign = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-		{
-		return Orion.Contains(item.Properties(), 'a house sign') && Orion.Contains(item.Properties(), 'Collapsing In:');
-		})[0];
-	if(!sign)
-		return Orion.CharPrint(self,1159,"Couldn't find house sign!");
-    var timeLeft = sign.Properties().match(/Collapsing In: Less Than \d+ Hours/) || [];
-    if(timeLeft[0])
-        for(var i = 0;i<10;i++)
-            {
-            Orion.PrintFast(sign.Serial(),1159,0,timeLeft[0])
-            Orion.Wait(500);
-            }
+    Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
+    AliWalkTo(targetX,targetY);
+    Orion.WarMode(0);
     }
 
 function isPointInRectangle(x1, y1, x2, y2, x3, y3) {
