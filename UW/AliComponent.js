@@ -1,4 +1,4 @@
-function AliComponentFarmer()
+function initScripts()
     {
     Orion.Exec('ComponentTraveler',true);
     Orion.Exec('Recover',true);
@@ -16,7 +16,7 @@ function ComponentTraveler()
             var loc = portalArr[i];
             if(Orion.GetDistance(portal.X,portal.Y) > 150)
                 {
-                RecallByGump('Jaw','Malas');
+                RecallByGump('Main','Portal');
                 AliWalkTo(portal.X,portal.Y)
                 }
             else
@@ -64,6 +64,7 @@ function Recover()
         [2248,1229], //voidpool trade
         [4397,1089], //moonglow
         [3747,1309], //nujelm
+        [1915,2815], //trinsic
         [2995,3442], //serpents hold
         [1411,3793], //jhelom
         [2928,854], //vesper
@@ -134,6 +135,19 @@ function Recover()
             }
         while(!Orion.ObjAtLayer('Mount'))
             {
+            var ethy = Orion.FindTypeEx(any).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),'Mount Hue');
+                })[0];
+            if(ethy)
+                {
+                while(!Orion.ObjAtLayer('Mount'))
+                    {
+                    Orion.UseObject(ethy.Serial());
+                    Orion.Wait(1000);
+                    }
+                break;
+                }
             var horse = Orion.FindTypeEx(any,any,ground,'live',24).filter(function(mob)
                 {
                 return mob.CanChangeName();
@@ -448,7 +462,7 @@ var containerArr =
     [1432, 3824, 6, '0x0E80'],
     //[2507, 474, 21, '0x0E80'],
     [4408, 1089, 6, '0x0E80'],
-    [2938, 3500, 10, '0x0E7D'],
+    //[2938, 3500, 10, '0x0E7D'],
     //[2936, 3502, 10, '0x0E7C'],
     //[2936, 3505, 10, '0x0E7C'],
     [625, 2161, 6, '0x0E80'],
@@ -567,7 +581,7 @@ function AliAtlas(targetX,targetY,targetMap)
 	        })[0];
     if(Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length == 0)
         {
-        return RecallByGump('Jaw','Malas');
+        return RecallByGump('Main','Portal');
         }
     var destinationGate = gateArr.filter(function(gate){return gate[1] == targetMap})
         .sort(function(a,b)
