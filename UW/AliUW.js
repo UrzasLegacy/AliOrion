@@ -126,7 +126,7 @@ var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gw
 Orion.Exec('JournalScan', true);
 var debug = true;
 var debug2 = true
-var luckScum = false;
+var luckScum = true;
 //--#Start
 function _____________START(_){}
 
@@ -2901,6 +2901,47 @@ function AppendMagic(input)
     Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
     tmpFile.Write(Orion.Time() + ': ' + inputString + '\n');
     tmpFile.Close();
+    }
+
+function RetrieveMagic()
+    {
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliUWTracker.txt';
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to open file: ' + fileNameString);
+    var outputString = tmpFile.ReadAll();
+    tmpFile.Close();
+    var replace = outputString.replace(/\\/g,'');
+    var replaceAgain = replace.replace(/\d\d:\d\d:\d\d\.\d\d\d: /g,'');
+    var lines = Orion.Split(replaceAgain,'\n');
+    var linesLength = lines.length;
+    var red = lines.reduce(function(sumObj,line)
+        {
+        var json = JSON.parse(line);
+        for(prop in json)
+            {
+            if(typeof sumObj !== 'object')
+                sumObj = {};
+            if(sumObj[prop] == undefined)
+                {
+                sumObj[prop] = 1
+                Orion.Print(true)
+                }
+            else
+                {
+                sumObj[prop] += json[prop]
+                }
+            }
+        return sumObj
+        },{})
+    TextWindow.Open()
+    TextWindow.Print('Runs: ' + linesLength)
+    for(prop in red)
+        {
+        var average = (red[prop] / linesLength).toFixed(2)
+        TextWindow.Print(prop + ': ' + average)
+        }
+    Orion.Print(red["Lesser Magic Item"])
     }
 
 //--#Coms
