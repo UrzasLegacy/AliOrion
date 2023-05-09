@@ -160,17 +160,20 @@ function Recover()
                     }
                 break;
                 }
-            var horse = Orion.FindTypeEx(any,any,ground,'live',24).filter(function(mob)
+            else
                 {
-                return mob.CanChangeName();
-                })[0];
-            Orion.Say('all follow me');
-            if(horse)
-                {
-                if(horse.Distance() > 2)
-                    Orion.WalkTo(horse.X(),horse.Y())
-                Orion.UseObject(horse.Serial());
-                Orion.Wait(1300);
+                var horse = Orion.FindTypeEx(any,any,ground,'live',24).filter(function(mob)
+                    {
+                    return mob.CanChangeName();
+                    })[0];
+                Orion.Say('all follow me');
+                if(horse)
+                    {
+                    if(horse.Distance() > 2)
+                        Orion.WalkTo(horse.X(),horse.Y())
+                    Orion.UseObject(horse.Serial());
+                    Orion.Wait(1300);
+                    }
                 }
             Orion.Wait(2000);
             }
