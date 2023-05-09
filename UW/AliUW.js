@@ -62,12 +62,12 @@
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
         var homeX = 4415; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
         var homeY = 1499; //Change this to a Y coordinate near your Home recall spot
-    
+
     //Misc Tips
         //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
             //self repair. It doesn't need to have any special stats besides that. Double strike will knock the barrels out faster, so you can choose a weapon with that
             //as the Primary ability, but it's not really necessary with as much down time as there is between runs.
-        
+        var doubleStrikeSpecial = 'Primary'; //Change this to whatever special Double Strike is for your weapon of choice.
         
 //Starting Instructions
     //Once all of the setup is complete, the routine for starting the script is simple.
@@ -138,6 +138,7 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
+            WarmodePause(text);
             MassAllMessage('StartSmartStart');
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
@@ -177,7 +178,6 @@ function SmartStart()
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
-            Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
                 CharacterMaintenance();
@@ -212,6 +212,12 @@ function SmartStart()
                 }
             initScripts();
             BossSequence();
+            CharacterMaintenance();
+            Orion.Exec('StayHidden',true);
+            Orion.Exec('StayLoggedIn',true);
+            EquipBossSuitByBotName();
+            WaitSyncFollower(); //Home position
+            Orion.Wait(1000);
             TerminateAll();
             Orion.Wait(500);
             Orion.Exec('SmartStart');
@@ -1091,13 +1097,13 @@ function ClearRoom()
     var phase = 1;
     while(!Player.Dead()) 
         {
-        var mobcheck = Orion.FindTypeEx('0x00D7|0x013D|0x005C|0x0018', '-1', 'ground', 'inlos', 10);
-        while(mobcheck[0] && mobcheck[0].Exists())
+        var mobcheck = Orion.FindTypeEx('0x00D7|0x013D|0x005C|0x0018', any, 'ground', 'inlos|near', 10)[0];
+        while(mobcheck && mobcheck.Exists())
             {
-            if(mobcheck[0].Distance() > 1)
-                Orion.WalkTo(mobcheck[0].X(), mobcheck[0].Y());
+            if(mobcheck.Distance() > 1)
+                Orion.WalkTo(mobcheck.X(), mobcheck.Y());
             else
-                Orion.Attack(mobcheck[0].Serial());
+                Orion.Attack(mobcheck.Serial());
             Orion.Wait(250);
             if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
                 Orion.UseAbility('primary');	
@@ -1158,21 +1164,23 @@ function ClearRoom()
             return barrelA.Distance() - barrelB.Distance();
             });
         Orion.ResetSearchArea();
-        if(barrels[0])
+        Jiggle('Move',8);
+        if(barrels.length)
             {
-            var barrelSerial = barrels[0].Serial();
-            var barrelX = barrels[0].X();
-            var barrelY = barrels[0].Y();
+            var barrel = barrels[0];
+            var barrelSerial = barrels.Serial();
+            var barrelX = barrels.X();
+            var barrelY = barrels.Y();
             if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
                 Orion.UseAbility('primary');	
-            if(barrels[0].Distance() > 1)
+            if(barrel.Distance() > 1)
                 if(Orion.WalkTo(barrelX,barrelY))
                        Orion.Attack(barrelSerial);
                    else
                        Orion.Ignore(barrelSerial);
             else
                 Orion.Attack(barrelSerial);
-               }
+            }
         else
             {
             Orion.IgnoreReset();
@@ -1183,11 +1191,11 @@ function ClearRoom()
                 });
             Orion.ResetSearchArea();
             Orion.ClearFakeMapObjects();
-            if(!barrels[0] && phase < 3)
+            if(!barrels.length && phase < 3)
                 phase++;
             }	    	
         Orion.Wait(500);
-         }
+        }
     Orion.Wait(10);
     //Orion.WalkTo(6432, 1699, 0, 0);
     }
@@ -2250,13 +2258,14 @@ function SwitchToBarrelWep()
     var barrelWepGraphics = '0x0F4B';
     var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
         {
-        return Orion.Contains(item.Properties(),'imbued|self repair');
+        return Orion.Contains(item.Properties(),'self repair');
         })[0];
     if(barrelWep)
         {
+        var endTime = Orion.Now() + 10000;
         var barrelWepSerial = barrelWep.Serial();
         var leftHand = Orion.ObjAtLayer('LeftHand')
-        while(!leftHand || leftHand.Serial() != barrelWepSerial)
+        while((!leftHand || leftHand.Serial() != barrelWepSerial) && Orion.Now() < endTime)
             {
             Orion.Equip(barrelWepSerial);
             Orion.Wait(1100);
@@ -2956,7 +2965,7 @@ function Jiggle(type,chance)
         {
         var rand = Orion.Random(0,1000);
         if(rand > chance)
-            return Debug2('Jiggle declined');
+            return;
         }
     switch(type)
         {
