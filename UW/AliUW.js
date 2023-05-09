@@ -276,14 +276,14 @@ function initScripts()
             break;
         case 'dexxer':
             var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
-            // if(lord)
-            //     {
-            //     if(lord.Distance() > 5)
-            //         Orion.WalkTo(lord.X(),lord.Y(),0,5);
-            //     Orion.InvokeVirtue('honor');
-            //     if(Orion.WaitForTarget(2000))
-            //         Orion.TargetObject(lord.Serial());
-            //     }
+            if(lord)
+                {
+                if(lord.Distance() > 5)
+                    Orion.WalkTo(lord.X(),lord.Y(),0,5);
+                Orion.InvokeVirtue('honor');
+                if(Orion.WaitForTarget(2000))
+                    Orion.TargetObject(lord.Serial());
+                }
             Orion.Exec('AutoAttack', true);
             Orion.Exec('AutoBuffs', true);
             Orion.Wait(200);
