@@ -1259,6 +1259,7 @@ function UWSampMovement()
     var isLeadSamp = Player.Serial() == leadSampSerial;
     while(!Player.Dead())
         {
+        Jiggle('Move',3);
         var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
         if(luckScum && isLeadSamp && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
             {
@@ -1958,7 +1959,7 @@ function GoFromHomeToLadderPosition()
             Orion.UseObject(whirlpool.Serial());
             Orion.Wait(1300);
             }
-        Jiggle('random',250);
+        Jiggle('random',1000);
         var ethy = Orion.FindTypeEx(any).filter(function(item)
             {
             return Orion.Contains(item.Properties(),'Mount Hue:')
@@ -2963,7 +2964,7 @@ function Jiggle(type,chance)
             Debug2('Jiggle Move');
             var playerX = Player.X();
             var playerY = Player.Y();
-            var tiles = Orion.GetTilesInRect('land',playerX - 2,playerY - 2,playerX + 2,playerY + 2);
+            var tiles = Orion.GetTilesInRect('land',playerX - 1,playerY - 1,playerX + 1,playerY + 1);
             var tile = tiles[Orion.Random(0,tiles.length)];
             Orion.Wait(Orion.Random(100,400));
             Orion.WalkTo(tile.X(),tile.Y(),0,0);
