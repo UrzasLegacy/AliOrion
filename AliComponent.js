@@ -140,8 +140,8 @@ function Recover()
                 });
             for(var i=0;i<corpse.length;i++)
                 {
-                AliWalkTo(corpse.X(),corpse.Y(),0,1);
-                Orion.UseObject(corpse[i]);
+                AliWalkTo(corpse[i].X(),corpse[i].Y(),0,1);
+                Orion.UseObject(corpse[i].Serial());
                 Orion.Wait(1300);
                 }
             }
