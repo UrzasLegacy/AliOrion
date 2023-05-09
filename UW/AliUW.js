@@ -145,7 +145,7 @@ function SmartStart()
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
-                    GoToLadderPosition();
+                    GoFromHomeToLadderPosition();
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 if(scoutWait)
@@ -166,7 +166,7 @@ function SmartStart()
                 Orion.ClearBadLocations(); 
                 Orion.Wait(1000);
                 GoToBossArena();
-                Jiggle('Walk',75);
+                Jiggle('Walk',750);
                 }
             initScripts();
             BossSequence();
@@ -189,9 +189,9 @@ function SmartStart()
                 if(Shared.GetVar('barrelSamp',false) === true)
                     GetKeys();
                 Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
-                GoToLadderPosition();
+                GoFromHomeToLadderPosition();
                 WaitSyncFollower(); //Ladder position
-                GoFromHomeToReadyPosition();
+                GoFromLadderToReadyPosition();
                 if(Shared.GetVar('barrelSamp',false) === true)
                     {
                     OpenUW();
@@ -226,15 +226,15 @@ function SmartStart()
                 EquipBossSuitByBotName();
                 WaitSyncFollower(); //Home position
                 Orion.PauseScript('SmartStart');
-                GoToLadderPosition();
+                GoFromHomeToLadderPosition();
                 WaitSyncFollower(); //Ladder position
-                GoFromHomeToReadyPosition();
+                GoFromLadderToReadyPosition();
                 WaitSyncFollower();
                 Orion.PauseScript('SmartStart');
                 Orion.Cast('Greater Heal');
                 Orion.WaitForTarget(3000);
                 GoToBossArena();
-                Jiggle('Walk',75);
+                Jiggle('Walk',750);
                 }
             initScripts();
             BossSequence();
@@ -340,6 +340,16 @@ function LeaveUW()
     if(!isPlayerInRectangle(6222, 1600, 6500, 1850) || AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1))
         return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //Boss area
         {
         var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'near', 10)[0];
@@ -1020,7 +1030,7 @@ function GetKeys()
         }
     if(barrelCheck)
         {
-        GoToLadderPosition();
+        GoFromHomeToLadderPosition();
         Orion.PauseScript('StayHidden');
         Orion.Wait(500);
         Orion.Terminate('StayHidden');
@@ -1533,7 +1543,7 @@ function Autostart(_)
     else
         Orion.Exec('AliComFollower',true);
     VerifyOpenContainer(backpack);
-    // while(ethy && Orion.ObjAtLayer('mount'))
+    // while(Orion.ObjAtLayer('mount'))
     //     {
     //     Orion.CharPrint(self,1159,'Dismounting to avoid Dismount debuff');
     //     Orion.UseObject(self);
@@ -1557,6 +1567,16 @@ function ScoutAhead()
     TextWindow.Clear()
     Shared.AddVar('leashing',false)
     Orion.CharPrint(self,1159,'Scouting ahead')    
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
     var hideCooldown = Orion.Now();
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
     if(ladder)
@@ -1884,10 +1904,10 @@ function DetermineBarrelSamp(_)
     Debug('Send //SetBarrelSamp: ' + barrelSamp[2]);
     }
     
-function GoToLadderPosition()
+function GoFromHomeToLadderPosition()
     {
     Orion.CharPrint(self,1159,'Going to Ladder position');
-	TerminateAll('GoToLadderPosition|GetKeys');
+	TerminateAll('GoFromHomeToLadderPosition|GetKeys');
     Orion.Wait(Orion.Random(0,10) * 1000);
     if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
         {
@@ -1918,7 +1938,7 @@ function GoToLadderPosition()
         {
         if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
             RecallByGump('Main','UW Dock','Main','UW Dock2')
-        Jiggle('random',75);
+        Jiggle('random',750);
         while(Orion.ObjAtLayer('Mount'))
             {
             Orion.UseObject(self);
@@ -1938,7 +1958,7 @@ function GoToLadderPosition()
             Orion.UseObject(whirlpool.Serial());
             Orion.Wait(1300);
             }
-        Jiggle('random',25);
+        Jiggle('random',250);
         var ethy = Orion.FindTypeEx(any).filter(function(item)
             {
             return Orion.Contains(item.Properties(),'Mount Hue:')
@@ -1991,10 +2011,20 @@ function UWSuitJournalCheck()
     EquipBossSuitByBotName();
     }
 
-function GoFromHomeToReadyPosition(_)
+function GoFromLadderToReadyPosition(_)
     {//this function is to move from Sync position to Ready position 
     Orion.CharPrint(self,1159,'Moving from safe to ready position');
     Debug2('Moving from safe to ready position');
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
     Orion.Wait(Orion.Random(0,10) * 500);
     var ladder = Orion.FindTypeEx('0x08A6',any,ground,'item',2)[0];
     if(!ladder)
@@ -2018,19 +2048,18 @@ function GoFromHomeToReadyPosition(_)
         {
         Debug2("Walking to Winch Assembly");
         AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        Jiggle('random',50);
         }
     else if(Player.Serial() == leadSampSerial)
         {
         Debug2("Walking to Lead Samp Position");
         AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        Jiggle('Turn',25);
+        Jiggle('Turn',250);
         }
     else
         {
         Debug2("Walking to Ready Position");
         AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
-        Jiggle('random',50);
+        Jiggle('random',500);
         }
     }
 
@@ -2090,7 +2119,7 @@ function OpenUW(_)
         Orion.UseObject(lever.Serial())
         Orion.Wait(500);
         }
-    Jiggle('random',50);
+    Jiggle('random',500);
     }
 
 function GoToBossArena(_)
@@ -2142,6 +2171,16 @@ function BossSequence(_)
         }
     Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
     Orion.Wait(Orion.Random(4,9) * 1000);
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
     }
 
 function CleanUpPublicCorpse()
@@ -2359,7 +2398,7 @@ function UWAvoidBot(distance)
         var lordDistance = Orion.GetDistance(lord[0]);
         if(lordDistance < distanceActual - 2 || lordDistance > 8)
             WalkToRadiusBorder(lord[0], distanceActual);
-        Jiggle('Walk',5);
+        Jiggle('Move',3);
         }
     }
 
@@ -2914,7 +2953,7 @@ function Jiggle(type,chance)
         }
     if(chance)
         {
-        var rand = Orion.Random(0,101);
+        var rand = Orion.Random(0,1000);
         if(rand > chance)
             return Debug2('Jiggle declined');
         }
@@ -3323,7 +3362,7 @@ var gumpAssets =
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
         [ ['toggle','SmartStart','Start'],['toggle','SmartStart','Start'] ],
         [ ['text','Utilities',554,1,17] ],
-        [ ['toggle','GoToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
+        [ ['toggle','GoFromHomeToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
         [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
         [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'], ],
 
