@@ -1149,7 +1149,7 @@ function AttackSpawn()
 			Orion.ResetSearchArea();
 			return bMobs - aMobs;
 			return a.Distance() - b.Distance();
-			})
+			});
 		Orion.PauseScript('WalkSpawn');
 		Orion.Wait(200);
 		Orion.StopWalking();
