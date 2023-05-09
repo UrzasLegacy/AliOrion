@@ -3,7 +3,11 @@ function initScripts()
     Orion.Exec('ComponentTraveler',true);
     Orion.Exec('Recover',true);
     }
-
+    function test()
+	{
+	Orion.ClearBadLocations()
+	AliWalkTo(Player.X() - 10,Player.Y())
+	}
 function ComponentTraveler()
     {
     var portal = {X: 1064,Y: 509};
@@ -16,8 +20,15 @@ function ComponentTraveler()
             var loc = portalArr[i];
             if(Orion.GetDistance(portal.X,portal.Y) > 150)
                 {
+                while(!Player.Hidden())
+                    {
+                    Orion.Cast('Invisibility');
+                    if(Orion.WaitForTarget(5000))
+                        Orion.TargetObject(self);
+                    Orion.Wait(500);
+                    }
                 RecallByGump('Main','Portal');
-                AliWalkTo(portal.X,portal.Y)
+                AliWalkTo(portal.X,portal.Y);
                 }
             else
                 AliAtlas(portal.X,portal.Y,'Malas');
@@ -35,12 +46,9 @@ function ComponentTraveler()
                     {
                     return Orion.GetDistance(a[0],a[1]) - Orion.GetDistance(b[0],b[1]);
                     });
-            Orion.Print(nearbyContainers.length)
+            SetBadLocations();
             for(var j=0;j<nearbyContainers.length;j++)
                 {
-                Orion.SetBadLocation(1409,3824);
-                Orion.SetBadLocation(1414,3827);
-                Orion.SetBadLocation(1419,3832);
                 var container = nearbyContainers[j];
                 AliWalkTo(container[0],container[1],0,1);
                 var foundContainerSerial = Orion.FindType(container[3],any,ground,'item','xyz: ' + container[0] + ',' + container[1] + ','+ container[2])[0];
@@ -102,7 +110,7 @@ function Recover()
         var deathY = Player.Y();
         Orion.Exec('AutoRes',true)
         Orion.PauseScript('ComponentTraveler');
-        Orion.Wait(5000);
+        Orion.Wait(500);
         while(Player.Dead())
             {
             var closestHealer = healerArr.sort(function(a,b)
@@ -124,11 +132,15 @@ function Recover()
             Orion.Wait(5000);
             }
         AliWalkTo(deathX,deathY);
-        while(Player.LRC() == 0)
+        while(!Orion.ObjAtLayer('Ring'))
             {
-            var corpse = Orion.FindType(any,any,ground,'item',0);
+            var corpse = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(), 'corpse')
+                });
             for(var i=0;i<corpse.length;i++)
                 {
+                AliWalkTo(corpse.X(),corpse.Y(),0,1);
                 Orion.UseObject(corpse[i]);
                 Orion.Wait(1300);
                 }
@@ -167,8 +179,10 @@ function Recover()
             {
             return Orion.Contains(mob.Properties(),'Guard')
             });
-        while(guardCheck.length && Orion.Now() < endTime)
+        var guardCount = guardCheck.length;
+        while(guardCheck.length == guardCount && Orion.Now() < endTime)
             {
+            Orion.CharPrint(self,1159,'Waiting for guards to leave...');
             Orion.Wait(1000);
             guardCheck = Orion.FindTypeEx(any,any,ground,'live',15).filter(function(mob)
                 {
@@ -192,6 +206,29 @@ function AutoRes()
             }
         Orion.Wait(1000);
         }
+    }
+
+function StayHidden()
+    {
+    var startX = Player.X();
+    var startY = Player.Y();
+    while(!Player.Dead() && Player.X() == startX && Player.Y() == startY)
+        {
+        if(!Orion.BuffExists('hiding'))
+            {
+            AttackNearest();
+            Orion.Wait(1000);
+            Orion.UseSkill('Hiding');
+            }
+        Orion.Wait(250);
+        }
+    }
+    
+function SetBadLocations(_)
+    {
+    Orion.SetBadLocation(1409,3824);
+    Orion.SetBadLocation(1414,3827);
+    Orion.SetBadLocation(1419,3832);
     }
 
 function WalkToRadiusBorder(targetSerial, distance) 
@@ -255,17 +292,11 @@ function ComponentContainer(containerSerial)
 	var lockpick = Orion.FindType(0x14FB)[0];
     if(!lockpick)
         return Orion.CharPrint(self,1159,'Missing lockpicks!');
-
-
-    while(container.Distance() > 1)
-        {
-        Orion.WalkTo(container.X(),container.Y());
-        Orion.Wait(100);
-        }
     Orion.ClearJournal('It appears to be locked.');
     var check = false;
     while(!check)
         {
+        AliWalkTo(container.X(),container.Y(),0,1);
         Orion.UseObject(lockpick)
         if(Orion.WaitForTarget(2000))
             {
@@ -280,6 +311,7 @@ function ComponentContainer(containerSerial)
         }
     while(!Orion.GumpExists('container',containerSerial))
         {
+        AliWalkTo(container.X(),container.Y(),0,1);
         if(Orion.InJournal('It appears to be locked.'))
             {
             var check = false;
@@ -305,12 +337,17 @@ function ComponentContainer(containerSerial)
     var stealable = Orion.FindTypeEx('0x142B|0x4CDA|0x142A|0x4CD9|0x2D61|0x4CD8',any,containerSerial)[0];
     if(!stealable)
         {
-        var npcCheck = Orion.FindType(any,any,ground,'live|inlos',6);
-        var itemWeight = 'Weight: 1 S|Weight: 2 S';
-        if(npcCheck < 2)
-            itemWeight += '|Weight: 3 S';
+        var npcCheck = Orion.FindType(any,any,ground,'live|inlos',8).length;
+        var itemWeight = 'Weight: 1 S';
+        if(npcCheck == 0)
+            itemWeight += '|Weight: 5 S';
         if(npcCheck < 3)
-            itemWeight += '|Weight: 4 S|Weight: 5 S';
+            itemWeight += '|Weight: 4 S';
+        if(npcCheck < 4)
+            itemWeight += '|Weight: 3 S';
+        if(npcCheck < 5)
+            itemWeight += '|Weight: 2 S';
+        Debug('NPCs: ' + npcCheck + 'Weights:' + itemWeight)
         stealable = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
             {
             return Orion.Contains(item.Properties(),itemWeight);
@@ -325,6 +362,7 @@ function ComponentContainer(containerSerial)
         var stealableSerial = stealable.Serial();
         while(!check)
             {
+            AliWalkTo(container.X(),container.Y(),0,1);
             Orion.UseSkill('Stealing');
             if(Orion.WaitForTarget(2000))
                 {
@@ -359,6 +397,15 @@ function ComponentContainer(containerSerial)
             }
         }
 	}
+
+function Debug(msg)
+    {
+    if(false)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + ': ' + msg);
+    }
 
 function TimerContainer(serial)
     {
@@ -641,25 +688,27 @@ function DistBetweenPoints(x1,y1,x2,y2)
     return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)))
     }
 
-function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
-    {
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn,staggerCheck)
+    {//Your maxWalkingTime must be longer than the time it takes to run one chunk
     if(z === undefined) z = 0;
     if(distanceXY === undefined) distanceXY = 0;
     if(distanceZ === undefined) distanceZ = 255;
     if(chunkSize === undefined) chunkSize = 5;
     if(run === undefined) run = 1;
     if(openDoor === undefined) openDoor = 1;
-    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    if(maxWalkingTime === undefined) maxWalkingTime = 2000;
     if(pathMarkers === undefined) pathMarkers = false;
-
+    if(staggerCheck === undefined) staggerCheck = 0;
     if(typeof startCallBackFn == 'function')
         {
         startCallBackFn();
         }
+    if(staggerCheck > 0)
+        Orion.CharPrint(self,1159,'Stagger: ' + staggerCheck + '/3');
     var playerX = Player.X();
     var playerY = Player.Y();
     var zeroMovement = playerX == x && playerY == y;
-    Orion.Print('zeroMovement: ' + zeroMovement)
+
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
         Orion.ClearFakeMapObjects();
@@ -668,6 +717,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     if(!zeroMovement)
         {
         var shortStop = pathTiles[pathTiles.length - 1];
+
         var shortX = shortStop.X();
         var shortY = shortStop.Y();
         if(pathMarkers)
@@ -675,7 +725,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
             pathTiles.forEach(function(tile,i)
                 {
                 Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-                })
+                });
             Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
             }
         if(pathTiles.length >= chunkSize)
@@ -688,19 +738,30 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
             Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
             Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
             }
-        Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+        if(!Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime))
+            staggerCheck++;
+        else
+            staggerCheck = 0;
+        if(staggerCheck > 2 && Player.X() == playerX && Player.Y() == playerY)
+            {
+            Orion.CharPrint(self,1159,'Correcting stagger...');
+            Orion.SetBadLocation(pathTiles[0].X(),pathTiles[0].Y())
+            staggerCheck = 0;
+            pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+            if(pathTiles.length === 0)
+                return false;
+            }
         Orion.Wait(1);
         }
 
     if(typeof endCallBackFn == 'function')
         {
-        if(endCallBackFn())
-            return 'Hydra';
+        var passThroughReturn = endCallBackFn();
         }
 
     if(!zeroMovement && Orion.GetDistance(shortX,shortY) > 0)
-        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
-    return true;
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn,staggerCheck);
+    return passThroughReturn || true;
     }
 
 function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
