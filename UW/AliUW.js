@@ -166,6 +166,7 @@ function SmartStart()
                 Orion.ClearBadLocations(); 
                 Orion.Wait(1000);
                 GoToBossArena();
+                Jiggle('Walk',75);
                 }
             initScripts();
             BossSequence();
@@ -205,6 +206,8 @@ function SmartStart()
                 Orion.PauseScript('SmartStart');
                 if(Player.Serial() != leadSampSerial)
                     Orion.Wait(2000);
+                else
+                    Orion.InvokeVirtue('Honor');
                 GoToBossArena();
                 }
             initScripts();
@@ -231,6 +234,7 @@ function SmartStart()
                 Orion.Cast('Greater Heal');
                 Orion.WaitForTarget(3000);
                 GoToBossArena();
+                Jiggle('Walk',75);
                 }
             initScripts();
             BossSequence();
@@ -278,9 +282,11 @@ function initScripts()
             var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
             if(lord)
                 {
+                Debug2('Attempt Honor')
                 if(lord.Distance() > 5)
                     Orion.WalkTo(lord.X(),lord.Y(),0,5);
-                Orion.InvokeVirtue('honor');
+                if(!Orion.HaveTarget())
+                    Orion.InvokeVirtue('honor');
                 if(Orion.WaitForTarget(2000))
                     Orion.TargetObject(lord.Serial());
                 }
@@ -1912,6 +1918,7 @@ function GoToLadderPosition()
         {
         if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
             RecallByGump('Main','UW Dock','Main','UW Dock2')
+        Jiggle('random',75);
         while(Orion.ObjAtLayer('Mount'))
             {
             Orion.UseObject(self);
@@ -1931,6 +1938,7 @@ function GoToLadderPosition()
             Orion.UseObject(whirlpool.Serial());
             Orion.Wait(1300);
             }
+        Jiggle('random',25);
         var ethy = Orion.FindTypeEx(any).filter(function(item)
             {
             return Orion.Contains(item.Properties(),'Mount Hue:')
@@ -2010,16 +2018,19 @@ function GoFromHomeToReadyPosition(_)
         {
         Debug2("Walking to Winch Assembly");
         AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('random',50);
         }
     else if(Player.Serial() == leadSampSerial)
         {
         Debug2("Walking to Lead Samp Position");
         AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('Turn',25);
         }
     else
         {
         Debug2("Walking to Ready Position");
         AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('random',50);
         }
     }
 
@@ -2079,6 +2090,7 @@ function OpenUW(_)
         Orion.UseObject(lever.Serial())
         Orion.Wait(500);
         }
+    Jiggle('random',50);
     }
 
 function GoToBossArena(_)
@@ -2347,6 +2359,7 @@ function UWAvoidBot(distance)
         var lordDistance = Orion.GetDistance(lord[0]);
         if(lordDistance < distanceActual - 2 || lordDistance > 8)
             WalkToRadiusBorder(lord[0], distanceActual);
+        Jiggle('Walk',5);
         }
     }
 
@@ -2889,6 +2902,47 @@ function SeaweedAvoid(_)
                 });
             }
         });
+    }
+
+function Jiggle(type,chance)
+    {
+    if(type === undefined) type = 'Move';
+    if(type === 'random')
+        {
+        var randChoices = ['Move','Turn','Wait'];
+        var type = randChoices[Orion.Random(0,randChoices.length)];
+        }
+    if(chance)
+        {
+        var rand = Orion.Random(0,101);
+        if(rand > chance)
+            return Debug2('Jiggle declined');
+        }
+    switch(type)
+        {
+        case 'Move':
+            Debug2('Jiggle Move');
+            var playerX = Player.X();
+            var playerY = Player.Y();
+            var tiles = Orion.GetTilesInRect('land',playerX - 2,playerY - 2,playerX + 2,playerY + 2);
+            var tile = tiles[Orion.Random(0,tiles.length)];
+            Orion.Wait(Orion.Random(100,400));
+            Orion.WalkTo(tile.X(),tile.Y(),0,0);
+            Orion.Wait(100);
+            break;
+        case 'Turn':
+            Debug2('Jiggle Turn');
+            Orion.Wait(Orion.Random(100,400));
+            Orion.Turn(Orion.Random(0,8))
+            Orion.Wait(100);
+            break;
+        case 'Wait':
+            Debug2('Jiggle Wait');
+            Orion.Wait(Orion.Random(100,2000))
+            break;
+        default:
+            break;
+        }
     }
 
 function AppendMagic(input)
