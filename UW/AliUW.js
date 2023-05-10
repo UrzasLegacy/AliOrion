@@ -138,7 +138,7 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
-            WarmodePause(text);
+            //WarmodePause(text);
             MassAllMessage('StartSmartStart');
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
@@ -173,6 +173,7 @@ function SmartStart()
             BossSequence();
             TerminateAll();
             CleanUpPublicCorpse();
+            WaitSyncLeader(); //Debrief
             Orion.Wait(500);
             Orion.Exec('SmartStart');
             break;
@@ -213,10 +214,8 @@ function SmartStart()
             initScripts();
             BossSequence();
             CharacterMaintenance();
-            Orion.Exec('StayHidden',true);
-            Orion.Exec('StayLoggedIn',true);
             EquipBossSuitByBotName();
-            WaitSyncFollower(); //Home position
+            WaitSyncFollower(); //Debrief
             Orion.Wait(1000);
             TerminateAll();
             Orion.Wait(500);
@@ -244,6 +243,9 @@ function SmartStart()
                 }
             initScripts();
             BossSequence();
+            CharacterMaintenance();
+            EquipBossSuitByBotName();
+            WaitSyncFollower(); //Debrief
             TerminateAll();
             Orion.Wait(500);
             Orion.Exec('SmartStart');
@@ -1168,11 +1170,12 @@ function ClearRoom()
         if(barrels.length)
             {
             var barrel = barrels[0];
-            var barrelSerial = barrels.Serial();
-            var barrelX = barrels.X();
-            var barrelY = barrels.Y();
+            var barrelSerial = barrel.Serial();
+            var barrelX = barrel.X();
+            var barrelY = barrel.Y();
             if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
-                Orion.UseAbility('primary');	
+                Orion.UseAbility('primary');
+            Orion.Wait(150);	
             if(barrel.Distance() > 1)
                 if(Orion.WalkTo(barrelX,barrelY))
                        Orion.Attack(barrelSerial);
@@ -1996,7 +1999,7 @@ function GoFromHomeToLadderPosition()
 function UWSuitJournalCheck()
     {
     var endTime = Orion.Now() + 10000;
-    while(Player.Y() < 1570 && Orion.Now() < endTime)
+    while(Player.Y() < 1585 && Orion.Now() < endTime)
         {
         var check = Orion.InJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!",'sys')
         if(check)
