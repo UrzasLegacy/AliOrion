@@ -143,15 +143,14 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
+                    DetermineBarrelSamp();	
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoFromHomeToLadderPosition();
+                WaitSyncLeader(); //Home position
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
-                if(scoutWait)
-                    DetermineBarrelSamp();
-                WaitSyncLeader(); //Home position
                 if(scoutWait)
                     {
                     WaitForReset(); //wait for keys and for uw to be ready
@@ -452,7 +451,7 @@ function Tithe()
     if(!ankh)
         RecallByGump('Main','Tithe','Main','Tithe2');
     CloseAllGumps();
-    var endTime = Orion.Now() + 10000;
+    var endTime = Orion.Now() + 30000;
     while(Player.TithingPoints() < 100000)
         {
         if(Orion.Now() > endTime)
@@ -470,24 +469,32 @@ function Tithe()
             } while(!Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',2)[0])
         Orion.WaitContextMenuID(ankh.Serial(), 412);
         Orion.RequestContextMenu(ankh.Serial());
-        if(Orion.WaitForGump(3000))
+        if(Orion.WaitForGump(3000,true))
             {
             var gump = Orion.GetGump('any','0x00000293');
             if(gump !== null)
                 {
                 gump.Select(Orion.CreateGumpHook(1));
                 Orion.Wait(300);
+                if(Orion.WaitForGump(3000,true))
+                    {
+                    var gump2 = Orion.GetGump('any','0x00000293');
+                    if(gump2 !== null)
+                        {
+                        gump2.Select(Orion.CreateGumpHook(2));
+                        Orion.Wait(300);
+                        }
+                    else
+                        Debug2('Tithe: Second gump failed 2');
+                    }
+                else
+                    Debug2('Tithe: Second gump failed 1');
                 }
+            else
+                Debug2('Tithe: First gump failed 2');
             }
-        if(Orion.WaitForGump(3000))
-            {
-            var gump = Orion.GetGump('any','0x00000293');
-            if(gump !== null)
-                {
-                gump.Select(Orion.CreateGumpHook(2));
-                Orion.Wait(300);
-                }
-            }
+        else
+            Debug2('Tithe: First gump failed 1');
         Orion.Wait(1000);
         }
     Orion.Wait(1500);
@@ -705,34 +712,6 @@ function CharacterMaintenance()
         RepairGear();
     if(ConsumablesCheck())
          RestockConsumables();
-    }
-
-function isTargetHour(targetHour)
-	{
-	var now = new Date();
-	var UTCHour = now.getUTCHours();
-	return UTCHour == targetHour;
-	}
-
-function MoveLoot(destinationContainerSerial)
-    {
-    if(destinationContainerSerial == undefined)
-        {
-        Orion.CharPrint(self,1159,'Target Destination Container');
-        Orion.WaitForAddObject('myTarget');
-        destinationContainerSerial = Orion.GetSerial('myTarget');
-        }
-    var containerObj = Orion.FindObject(destinationContainerSerial);
-    var loot = Orion.FindList('UWLoot')[0];
-    while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
-        {
-        Orion.CharPrint(self,1159,'Moving loot');
-        Orion.MoveItem(loot,0,destinationContainerSerial);
-        Orion.Wait(1100);
-        loot = Orion.FindList('UWLoot')[0];
-        }
-    if(!loot)
-        return true;
     }
 
 function DropLoot()
@@ -2414,6 +2393,34 @@ function UWAvoidBot(distance)
             WalkToRadiusBorder(lord[0], distanceActual);
         Jiggle('Move',3);
         }
+    }
+
+function isTargetHour(targetHour)
+	{
+	var now = new Date();
+	var UTCHour = now.getUTCHours();
+	return UTCHour == targetHour;
+	}
+
+function MoveLoot(destinationContainerSerial)
+    {
+    if(destinationContainerSerial == undefined)
+        {
+        Orion.CharPrint(self,1159,'Target Destination Container');
+        Orion.WaitForAddObject('myTarget');
+        destinationContainerSerial = Orion.GetSerial('myTarget');
+        }
+    var containerObj = Orion.FindObject(destinationContainerSerial);
+    var loot = Orion.FindList('UWLoot')[0];
+    while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
+        {
+        Orion.CharPrint(self,1159,'Moving loot');
+        Orion.MoveItem(loot,0,destinationContainerSerial);
+        Orion.Wait(1100);
+        loot = Orion.FindList('UWLoot')[0];
+        }
+    if(!loot)
+        return true;
     }
 
 function ParseWinch(_)
