@@ -564,7 +564,7 @@ function WalkThroughRepair()
     do
         {
         Orion.Step('n');
-        Orion.Wait(500);
+        Orion.Wait(2000);
         var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
         } while(!bench)
     if(!Orion.WalkTo(bench.X(),bench.Y()))
