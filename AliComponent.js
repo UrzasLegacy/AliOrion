@@ -83,27 +83,41 @@ function Recover()
         [544,966], //yew
         ]
     
+    
+    var poisoned;
+    var hurt;
     while(true)
         {
         while(!Player.Dead())
             {
-            if(!Orion.HaveTarget())
+            poisoned = false;
+            hurt = false;
+            if(Player.Poisoned())
                 {
-                if(Player.Poisoned())
+                poisoned = true;
+                if(!Orion.HaveTarget())
                     {
+                    Orion.PauseScript('ComponentTraveler');
                     Orion.Cast('Cure');
                     if(Orion.WaitForTarget(2000))
                         Orion.TargetObject(self)
                     Orion.Wait(200);
                     }
-                else if(Player.Hits('%') < 90)
+                }
+            else if(Player.Hits('%') < 80)
+                {
+                hurt = true;
+                if(!Orion.HaveTarget())
                     {
+                    Orion.PauseScript('ComponentTraveler');
                     Orion.Cast('Heal');
                     if(Orion.WaitForTarget(2000))
                         Orion.TargetObject(self)
                     Orion.Wait(200);
                     }
                 }
+            if(!poisoned && !hurt && Orion.ScriptRunning('ComponentTraveler') < 0)
+                Orion.ResumeScript('ComponentTraveler');
             Orion.Wait(200);
             }
         var deathX = Player.X();
@@ -120,7 +134,8 @@ function Recover()
             Orion.WalkTo(closestHealer[0],closestHealer[1],0,0);
             var healer = Orion.FindTypeEx(any,any,ground,'live',24).filter(function(mob)
                 {
-                return Orion.Contains(mob.Properties(), 'Healer');
+                var mobProperties = mob.Properties();
+                return Orion.Contains(mobProperties, 'Healer') && !Orion.Contains(mobProperties,'Quest Giver');
                 });
             if(!healer.length)
                 {
@@ -342,15 +357,13 @@ function ComponentContainer(containerSerial)
         {
         var npcCheck = Orion.FindType(any,any,ground,'live|inlos',8).length;
         var itemWeight = 'Weight: 1 S';
-        if(npcCheck == 0)
-            itemWeight += '|Weight: 5 S';
-        if(npcCheck < 3)
-            itemWeight += '|Weight: 4 S';
-        if(npcCheck < 4)
-            itemWeight += '|Weight: 3 S';
-        if(npcCheck < 5)
-            itemWeight += '|Weight: 2 S';
-        Debug('NPCs: ' + npcCheck + 'Weights:' + itemWeight)
+        for(var i=0;i<10;i++)
+            {
+            var stones = 10 - i;
+            if(i >= npcCheck)
+                itemWeight += '|Weight: ' + stones + ' Stones';
+            }
+        Debug('NPCs: ' + npcCheck + ', Weights: ' + itemWeight);
         stealable = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
             {
             return Orion.Contains(item.Properties(),itemWeight);
@@ -559,7 +572,7 @@ var containerArr =
     [1984, 2838, 21, '0x09A8'],
     [1988, 2865, 26, '0x09A8'],
     [2839, 880, 6, '0x09A8'],
-    [2860, 998, 6, '0x09A8'],
+    [2860, 998, 6, '0x0E80'],
 
     ]
 
