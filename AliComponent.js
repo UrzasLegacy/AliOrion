@@ -2,43 +2,65 @@ function initScripts()
     {
     Orion.Exec('ComponentTraveler',true);
     Orion.Exec('Recover',true);
+    Orion.Exec('JournalScan',true);
     }
-    function test()
+function test()
 	{
 	Orion.ClearBadLocations()
 	AliWalkTo(Player.X() - 10,Player.Y())
 	}
+
+function JournalScan()
+	{
+	var bot = "https://discordapp.com/api/webhooks/"
+        + '941921319463841843' //hook
+        + "/"
+        + '7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI'; //key
+    var paramText = "content=" + Player.Name() + ": GM";
+	var msg = 'GM';
+	while(true)
+		{
+		var check = Orion.WaitJournal(msg, Orion.Now(), 0);
+		Orion.Wait(100);
+        var checkarr = Orion.Split(check.Text(), ' ');
+		for(i = 0;i<checkarr.length;i++)
+			{
+			switch(checkarr[i])
+				{
+				case 'GM':
+					Orion.HttpPost(bot, paramText);
+					//Orion.PlayWav('Alarm09.wav');
+					Orion.PauseScript('all', 'GMJournalScan');
+                    Orion.Wait(1000);
+                    Orion.StopWalking();
+					Orion.OAOptionSet('AutoReconnect', '0');
+					Orion.Wait(2000);			
+					break;	
+				default:
+					break;
+				}
+			}
+		}
+	}    
+
 function ComponentTraveler()
     {
-    var portal = {X: 1064,Y: 509};
-    var portalArr = ['Britain','Jhelom','Moonglow','Ocllo','Serpent','Skara','Trinsic','Vesper', 'Yew']
+    var locArr = ['Britain','Jhelom','Moonglow','Ocllo','Serpent','Skara','Trinsic','Vesper', 'Yew']
     var containerArrCopy = JSON.parse(JSON.stringify(containerArr));
     while(true)
         {
-        for(var i=0;i<portalArr.length;i++)
+        for(var i=0;i<locArr.length;i++)
             {
-            var loc = portalArr[i];
-            if(Orion.GetDistance(portal.X,portal.Y) > 150)
+            var loc = locArr[i];
+            while(!Player.Hidden())
                 {
-                while(!Player.Hidden())
-                    {
-                    Orion.Cast('Invisibility');
-                    if(Orion.WaitForTarget(5000))
-                        Orion.TargetObject(self);
-                    Orion.Wait(500);
-                    }
-                RecallByGump('Main','Portal');
-                AliWalkTo(portal.X,portal.Y);
+                Orion.Cast('Invisibility');
+                if(Orion.WaitForTarget(5000))
+                    Orion.TargetObject(self);
+                Orion.Wait(500);
                 }
-            else
-                AliAtlas(portal.X,portal.Y,'Malas');
-            var tempX = Player.X();
-            var tempY = Player.Y();
-            while(Player.X() == tempX && Player.Y() == tempY)
-                {
-                Orion.SayWhisper('fel ' + loc + ' mint');
-                Orion.Wait(1000);
-                }
+            if(RecallByGump('Main',loc) === false)
+                continue;
             var nearbyContainers = containerArr.filter(function(container)
                 {
                 return Orion.GetDistance(container[0],container[1]) < 500;
@@ -247,6 +269,7 @@ function SetBadLocations(_)
     Orion.SetBadLocation(1409,3824);
     Orion.SetBadLocation(1414,3827);
     Orion.SetBadLocation(1419,3832);
+    Orion.SetBadLocation(1367,3754);
     }
 
 function WalkToRadiusBorder(targetSerial, distance) 
@@ -505,7 +528,7 @@ var containerArr =
     [3019, 3424, 15, '0x09AB'],
     [3011, 3424, 15, '0x0E41'],
     //[1352, 3757, 8, '0x0E80'],
-    //[1442, 3718, 6, '0x0E80'],
+    [1442, 3718, 6, '0x0E80'],
     [2842, 792, 6, '0x09A8'],
     [2864, 848, 6, '0x09A8'],
     //[2637, 2084, 10, '0x0E77'],
@@ -573,6 +596,9 @@ var containerArr =
     [1988, 2865, 26, '0x09A8'],
     [2839, 880, 6, '0x09A8'],
     [2860, 998, 6, '0x0E80'],
+    [1481, 3856, 6, '0x09A8'],
+    [1452, 3849, 6, '0x09A8'],
+    [1390, 3710, 6, '0x0E80'],
 
     ]
 
@@ -849,7 +875,10 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
             else if(backup)
                 return RecallByGump(backupBook, backupRune, bookName, runeName);
 	        else
+                {
 	            Orion.Print("No backup runebook named '" + backupBook + "' found!");
+                return false;
+                }
 	        }
 	    else if(Orion.InJournal('You cannot teleport into that area.', 'sys', 0, any, startJournal))
 	        {
@@ -862,7 +891,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
                 else
                     runeIndex = '1';
                 }
-	        return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
+	        return false//RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
 	        }
 		Orion.Wait(500);
 		}
