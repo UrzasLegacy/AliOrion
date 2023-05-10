@@ -3020,7 +3020,10 @@ function RetrieveMagic()
     tmpFile.Close();
     var replace = outputString.replace(/\\/g,'');
     var replaceAgain = replace.replace(/\d\d:\d\d:\d\d\.\d\d\d: /g,'');
-    var lines = Orion.Split(replaceAgain,'\n');
+    var lines = Orion.Split(replaceAgain,'\n').filter(function(line)
+        {
+        return Orion.Contains(line,'"Luck Leader":2660')
+        });
     var linesLength = lines.length;
     var red = lines.reduce(function(sumObj,line)
         {
@@ -3030,10 +3033,7 @@ function RetrieveMagic()
             if(typeof sumObj !== 'object')
                 sumObj = {};
             if(sumObj[prop] == undefined)
-                {
-                sumObj[prop] = 1
-                Orion.Print(true)
-                }
+                sumObj[prop] = json[prop];
             else
                 {
                 sumObj[prop] += json[prop]
@@ -3048,7 +3048,6 @@ function RetrieveMagic()
         var average = (red[prop] / linesLength).toFixed(2)
         TextWindow.Print(prop + ': ' + average)
         }
-    Orion.Print(red["Lesser Magic Item"])
     }
 
 //--#Coms
