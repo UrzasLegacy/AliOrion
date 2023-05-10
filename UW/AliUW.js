@@ -2055,7 +2055,7 @@ function GoFromLadderToReadyPosition(_)
         Orion.UseObject(ladder.Serial());
         Orion.Wait(1300);
         }
-    var randX = 6315 + Orion.Random(-3,4);
+    var randX = 6315 + Orion.Random(-2,3);
     var randY = 1706 + Orion.Random(-3,4);
     if(Shared.GetVar('barrelSamp',false))
         {
