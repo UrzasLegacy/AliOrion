@@ -213,6 +213,7 @@ function SmartStart()
                 }
             initScripts();
             BossSequence();
+            Shared.AddVar('barrelSamp',false);
             CharacterMaintenance();
             EquipBossSuitByBotName();
             WaitSyncFollower(); //Debrief
@@ -1856,7 +1857,7 @@ function KeyCheck()
             ['Wire Spool',6426,1753],//0x4CDB
             ['Power Core',6436,1753]//0x47E6
         ];
-    var keyCheck = true;
+    var keyCheck = false;
     for(var i=0;i<locArr.length;i++)
         {
         var loc = locArr[i];
@@ -1864,9 +1865,9 @@ function KeyCheck()
             {
             return Orion.Contains(item.Properties(),loc[0]);
             })[0];
-        if(!component)
+        if(component)
             {
-            keyCheck = false;;
+            keyCheck = true;
             break;
             }
         }
