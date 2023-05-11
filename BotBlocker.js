@@ -122,7 +122,10 @@ function CheckStandingStill(mobSerial,mobX,mobY)
         return true;
     return false;
     }
-
+for (let i = 0; i < array.length; i++) {
+	const element = array[i];
+	
+}
 function BotBlocker()
     {
     var blockItems = '0x0F36'; //
