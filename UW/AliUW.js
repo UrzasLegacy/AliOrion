@@ -476,7 +476,7 @@ function Tithe()
                 {
                 gump.Select(Orion.CreateGumpHook(1));
                 Orion.Wait(300);
-                if(Orion.WaitForGump(3000,true))
+                if(Orion.WaitForGump(3000))
                     {
                     var gump2 = Orion.GetGump('any','0x00000293');
                     if(gump2 !== null)
@@ -2240,7 +2240,7 @@ function BossCheck(_)
     {
     return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length;
     }
-    
+
 function SwitchToBarrelWep()
     {
     var barrelWepGraphics = '0x0F4B';
@@ -3654,3 +3654,74 @@ function AliGumpCallback(_)
     Orion.Wait(50);
     Orion.Exec('AliGumpRenderer',true);
     }
+
+function TrainMagery() 
+	{
+	var skillCap = 1150; //set to your target skill level. 1000 = 100.0
+	Orion.Exec('SkillGump', false, ['Magery']);
+	var skillLevel = Orion.SkillValue('Magery', 'base');
+	var skillLevelreal = Orion.SkillValue('Magery');
+	var iteminpack = Orion.FindType(any);
+	if(iteminpack[0])
+		var trainingTarget = iteminpack[0];
+	else
+		return Orion.CharPrint(self,1159,'No item in backpack to target!');
+    while (skillLevelreal < skillCap) 
+      	{
+      	skillLevel = Orion.SkillValue('Magery', 'base');
+      	skillLevelreal = Orion.SkillValue('Magery');
+        if(Player.Mana() < 20) 
+        	{
+            while (Player.Mana() < Player.MaxMana()) 
+				{
+				Orion.Wait(1500);
+				if(!Orion.BuffExists('Meditation')) 
+					Orion.UseSkill('Meditation');
+				}
+            }
+        else if(skillLevel < 300) 
+        	{
+        	Orion.Cast('Cure');
+        	Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+        	}
+        else if(skillLevel <= 450)
+        	{
+            Orion.Cast('Fireball');
+            Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+        	}
+       	else if(skillLevel <= 550) 
+       		{
+       		Orion.Cast('Lightning');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 650) 
+       		{
+       		Orion.Cast('Paralyze');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 800) 
+       		{
+       		Orion.Cast('Reveal');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(self);
+       		}
+       	else if(skillLevel <= 900) 
+       		{
+       		Orion.Cast('Flame Strike');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 1200) 
+       		{
+       		Orion.Cast('Earthquake');
+       		WaitPingAdjusted(1000);
+       		}  
+       	WaitPingAdjusted(500);  	
+        }
+  	TextWindow.Open();
+	TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() + ": Magery Finished");
+	}
