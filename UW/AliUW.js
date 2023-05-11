@@ -205,9 +205,14 @@ function SmartStart()
                 WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
                 if(Player.Serial() != leadSampSerial)
-                    Orion.Wait(2000);
+                    Orion.Wait(3000);
                 else
+                    {
+                    Orion.Cast('Evasion');
+                    Orion.Wait(500);
                     Orion.InvokeVirtue('Honor');
+                    Orion.Wait(500);
+                    }
                 GoToBossArena();
                 }
             initScripts();
@@ -3389,7 +3394,7 @@ function ____________GUMP(_){}
 var gumpAssets = 
     [
         [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
-        [ ['toggle','SmartStart','Start'],['toggle','SmartStart','Start'] ],
+        [ ['toggle','SmartStart','Start'] ],
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','GoFromHomeToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
         [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
