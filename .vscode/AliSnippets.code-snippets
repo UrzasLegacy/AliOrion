@@ -1,0 +1,59 @@
+{
+	// Place your AliOrion workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+
+	"ali if statement": 
+		{
+		"scope": "javascript,typescript",
+		"prefix": "if",
+		"body": 
+			[
+			"if(${1:condition});",
+			"\t{",
+			"\t${2:body}",
+			"\t}"
+			],
+		"description": "Create if statement"
+		},
+	"ali while statement": 
+		{
+		"scope": "javascript,typescript",
+		"prefix": "while",
+		"body": 
+			[
+			"while(${1:condition});",
+			"\t{",
+			"\t${2:body}",
+			"\t}"
+			],
+		"description": "Create while statement"
+		},
+	"ali for statement": 
+		{
+		"scope": "javascript,typescript",
+		"prefix": "for",
+		"body": 
+			[
+			"for(var ${1:i};i<${2:arr}.length;i++);",
+			"\t{",
+			"\tvar ${3:ele} = ${2:arr}[${1:i}]",
+			"\t${4://body}",
+			"\t}"
+			],
+		"description": "Create for statement"
+		},
+}
