@@ -205,13 +205,13 @@ function SmartStart()
                 WaitSyncFollower(); //ready position
                 Orion.PauseScript('SmartStart');
                 if(Player.Serial() != leadSampSerial)
-                    Orion.Wait(3000);
+                    Orion.Wait(2500);
                 else
                     {
-                    Orion.Cast('Evasion');
-                    Orion.Wait(500);
                     Orion.InvokeVirtue('Honor');
                     Orion.Wait(500);
+                    Orion.Cast('Evasion');
+                    Orion.Wait(250);
                     }
                 GoToBossArena();
                 }
@@ -2183,7 +2183,7 @@ function BossSequence(_)
 function CleanUpPublicCorpse()
     {
     Orion.IgnoreReset();
-    Orion.AddDisplayTimer('publicCorpse',200000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
+    Orion.AddDisplayTimer('publicCorpse',150000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
 	var corpse = Orion.FindTypeEx('0x2006', any, ground, 23).filter(function(item)
         {
         return Orion.Contains(item.Properties(), 'An Evil One');
@@ -3723,9 +3723,9 @@ function TrainMagery()
        	else if(skillLevel <= 1200) 
        		{
        		Orion.Cast('Earthquake');
-       		WaitPingAdjusted(1000);
+       		Orion.Wait(1000);
        		}  
-       	WaitPingAdjusted(500);  	
+       	Orion.Wait(500);  	
         }
   	TextWindow.Open();
 	TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() + ": Magery Finished");
