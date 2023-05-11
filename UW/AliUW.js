@@ -2236,6 +2236,11 @@ function WaitForSpecificGump(delay, type, serial, id)
 	return false;
 	}
 
+function BossCheck(_)
+    {
+    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length;
+    }
+    
 function SwitchToBarrelWep()
     {
     var barrelWepGraphics = '0x0F4B';
