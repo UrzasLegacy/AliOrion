@@ -3,7 +3,7 @@
 //#include Ali/AliDebug.js
 //#include Ali/AliHelpers.js
 //#include Ali/AliGumpHUD.js
-var leaderSerial = '0x02F4684A';
+var leaderSerial = '0x01DD7DAE';
 
 function followme()
 	{
@@ -19,7 +19,7 @@ function allterminate()
 	{
 	FollowerMassMessage('TerminateAll');
 	}
-    
+
 var profiles = 
     {
     Primeval: 
@@ -240,7 +240,7 @@ function Init()
         Orion.Exec('AliComFollower',true);
         Orion.Exec('AutoAttack',true);
         Orion.Exec('AutoBuffs',true);
-        if(profile.useBandieSelf || profile.useBandieOthers)
+        if(Orion.SkillValue('Healing') > 600)
             Orion.Exec('BandieBot',true);
         }
     }
