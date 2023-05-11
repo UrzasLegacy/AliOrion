@@ -2842,7 +2842,6 @@ function HydraLeash(_)
     Orion.ClearBadLocations();
     AvoidDropdowns();
     var hydraGraphic = '0x0109';
-    
     if(!Shared.GetVar('leashing',false))
         {
         var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance).sort(function(a,b)
@@ -2877,6 +2876,16 @@ function HydraLeash(_)
                     {
                     Debug('Hydra leashed')
                     Shared.AddVar('leashing',hydra.Serial());
+                    }
+                else
+                    {
+                    var tempX = Player.X();
+                    var tempY = Player.Y();
+                    Orion.Cast('Magic Arrow');
+                    Orion.WaitForTarget(500);
+                    Orion.WalkTo(hydra.X(),hydra.Y(),0,0);
+                    Orion.TargetObject(hydra.Serial());
+                    Orion.WalkTo(tempX,tempY,0,0);
                     }
                 break
             default:
