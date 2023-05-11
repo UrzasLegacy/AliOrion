@@ -10,6 +10,53 @@ function test()
 	AliWalkTo(Player.X() - 10,Player.Y())
 	}
 
+function Jiggle(type,chance)
+    {
+    if(type === undefined) type = 'Move';
+    if(type === 'random')
+        {
+        var randChoices = ['Move','Turn'];
+        var type = randChoices[Orion.Random(0,randChoices.length)];
+        }
+    if(chance)
+        {
+        var rand = Orion.Random(0,1000);
+        if(rand > chance)
+            return;
+        }
+    switch(type)
+        {
+        case 'Move':
+            Debug('Jiggle Move');
+            var playerX = Player.X();
+            var playerY = Player.Y();
+            var range = Orion.Random(1,4);
+            var tiles = Orion.GetTilesInRect('land',playerX - range,playerY - range,playerX + range,playerY + range).filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                return Orion.InLos(tileX,tileY) && tileX != Player.X() && tileY != Player.Y();
+                });
+                var tile = tiles[Orion.Random(0,tiles.length)];
+                Orion.Wait(Orion.Random(100,400));
+                Orion.WalkTo(tile.X(),tile.Y(),0,0);
+            Orion.Wait(100);
+            break;
+        case 'Turn':
+            Debug('Jiggle Turn');
+            Orion.Wait(Orion.Random(100,400));
+            Orion.Turn(Orion.Random(0,8));
+            Orion.Wait(100);
+            break;
+        case 'Wait':
+            Debug('Jiggle Wait');
+            Orion.Wait(Orion.Random(100,2000))
+            break;
+        default:
+            break;
+        }
+    }
+
 function JournalScan()
 	{
 	var bot = "https://discordapp.com/api/webhooks/"
