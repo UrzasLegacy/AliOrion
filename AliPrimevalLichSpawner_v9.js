@@ -1840,11 +1840,11 @@ function PrintSolution()
 	{
 	var outStr = '';
 	for(var i = 0;i<solution.length;i++)
-		{
+	{
+		outStr += 'Unknown';
 		if(!solution[i])
-			outStr += 'Unknown';
-		else
 			outStr += solution[i];
+			else
 		if(i == 2 || i == 5)
 			outStr += '\n';
 		else
