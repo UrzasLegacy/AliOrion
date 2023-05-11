@@ -45,7 +45,7 @@ function Jiggle(type,chance)
         case 'Turn':
             Debug('Jiggle Turn');
             Orion.Wait(Orion.Random(100,400));
-            Orion.Turn(Orion.Random(0,8));
+            Orion.Turn(Orion.Random(0,8))
             Orion.Wait(100);
             break;
         case 'Wait':
@@ -374,7 +374,10 @@ function ComponentContainer(containerSerial)
         var container = Orion.FindObject(containerSerial)
     if(!container)
         return Orion.CharPrint(self,1159,'Missing container!')
-    Orion.Print(container.X() + ',' + container.Y())
+    var containerX = container.X();
+    var containerY = container.Y();
+    var containerZ = container.Z();
+    Orion.Print(containerX + ',' + containerY)
     if(Orion.Contains(container.Properties(),'Contents'))
         return;
 	var lockpick = Orion.FindType(0x14FB)[0];
@@ -384,7 +387,7 @@ function ComponentContainer(containerSerial)
     var check = false;
     while(!check)
         {
-        AliWalkTo(container.X(),container.Y(),0,1);
+        AliWalkTo(containerX,containerY,0,1);
         Orion.UseObject(lockpick)
         if(Orion.WaitForTarget(2000))
             {
@@ -399,7 +402,7 @@ function ComponentContainer(containerSerial)
         }
     while(!Orion.GumpExists('container',containerSerial))
         {
-        AliWalkTo(container.X(),container.Y(),0,1);
+        AliWalkTo(containerX,containerY,0,1);
         if(Orion.InJournal('It appears to be locked.'))
             {
             var check = false;
@@ -433,7 +436,6 @@ function ComponentContainer(containerSerial)
             if(i >= npcCheck)
                 itemWeight += '|Weight: ' + stones + ' Stones';
             }
-        Debug('NPCs: ' + npcCheck + ', Weights: ' + itemWeight);
         stealable = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
             {
             return Orion.Contains(item.Properties(),itemWeight);
@@ -441,14 +443,17 @@ function ComponentContainer(containerSerial)
         component = false;
         } 
     if(!stealable)
+        {
+        Debug('Container: ' + containerX + ', ' + containerY + ', ' + containerZ + ': Nothing to steal!')
         return Orion.CharPrint(self,1159,'Nothing to steal!')
+        }
     else
         {
         var check = false;
         var stealableSerial = stealable.Serial();
         while(!check)
             {
-            AliWalkTo(container.X(),container.Y(),0,1);
+            AliWalkTo(containerX,containerY,0,1);
             Orion.UseSkill('Stealing');
             if(Orion.WaitForTarget(2000))
                 {
@@ -463,6 +468,7 @@ function ComponentContainer(containerSerial)
                 }
             Orion.Wait(1000);
             }
+        Debug('Container: ' + containerX + ', ' + containerY + ', ' + containerZ + ', NPCs: ' + npcCheck + ', Item: ' + stealable.Name());
         TimerContainer(containerSerial);
         Orion.CloseGump('container',containerSerial);
         if(component)
