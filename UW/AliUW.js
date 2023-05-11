@@ -1654,9 +1654,9 @@ function HydraReset()
     {
     AvoidDropdowns();
     Debug('Walking to ready position')
-    var hydraresetCheck = AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck)
-    Orion.Print('HydraResetCheck: ' + hydraresetCheck)
-    if(hydraresetCheck == 'Hydra')
+    var hydraResetCheck = AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck)
+    Orion.Print('HydraResetCheck: ' + hydraResetCheck)
+    if(hydraResetCheck == 'Hydra')
         {
         Debug('Hydra found. Walking to stern')
         AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
@@ -2350,11 +2350,6 @@ function ConsumablesCheck(_)
             }
         }
     return false;
-    }
-
-function BossCheck(_)
-    {
-    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length;
     }
 
 function isPlayerInRectangle(x1, y1, x2, y2)
