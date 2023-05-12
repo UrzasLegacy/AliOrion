@@ -35,7 +35,7 @@ function Jiggle(type,chance)
                 {
                 var tileX = tile.X();
                 var tileY = tile.Y();
-                return Orion.InLos(tileX,tileY) && tileX != Player.X() && tileY != Player.Y();
+                return Orion.InLOS(tileX,tileY) && tileX != Player.X() && tileY != Player.Y();
                 });
                 var tile = tiles[Orion.Random(0,tiles.length)];
                 Orion.Wait(Orion.Random(100,400));
@@ -119,11 +119,11 @@ function ComponentTraveler()
             for(var j=0;j<nearbyContainers.length;j++)
                 {
                 var container = nearbyContainers[j];
-                AliWalkTo(container[0],container[1],0,1);
-                var foundContainerSerial = Orion.FindType(container[3],any,ground,'item','xyz: ' + container[0] + ',' + container[1] + ','+ container[2])[0];
-                if(foundContainerSerial)
+                AliWalkTo(container[0],container[1],0,10);
+                var foundContainer = Orion.FindTypeEx(container[3],any,ground,'item','xyz: ' + container[0] + ',' + container[1] + ','+ container[2])[0];
+                if(foundContainer && !Orion.Contains(foundContainer.Properties(),'Contents'))
                     {
-                    ComponentContainer(foundContainerSerial)
+                    ComponentContainer(foundContainer.Serial(),loc)
                     Orion.Wait(1000);
                     }
                 }
@@ -194,13 +194,14 @@ function Recover()
         Orion.Exec('AutoRes',true)
         Orion.PauseScript('ComponentTraveler');
         Orion.Wait(500);
+        Debug(Player.Name() + ' died!');
+        var closestHealer = healerArr.sort(function(a,b)
+            {
+            return Orion.GetDistance(a[0],a[1]) - Orion.GetDistance(b[0],b[1]);
+            })[0];
+        AliWalkTo(closestHealer[0],closestHealer[1],0,0);
         while(Player.Dead())
             {
-            var closestHealer = healerArr.sort(function(a,b)
-                {
-                return Orion.GetDistance(a[0],a[1]) - Orion.GetDistance(b[0],b[1]);
-                })[0];
-            Orion.WalkTo(closestHealer[0],closestHealer[1],0,0);
             var healer = Orion.FindTypeEx(any,any,ground,'live',24).filter(function(mob)
                 {
                 var mobProperties = mob.Properties();
@@ -209,6 +210,7 @@ function Recover()
             if(!healer.length)
                 {
                 Orion.CharPrint(self,1159,'No healer found!');
+                AliWalkTo(closestHealer[0],closestHealer[1],0,0);
                 continue;
                 }
             Orion.WalkTo(healer[0].X(),healer[0].Y());
@@ -335,7 +337,10 @@ function WalkToRadiusBorder(targetSerial, distance)
                 || (x == (tileX + distance))
                 || (y == (tileY - distance))
                 || (y == (tileY + distance));
-                }).sort(function (a,b) 
+                }).filter(function(tile)
+                    {
+                    return Orion.InLOS(tile.X(),tile.Y())
+                    }).sort(function (a,b) 
                     {
                     return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
                     });
@@ -358,7 +363,7 @@ function singleContainer()
     ComponentContainer()
     }
 
-function ComponentContainer(containerSerial)
+function ComponentContainer(containerSerial,loc)
 	{
     if(containerSerial == undefined)
         {
@@ -426,9 +431,9 @@ function ComponentContainer(containerSerial)
         }
     var component = true;
     var stealable = Orion.FindTypeEx('0x142B|0x4CDA|0x142A|0x4CD9|0x2D61|0x4CD8',any,containerSerial)[0];
+    var npcCheck = Orion.FindType(any,any,ground,'live|inlos',8).length;
     if(!stealable)
         {
-        var npcCheck = Orion.FindType(any,any,ground,'live|inlos',8).length;
         var itemWeight = 'Weight: 1 S';
         for(var i=0;i<10;i++)
             {
@@ -444,7 +449,7 @@ function ComponentContainer(containerSerial)
         } 
     if(!stealable)
         {
-        Debug('Container: ' + containerX + ', ' + containerY + ', ' + containerZ + ': Nothing to steal!')
+        Debug(Player.Name() + ': ' + loc + ': [' + containerX + ', ' + containerY + ', ' + containerZ + ']: Nothing to steal!')
         return Orion.CharPrint(self,1159,'Nothing to steal!')
         }
     else
@@ -464,11 +469,11 @@ function ComponentContainer(containerSerial)
                 if(journal && journal.Text() == "You successfully steal the item.")
                     check = true;
                 else if(journal && journal.Text() == 'You can\'t steal that.')
-                    return ComponentContainer(containerSerial);
+                    return ComponentContainer(containerSerial,loc);
                 }
             Orion.Wait(1000);
             }
-        Debug('Container: ' + containerX + ', ' + containerY + ', ' + containerZ + ', NPCs: ' + npcCheck + ', Item: ' + stealable.Name());
+        Debug(Player.Name() + ': ' + loc + ': [' + containerX + ', ' + containerY + ', ' + containerZ + '], NPCs: ' + npcCheck + ', Item: ' + stealable.Name());
         TimerContainer(containerSerial);
         Orion.CloseGump('container',containerSerial);
         if(component)
@@ -638,8 +643,8 @@ var containerArr =
     [3641, 2596, 6, '0x09A8'],
     [2918, 806, 0, '0x0E3D'],
     [2918, 806, 3, '0x0E3D'],
-    [2918, 806, 6, '0x0E3D'],
-    [2918, 806, 9, '0x0E3D'],
+    //[2918, 806, 6, '0x0E3D'],
+    //[2918, 806, 9, '0x0E3D'],
     [2917, 806, 6, '0x0E3D'],
     [2917, 806, 3, '0x0E3D'],
     [2917, 806, 0, '0x0E3D'],
