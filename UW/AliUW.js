@@ -2380,7 +2380,7 @@ function isPlayerInRectangle(x1, y1, x2, y2)
 
 function injuredCheck(range, threshold, healDead)
     {
-    var flags = healDead ? 'ignoreself|mobile' : 'ignoreself|live';
+    var flags = healDead ? 'mobile' : 'live';
     var injureList = Orion.FindTypeEx(any, any, ground, flags, range, 'green').filter(function(part)
         {
         return part.Hits('%') < threshold || part.Poisoned();
