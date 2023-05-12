@@ -2116,7 +2116,14 @@ function OpenUW(_)
         Orion.UseObject(lever.Serial())
         Orion.Wait(500);
         }
-    Jiggle('random',500);
+    if(Player.Serial() == leadSampSerial)
+        {
+        Debug2("Walking to Lead Samp Position from winch");
+        AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('Turn',750);
+        }
+    else
+        Jiggle('random',500);
     }
 
 function GoToBossArena(_)
