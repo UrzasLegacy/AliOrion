@@ -428,7 +428,7 @@ function BlazeProtocol(mobSerial,outMsg)
         {
         Orion.AddFakeMapObject(ind + 10000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
         })
-    AliWalkTo(mob.X(),mob.Y(),mob.Z(),5)
+    AliWalkTo(mob.X(),mob.Y(),mob.Z(),5);
     Orion.Attack(mobSerial);
     Orion.WarMode(0);
     DiscordPush(outMsg);
@@ -437,7 +437,7 @@ function BlazeProtocol(mobSerial,outMsg)
         {
         TameCu();
         Shared.AddVar('pauseStamp',Orion.Now());
-        Orion.PauseScript('CuGump')
+        Orion.PauseScript('CuGump');
         StoreCu();
         Orion.PauseScript('all');
         }
@@ -944,34 +944,40 @@ function StoreCu()
     if(gate)
         {
         AliWalkTo(gate.X(),gate.Y())
-        Orion.UseObject(gate.Serial());
-        if(Orion.WaitForGump(3000))
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        while(Player.X() == tempX && Player.Y() == tempY)
             {
-            var gump = Orion.GetGump('any','0x00000258');
-            if(gump !== null)
+            Orion.UseObject(gate.Serial());
+            if(Orion.WaitForGump(3000))
                 {
-                var gumpHook = Orion.CreateGumpHook(1);
-                gumpHook.AddCheck(28, true);
-                gump.Select(gumpHook);
+                var gump = Orion.GetGump('any','0x00000258');
+                if(gump !== null)
+                    {
+                    var gumpHook = Orion.CreateGumpHook(1);
+                    gumpHook.AddCheck(28, true);
+                    gump.Select(gumpHook);
+                    }
+                }
+            Orion.Wait(500);
+            }
+        Orion.Wait(2000);
+        AliWalkTo(1024,500);
+        while(Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(self);
+            Orion.Wait(1300);
+            }
+        while(Orion.FindObject(serial))
+            {
+            Orion.Say('stall')
+            if(Orion.WaitForTarget(3000))
+                {
+                Orion.TargetObject(serial);
                 Orion.Wait(3000);
-                AliWalkTo(1024,500);
-                while(Orion.ObjAtLayer('Mount'))
-                    {
-                    Orion.UseObject(self);
-                    Orion.Wait(1300);
-                    }
-                while(Orion.FindObject(serial))
-                    {
-                    Orion.Say('stall')
-                    if(Orion.WaitForTarget(3000))
-                        {
-                        Orion.TargetObject(serial);
-                        Orion.Wait(3000);
-                        }
-                    }
-                Orion.LogOut();
                 }
             }
+        Orion.LogOut();
         }
     }
 
