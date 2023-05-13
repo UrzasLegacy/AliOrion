@@ -357,7 +357,7 @@ function LeaveUW()
         {
         return Orion.Contains(item.Properties(),'Mount Hue:');
         })[0];
-    while(ethy && !Orion.ObjAtLayer('mount'))
+    while(ethy && !Player.Dead() && !Orion.ObjAtLayer('mount'))
         {
         Orion.CharPrint(self,1159,'Remounting');
         Orion.UseObject(ethy.Serial());
