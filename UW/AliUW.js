@@ -975,17 +975,29 @@ function StayHidden()
     }
 
 function FindOwnCorpse()
-    {//Runs to and loots your corpse. Might need to spam the hotkey
+    {
     if(Orion.Contains(Player.Name(), 'Lady|Lord'))
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
         var _pName = Player.Name()
     var body = Orion.FindTypeEx(any, any, ground, 'ignoreself', 24).filter(function(part)
-        {
-        return Orion.Contains(part.Properties(), _pName)
-        });
-    if(Orion.WalkTo(body[0].X(), body[0].Y()))
-        Orion.UseObject(body[0].Serial());
+		{
+		return Orion.Contains(part.Properties(), _pName)
+		})[0];
+	if(!body)
+		return false;
+	var bodyX = body.X();
+	var bodyY = body.Y();
+	var endTime = Orion.Now() + 5000;
+	while(Orion.GetDistance(bodyX,bodyY) > 1 || !Orion.ObjAtLayer(1))
+		{
+		if(Orion.Now() > endTime)
+			return false;
+    	Orion.WalkTo(bodyX, bodyY);
+        Orion.UseObject(body.Serial());
+		Orion.Wait(1300);
+		}
+	return true;
     }
 
 function UltraTerminate()
@@ -2153,37 +2165,75 @@ function BossSequence(_)
     Orion.CharPrint(self,1159,'Starting Boss Sequence!');
     Debug2('Starting Boss Sequence!');
     Shared.AddVar('bossStartStamp',Orion.Now());
-    while(!Player.Dead())
+    while(true)
         {
-        var corpse = Orion.FindTypeEx('0x2006', any, ground, 'item', 23).filter(function(mob)
+        initScripts();
+        while(!Player.Dead())
             {
-            return Orion.Contains(mob.Properties(),'Evil');
-            });
-        if(corpse.length)
-            {
-            Orion.AddDisplayTimer('bossReset', 1800000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
-            Shared.AddVar('bossDeathStamp',Orion.Now());
-            if(Player.Serial() != leadSampSerial)
-                Orion.Wait(Orion.Random(5,11) * 500);
-            TerminateAll('BossSequence');
-            AliWalkTo(corpse[0].X(),corpse[0].Y());
-            ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
-            Orion.Wait(100);
-            break;
+            var corpse = Orion.FindTypeEx('0x2006', any, ground, 'item', 23).filter(function(mob)
+                {
+                return Orion.Contains(mob.Properties(),'Evil');
+                });
+            if(corpse.length)
+                {
+                Orion.AddDisplayTimer('bossReset', 1805000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
+                Shared.AddVar('bossDeathStamp',Orion.Now());
+                Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
+                if(Player.Serial() != leadSampSerial)
+                    Orion.Wait(Orion.Random(5,11) * 500);
+                TerminateAll('BossSequence');
+                AliWalkTo(corpse[0].X(),corpse[0].Y());
+                ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+                Orion.Wait(Orion.Random(4,9) * 1000);
+                var ethy = Orion.FindTypeEx(any).filter(function(item)
+                    {
+                    return Orion.Contains(item.Properties(),'Mount Hue:');
+                    })[0];
+                while(ethy && !Orion.ObjAtLayer('mount'))
+                    {
+                    Orion.CharPrint(self,1159,'Remounting');
+                    Orion.UseObject(ethy.Serial());
+                    Orion.Wait(1300);
+                    }
+                return;
+                }
+            Orion.Wait(1000);
             }
-        Orion.Wait(1000);
-        }
-    Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
-    Orion.Wait(Orion.Random(4,9) * 1000);
-    var ethy = Orion.FindTypeEx(any).filter(function(item)
-        {
-        return Orion.Contains(item.Properties(),'Mount Hue:');
-        })[0];
-    while(ethy && !Orion.ObjAtLayer('mount'))
-        {
-        Orion.CharPrint(self,1159,'Remounting');
-        Orion.UseObject(ethy.Serial());
-        Orion.Wait(1300);
+        //handle death during boss fight
+        Debug2('Died');
+        Orion.Wait(3000);
+        Orion.WarMode(0);
+        var gump = Orion.GetGump('any','0x000008AF');
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(2));
+            Orion.Wait(300);
+            }
+        while(Player.Dead())
+            {
+            LeaveUW();
+            var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+            if(!ankh)
+                {
+                LeaveUW();
+                ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+                if(!ankh)
+                    return Orion.CharPrint(self,1159,'No ankh found!')
+                }
+            Orion.Exec('AutoRes',true);
+            Orion.WalkTo(ankh.X(),ankh.Y())
+            Orion.Wait(500);
+            }
+        Debug2('Ressed');
+        if(BossCheck() === 0)
+            {
+            Orion.Exec('AutoConfidence',true);
+            GoFromHomeToLadderPosition();
+            GoFromLadderToReadyPosition();
+            GoToBossArena();
+            }
+        FindOwnCorpse();
+        Debug2('Recovered');
         }
     }
 
@@ -2271,6 +2321,29 @@ function SwitchToBarrelWep()
             Orion.Wait(1100);
             leftHand = Orion.ObjAtLayer('LeftHand');
             }
+        }
+    }
+
+function AutoConfidence(_)
+    {
+    while(Player.Hits('%') < 100)
+        {
+        Orion.Cast('Confidence');
+        Orion.Wait(7000);
+        }
+    }
+
+function AutoRes(_)
+    {
+    while(Player.Dead())
+        {
+        var gump = Orion.GetGump('any','0x000008AF');
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(2));
+            Orion.Wait(200);
+            }
+        Orion.Wait(1000);
         }
     }
 
