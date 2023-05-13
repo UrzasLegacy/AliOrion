@@ -48,12 +48,28 @@
 		"prefix": "for",
 		"body": 
 			[
-			"for(var ${1:i};i<${2:arr}.length;i++);",
+			"for(var ${1:i} = 0;i<${2:arr}.length;i++)",
 			"\t{",
 			"\tvar ${3:ele} = ${2:arr}[${1:i}]",
 			"\t${4://body}",
 			"\t}"
 			],
 		"description": "Create for statement"
+		},
+	"Orion Class": 
+		{
+		"scope": "javascript,typescript",
+		"prefix": "Orion",
+		"body": 
+			[""],
+		"description": "Orion Class"
+		},
+	"Shared Class": 
+		{
+		"scope": "javascript,typescript",
+		"prefix": "Shared",
+		"body": 
+			[""],
+		"description": "Shared Class"
 		},
 }
