@@ -1520,7 +1520,7 @@ function ____________PHASES(_){}
 
 function Autostart(_)
     {
-    if(Player.X() > 6000)
+    if(Player.X() > 6000 && Orion.Now() < 20000)
         {
         while(Orion.ObjAtLayer('mount'))
             {
