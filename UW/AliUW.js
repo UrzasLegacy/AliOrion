@@ -123,6 +123,9 @@ var useDiscordPush = true; //true, false. Set to true to use Discord notificatio
 var discordHook = '887268637315047444'; //Put your Discord WebHook here.
 var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
+var useFeint = true;
+var feintSpecial = 'Primary';
+
 Orion.Exec('JournalScan', true);
 var debug = true;
 var debug2 = true
@@ -1392,7 +1395,9 @@ function AutoAttack()
         switch(enemyCount)
             {
             case 1:
-                if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                if(useFeint && !Orion.BuffExists('feint'))
+                    Orion.UseAbility(feintSpecial);
+                else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
                     {
                     Orion.Cast('Onslaught');
                     var startTime = Orion.Now();
