@@ -1395,7 +1395,7 @@ function AutoAttack()
         switch(enemyCount)
             {
             case 1:
-                if(useFeint && !Orion.BuffExists('feint'))
+                if(useFeint && !Orion.BuffExists('feint') && !Orion.AbilityStatus(feintSpecial))
                     Orion.UseAbility(feintSpecial);
                 else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
                     {
