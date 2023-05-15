@@ -2586,7 +2586,7 @@ function ListLoot(findList)  //v2
                             totals[lastLine] = 1;
                         }
                     }
-                totals['Run Type'] = 'All Luck';
+                totals['Run Type'] = 'Luck Leader Full Run';
                 totals['Team Size'] = 6;
                 totals['Luck Leader'] = Player.Luck();
                 totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
