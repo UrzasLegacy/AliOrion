@@ -202,14 +202,14 @@ function AutoAttack()
                     Orion.UseAbility(singleTargetSpecial);
                 break;
             case 2:
-                if(useMomentumStrike)
+                if(useMomentumStrike && !Orion.BuffExists('Momentum Strike'))
                     {
-                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                    if(Player.Mana() >= 8)
                         Orion.Cast('Momentum Strike');
                     }
-                else if(useWhirlwind)
+                else if(useWhirlwind && !Orion.AbilityStatus(whirlwindSpecial))
                     {
-                    if(!Orion.AbilityStatus(whirlwindSpecial) && Player.Mana() >= 15)
+                    if(Player.Mana() >= 15)
                         Orion.UseAbility(whirlwindSpecial);
                     }
                 else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
@@ -221,18 +221,21 @@ function AutoAttack()
                     if(check)
                         Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
                     }
-                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
-                    Orion.UseAbility(singleTargetSpecial);
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial))
+                    {
+                    if(Player.Mana() >= 15)
+                        Orion.UseAbility(singleTargetSpecial);
+                    }
                 break;
             default: //more than 2 enemies
-                if(useWhirlwind)
+                if(useWhirlwind && !Orion.AbilityStatus(whirlwindSpecial))
                     {
-                    if(!Orion.AbilityStatus(whirlwindSpecial) && Player.Mana() >= 15)
+                    if(Player.Mana() >= 15)
                         Orion.UseAbility(whirlwindSpecial);
                     }
-                else if(useMomentumStrike)
+                else if(useMomentumStrike && !Orion.BuffExists('Momentum Strike'))
                     {
-                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                    if(Player.Mana() >= 8)
                         Orion.Cast('Momentum Strike');
                     }
                 else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
@@ -244,8 +247,11 @@ function AutoAttack()
                     if(check)
                         Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
                     }
-                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
-                    Orion.UseAbility(singleTargetSpecial);
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial))
+                    {
+                    if(Player.Mana() >= 15)
+                        Orion.UseAbility(singleTargetSpecial);
+                    }
                 break;
             }
         Orion.Wait(500);
