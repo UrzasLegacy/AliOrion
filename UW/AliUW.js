@@ -14,8 +14,8 @@
         //https://discord.com/api/webhooks/1103791296381976606/stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
         //You'll need to grab your hook number, in this example it is 1103791296381976606
         //and your key, in this example it is stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
-        var discordHook = '1103791296381976606' //Change this to your hook
-        var discordKey = 'stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx' //Change this to your key
+        //var discordHook = '1103791296381976606' //Change this to your hook
+        //var discordKey = 'stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx' //Change this to your key
 
     //Profiles
         //There are two types of profiles, ingame profile and Orion Assistant profile. You can set up one ingame profile and one OA profile and all characters can share them.
@@ -67,7 +67,7 @@
         //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
             //self repair. It doesn't need to have any special stats besides that. Double strike will knock the barrels out faster, so you can choose a weapon with that
             //as the Primary ability, but it's not really necessary with as much down time as there is between runs.
-        var doubleStrikeSpecial = 'Primary'; //Change this to whatever special Double Strike is for your weapon of choice.
+        var doubleStrikeSpecial = 'Primary'; //Change this to whatever special Double Strike is for your barrel weapon of choice.
         
 //Starting Instructions
     //Once all of the setup is complete, the routine for starting the script is simple.
@@ -104,7 +104,7 @@
 
 var useSingleTargetSpecial = true; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var singleTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-var useOnslaught = false; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
+var useOnslaught = true; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
 var useMultiTargetSpecial = false; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
 var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby. If MultiTargeSpecial is false 2 or more mobs.
@@ -113,11 +113,11 @@ var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all
 var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times.
 var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
 var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
-var useConfidenceThresholdPercent = 60; //Percentage of self HP to attempt to cast confidence.
+var useConfidenceThresholdPercent = 80; //Percentage of self HP to attempt to cast confidence.
 var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes below a threshold.
-var evasionThresholdPercent = 40; //Percentage of self HP to attempt to cast Evasion.
+var evasionThresholdPercent = 50; //Percentage of self HP to attempt to cast Evasion.
 var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oathed during apple cooldown
-var useCleanseByFire = true; //boolean. Attempt to self cure poison
+var useCleanseByFire = false; //boolean. Attempt to self cure poison
 var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder.
 var useDiscordPush = true; //true, false. Set to true to use Discord notifications for JournalScan
 var discordHook = '887268637315047444'; //Put your Discord WebHook here.
@@ -126,7 +126,7 @@ var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gw
 Orion.Exec('JournalScan', true);
 var debug = true;
 var debug2 = true
-var luckScum = true;
+var luckScum = false;
 //--#Start
 function _____________START(_){}
 
@@ -143,7 +143,7 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                    DetermineBarrelSamp();	
+                DetermineBarrelSamp();	
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
@@ -2586,7 +2586,7 @@ function ListLoot(findList)  //v2
                             totals[lastLine] = 1;
                         }
                     }
-                totals['Run Type'] = 'All No Luck';
+                totals['Run Type'] = 'All Luck';
                 totals['Team Size'] = 6;
                 totals['Luck Leader'] = Player.Luck();
                 totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
