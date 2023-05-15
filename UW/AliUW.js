@@ -1396,8 +1396,10 @@ function AutoAttack()
             {
             case 1:
                 if(useFeint && !Orion.BuffExists('feint'))
+                    {
                     if(!Orion.AbilityStatus(feintSpecial))
                         Orion.UseAbility(feintSpecial);
+                    }
                 else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
                     {
                     Orion.Cast('Onslaught');
