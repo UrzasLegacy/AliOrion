@@ -103,7 +103,7 @@
     //As a precaution, I recommend using accounts that are not tied to your main Mythic accounts in any way!
 
 var useSingleTargetSpecial = true; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
-var singleTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+var singleTargetSpecial = 'Secondary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
 var useOnslaught = true; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
 var useMultiTargetSpecial = false; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
 var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
