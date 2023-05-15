@@ -1081,7 +1081,7 @@ function Commodifier(stackSize,useCommodityDeeds,useSpecificArray)
             var item = useSpecificArray[i];
             var itemGraphic = item[0];
             var itemColor = item[1];
-            Combine(itemGraphic,itemColor,container,stackSize);
+            CombineCommodity(itemGraphic,itemColor,container,stackSize);
             if(useCommodityDeeds)
                 Commodify(itemGraphic, itemColor, container, stackSize);
             }
@@ -1101,14 +1101,14 @@ function Commodifier(stackSize,useCommodityDeeds,useSpecificArray)
             var graphicColorSplit = Orion.Split(graphicColor, ':');
             var itemGraphic = graphicColorSplit[0];
             var itemColor = graphicColorSplit[1];
-            Combine(itemGraphic, itemColor, container, stackSize);
+            CombineCommodity(itemGraphic, itemColor, container, stackSize);
             if(useCommodityDeeds)
                 Commodify(itemGraphic, itemColor, container, stackSize);
             }
         }
     }
 
-function Combine(graphicSerial, colorCode, containerSerial, stackCount)
+function CombineCommodity(graphicSerial, colorCode, containerSerial, stackCount)
 	{
     var itemOverstacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
         {
