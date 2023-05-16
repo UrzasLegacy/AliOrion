@@ -2212,6 +2212,7 @@ function BossSequence(_)
             }
         //handle death during boss fight
         Debug2('Died');
+        DiscordPush('Died');
         Orion.Wait(3000);
         Orion.WarMode(0);
         var gump = Orion.GetGump('any','0x000008AF');
