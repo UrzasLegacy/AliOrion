@@ -35,14 +35,14 @@ var profiles =
         useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
         useEnemyOfOne: false, //true , false.
         useCounterAttack: true, //true , false.
-        useConsecrateWeapon: true, //true , false.
+        useConsecrateWeapon: false, //true , false.
         useDivineFury: true, //true , false.
         useAutoLoot: false, //true, false.
         useConfidence: true, //true , false.
             useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-        useBandieSelf: false, //true , false.
+        useBandieSelf: true, //true , false.
             useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-        useBandieOthers: false, //true , false.
+        useBandieOthers: true, //true , false.
             useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
         useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
             discordHook: '887268637315047444', //Put Discord WebHook here
