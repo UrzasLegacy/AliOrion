@@ -32,6 +32,7 @@
         //Recommended Hotkeys:
             //SmartStart
             //AliGumpRenderer
+            //UltraTerminate
         //Check the Utilites section for anything else that looks interesting to you :)
 
     //Dress Agent
@@ -60,7 +61,7 @@
         //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
         //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
-        var homeX = 4415; //Change this to an X coordinate within 50 tiles of your Home recall spot. I use this to if your character is at home or not.
+        var homeX = 4415; //Change this to an X coordinate adjacent your 
         var homeY = 1499; //Change this to a Y coordinate near your Home recall spot
 
     //Misc Tips
@@ -123,12 +124,12 @@ var useDiscordPush = true; //true, false. Set to true to use Discord notificatio
 var discordHook = '887268637315047444'; //Put your Discord WebHook here.
 var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
-var useFeint = true;
+var useFeint = false;
 var feintSpecial = 'Primary';
 
 Orion.Exec('JournalScan', true);
-var debug = true;
-var debug2 = true
+var debug = false;
+var debug2 = false;
 var luckScum = false;
 //--#Start
 function _____________START(_){}
@@ -146,7 +147,6 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                DetermineBarrelSamp();	
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
@@ -156,6 +156,7 @@ function SmartStart()
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 if(scoutWait)
                     {
+                    DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
@@ -274,7 +275,7 @@ function AutoSettings()
     Orion.ClientOptionSet('BlockRunWhileHidden', 0);
     Orion.ClientOptionSet('AlwaysRun', 1);
     Orion.ClientOptionSet('AutoAvoidObstacles', 1);
-    Orion.ClientOptionSet('FixStatusbarOSI  ', 1);
+    Orion.ClientOptionSet('FixStatusbarOSI', 1);
     Orion.ClientOptionSet('ShowTimeInJournal', 1);       
     Orion.ClientOptionSet('EnableLegibleJournal', 1);
    
@@ -1330,6 +1331,7 @@ function AutoBuffs()
             {
             Orion.UseType('0x2FD8');
             nextAppleTime = timeStamp + 30000;
+            Orion.Wait(100);
             }
         timeStamp = Orion.Now();
         if(timeStamp > nextSpellTime && Player.Mana() > 20)
@@ -1379,6 +1381,7 @@ function AutoBuffs()
 
 function AutoAttack()
     {
+    var isLeader = Player.Serial() == leadSampSerial;
     while(!Player.Dead())
         {
         Orion.Wait(500);
@@ -1400,7 +1403,7 @@ function AutoAttack()
                     if(!Orion.AbilityStatus(feintSpecial))
                         Orion.UseAbility(feintSpecial);
                     }
-                else if(useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                else if(!isLeader && useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
                     {
                     Orion.Cast('Onslaught');
                     var startTime = Orion.Now();
@@ -1994,7 +1997,7 @@ function GoFromHomeToLadderPosition()
         Orion.Wait(1300);
         }
     AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)//outside boat
-    Orion.Wait(1300);
+    Orion.Wait(3000);
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
     AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
@@ -3817,4 +3820,50 @@ function TrainMagery()
         }
   	TextWindow.Open();
 	TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() + ": Magery Finished");
+	}
+
+function TrainMusic()
+	{
+    var instruments = '0x0EB3|0x0E9C|0x0E9D';
+	Orion.Exec('SkillGump', false, ['Musicianship'])
+	while(!Player.Dead() && Orion.SkillValue('Musicianship') < 1000)
+		{
+		var instrument = Orion.FindType(instruments)
+		if(instrument[0])
+			Orion.UseObject(instrument[0])
+		else
+			Orion.Print('No instruments found');
+		Orion.Wait(1100);
+		}
+	TextWindow.Open()
+	TextWindow.Print('skill done');
+	//Orion.LogOut();
+	}
+
+function TrainPeacemaking()
+	{
+    var instruments = '0x0EB3|0x0E9C|0x0E9D';
+	Orion.Exec('SkillGump', false, ['Peacemaking'])
+	while(!Player.Dead())
+		{
+		Orion.Wait(2000);
+		if(Orion.HaveTarget())
+	    	Orion.CancelTarget();		
+		if (!Orion.BuffExists('Meditation') && Player.Mana() > 50)
+			{
+			Orion.UseSkill('Peacemaking');
+			Orion.Wait(200);
+			Orion.WaitForTarget(1000);
+			if(Orion.InJournal('instrument shall you', ' ', 0, any, Orion.Now() - 3000, Orion.Now() + 3000))
+				{
+				var a = Orion.FindType(instruments)
+				Orion.TargetObject(a[0])
+				Orion.WaitForTarget(1000);
+				Orion.TargetObject(self);
+				}
+			else
+				Orion.TargetObject(self);
+			}	
+		Orion.Wait(8000);
+		}
 	}
