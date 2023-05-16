@@ -147,6 +147,7 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
+                DetermineBarrelSamp();
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
@@ -156,7 +157,6 @@ function SmartStart()
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 if(scoutWait)
                     {
-                    DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
@@ -400,7 +400,7 @@ function LeaveUW()
         }
      AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1); //Below Deck
      Orion.Wait(2000);
-     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1)) //Outside boat
+     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)) //Outside boat
         {
         var rope = Orion.FindTypeEx(0x14FA, any, ground, ' ', 2)[0];
         if(rope)
