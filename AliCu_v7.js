@@ -119,7 +119,7 @@ function StartCuFarm()
         AliAtlas(1174,1285,'Ilshenar');
     EquipRegularSuitByBotName();
     Orion.Wait(1000);
-    DiscordPush(Player.Name() + ' progressing spawn');
+    //DiscordPush(Player.Name() + ' progressing spawn');
     Orion.Exec('CuGump',true);
     Orion.Exec('AutoAttack',true);
     Orion.Exec('WalkSpawn',true);
@@ -329,7 +329,6 @@ function WalkSpawn()
 		AliWalkTo(x,y,0,0,255,20);
 		Orion.Wait(10);
         }
-    DiscordPush(Player.Name() + ' Died!')
 	}
 
 function RareAlert()
@@ -1371,8 +1370,8 @@ function JournalScan()
 					Orion.Wait(6000);
 					break;
 				case 'severely':
-					if(useDiscordPush)
-						DiscordPush(Player.Name() + ": Equipment is damaged")
+					//if(useDiscordPush)
+						//DiscordPush(Player.Name() + ": Equipment is damaged")
 					//if(useAlarmSound)
 						//Orion.PlayWav('Alarm.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
 					//Orion.Terminate('all', 'JournalScan');
