@@ -3491,6 +3491,8 @@ var gumpAssets =
         [ ['toggle','GoFromHomeToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
         [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
         [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'], ],
+        [ ['text','Training',554,1,17] ],
+        [ ['toggle','TrainMusic','TrainMusic'],['toggle','TrainPeacemaking','TrainPeacemaking'], ],
 
         [ ['ySpacer',20] ],
     ];
