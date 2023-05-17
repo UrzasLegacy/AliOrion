@@ -2212,7 +2212,7 @@ function BossSequence(_)
             }
         //handle death during boss fight
         Debug2('Died');
-        DiscordPush('Died');
+        DiscordPush(Player.Name() + ' Died');
         Orion.Wait(3000);
         Orion.WarMode(0);
         var gump = Orion.GetGump('any','0x000008AF');
@@ -3070,6 +3070,29 @@ function SeaweedAvoid(_)
         });
     }
 
+function LichAttackWalk(_)
+    {
+    if(Orion.SkillValue('Swordsmanship') < 900)
+        return;
+    Orion.ClearBadLocations();
+    var mobGraphic = '0x0008';
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',12);
+    if(mobs.length)
+        {
+        var mob = mobs[0];
+        var x = mob.X();
+        var y = mob.Y();
+        while(!Player.Dead() && mob.Exists())
+            {
+            if(Orion.GetDistance(x,y) > 1)
+                Orion.WalkTo(x,y);
+            else
+                Orion.Attack(mob.Serial())
+            Orion.Wait(500);
+            }
+        }
+    }
+
 function Jiggle(type,chance)
     {
     if(type === undefined) type = 'Move';
@@ -3384,7 +3407,7 @@ function SetBarrelSamp(_)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure';
+    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
