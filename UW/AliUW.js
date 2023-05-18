@@ -864,11 +864,11 @@ function RestockConsumables()
         var restockAmount = consumables[i][1];
         var consumableName = consumables[i][2];
         var count = Orion.Count(consumableGraphic)
-        if(count < restockAmount || restockAmount == 0)
+        if(count < restockAmount)
             {
             Orion.Wait(200);
             count = Orion.Count(consumableGraphic)
-            if(count < restockAmount || restockAmount == 0)
+            if(count < restockAmount)
                 {
                 var needed = restockAmount - count;
                 var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
@@ -881,6 +881,17 @@ function RestockConsumables()
                     i--;
                     }
                 }
+            }
+        else if(restockAmount == 0)
+            {
+            var check = Orion.FindType(consumableGraphic).length;
+            if(check < 1)
+                {
+                Orion.MoveItem(consumable);
+                Orion.Wait(1100);
+                i--;
+                }
+                
             }
         }
     Orion.CloseGump('container',pouchSerial);
