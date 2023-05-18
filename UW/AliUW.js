@@ -478,7 +478,7 @@ function Tithe()
             } while(!Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',2)[0])
         Orion.WaitContextMenuID(ankh.Serial(), 412);
         Orion.RequestContextMenu(ankh.Serial());
-        if(Orion.WaitForGump(3000,true))
+        if(Orion.WaitForGump(3000))
             {
             var gump = Orion.GetGump('any','0x00000293');
             if(gump !== null)
@@ -856,6 +856,7 @@ function RestockConsumables()
     var consumables =
         [
             ['0x2FD8', 10, 'Enchanted Apples'],
+            ['0x1F13', 0, 'Gem of Salvation'],
         ]
     for(var i=0;i<consumables.length;i++)
         {
@@ -863,17 +864,17 @@ function RestockConsumables()
         var restockAmount = consumables[i][1];
         var consumableName = consumables[i][2];
         var count = Orion.Count(consumableGraphic)
-        if(count < restockAmount)
+        if(count < restockAmount || restockAmount == 0)
             {
             Orion.Wait(200);
             count = Orion.Count(consumableGraphic)
-            if(count < restockAmount)
+            if(count < restockAmount || restockAmount == 0)
                 {
                 var needed = restockAmount - count;
                 var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
                 if(!consumable)
                     DiscordPush('UW House is out of ' + consumableName);
-                else
+                else if(needed >= 0)
                     {
                     Orion.MoveItem(consumable, needed);
                     Orion.Wait(1100);
@@ -2468,12 +2469,20 @@ function injuredCheck(range, threshold, healDead)
     var flags = healDead ? 'mobile' : 'live';
     var injureList = Orion.FindTypeEx(any, any, ground, flags, range, 'green').filter(function(part)
         {
+        Orion.GetStatus(part.Serial());
         return part.Hits('%') < threshold || part.Poisoned();
         }).sort(function(a,b)
             {
             return a.Hits() - b.Hits();
             });
     return injureList[0];
+    }
+
+function CheckHits()
+    {
+    Orion.WaitForAddObject('myTarget');
+    var a = Orion.FindObject('myTarget');
+    Orion.Print('Hits: ' + a.Hits('%'))
     }
 
 function UWAvoidBot(distance)
