@@ -1,5 +1,12 @@
 //v7
-
+function Debug(msg)
+    {
+    if(false)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + ': ' + msg);
+    }
 
 var profiles = 
 	{
@@ -311,7 +318,10 @@ function StaticAutoFarm()
 				Orion.ControlAgent('autoloot','BotLoot','toggle');
 				if(Orion.WaitJournal("Autoloot 'BotLoot' stopped", Orion.Now() - 200, Orion.Now() + 200))
 					Orion.ControlAgent('autoloot','BotLoot','toggle');
-				}
+				}	
+			if(isLeader)
+				Debug('Fezzik Found')
+			var timeStamp = Orion.Now();
 			while(!Player.Dead() && mob.Exists())
 				{
 				if(!stayStill && mob.Distance() > 1)
@@ -319,7 +329,10 @@ function StaticAutoFarm()
 				Orion.Wait(500);
 				}
             if(isLeader)
+				{
+				Debug('Fezzik Killed TTK: ' + (Orion.Now() - timeStamp) + 'ms')
                 IncrementKillCount();
+				}
 			if(isTargetHour(11))
 				{
 				Orion.PauseScript('all','StaticAutoFarm|JournalScan');
@@ -1230,6 +1243,7 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
 function WalkThroughCurrentFarm()
 	{
 	Orion.Terminate('all', 'WalkThroughCurrentFarm|JournalScan');
+	RecallByGump('Main','Farm');
 	AliWalkTo(2042,215)
     Orion.Wait(1000);
 	AliWalkTo(5827,590)
@@ -1836,6 +1850,10 @@ function isTargetHour(targetHour)
 
 function RecallRepair()
 	{
+	AliWalkTo(5690,573)
+    Orion.Wait(1000);
+	AliWalkTo(5824,631)
+    Orion.Wait(1000);
 	RecallByGump('Main', 'Repair');
 	Orion.WarMode(0);
 	do
