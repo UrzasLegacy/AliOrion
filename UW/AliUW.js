@@ -856,7 +856,7 @@ function RestockConsumables()
     var consumables =
         [
             ['0x2FD8', 10, 'Enchanted Apples'],
-            ['0x1F13', 0, 'Gem of Salvation'],
+            ['0x1F13', 1, 'Gem of Salvation'],
         ]
     for(var i=0;i<consumables.length;i++)
         {
@@ -882,23 +882,23 @@ function RestockConsumables()
                     }
                 }
             }
-        else if(restockAmount == 0)
-            {
-            var check = Orion.FindType(consumableGraphic).length;
-            if(check < 1)
-                {
-                var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
-                if(!consumable)
-                    DiscordPush('UW House is out of ' + consumableName);
-                else
-                    {
-                    Orion.MoveItem(consumable);
-                    Orion.Wait(1100);
-                    i--;
-                    }
-                }
+        // else if(restockAmount == 0)
+        //     {
+        //     var check = Orion.FindType(consumableGraphic).length;
+        //     if(check < 1)
+        //         {
+        //         var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
+        //         if(!consumable)
+        //             DiscordPush('UW House is out of ' + consumableName);
+        //         else
+        //             {
+        //             Orion.MoveItem(consumable);
+        //             Orion.Wait(1100);
+        //             i--;
+        //             }
+        //         }
                 
-            }
+        //     }
         }
     Orion.CloseGump('container',pouchSerial);
     }
