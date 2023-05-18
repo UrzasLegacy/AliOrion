@@ -2453,7 +2453,8 @@ function ConsumablesCheck(_)
     Debug2('Checking consumables...');
     var consumables =
         [
-        ['0x2FD8', 10], //apple
+        ['0x2FD8', 10,'Enchanted Apple'], //apple
+        ['0x1F13', 1, 'Gem of Salvation'],
         ]
     for(var i=0;i<consumables.length;i++)
         {
@@ -2464,7 +2465,7 @@ function ConsumablesCheck(_)
             Orion.Wait(200);
             if(Orion.Count(consumable) < restockAmount)
                 {
-                Orion.Print('Restock needed!');
+                Orion.Print('Restock needed: ' + consumables[i][2]);
                 return true;
                 }
             }
