@@ -316,7 +316,7 @@ function SeedOfLifeWander()
 		                break;
 		                }    
                     Orion.UseSkill('Stealing');
-                    Orion.WaitForTarget(1000);
+                    Orion.WaitForTarget(2000);
                     Orion.TargetObject(mob.Serial());
                    	Orion.AddDisplayTimer('stealtimer', 11000, 'AboveChar', 'Circle|bar', 'Steal', 0, 0, 'any', -1, '0x00FF00FE');
                     Orion.Wait(1000);
@@ -334,6 +334,7 @@ function SeedOfLifeWander()
                 else if(Orion.DisplayTimerExists('stealtimer'))
                     {
                     Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,10000)	
+					Orion.Wait(100);
                     Consolidate();
                     }
                 else
