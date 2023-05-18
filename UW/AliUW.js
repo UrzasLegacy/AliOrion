@@ -887,9 +887,15 @@ function RestockConsumables()
             var check = Orion.FindType(consumableGraphic).length;
             if(check < 1)
                 {
-                Orion.MoveItem(consumable);
-                Orion.Wait(1100);
-                i--;
+                var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
+                if(!consumable)
+                    DiscordPush('UW House is out of ' + consumableName);
+                else
+                    {
+                    Orion.MoveItem(consumable);
+                    Orion.Wait(1100);
+                    i--;
+                    }
                 }
                 
             }
