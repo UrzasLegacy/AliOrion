@@ -4,8 +4,8 @@ function CalculateScore()
     //var exampleString = Orion.FindObject('myTarget').Properties();
     var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nAntique\nMysticism +20\nResisting Spells +20\nFaster Casting 1\nFaster Cast Recovery 4\nLower Mana Cost 10%\nLower Reagent Cost 25%\nDurability 255 / 255\nMajor Artifact";
     Debug(exampleString + '\n')
-    var parse = parseJewelryProperties(exampleString)
-    var value = calculateTotalValueExclusiveSynergy(parse,modWeightsExampleArchetype,synergiesExampleArchetypeComplex)
+    var parse = parseJewelryProperties(exampleString);
+    var value = calculateTotalValueExclusiveSynergy(parse,modWeightsExampleArchetype,synergiesExampleArchetypeComplex);
     Orion.Print(value)
     }
 
@@ -206,15 +206,15 @@ var synergiesExampleArchetypeComplex =
 
 function parseJewelryProperties(jewelryString)
     {
-    const lines = jewelryString.split("\n");
-    const modsObject = {};
-    lines.forEach(function (line)
+    var lines = jewelryString.split("\n");
+    var modsObject = {};
+    lines.forEach(function(line)
         {
-        const modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)/);
+        var modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)/);
         if(modMatch)
             {
-            const modName = modMatch[1].replace(/\s/g, '');
-            const modValue = parseInt(modMatch[2]);
+            var modName = modMatch[1].replace(/\s/g, '');
+            var modValue = parseInt(modMatch[2]);
             modsObject[modName] = modValue;
             }
         });
@@ -222,72 +222,82 @@ function parseJewelryProperties(jewelryString)
     return modsObject;
     }
 
-function hasSynergy(mods, synergyMods) {
-    return synergyMods.every(function (mod) {
+function hasSynergy(mods, synergyMods)
+    {
+    return synergyMods.every(function(mod)
+        {
         return mods.hasOwnProperty(mod);
-    });
-}
+        });
+    }
 
 
-function calculateTotalValue(mods, modWeights, synergies) {
+function calculateTotalValue(mods, modWeights, synergies)
+    {
     var totalValue = 0;
     
     // Calculate the individual mod values
-    for (var mod in mods) {
-        if (modWeights.hasOwnProperty(mod)) {
+    for(var mod in mods)
+        {
+        if(modWeights.hasOwnProperty(mod))
+            {
             var modValue = mods[mod] * modWeights[mod];
             totalValue += modValue;
             Debug('Mod: ' + mod + ', Value: ' + modValue + ', Total Value: ' + totalValue);
+            }
         }
-    }
 
     // Calculate the synergistic values
-    for (var i = 0; i < synergies.length; i++) {
+    for(var i=0;i<synergies.length;i++)
+        {
         var synergy = synergies[i];
-
-        if (hasSynergy(mods, synergy.mods)) {
-            var combinedValue = synergy.mods.reduce(function (sum, mod) {
+        if(hasSynergy(mods, synergy.mods))
+            {
+            var combinedValue = synergy.mods.reduce(function (sum, mod)
+                {
                 return sum + mods[mod] * modWeights[mod];
-            }, 0);
+                }, 0);
 
             var synergyBonus = synergy.bonus;
             var synergyValue = combinedValue * synergyBonus - combinedValue;
             totalValue += synergyValue;
-
             Debug('Synergy: ' + synergy.mods.join(', ') + ', Synergy Value: ' + synergyValue + ', Total Value: ' + totalValue);
+            }
         }
+    return totalValue;
     }
 
-    return totalValue;
-}
-
-function calculateTotalValueExclusiveSynergy(mods, modWeights, synergies) {
+function calculateTotalValueExclusiveSynergy(mods, modWeights, synergies)
+    {
     var totalValue = 0;
     var appliedMods = {};
 
     // Sort synergies by the number of mods in descending order
-    synergies.sort(function (a, b) {
+    synergies.sort(function (a, b)
+        {
         return b.mods.length - a.mods.length;
-    });
+        });
     var modNum = 1;
     // Calculate the individual mod values
-    for (var mod in mods) {
-        if (modWeights.hasOwnProperty(mod)) {
+    for(var mod in mods)
+        {
+        if(modWeights.hasOwnProperty(mod))
+            {
             var modValue = mods[mod] * modWeights[mod];
             totalValue += modValue;
             Debug('Mod ' + modNum++ + ': ' + mod + ' ' + mods[mod] + ', Weight: ' + modWeights[mod] + ', Value: ' + modValue + ', Total Value: ' + totalValue);
+            }
         }
-    }
 
     // Calculate the synergistic values
-    for (var i = 0; i < synergies.length; i++) {
+    for(var i = 0; i < synergies.length; i++)
+        {
         var synergy = synergies[i];
-
-        if (hasSynergy(mods, synergy.mods) && !hasSynergy(appliedMods, synergy.mods)) {
-            var combinedValue = synergy.mods.reduce(function (sum, mod) {
+        if(hasSynergy(mods, synergy.mods) && !hasSynergy(appliedMods, synergy.mods))
+            {
+            var combinedValue = synergy.mods.reduce(function(sum, mod)
+                {
                 return sum + mods[mod] * modWeights[mod];
-            }, 0);
-
+                }, 0);
             var synergyBonus = synergy.bonus;
             var synergyValue = combinedValue * synergyBonus - combinedValue;
             totalValue += synergyValue;
@@ -295,14 +305,15 @@ function calculateTotalValueExclusiveSynergy(mods, modWeights, synergies) {
             Debug('Synergy: [' + synergy.mods.join(', ') + '], Modifier: ' + synergyBonus + ', Synergy Value: ' + synergyValue + ', Total Value: ' + totalValue);
 
             // Mark the mods in this synergy as applied
-            for (var j = 0; j < synergy.mods.length; j++) {
+            for(var j=0;j<synergy.mods.length;j++)
+                {
                 appliedMods[synergy.mods[j]] = true;
+                }
             }
         }
-    }
 
     return totalValue;
-}
+    }
 
 function Debug(msg)
     {
