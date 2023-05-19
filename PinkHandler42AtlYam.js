@@ -631,7 +631,7 @@ function VSResultPinks()
 					{
                     if(lowestPrice - 1 < 1000000)
                         tab = '\t\t';
-                    outMsg += "-\t" + (lowestPrice-1);
+                    outMsg += "\\-\t" + (lowestPrice-1);
 					}
 				else if((lowestPrice == currentPrice || lowestPrice - 1 == currentPrice))
                     {
