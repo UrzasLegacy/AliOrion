@@ -990,7 +990,8 @@ function RunToRepair()
             "Great Lakes": [932,495,'Malas'],
             "Yamato": [798,755,'Trammel'],
             "Arirang": [738,791,'Trammel'],
-            "Lake Austin": [1051,543,'Malas']
+            "Lake Austin": [1051,543,'Malas'],
+            "Sakura": [793,754,'Trammel'],
         }
     var shardName = Orion.ShardName();
     var repairArr = shards[shardName];
