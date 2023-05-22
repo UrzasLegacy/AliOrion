@@ -1860,7 +1860,7 @@ function RecallRepair()
 		{
 		Orion.Step('n');
 		Orion.Wait(250);
-		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 10)[0];
+		var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 16)[0];
 		} while(!bench)
 	if(!Orion.WalkTo(bench.X(),bench.Y()))
 		Orion.WalkTo(bench.X(),bench.Y());
