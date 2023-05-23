@@ -788,7 +788,7 @@ function NeedleInAHayStack()
         var containerY = containerObj.Y();
         var containerZ = containerObj.Z();
         VerifyWalkTo(containerX,containerY,containerZ,1);
-        var subContainers = GetAllSubContainers(containerSerial);
+        var subContainers = GetAllSubContainers(containerSerial,true);
         for(var j=0;j<subContainers.length;j++)
             {
             var subContainerSerial = subContainers[j];
