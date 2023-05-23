@@ -77,20 +77,24 @@ function ListLoot(findlist,ignorelist)  //v1
     }
 
 var subContainersArr = [];
-function GetAllSubContainers(containerSerial)
+function GetAllSubContainers(containerSerial,ignoreEmpties)
     {
     if(!VerifyOpenContainer(containerSerial))
         return;
     subContainersArr.push(containerSerial);
     var subContainers = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
         {
-        var bool = Orion.Contains(item.Properties(),'Contents: ');
-        return bool;
+        var itemProps = item.Properties();
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
+        if(ignoreEmpties)
+            return containerCheck && !emptyCheck;
+        return containerCheck;
         });
     for(var i=0;i<subContainers.length;i++)
         {
         var subContainer = subContainers[i];
-        GetAllSubContainers(subContainer.Serial());
+        GetAllSubContainers(subContainer.Serial(),ignoreEmpties);
         }
     Orion.CloseGump('container',containerSerial);
     return subContainersArr;
