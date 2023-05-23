@@ -770,10 +770,12 @@ function NeedleInAHayStack()
     var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) //get all containers on the ground within 24 tiles
         {
         var itemZ = item.Z();
+        var itemProps = item.Properties();
         var playerZ = Player.Z();
         var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
-        var containerCheck = Orion.Contains(item.Properties(),'Contents: ')
-        return zCheck && containerCheck;
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
+        return zCheck && containerCheck && !emptyCheck;
         }).sort(function(a,b) //sort by nearest
             {
             return a.Distance() - b.Distance();
