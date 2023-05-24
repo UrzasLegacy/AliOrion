@@ -1,8 +1,8 @@
 function JournalScan()
 	{
-	var useDiscordPush = profile.useDiscordPush;
+	var useDiscordPush = true//profile.useDiscordPush;
 	var useAlarmSound = true//profile.useAlarmSound;
-	var journalScanType = profile.journalScanType;
+	var journalScanType = true//profile.journalScanType;
 	var msg = 'GM'
 	if(Orion.Contains(journalScanType, 'Equipment Damage'))
 		msg += '|equipment is severely';
