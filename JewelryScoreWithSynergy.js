@@ -1,12 +1,13 @@
 function CalculateScore()
     {
-    //Orion.WaitForAddObject('myTarget');
-    //var exampleString = Orion.FindObject('myTarget').Properties();
-    var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nAntique\nMysticism +20\nResisting Spells +20\nFaster Casting 1\nFaster Cast Recovery 4\nLower Mana Cost 10%\nLower Reagent Cost 25%\nDurability 255 / 255\nMajor Artifact";
-    Debug(exampleString + '\n')
-    var parse = parseJewelryProperties(exampleString);
-    var value = calculateTotalValueExclusiveSynergy(parse,modWeightsExampleArchetype,synergiesExampleArchetypeComplex);
-    Orion.Print(value)
+    Orion.WaitForAddObject('myTarget');
+    var exampleString = Orion.FindObject('myTarget').Properties();
+    //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nAntique\nMysticism +20\nResisting Spells +20\nFaster Casting 1\nFaster Cast Recovery 4\nLower Mana Cost 10%\nLower Reagent Cost 25%\nDurability 255 / 255\nMajor Artifact";
+    //Debug(exampleString + '\n')
+    var parse = parseJewelryProperties(exampleString,modWeightsExampleArchetype);
+    //var value = calculateTotalValueExclusiveSynergy(parse,modWeightsExampleArchetype,synergiesExampleArchetypeComplex);
+    Orion.Print(JSON.stringify(parse))
+    Orion.Print(Object.keys(parse).length)
     }
 
 var modWeightsExampleArchetype =
@@ -14,16 +15,13 @@ var modWeightsExampleArchetype =
     Magery: 5,
     MaceFighting: 1,
     Fencing: 1,
-    Musicianship: 0,
     Swordsmanship: 4,
     AnimalTaming: 1,
     SpiritSpeak: 3,
     Tactics: 1,
     Wrestling: 5,
-    AnimalLore: 0,
-    Discordance: 0,
     Focus: 5,
-    Parrying: 5,
+    Parrying: 10,
     Stealth: 1,
     Meditation: 1,
     Anatomy: 2,
@@ -31,15 +29,12 @@ var modWeightsExampleArchetype =
     EvaluateIntelligence: 5,
     Mysticism: 5,
     Necromancy: 3,
-    Stealing: 0,
-    Veterinary: 0,
     Archery: 3,
     Chivalry: 1,
     Healing: 1,
     Ninjitsu: 4,
-    Peacemaking: 0,
     Throwing: 2,
-    ResistingSpells: 10, //Resisting spells is higher because it is not considered for synergies/Everyone can use it
+    ResistingSpells: 10, //Resisting spells is highest because it is not considered for synergies/Everyone can use it
     ManaIncrease: 12,
     StaminaIncrease: 12,
     StrengthBonus: 7,
@@ -56,11 +51,6 @@ var modWeightsExampleArchetype =
     FasterCasting: 60,
     LowerManaCost: 8,
     LowerReagentCost: 2.5,
-    PhysicalResist: .1,
-    FireResist: .1,
-    ColdResist: .1,
-    PoisonResist: .1,
-    EnergyResist: .1,
     };
 
 var skillGroups = 
@@ -204,7 +194,7 @@ var synergiesExampleArchetypeComplex =
         // ... add more synergies as needed
     ];
 
-function parseJewelryProperties(jewelryString)
+function parseJewelryProperties(jewelryString,modWeights)
     {
     var lines = jewelryString.split("\n");
     var modsObject = {};
@@ -214,11 +204,13 @@ function parseJewelryProperties(jewelryString)
         if(modMatch)
             {
             var modName = modMatch[1].replace(/\s/g, '');
-            var modValue = parseInt(modMatch[2]);
-            modsObject[modName] = modValue;
+            if(modWeights[modName])
+                {
+                var modValue = parseInt(modMatch[2]);
+                modsObject[modName] = modValue;
+                }
             }
         });
-
     return modsObject;
     }
 
@@ -229,7 +221,6 @@ function hasSynergy(mods, synergyMods)
         return mods.hasOwnProperty(mod);
         });
     }
-
 
 function calculateTotalValue(mods, modWeights, synergies)
     {
