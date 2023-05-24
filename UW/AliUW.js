@@ -708,7 +708,7 @@ function RepairGear()
     }
 
 function CharacterMaintenance()
-    { 
+    {
     if(isTargetHour(11))
         Orion.LogOut();
     LeaveUW();
@@ -1252,8 +1252,15 @@ function ____________LEADER(_){}
 
 function UWHealLeader()
     {
+    var isBard = Orion.SkillValue('Musicianship') >= 1000 && Orion.SkillValue('Discordance') >= 1000;
+    Debug(isBard);
+    var discordCooldown = 8500;
+    var nextDiscord = 0;
+    var playerSerial = Player.Serial();
     var activeHealers = Shared.GetArray('healer',[]);
-    activeHealers.push([40420,Player.Serial(),Player.Name(),'leader'])
+    activeHealers.push([40420,playerSerial,Player.Name(),'leader'])
+    if(isBard)
+        Orion.Exec('AsyncDiscord',true);
     while(true)
         {
         var target = injuredCheck(15,80);
@@ -1262,6 +1269,28 @@ function UWHealLeader()
             var targetSerial = target.Serial();
             var healer = activeHealers.shift();
             activeHealers.push(healer);
+            if(isBard && healer[1] == playerSerial)
+                {
+                var scriptRunning = Orion.ScriptRunning('AsyncDiscord');
+                if(scriptRunning < 0) //paused
+                    { 
+                    if(Orion.Now() > nextDiscord)
+                        {
+                        Debug('ResumeScript: AsyncDiscord');
+                        Orion.ResumeScript('AsyncDiscord');
+                        var healer = activeHealers.shift();
+                        activeHealers.push(healer);
+                        Debug('On resume, Skipping leadHealer to: ' + healer);
+                        nextDiscord = Orion.Now() + discordCooldown;
+                        }
+                    }
+                else if(scriptRunning > 0) //running
+                    {
+                    var healer = activeHealers.shift();
+                    activeHealers.push(healer);
+                    Debug('Skipping leadHealer to: ' + healer);
+                    }
+                }
             Orion.TargetSystemSerial(target.Serial());
             if(target.Poisoned())
                 {
@@ -1280,6 +1309,57 @@ function UWHealLeader()
         }
     }
 
+function AsyncDiscord()
+    {
+    Debug('Start AsyncDiscord');
+    var musicalInstruments = '';
+    while(true)
+        {
+        Orion.PauseScript('UWHealBot');
+        if(Orion.HaveTarget())
+            Orion.CancelTarget();
+        Orion.Wait(100);
+        var timeStamp = Orion.Now();
+        Orion.UseSkill('Discordance');
+        if(Orion.WaitForTarget(2000))
+            {
+            if(Orion.InJournal('instrument shall you', '', 0, 'any', timeStamp))
+                {
+                var instrument = Orion.FindType(musicalInstruments)[0];
+                if(!instrument)
+                    return Orion.CharPrint(self,1159,'Out of instruments!');
+                Orion.TargetObject(instrument);
+                Debug('Switched instrument');
+                Orion.WaitForTarget(2000);
+                }
+            var lord = Orion.FindType('0x02C0', any, ground, 'live', 20, 'red|orange')[0];
+            Orion.TargetObject(lord);
+            var startTime = Orion.Now();
+            var endTime = startTime + 3000;
+            var result = Orion.WaitJournal("You play jarring music, suppressing your target's strength|That creature is already in discord.|You attempt to disrupt your target, but fail.",startTime,endTime,'sys')
+            if(result)
+                {
+                var text = result.Text();
+                Debug('WaitJournal: ' + text);
+                if(text == "You play jarring music, suppressing your target's strength" || text == "That creature is already in discord.")
+                    break;
+                }
+            }
+        Debug('Failed discord');
+        if(Orion.HaveTarget())
+            Orion.CancelTarget();
+        Orion.Wait(100);
+        Orion.ResumeScript('UWHealBot');
+        Orion.Wait(100);
+        Orion.PauseScript();
+        Orion.Wait(100);
+        }
+    Debug('Succeeded discord');
+    Orion.CharPrint(self,1159,'Successfully discorded!')
+    }
+//You play jarring music, suppressing your target's strength.
+//That creature is already in discord.
+//You attempt to disrupt your target, but fail.
 //--#Melee
 function ____________MELEE(_){}
 
