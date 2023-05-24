@@ -466,7 +466,7 @@ function Tithe()
         if(Orion.Now() > endTime)
             return DiscordPush(Player.Name() + "couldn't tithe to 100,000");
         var subEndTime = Orion.Now() + 5000;
-        var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+        var ankh = Orion.FindTypeEx('0x0005|0x0003|0x0004',any,ground,'item',20)[0];
         if(!ankh)
             return Orion.CharPrint(self,1159,'No ankh found!')
         do
@@ -1312,7 +1312,7 @@ function UWHealLeader()
 function AsyncDiscord()
     {
     Debug('Start AsyncDiscord');
-    var musicalInstruments = '';
+    var musicalInstruments = '0x0E9C|0x0EB3|0x0E9E|0x0E9D|0x0EB2|0x2807'; //use Exceptional instruments!
     while(true)
         {
         Orion.PauseScript('UWHealBot');
@@ -1333,7 +1333,10 @@ function AsyncDiscord()
                 Orion.WaitForTarget(2000);
                 }
             var lord = Orion.FindType('0x02C0', any, ground, 'live', 20, 'red|orange')[0];
-            Orion.TargetObject(lord);
+            if(lord)
+                Orion.TargetObject(lord);
+            else
+                Orion.CancelTarget();
             var startTime = Orion.Now();
             var endTime = startTime + 3000;
             var result = Orion.WaitJournal("You play jarring music, suppressing your target's strength|That creature is already in discord.|You attempt to disrupt your target, but fail.",startTime,endTime,'sys')
@@ -1341,8 +1344,12 @@ function AsyncDiscord()
                 {
                 var text = result.Text();
                 Debug('WaitJournal: ' + text);
-                if(text == "You play jarring music, suppressing your target's strength" || text == "That creature is already in discord.")
+                if(text == "You play jarring music, suppressing your target's strength." || text == "That creature is already in discord.")
+                    {
+                    Orion.ResumeScript('UWHealBot');
+                    Orion.Wait(100);
                     break;
+                    }
                 }
             }
         Debug('Failed discord');
