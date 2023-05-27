@@ -1282,11 +1282,39 @@ function HouseTarget()
         }
     }
 
+function ManualPlacer()
+    {
+    var coordX = houseTargetCoords[0];
+    var coordY = houseTargetCoords[1];
+    Orion.TargetTile('any', coordX, coordY, 0);
+    var startTime = Orion.Now();
+    var endTime = startTime + 2000;
+    Orion.PauseScript('KeepUpHouseTarget');
+    var gump = Orion.GetGump(any, '0x000001EC'); //accept house placement gump
+    while(!gump && Orion.Now() < endTime && !Orion.InJournal('This is an invalid location.|This area is temporarily unavailable for house placement.|You cannot reach that.', 'sys', '0', any, startTime))
+        {
+        Orion.Print('Catching gump');
+        Orion.Wait(1);
+        gump = Orion.GetGump(any, '0x000001EC');
+        }
+    if(gump)
+        gump.Select(Orion.CreateGumpHook(1));
+    }
+
 function ScrubUDPServers()
     {
     for(var i=60001;i<60050;i++)
         Orion.UdpSend(i,'removeudp')
     Orion.RemoveAllUdpServers();
+    }
+
+function EquipSuitByCharacterName()
+    {
+    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+        var pName = Player.Name().slice(5, Player.Name().length);
+    else
+        var pName = Player.Name()
+    Orion.Dress(pName);
     }
 
 function GetHouseDimensions()
