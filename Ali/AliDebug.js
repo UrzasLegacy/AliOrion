@@ -178,3 +178,23 @@ function AliGumpRedraw()
         }
     gumpRedraw.Update()
     }
+
+function GetAllUniqueGraphicsInContainer()
+    {
+    var hash = {};
+    var outString = '';
+    Orion.WaitForAddObject('myTarget');
+    var serial = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(serial);
+    Orion.FindTypeEx(any,any,serial).forEach(function(item)
+        {
+        var graphic = item.Graphic();
+        if(!hash[graphic])
+            {
+            outString += graphic + '|';
+            hash[graphic] = true;
+            }
+        });
+    TextWindow.Open();
+    TextWindow.Print(outString.slice(0,-1));
+    }
