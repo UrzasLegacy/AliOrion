@@ -764,9 +764,18 @@ function LandGridToggle()
 		Orion.ClientOptionSet('MarkingLandTiles', 1)
 	}
 
+function toost()
+	{
+	while(true)
+		{
+		if (Orion.WaitForPrompt(1000))
+			Orion.SendPrompt('30000');
+		}
+	}
+    
 function NeedleInAHayStack()
     { //v1
-    var textSearch = 'Feudal Grip';
+    var textSearch = 'Retouch';
     var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) //get all containers on the ground within 24 tiles
         {
         var itemZ = item.Z();
@@ -1222,7 +1231,7 @@ function TeleportChargeCounter()
 
 function VendorRepricer()
     {
-    var adjAmount = .9; //multiply current price by this to get adjusted price
+    var adjAmount = .8; //multiply current price by this to get adjusted price
     Orion.CancelWaitPrompt();
     if(Orion.PromptExists())
         Orion.SendPrompt(' ');
@@ -1245,20 +1254,44 @@ function VendorRepricer()
         var item = items[i];
         var priceString = (item.Properties().match(/Price: ([\d,]+)/) || [])[1];
         if(!priceString)
+            {
+            Orion.CharPrint(self,1159,'priceString failed, retrying...')
+            i--;
             continue;
+            }
         var itemSerial = item.Serial();
+        var itemContainer = item.Container()
         var itemX = item.X();
         var itemY = item.Y();
+        var itemIndex = item.GridIndex();
         var priceNumber = +priceString.replace(/,/g, '');
         var adjPrice = Math.floor(priceNumber * adjAmount);
         Orion.Print(item.Name());
         Orion.Print(priceNumber + ' -> ' + adjPrice);
-        Orion.MoveItem(itemSerial);
-        Orion.Wait(1300);
+        var endTime = Orion.Now() + 2000;
+        var timeout = false;
+        while(item.Container() == itemContainer && !timeout)
+            {
+            Orion.MoveItem(itemSerial);
+            Orion.Wait(1300);
+            timeout = Orion.Now() > endTime;
+            }
+        if(timeout)
+            {
+            Orion.CharPrint(self,1159,'Item didnt move, retrying...');
+            i--;
+            continue;
+            }
+        itemContainer = item.Container();
         Orion.WaitPrompt(adjPrice);
-        Orion.Wait(700);
-        Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY);
-        Orion.Wait(700);	
+        endTime = Orion.Now() + 2000;
+        timeout = false;
+        while(itemContainer == item.Container() && !timeout)
+            {
+            Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, itemIndex);
+            Orion.Wait(1300);	
+            timeout = Orion.Now() > endTime;
+            }
         Orion.CancelWaitPrompt();
         if(Orion.PromptExists())
             Orion.SendPrompt(' ');
