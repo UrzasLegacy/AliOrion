@@ -147,19 +147,19 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                DetermineBarrelSamp();
                 if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoFromHomeToLadderPosition();
-                WaitSyncLeader(); //Home position
                 EquipBossSuitByBotName();
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 if(scoutWait)
                     {
+                    DetermineBarrelSamp();
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
+                WaitSyncLeader(); //Home position
                 Orion.Wait(3000);
                 MassAllMessage('ResumeSmartStart'); //follower Home>Ladder position
                 WaitSyncLeader(); //Ladder position
@@ -1689,9 +1689,9 @@ function Autostart(_)
 
 function ScoutAhead()
     {
-    TextWindow.Clear()
-    Shared.AddVar('leashing',false)
-    Orion.CharPrint(self,1159,'Scouting ahead')    
+    TextWindow.Clear();
+    Shared.AddVar('leashing',false);
+    Orion.CharPrint(self,1159,'Scouting ahead');
     var ethy = Orion.FindTypeEx(any).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'Mount Hue:');
