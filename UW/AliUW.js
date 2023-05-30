@@ -184,6 +184,7 @@ function SmartStart()
             break;
         case 'dexxer':
 			Orion.Exec('AliComFollower',true);
+            Shared.AddVar('barrelSamp',false);
             if(!BossCheck())
                 {
                 CharacterMaintenance();
