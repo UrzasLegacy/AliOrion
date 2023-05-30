@@ -156,10 +156,12 @@ function SmartStart()
                 if(scoutWait)
                     {
                     DetermineBarrelSamp();
+                    WaitSyncLeader(); //Home position
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
-                WaitSyncLeader(); //Home position
+                else
+                    WaitSyncLeader(); //Home position
                 Orion.Wait(3000);
                 MassAllMessage('ResumeSmartStart'); //follower Home>Ladder position
                 WaitSyncLeader(); //Ladder position
