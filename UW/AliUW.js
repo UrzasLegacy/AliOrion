@@ -1569,7 +1569,7 @@ function AutoInsure()
         var items = Orion.FindList('UWLoot').filter(function(item)
             {
             var obj = Orion.FindObject(item) || false;
-            return obj && !Orion.Contains(obj.Properties(),'insured|blessed');
+            return obj && !Orion.Contains(obj.Properties(),'insured|blessed|cursed');
             });
         if(items.length && !Orion.HaveTarget())
             {
@@ -1961,6 +1961,11 @@ function WaitSyncFollower(_)
         Orion.CharPrint(self,1159,'Awaiting sync');
         Orion.Wait(1000);
         }
+    }
+
+function PassSync()
+    {
+    Shared.AddVar('Desync',false);
     }
 
 function KeyCheck()
@@ -2408,6 +2413,7 @@ function JournalScan()
 
 //--# Helpers
 function ____________HELPERS(_){}
+
 function WaitForSpecificGump(delay, type, serial, id)
 	{
 	var endTime = Orion.Now() + delay;
@@ -3630,7 +3636,7 @@ var gumpAssets =
         [ ['text','Utilities',554,1,17] ],
         [ ['toggle','GoFromHomeToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
         [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
-        [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'], ],
+        [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'],['toggle','PassSync','PassSync'], ],
         [ ['text','Training',554,1,17] ],
         [ ['toggle','TrainMusic','TrainMusic'],['toggle','TrainPeacemaking','TrainPeacemaking'], ],
 
