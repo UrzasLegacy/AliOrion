@@ -612,8 +612,8 @@ function IDOCBarrels()
 	var Sbound = barrels.sort(function(a,b){return b.Y()-a.Y()})[0].Y();
 	if(castleMode)
 		{
-		Nbound = Sbound + 30;
-		Ebound = Wbound + 30;
+		Nbound = Sbound - 29;
+		Ebound = Wbound + 29;
 		}
     var startX = Wbound - 1;
     var startY = Sbound - 2;
