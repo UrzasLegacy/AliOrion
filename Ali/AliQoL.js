@@ -1298,3 +1298,23 @@ function VendorRepricer()
         Orion.Wait(700);
         }
     }
+
+function WaitForAuctionItem()
+	{
+	var searchString = 'lava'
+	var startTime = Orion.Now();
+	while(true)
+		{
+		var found = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+			{
+			return Orion.Contains(item.Properties(), searchString);
+			})[0];
+		var journal = Orion.InJournal(searchString, "", '0', 'any', startTime);
+		if(found || journal)
+			{
+			DiscordPush('Auction Item Up!');
+			Orion.PauseScript();
+			}
+		Orion.Wait(1000);
+		}
+	}
