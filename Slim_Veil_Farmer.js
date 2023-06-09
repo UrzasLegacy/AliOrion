@@ -7,34 +7,34 @@ const boatDropOFf = [3631,2219];
 
 
 const tanner = [[0x13C7,'Leather Gorget',0x1DB9,'Leather Cap',0x13C5,'Leather Sleeves',0x13C5,'Leather Sleeves',0x13CB,'Leather Leggings',0x13C6,'Leather Gloves', 0x13D6,'Studded Gorget',0x13D4,'Studded Sleeves',0x13DB,'Studded Tunic', 
-							0x13DA,'Studded Leggings',0x13D5,'Studded Gloves',0x1C02,'Studded Armor',0x1C04,'Female Plate',0x1C06,'Female Leather Armor',0x1C00,'Leather Shorts',0x1C08,'Leather Skirt',0x1C0A,'Leather Bustier',0x1C0B,'Leather Bustier', 
-							0x1C0C,'Studded Bustier',0x1C0D,'Studded Bustier',0x0E76,'Bag',0x0E79,'Pouch',0x0E75,'Backpack',0x1081,'Cut Leather',0x0EC4,'Skinning Knife',0x1EBA,'A Taxidermy Kit'],[],[3610,2612]];
+                0x13DA,'Studded Leggings',0x13D5,'Studded Gloves',0x1C02,'Studded Armor',0x1C04,'Female Plate',0x1C06,'Female Leather Armor',0x1C00,'Leather Shorts',0x1C08,'Leather Skirt',0x1C0A,'Leather Bustier',0x1C0B,'Leather Bustier', 
+                0x1C0C,'Studded Bustier',0x1C0D,'Studded Bustier',0x0E76,'Bag',0x0E79,'Pouch',0x0E75,'Backpack',0x1081,'Cut Leather',0x0EC4,'Skinning Knife',0x1EBA,'A Taxidermy Kit'],[],[3610,2612]];
 
 const butcher = [[0x0978,'Bacon',0x09D3,'Ham',0x09C1,'Sausage',0x1607,'Chicken Leg',0x09B9,'Raw Bird',0x1609,'Lamb',0x09F1,'Ribs',0x13F6,'Butcher Knife',0x0EC3,'Cleaver',0x0EC4,'Skinning Knife']];
 
 const tailor = [[0x1F7B,'Doublet',0x1FA1,'Tunic',0x1F9F,'Jester Suit',0x171C,'Jester Hat',0x1713,'Floppy Hat',0x1714,'Wide-brim Hat',0x1715,'Cap',0x1716,'Tall Straw Hat',0x1717,'Straw Hat',0x1718,'Wizard\'s Hat',
-						0x1DB9,'Leather Cap',0x171A,'Feathered Hat',0x171B,'Tricorne Hat',0x153F,'Bandana',0x1544,'Skullcap',0x0F95,'Bolt Of Cloth',0x1766,'Cut Cloth',0x1767,'Cloth',0x0DF9,'Bale Of Cotton',0x0DF8,'Pile Of Wool',0x1A9C,'Flax Bundle',
-						0x0FA0,'Spool Of Thread',0x0F9D,'Sewing Kit',0x0F9E,'Scissors',0x0FAB,'Dyeing Tub',0x0FA9,'Dyes',0x1F7B,'Doublet',0x152E,'Short Pants',0x1EFD,'Fancy Shirt',0x1539,'Long Pants',0x1EFF,'Fancy Dress',0x1F01,'Plain Dress',0x1516,'Skirt',
-						0x1537,'Kilt',0x153B,'Half Apron',0x1F03,'Robe',0x1515,'Cloak',0x1517,'Shirt'],[3710,2248],[3666,2587]];
+                0x1DB9,'Leather Cap',0x171A,'Feathered Hat',0x171B,'Tricorne Hat',0x153F,'Bandana',0x1544,'Skullcap',0x0F95,'Bolt Of Cloth',0x1766,'Cut Cloth',0x1767,'Cloth',0x0DF9,'Bale Of Cotton',0x0DF8,'Pile Of Wool',0x1A9C,'Flax Bundle',
+                0x0FA0,'Spool Of Thread',0x0F9D,'Sewing Kit',0x0F9E,'Scissors',0x0FAB,'Dyeing Tub',0x0FA9,'Dyes',0x1F7B,'Doublet',0x152E,'Short Pants',0x1EFD,'Fancy Shirt',0x1539,'Long Pants',0x1EFF,'Fancy Dress',0x1F01,'Plain Dress',0x1516,'Skirt',
+                0x1537,'Kilt',0x153B,'Half Apron',0x1F03,'Robe',0x1515,'Cloak',0x1517,'Shirt'],[3710,2248],[3666,2587]];
 						
 const cobbler = [[0x1711,'Thigh Boots',0x170F,'Shoes',0x170B,'Boots',0x170D,'Sandals'],[3710,2248]];
 
 const provisioner = [[0x0DF0,'Black Staff',0x13B4,'Club',0x13F8,'Gnarled Staff',0x0F5C,'Mace',0x143B,'Maul',0x0E89,'Quarter Staff',0x13F5,'Crook',0x13E3,'Smith',0x1403,'Short Spear',0x0F62,'Spear',0x1439,'War Hammer',0x1407,'War Mace',0x26BC,'Scepter',
-									0x26BD,'Bladed Staff',0x0F3F,'Arrow',0x1BFB,'Crossbow Bolt',0x0E75,'Backpack',0x0E79,'Pouch',0x0E76,'Bag',0x0A0F,'Candle',0x0F64,'Torch',0x0A25,'Lantern',0x1C18,'Oil Flask',0x14FB,'Lockpick',0x1713,'Floppy Hat',0x1714,'Wide-brim Hat',
-									0x1715,'Cap',0x1716,'Tall Straw Hat',0x1717,'Straw Hat',0x1718,'Wizard\'s Hat',
-									0x1DB9,'Leather Cap',0x171A,'Feathered Hat',0x171B,'Tricorne Hat',0x153F,'Bandana',0x1544,'Skullcap',0x103B,'Bread Loaf',0x160A,'Lamb',0x1608,'Chicken leg',
-									0x09B7,'Cooked Bird',0x099F,'A Bottle Of Ale',0x09C7,'A Bottle Of Wine',0x099B,'A Bottle Of Liquor',0x09C8,'A Jug Of Cider',0x172D,'Pear',0x09D0,'Apple',0x1422,'Beeswax',0x0F84,'Garlic',0x0F85,'Ginseng',0x0F0E,'Empty Bottle',
-									0x0FF2,'Book',0x0E7D,'Wooden Box',0x100E,'Copper Key',0x0A59,'Bedroll',0x0DE1,'Kindling',0x14F2,'Small Ship Deed',0x0EFF,'Hair Dye',0x0EFF,'Skin Tingeing Tincture',0x0FA6,'A Chessboard',0x0FA6,'A Checker Board',0x0FAD,'Backgammon Game',
-									0x0FAA,'Mahjong Game',0x0FA7,'Dice And Cup',0x15FD,'A Plant Bowl',0x2256,'Bagball',0x2257,'Bagball',0x0E76,'Salvage Bag'],[3710,2248],[3636,2574]];
+                    0x26BD,'Bladed Staff',0x0F3F,'Arrow',0x1BFB,'Crossbow Bolt',0x0E75,'Backpack',0x0E79,'Pouch',0x0E76,'Bag',0x0A0F,'Candle',0x0F64,'Torch',0x0A25,'Lantern',0x1C18,'Oil Flask',0x14FB,'Lockpick',0x1713,'Floppy Hat',0x1714,'Wide-brim Hat',
+                    0x1715,'Cap',0x1716,'Tall Straw Hat',0x1717,'Straw Hat',0x1718,'Wizard\'s Hat',
+                    0x1DB9,'Leather Cap',0x171A,'Feathered Hat',0x171B,'Tricorne Hat',0x153F,'Bandana',0x1544,'Skullcap',0x103B,'Bread Loaf',0x160A,'Lamb',0x1608,'Chicken leg',
+                    0x09B7,'Cooked Bird',0x099F,'A Bottle Of Ale',0x09C7,'A Bottle Of Wine',0x099B,'A Bottle Of Liquor',0x09C8,'A Jug Of Cider',0x172D,'Pear',0x09D0,'Apple',0x1422,'Beeswax',0x0F84,'Garlic',0x0F85,'Ginseng',0x0F0E,'Empty Bottle',
+                    0x0FF2,'Book',0x0E7D,'Wooden Box',0x100E,'Copper Key',0x0A59,'Bedroll',0x0DE1,'Kindling',0x14F2,'Small Ship Deed',0x0EFF,'Hair Dye',0x0EFF,'Skin Tingeing Tincture',0x0FA6,'A Chessboard',0x0FA6,'A Checker Board',0x0FAD,'Backgammon Game',
+                    0x0FAA,'Mahjong Game',0x0FA7,'Dice And Cup',0x15FD,'A Plant Bowl',0x2256,'Bagball',0x2257,'Bagball',0x0E76,'Salvage Bag'],[3710,2248],[3636,2574]];
 
 const blacksmith = [[0x0F4F,'Crossbow',0x13FD,'Heavy Crossbow',0x1441,'Cutlass',0x0F51,'Dagger',0x143F,'Halberd',0x143D,'Hammer Pick',0x13FF,'Katana',0x1401,'Kryss',0x0F5E,'Broadsword',0x0F61,'Longsword',0x13B8,'Long Sword',0x13B9,'Viking Sword',0x0EC3,'Cleaver',
-								   0x0F49,'Axe',0x0F4B,'Double Axe',0x0E86,'Pickaxe',0x0E87,'Pitchfork',0x13B6,'Scimitar',0x0EC4,'Skinning Knife',0x13FB,'Large Battle Axe',0x13B0,'War Axe',0x26BB,'Bone Harvester',0x26C1,'Crescent Blade',0x26BF,'Double Bladed Staff',
- 								   0x26C0,'Lance',0x26BE,'Pike',0x26BA,'Scythe',0x26C2,'Composite Bow',0x26C3,'Repeating Crossbow',0x0DF0,'Black Staff',0x13B4,'Club',0x13F8,'Gnarled Staff',0x0F5C,'Mace',0x143B,'Maul',0x0E89,'Quarter Staff',0x13F5,'Crook',0x13E3,'Smith\'s Hammer',
-								   0x1403,'Short Spear',0x0F62,'Spear',0x1439,'War Hammer',0x1407,'War Mace',0x26BC,'Scepter',0x26BD,'Bladed Staff',0x1BF2,'Ingots',0x0FBB,'Tongs',0x1BE9,'Malleable',0x1B72,'Bronze Shield',0x1B73,'Buckler ',0x1B74,'Metal Kite Shield',
-								   0x1B76,'Heater Shield',0x1B79,'Tear Kite Shield',0x1B7B,'Metal Shield',0x1B7A,'Wooden Shield',0x1413,'Platemail Gorget',0x1415,'Platemail Tunic',0x1411,'Platemail Legs',0x1417,'Platemail Arms',0x1414,'Platemail Gloves',0x1412,'Plate Helm',
-								   0x1408,'Close Helmet',0x1409,'Close Helm',0x140A,'Helmet',0x140B,'Helmet',0x140E,'Norse Helm',0x140F,'Norse Helm',0x1412,'Plate Helm',0x140D,'Bascinet',0x13BB,'Chainmail Coif',0x13BF,'Chainmail Tunic',0x13BE,'Chainmail Leggings',
-								   0x13EC,'Ringmail Tunic',0x13F0,'Ringmail Leggings',0x13EE,'Ringmail Sleeves',0x13EB,'Ringmail Gloves',0x0F45,'Executioner\'s Axe', 
-								   0x0F4D,'Bardiche',0x0F47,'Battle Axe',0x1443,'Two Handed Axe',0x13B2,'Bow',0x13F6,'Butcher Knife'],[3710,2248],[3649,2603]];
+                    0x0F49,'Axe',0x0F4B,'Double Axe',0x0E86,'Pickaxe',0x0E87,'Pitchfork',0x13B6,'Scimitar',0x0EC4,'Skinning Knife',0x13FB,'Large Battle Axe',0x13B0,'War Axe',0x26BB,'Bone Harvester',0x26C1,'Crescent Blade',0x26BF,'Double Bladed Staff',
+                    0x26C0,'Lance',0x26BE,'Pike',0x26BA,'Scythe',0x26C2,'Composite Bow',0x26C3,'Repeating Crossbow',0x0DF0,'Black Staff',0x13B4,'Club',0x13F8,'Gnarled Staff',0x0F5C,'Mace',0x143B,'Maul',0x0E89,'Quarter Staff',0x13F5,'Crook',0x13E3,'Smith\'s Hammer',
+                    0x1403,'Short Spear',0x0F62,'Spear',0x1439,'War Hammer',0x1407,'War Mace',0x26BC,'Scepter',0x26BD,'Bladed Staff',0x1BF2,'Ingots',0x0FBB,'Tongs',0x1BE9,'Malleable',0x1B72,'Bronze Shield',0x1B73,'Buckler ',0x1B74,'Metal Kite Shield',
+                    0x1B76,'Heater Shield',0x1B79,'Tear Kite Shield',0x1B7B,'Metal Shield',0x1B7A,'Wooden Shield',0x1413,'Platemail Gorget',0x1415,'Platemail Tunic',0x1411,'Platemail Legs',0x1417,'Platemail Arms',0x1414,'Platemail Gloves',0x1412,'Plate Helm',
+                    0x1408,'Close Helmet',0x1409,'Close Helm',0x140A,'Helmet',0x140B,'Helmet',0x140E,'Norse Helm',0x140F,'Norse Helm',0x1412,'Plate Helm',0x140D,'Bascinet',0x13BB,'Chainmail Coif',0x13BF,'Chainmail Tunic',0x13BE,'Chainmail Leggings',
+                    0x13EC,'Ringmail Tunic',0x13F0,'Ringmail Leggings',0x13EE,'Ringmail Sleeves',0x13EB,'Ringmail Gloves',0x0F45,'Executioner\'s Axe', 
+                    0x0F4D,'Bardiche',0x0F47,'Battle Axe',0x1443,'Two Handed Axe',0x13B2,'Bow',0x13F6,'Butcher Knife'],[3710,2248],[3649,2603]];
 
 const healer = [[0x0E21,'Bandage',0x0F0C,'Healing Potion',0x0F85,'Ginseng',0x0F84,'Garlic',0x0F0B,'Refresh Potion'],[3702,2222],[3628,2611]];
 
@@ -45,17 +45,17 @@ const ship = [[0x14F2,'Small Ship Deed',0x14F2,'Small Dragon Ship Deed',0x14F2,'
 const map = [[0x14EB,'Map',0x0EF3,'Blank Scroll',0x0FC0,'Mapmaker\'s Pen'],[3676,2259],[3637,2638]];
 
 const tavern = [[0x099F,'A Bottle Of Ale',0x09C7,'A Bottle Of Wine',0x099B,'A Bottle Of Liquor',0x09C8,'A Jug Of Cider',0x1F95,'A Pitcher Of Ale',0x1F97,'A Pitcher Of Cider',0x0FF6,'A Pitcher Of Water',0x1F99,'A Pitcher Of Liquor',0x09F0,'A Pitcher Of Milk',
-							0x1F9B,'A Pitcher Of Wine',0x1F9D,'A Pitcher Of Water',0x103B,'Loaf',0x097E,'Wheel Of Cheese',0x09B7,'Cooked Bird',0x160A,'Leg Of Lamb',0x15F9,'Bowl Of Carrots',0x15FA,'Bowl Of Corn',0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',0x15FD,'Pewter Bowl',
-							0x15FF,'Bowl Of Corn',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1606,'Tomato Soup',0x1041,'Backed Pie',0x0FA6,'A Chessboard',0x0FA6,'A Checker Board',0x0FAD,'Backgammon Game',0x0FA7,'Dice And Cup',
-							0x14F0,'A Contract Of Employment' ,0x14F0,'A Commission Contract Of Employment',0x14F0,'A Vendor Rental Contract'],[3692,2251],[3671,2654]];
+                0x1F9B,'A Pitcher Of Wine',0x1F9D,'A Pitcher Of Water',0x103B,'Loaf',0x097E,'Wheel Of Cheese',0x09B7,'Cooked Bird',0x160A,'Leg Of Lamb',0x15F9,'Bowl Of Carrots',0x15FA,'Bowl Of Corn',0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',0x15FD,'Pewter Bowl',
+                0x15FF,'Bowl Of Corn',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1606,'Tomato Soup',0x1041,'Backed Pie',0x0FA6,'A Chessboard',0x0FA6,'A Checker Board',0x0FAD,'Backgammon Game',0x0FA7,'Dice And Cup',
+                0x14F0,'A Contract Of Employment' ,0x14F0,'A Commission Contract Of Employment',0x14F0,'A Vendor Rental Contract'],[3692,2251],[3671,2654]];
 							
 const cook = [[0x103C,'Bread Loaf',0x103B,'Bread Loaf',0x1041,'Baked Pie',0x09E9,'Cake',0x09EA,'Muffin',0x097E,'Wheel Of Cheese',0x09B7,'Cooked Bird',0x160A,'Leg Of Lamb',0x1608,'Chicken Leg',0x15F9,'Bowl Of Carrots',0x15FA,'Bowl Of Corn',
-						0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',0x15FD,'Pewter Bowl',0x15FF,'Bowl Of Corn',0x1600,'Bowl Of Lettuce',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1604,'Bowl Of Stew',0x1606,'Tomato Soup',0x09BB,'Roast Pig',
-						0x1039,'Sack Of Flour',0x09EC,'Jar Of Honey',0x1043,'Rolling Pin',0x103E,'Sifter',0x097F,'Skillet'],[3692,2251],[3671,2654]];
+            0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',0x15FD,'Pewter Bowl',0x15FF,'Bowl Of Corn',0x1600,'Bowl Of Lettuce',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1604,'Bowl Of Stew',0x1606,'Tomato Soup',0x09BB,'Roast Pig',
+            0x1039,'Sack Of Flour',0x09EC,'Jar Of Honey',0x1043,'Rolling Pin',0x103E,'Sifter',0x097F,'Skillet'],[3692,2251],[3671,2654]];
 						
 const waiter = [[0x099F,'A Bottle Of Ale',0x09C7,'A Bottle Of Wine',0x099B,'A Bottle Of Liquor',0x09C8,'A Jug Of Cider',0x1F95,'A Pitcher Of Ale',0x1F97,'A Pitcher Of Cider',0x0FF6,'A Pitcher Of Water',0x1F99,'A Pitcher Of Liquor',0x09F0,'A Pitcher Of Milk',
-							0x1F9B,'A Pitcher Of Wine',0x1F9D,'A Pitcher Of Water',0x103B,'Loaf',0x097E,'Wheel Of Cheese',0x09B7,'Cooked Bird',0x160A,'Leg Of Lamb',0x15F9,'Bowl Of Carrots',0x15FA,'Bowl Of Corn',0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',
-							0x15FD,'Pewter Bowl',0x15FF,'Bowl Of Corn',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1606,'Tomato Soup',0x1041,'Backed Pie'],[3692,2251],[3671,2654]];
+                0x1F9B,'A Pitcher Of Wine',0x1F9D,'A Pitcher Of Water',0x103B,'Loaf',0x097E,'Wheel Of Cheese',0x09B7,'Cooked Bird',0x160A,'Leg Of Lamb',0x15F9,'Bowl Of Carrots',0x15FA,'Bowl Of Corn',0x15FB,'Bowl Of Lettuce',0x15FC,'Bowl Of Peas',
+                0x15FD,'Pewter Bowl',0x15FF,'Bowl Of Corn',0x1601,'Bowl Of Peas',0x1602,'Bowl Of Potatoes',0x1606,'Tomato Soup',0x1041,'Backed Pie'],[3692,2251],[3671,2654]];
 						
 const gardener = [[0x0E86,'Hoe',	0x14F0,'Gardening Contract',0x15FD,'A Plant Bowl',	0x1F9D,'A Pitcher Of Water'],[3668,2109]];	
 
