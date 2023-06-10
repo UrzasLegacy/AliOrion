@@ -3269,7 +3269,7 @@ function AppendMagic(input)
     tmpFile.Close();
     }
 
-function RetrieveMagic()
+    function RetrieveMagic()
     {
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliUWTracker.txt';
     var tmpFile = Orion.NewFile();
@@ -3281,7 +3281,16 @@ function RetrieveMagic()
     var replaceAgain = replace.replace(/\d\d:\d\d:\d\d\.\d\d\d: /g,'');
     var lines = Orion.Split(replaceAgain,'\n').filter(function(line)
         {
-        return Orion.Contains(line,'"Luck Leader":2660')
+        var obj = JSON.parse(line)
+        var legArt = obj["Legendary Artifact"] || 0
+        var majArt = obj["Major Artifact"] || 0
+        var greatArt = obj["Greater Artifact"] || 0
+        var lessArt = obj["Lesser Artifact"] || 0
+        var majMag = obj["Major Magic Item"] || 0
+        var greatMag = obj["Greater Magic Item"] || 0
+        var lessMag = obj["Lesser Magic Item"] || 0
+        var total = legArt + majArt + greatArt + lessArt + majMag + greatMag + lessMag
+        return Orion.Contains(line,"Luck Leader Full Run") && total > 73 && total < 78
         });
     var linesLength = lines.length;
     var red = lines.reduce(function(sumObj,line)
