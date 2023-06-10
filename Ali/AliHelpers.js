@@ -1172,7 +1172,7 @@ function Commodify(graphicSerial, colorCode, containerSerial, stackCount)
         }
     }
 
-    function AliAtlas(targetX,targetY,targetMap)
+function AliAtlas(targetX,targetY,targetMap)
     { //[x,y,facet]
     var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
     var gateArr = 
@@ -1220,7 +1220,7 @@ function Commodify(graphicSerial, colorCode, containerSerial, stackCount)
         Orion.WarMode(0);
         return;
         }
-    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && maps[map] == targetMap)
+    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && map == targetMap)
         {
         Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
         Orion.WarMode(1);
