@@ -1,12 +1,20 @@
 
+var lootItems = {
+    '0x400B': true, //shame crystals
+    '0x0F87': true, //lucky coin
+    '0x0EED': true, //gold
+}
+
 var serialIndex = 1;
 var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
     [
+        [ [100, 30, serialIndex++, "TestItem", 'EvalKeep'], [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], ],
         [ [100, 30, serialIndex++, "TestJewelry", 'testEvalJewelry'], [100, 30, serialIndex++, "TestArmor", 'testEvalArmor'], [100, 30, serialIndex++, "TestWeapon", 'testEvalWeapon'], ],
         [], //blank row
         [ [100, 30, serialIndex++, "SortJewelry", "testSortJewelry"], [100, 30, serialIndex++, "SortArmor", "testSortArmor"], [100, 30, serialIndex++, "SortWeapons", "testSortWeapon"], ],
+        [ [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
     ]
-
+    
 function Debug(msg)
     {
     if(!TextWindow.IsOpened())
@@ -62,6 +70,43 @@ function ModularGumpCallback(_)
                 }
             })
         });
+    }
+
+function EvalKeep()
+    {
+    Orion.CharPrint(self,1159,'Target item');
+    Orion.WaitForAddObject('myTarget')
+    var serial = Orion.GetSerial('myTarget');
+    var startTime = Orion.Now();
+    Orion.Print('Keep: ' + AliKeep(serial) + '\nEvalKeepMS: ' + (Orion.Now() - startTime));
+    }
+
+function MoveKeepers()
+    {
+    Orion.CharPrint(self,1159,'Target FROM container')
+    Orion.WaitForAddObject('myTarget');
+    var fromContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(fromContainer);
+    Orion.CharPrint(self,1159,'Target TO container')
+    Orion.WaitForAddObject('myTarget');
+    var toContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(toContainer);
+    var items = Orion.FindType(any,any,fromContainer).filter(function(item)
+        {
+        return AliKeep(item);
+        });
+    while(items.length)
+        {
+        for(var i=0;i<items.length;i++)
+            {
+            Orion.MoveItem(items[i],0,toContainer);
+            Orion.Wait(1300);
+            }
+        items = Orion.FindType(any,any,fromContainer).filter(function(item)
+            {
+            return AliKeep(item);
+            });
+        }
     }
 
 function testEvalWeapon()
@@ -140,12 +185,6 @@ function testSortItem(parseFn,keepFn)
             });
         }
     }
-
-var lootItems = {
-    '0x400B': true, //shame crystals
-    '0x0F87': true, //lucky coin
-    '0x0EED': true, //gold
-}
 
 function itemEvalUnitTest()
     {
@@ -270,14 +309,6 @@ function AliKeep(itemSerial)
 	var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
     var isArmor = props.indexOf("Poison Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1;
 
-    if(!isJewelry && !is2hWeapon && !is1hWeapon && !isArmor)
-        {
-        //Handle shields, only luck
-        if(Orion.Contains('0x1B72|0x1BC3|0x1BC4|0x1B7B|0x1B73|0x1B74|0x1B77|0x1B78|0x1B75|0x1B76|0x1BC5|0x1B79|0x1B7A', itemGraphic) && props.indexOf("Luck 150") > -1)
-            return true;
-        return false;
-        }
-
     //Special Cases
     //Exclude cursed items and ranged weapons (looted bows and throwing weps are never good)
 	if(props.indexOf('Cursed') > -1 || props.indexOf('Weight: 50 Stones') > -1)
@@ -286,6 +317,14 @@ function AliKeep(itemSerial)
         return false;
     if(props.indexOf('Skill Required: Throwing') > -1) 
         return false;
+
+    if(!isJewelry && !is2hWeapon && !is1hWeapon && !isArmor)
+        {
+        //Handle shields, only luck
+        if(Orion.Contains('0x1B72|0x1BC3|0x1BC4|0x1B7B|0x1B73|0x1B74|0x1B77|0x1B78|0x1B75|0x1B76|0x1BC5|0x1B79|0x1B7A', itemGraphic) && props.indexOf("Luck 150") > -1)
+            return true;
+        return false;
+        }
 
     if(is1hWeapon || is2hWeapon)
         {
@@ -301,7 +340,7 @@ function AliKeep(itemSerial)
 
 	if(isArmor)
         {
-        var parse = parseJewelryProperties(props);
+        var parse = parseArmorProperties(props);
         return KeepArmor(parse,props,itemGraphic);
 	    }
 
@@ -310,6 +349,8 @@ function AliKeep(itemSerial)
 
 function KeepWeapon(propertiesObj,props)
     {
+    //ssi requirement on slow weps
+    //brittle raises requirements
     var is2hWeapon = props.indexOf('Two-handed Weapon') > -1;
 	var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
 	if(is2hWeapon) //handle 2 handed weapon special cases
@@ -346,23 +387,44 @@ function KeepWeapon(propertiesObj,props)
 		    }
         if(props.indexOf("Spell Channeling") > -1 && props.indexOf('Luck 150') > -1 && props.indexOf('Mage Weapon') > -1)
             return true;
-	    }
+        }
     var wepObj = propertiesObj;
+
     var isOverCapSplinter = wepObj['SplinteringWeapon'] > 20;
     var isSplinter = wepObj['SplinteringWeapon'] >= 20;
     var isAntique = props.indexOf('Antique') > -1;
+    var isClean = props.indexOf('Antique') == -1 && props.indexOf('Brittle') == -1;
     var isOverCapFireball = wepObj['HitFireball'] > 50;
     var isOverCapLightning = wepObj['HitLightning'] > 50;
     var isOverCapHarm = wepObj['HitHarm'] > 50;
     var isHitSpell = wepObj['HitFireball'] >= 50 || wepObj['HitLightning'] >= 50 || wepObj['HitHarm'] >= 50;
     var isLowerD = wepObj['HitLowerDefense'] >= 30;
     var isHighManaLeech = wepObj['HitManaLeech'] >= 80;
+    var isSpellChanneling = wepObj['SpellChanneling'] >= 1;
     var isBokuto = props.indexOf("Bokuto") > -1;
     var isPvmWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") || props.indexOf("Broadsword") || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1;
-    var isImbuable = Object.keys(wepObj).length <= 4;
-    
+    var numProps = Object.keys(wepObj).length;
+    var isImbuable = numProps <= 4;
+    var isTwoMod = numProps == 2;
     if(isAntique && !isBokuto)
         return false;
+
+    if(isBokuto && isSplinter)
+        {
+        if(isOverCapSplinter && (isHitSpell || isLowerD))
+            return true;
+        if(isOverCapLightning || isOverCapFireball || isOverCapHarm)
+            return true;
+        if(isHitSpell && isLowerD) //Keep brittle weapons (and antique boks) if HLD, hit spell, and splinter
+            return true;
+        // if(isBokuto && isHitSpell && isSpellChanneling) //Keep all hit spell and splinter bokutos
+        //     return true;
+        if(isImbuable && (isHitSpell || isLowerD || isBokuto || isOverCapSplinter))
+            return true;
+        if(isPvmWep && isHighManaLeech && (isHitSpell || isLowerD || isImbuable))
+            return true;
+        return false;		
+        }
 
     if(isSplinter)
         {
@@ -372,15 +434,15 @@ function KeepWeapon(propertiesObj,props)
             return true;
         if(isHitSpell && isLowerD) //Keep brittle weapons (and antique boks) if HLD, hit spell, and splinter
             return true;
-        if(isBokuto && isHitSpell) //Keep all hit spell and splinter bokutos
-            return true;
+        // if(isBokuto && isHitSpell && isSpellChanneling) //Keep all hit spell and splinter bokutos
+        //     return true;
         if(isImbuable && (isHitSpell || isLowerD || isBokuto || isOverCapSplinter))
             return true;
         if(isPvmWep && isHighManaLeech && (isHitSpell || isLowerD || isImbuable))
             return true;
         return false;		
         }
-    
+
     if(isPvmWep)
         {
         var isHitFatigue = wepObj['HitFatigue'] >= 50;
@@ -409,19 +471,24 @@ function KeepJewelry(propertiesObj,props)
     var skillMods = 
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
-        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        
+        }
+    var statMods = 
+        {
+        StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,
+        StaminaIncrease:true,ManaIncrease:true,
         }
     var mageMods = 
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,
-        Stealth:true,Archery:true,Healing:true,Throwing:true,
         Mysticism:true,SpellDamageIncrease:true,LowerReagentCost:true,
         }
     var dexxerMods = 
         {
-        Stealth:true,Archery:true,Healing:true,Throwing:true,
+        Archery:true,Healing:true,Throwing:true,
         }
     var hybridMods =
         {
@@ -430,30 +497,45 @@ function KeepJewelry(propertiesObj,props)
         HitChanceIncrease:true,DefenseChanceIncrease:true,LowerManaCost:true,ManaIncrease:true,
         MaceFighting:true,Fencing:true,Swordsmanship:true,SwingSpeedIncrease:true,DamageIncrease:true,
         FasterCasting:true,Tactics:true,StaminaIncrease:true,Necromancy:true,FasterCastRecovery:true,
-        AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Chivalry:true,
+        AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Chivalry:true,Stealth:true,
         }
     if(propertiesObj['Chivalry'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
+        {
+        Debug('Keep: 1/3 +20 Chiv Samp Jewel');
         return true;
+        }
     var skillInt = countMatchingMods(propertiesObj, skillMods);
     if(skillInt == 0)
         {
         if(!propertiesObj['EnhancePotions'] || !propertiesObj['DefenseChanceIncrease'] || !propertiesObj['ManaRegeneration'])
+            {
+            Debug('Trash: Zero skills, missing EP or DCI or MR');
             return false;
+            }
         targetModCount++;
         }
-    if(skillInt < 2 && !propertiesObj['EnhancePotions'] && !propertiesObj['DefenseChanceIncrease'] && !propertiesObj['HitChanceIncrease'])
+    if(skillInt == 1 && !propertiesObj['EnhancePotions'] && !propertiesObj['DefenseChanceIncrease'] && !propertiesObj['HitChanceIncrease'])
         {
-        Orion.Print('EP/DCI/HCI/Skill30 Missing');
+        Debug('Trash: One skill mod and must have at least one of EP/DCI/HCI');
         return false;
         }
     if(skillInt >= 4)
+        {
+        Debug('Keep: >= 4 skill mods');
         return true;
+        }
+    var statInt = countMatchingMods(propertiesObj,statMods);
+    if(skillInt >= 2 && statInt >= 3)
+        return false;
     var mageInt = countMatchingMods(propertiesObj, mageMods);
     var dexxerInt = countMatchingMods(propertiesObj, dexxerMods);
     var hybridInt = countMatchingMods(propertiesObj, hybridMods);
-    Orion.Print('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nclean: ' + isClean);
+    Orion.Print('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nstatInt: ' + statInt + '\nclean: ' + isClean);
     if(mageInt + hybridInt >= targetModCount || dexxerInt + hybridInt >= targetModCount)
+        {
+        Debug('Keep: 7 or 8 good mods (or 6 if clean)');
         return true;
+        }
     return false;
     }
 
@@ -654,7 +736,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     var dci = propertiesObj['DefenseChanceIncrease'] || 0;
     //var cf = propertiesObj['CastingFocus'] || 0;
     var damageEater = propertiesObj['DamageEater'] || 0;
-    //var kineticEater = propertiesObj['KineticEater'] || 0;
+    var kineticEater = propertiesObj['KineticEater'] || 0;
     var poisonEater = propertiesObj['PoisonEater'] || 0;
     var fireEater = propertiesObj['FireEater'] || 0;
     var energyEater = propertiesObj['EnergyEater'] || 0;
@@ -664,7 +746,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     var luck = propertiesObj['Luck'] || 0;
     //var nightsight = propertiesObj['NightSight'] || 0;
 
-    var goodEater = damageEater || poisonEater || fireEater || coldEater || energyEater;
+    var goodEater = damageEater || poisonEater || fireEater || coldEater || energyEater || kineticEater;
     var totalStats = hpi + stam + mana + str + dex + int;
     var isArtifact = props.indexOf('Artifact') > -1;
     var intrinsicLMCArr = lmcArr[itemGraphic];
@@ -677,6 +759,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         var intrinsicLMC = intrinsicLMCArr[0];
         
     Orion.Print('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC)
+    
     if(hpi >= 3)
         { //treat as Vitality
         switch(intrinsicLMC)
@@ -685,7 +768,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 Debug('hpi intrinsicLMC switch defaulted on graphic: ' + itemGraphic + '\n' + props);
             case '3':
                 var lrcThreshold = 10;
-                var lmcThreshold = 5;
+                var lmcThreshold = lrc >= 20 ? 1 : 5;
                 var mrThreshold = 2;
                 var statThreshold = goodEater ? 10 : 15;
                 break;
@@ -709,6 +792,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(stam > 5 && isArtifact)
             return true;
         }
+
     if(stam >= 7)
         { //treat as Haste
         switch(intrinsicLMC)
@@ -735,6 +819,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
             return true;
         }
+
     if(isArtifact)
         { //everything else
         if(luck == 150 || (hci == 5 || dci == 5)) //keep 150 luck or 5 dci/hci artifact armor
@@ -762,7 +847,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var lmcThreshold = 10;
                 var mrThreshold = 4;
                 var hprThreshold = 4;
-                var statThreshold = goodEater ? 10 : 15;  
+                var statThreshold = goodEater ? 10 : 15;
                 break;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
@@ -770,10 +855,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold + 3)
             return true;
         }
-    if(luck == 150 && isArtifact)
-        return true;
-    if((hci == 5 || dci == 5) && isArtifact)
-        return true;
+
     return false;
     }
 
@@ -922,3 +1004,21 @@ function VerifyOpenContainer(containerSerial,delay)
         }
     return true;
     }
+
+function MoveAll()
+	{
+    Orion.CharPrint(self,1159,"Select 'From' container");
+	Orion.WaitForAddObject('myTarget');
+	var fromContainer = Orion.GetSerial('myTarget');
+    Orion.CharPrint(self,1159,"Select 'To' container");
+	Orion.WaitForAddObject('myTarget');
+	var toContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(fromContainer);
+    var item = Orion.FindType(any,any,fromContainer)[0];
+    while(item)
+        {
+        Orion.MoveItem(item,0,toContainer);
+        Orion.Wait(1200);
+        item = Orion.FindType(any,any,fromContainer)[0];
+        }
+	}
