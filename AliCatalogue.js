@@ -350,7 +350,7 @@ function StraticsFormatCatalogueTable()
     TextWindow.Print('[TABLE]\n[TR]')
     outArr.forEach(function(safe,ind)
         {
-        var lineOut = safe[1].replace(/.*Bid: ([\d,]+p [\d,]+gp)\nB\/O: [\d,]+p [\d,]+gp/,'Price: $1').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n([\w \-\']+)/g,':\n[B]$1[/B]').replace(/\n\n/,'\n').trim()
+        var lineOut = safe[1].replace(/Bid:/,'Start:').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n([\w \-\']+)/g,':\n[B]$1[/B]').replace(/\n\n/,'\n').trim()
      	TextWindow.Print('[TD][CENTER][COLOR=rgb(0, 0, 0)]' + lineOut + '[/COLOR][/CENTER][/TD]');
      	outStr += lineOut + '\n'
         if(ind == outArr.length - 1)
