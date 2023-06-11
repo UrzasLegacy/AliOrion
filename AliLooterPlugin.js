@@ -3,7 +3,7 @@ var lootItems = {
     '0x0F87': true, //lucky coin
     '0x0EED': true, //gold
 }
-
+var keepTrainingArmor = true;
 var serialIndex = 1;
 var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
     [
@@ -104,14 +104,17 @@ function MoveLootCall(keep)
     Orion.WaitForAddObject('myTarget');
     var toContainer = Orion.GetSerial('myTarget');
     VerifyOpenContainer(toContainer);
+    var totalItems = 0;
     var items = Orion.FindType(any,any,fromContainer).filter(function(item)
         {
+        totalItems++;
         if(keep == 'all')
             return true;
         if(keep)
             return AliKeep(item);
         return !AliKeep(item);
         });
+    Orion.Print('Total Matching: ' + items.length + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (items.length / totalItems).toFixed(2))
     while(items.length)
         {
         for(var i=0;i<items.length;i++)
@@ -194,6 +197,7 @@ function HighlightTrash()
 
 function HighlightContainersCall(keep)
     {
+    var startTime = Orion.Now();
     var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
         {
         return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
@@ -211,6 +215,8 @@ function HighlightContainersCall(keep)
             return npcPack;
             });
     var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var totalItems = 0;
+    var totalHighlighted = 0;
     for(var i=0;i<containers.length;i++)
         {
         var container = containers[i]
@@ -218,14 +224,17 @@ function HighlightContainersCall(keep)
             Orion.Print(container)
         Orion.FindType(any,any,container.Serial(),'item', 'finddistance', '', true).filter(function(item)
             {
+            totalItems++;
             if(keep)
                 return AliKeep(item);
             return !AliKeep(item);
             }).forEach(function(keeper)
                 {
+                    totalHighlighted++;
                 Orion.TestItemColor(keeper, 1152)
                 });
         }
+    Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
     }
 
 function testEvalWeapon()
@@ -483,23 +492,29 @@ function KeepWeapon(propertiesObj,props)
             !(props.indexOf('Tetsubo') > -1)
 		)
             {
+            Debug('Trash: Excluded Two Handed Weapon');
 			return false;
 		    }
 	    }
 	if(is1hWeapon) //handle 1 handed weapon special cases
-        { //I want to exclude THESE specific 1h weapons
-		if(
+        { 
+        if(props.indexOf("Spell Channeling") > -1 && props.indexOf('Luck 150') > -1 && props.indexOf('Mage Weapon') > -1)
+            return 'Luck Weapon';
+		if( //I want to exclude THESE specific 1h weapons
 			props.indexOf('Elven Machete') > -1 ||
 			props.indexOf('Radiant Scimitar') > -1 || 
 			props.indexOf('Wild Staff') > -1 ||
 			props.indexOf('Lance') > -1 ||
+			props.indexOf('Scepter') > -1 ||
+			props.indexOf('Viking Sword') > -1 ||
+			props.indexOf('War Mace') > -1 ||
+			props.indexOf("Smith's Hammer") > -1 ||
 			props.indexOf('Sledge Hammer') > -1
 		)
             {
+            Debug('Trash: Excluded One Handed Weapon');
 			return false;
 		    }
-        if(props.indexOf("Spell Channeling") > -1 && props.indexOf('Luck 150') > -1 && props.indexOf('Mage Weapon') > -1)
-            return 'Luck Weapon';
         }
     var wepObj = propertiesObj;
 
@@ -515,12 +530,15 @@ function KeepWeapon(propertiesObj,props)
     var isHighManaLeech = wepObj['HitManaLeech'] >= 80;
     var isSpellChanneling = wepObj['SpellChanneling'] >= 1;
     var isBokuto = props.indexOf("Bokuto") > -1;
-    var isButcherKnife = props.indexOf("Butcher Knife") > -1;
 
     var numProps = Object.keys(wepObj).length;
     if(wepObj['FasterCasting'] === -1)
         numProps--;
-    var isImbuable = numProps <= 4;
+    if(isHitSpell || wepObj['HitDispel'] || wepObj['HitMagicArrow'])
+        var imbueProps = numProps - 1;
+    else
+        var imbueProps = numProps;
+    var isImbuable = imbueProps <= 4;
     var isEleDamage = props.indexOf('Physical Damage 100%') == -1
     Debug('numProps: ' + numProps)
     if(isBokuto && isSplinter)
@@ -553,13 +571,18 @@ function KeepWeapon(propertiesObj,props)
         return false;		
         }
     var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") || props.indexOf("Broadsword") || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1;
-    var isBloodDrinker = wepObj['BloodDrinker'];
-    var isReactiveParalyze = wepObj['ReactiveParalyze'];
-    var isSlowWep = props.indexOf('Weapon Speed 2.75s') > -1 || props.indexOf('Weapon Speed 3s') > -1 || props.indexOf('Weapon Speed 3.5s') > -1 || props.indexOf('Weapon Speed 3.75s') > -1
     if(isSplinter)
         {
-        if(numProps <= 2)
-            return 'Low Mod Count Splinter Weapon';
+        var isBloodDrinker = wepObj['BloodDrinker'];
+        var isReactiveParalyze = wepObj['ReactiveParalyze'];
+        var isDisarmWep = props.indexOf("Butcher Knife") > -1 && props.indexOf("Ornate Axe") > -1 && props.indexOf("War Cleaver") > -1 && props.indexOf("War Fork") > -1 && props.indexOf("Mace") > -1 && props.indexOf("Wand") > -1 && props.indexOf("Hatchet") > -1 && props.indexOf("Pickaxe") > -1;
+        var isSlowWep = props.indexOf('Weapon Speed 3.25s') > -1 || props.indexOf('Weapon Speed 3.5s') > -1 || props.indexOf('Weapon Speed 3.75s') > -1 || props.indexOf('Weapon Speed 4s') > -1 || props.indexOf('Weapon Speed 4.25s') > -1 || props.indexOf('Weapon Speed 4.5') > -1 || props.indexOf('Weapon Speed 4.75s') > -1
+        if(numProps == 1)
+            return 'One Mod Splinter Weapon';
+        if(numProps == 2)
+            return 'Two Mod Splinter Weapon';
+        if(numProps == 3 && isReactiveParalyze)
+            return 'Three Mod Reactive Paralyze Weapon';
         if((isHitSpell || isImbuable))
             {
             if(isEleDamage)
@@ -567,7 +590,7 @@ function KeepWeapon(propertiesObj,props)
             if(isOverCapSplinter)
                 return 'OverCap Splinter Weapon';
             }
-        if(isHitSpell && isLowerD && (isEleDamage || (isSlowWep && wepObj['SwingSpeedIncrease']) || isBloodDrinker || isReactiveParalyze))
+        if(isHitSpell && isLowerD && (isEleDamage || (isSlowWep && wepObj['SwingSpeedIncrease']) || isBloodDrinker || isReactiveParalyze || isSpellChanneling))
             return '20+/50+/50+ God Weapon';
         if(!isClean)
             {
@@ -589,7 +612,7 @@ function KeepWeapon(propertiesObj,props)
             return 'Clean 20/50 SC Weapon';
         if(isAIWep && isHighManaLeech && (isHitSpell || (isLowerD && isImbuable)))
             return 'Clean High Mana Leech AI Weapon';
-        if(isButcherKnife && isOverCapSplinter && isLowerD)
+        if(isDisarmWep && isOverCapSplinter && isLowerD)
             return 'Clean 25+/0+/50+ Butcher Knife';
         Debug('Trash: Splinter weapon failed all previous checks');
         return false;		
@@ -665,12 +688,16 @@ function KeepJewelry(propertiesObj,props)
         }
     if(propertiesObj['Chivalry'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
         return '1/3 +20 Chiv Samp Jewel';
+    if(propertiesObj['Magery'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
+        return '1/3 +20 Magery Jewel';
     var overcapInt = CountJewelryOvercaps(propertiesObj);
     var skillInt = CountMatchingMods(propertiesObj, skillMods);
     if(skillInt == 0)
         {
         if(overcapInt == 0 && !propertiesObj['EnhancePotions'] || !propertiesObj['DefenseChanceIncrease'] || !propertiesObj['ManaRegeneration'])
             {
+            if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
+                return 'Str10/Dex10/Int10';
             Debug('Trash: Zero skills, missing EP or DCI or MR');
             return false;
             }
@@ -700,6 +727,8 @@ function KeepJewelry(propertiesObj,props)
     Debug('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nstatInt: ' + statInt + '\nclean: ' + isClean);
     if(mageInt + hybridInt >= targetModCount || dexxerInt + hybridInt >= targetModCount)
         return '7 or 8 good mods (or 6 if clean)';
+    if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
+        return 'Str10/Dex10/Int10';
     Debug('Trash: Jewelry failed all previous checks');
     return false;
     }
@@ -739,177 +768,24 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return false;
             }
     var lmcArr = 
-        { //graphic: [intrinsicLMC,comment]
-        '0x153F':['0','Bandana(mono)'],
-        '0x140D':['1','Bascinet(left)'],
-        '0x140C':['1','Bascinet(right)'],
-        '0x1545':['0','Bear Mask(mono)'],
-        '0x1454':['3','Bone Armor(left)'],
-        '0x144F':['3','Bone Armor(right)'],
-        '0x144E':['3','Bone Arms(left)'],
-        '0x1453':['3','Bone Arms(right)'],
-        '0x1450':['3','Bone Gloves(left)'],
-        '0x1455':['3','Bone Gloves(right)'],
-        '0x1451':['3','Bone Helmet(left)'],
-        '0x1456':['3','Bone Helmet(right)'],
-        '0x1457':['3','Bone Leggings(left)'],
-        '0x1452':['3','Bone Leggings(right)'],
-        '0x13BB':['1','Chainmail Coif(left)'],
-        '0x13C0':['1','Chainmail Coif(right)'],
-        '0x2774':['1','Chainmail Hatsuburi(mono)'],
-        '0x13C3':['1','Chainmail Leggings(left)'],
-        '0x13BE':['1','Chainmail Leggings(right)'],
-        '0x13C4':['1','Chainmail Tunic(left)'],
-        '0x13BF':['1','Chainmail Tunic(right)'],
-        '0x1409':['1','Close Helm(left)'],
-        '0x1408':['1','Close Helmet(right)'],
-        '0x2778':['1','Decorative Platemail Kabuto(mono)'],
-        '0x1547':['0','Deer Mask(mono)'],
-        '0x171A':['0','Feathered Hat(mono)'],
-        '0x1C07':['0','Female Leather Armor(left)'],
-        '0x1C06':['0','Female Leather Armor(right)'],
-        '0x1C05':['1','Female Plate(left)'],
-        '0x1C04':['1','Female Plate(right)'],
-        '0x1713':['0','Floppy Hat(mono)'],
-        '0x2777':['1','Heavy Platemail Jingasa(mono)'],
-        '0x140B':['1','Helmet(left)'],
-        '0x140A':['1','Helmet(right)'],
-        '0x2B75':['3','Hide Gloves(mono)'],
-        '0x2B76':['3','Hide Gorget(mono)'],
-        '0x2B78':['3','Hide Pants(mono)'],
-        '0x2B77':['3','Hide Pauldrons(mono)'],
-        '0x2B74':['3','Hide Tunic(mono)'],
-        '0x171C':['0','Jester Hat(mono)'],
-        '0x2798':['0','Kasa(mono)'],
-        '0x2FC8':['0','Leaf Arms(mono)'],
-        '0x2FC6':['0','Leaf Gloves(mono)'],
-        '0x2FC7':['0','Leaf Gorget(mono)'],
-        '0x2FC9':['0','Leaf Leggings(mono)'],
-        '0x2FCA':['0','Leaf Tonlet(mono)'],
-        '0x2FC5':['0','Leaf Tunic(mono)'],
-        '0x1C0B':['0','Leather Bustier(left)'],
-        '0x1C0A':['0','Leather Bustier(right)'],
-        '0x1DB9':['0','Leather Cap(left)'],
-        '0x1DBA':['0','Leather Cap(right)'],
-        '0x277B':['0','Leather Do(mono)'],
-        '0x13C6':['0','Leather Gloves(left)'],
-        '0x13CE':['0','Leather Gloves(right)'],
-        '0x13C7':['0','Leather Gorget(mono)'],
-        '0x278A':['0','Leather Haidate(mono)'],
-        '0x277E':['0','Leather Hiro Sode(mono)'],
-        '0x2776':['0','Leather Jingasa(mono)'],
-        '0x13D2':['0','Leather Leggings(left)'],
-        '0x13CB':['0','Leather Leggings(right)'],
-        '0x277A':['0','Leather Mempo(mono)'],
-        '0x278E':['0','Leather Ninja Hood(mono)'],
-        '0x2793':['0','Leather Ninja Jacket(mono)'],
-        '0x2792':['0','Leather Ninja Mitts(mono)'],
-        '0x2791':['0','Leather Ninja Pants(mono)'],
-        '0x1C01':['0','Leather Shorts(left)'],
-        '0x1C00':['0','Leather Shorts(right)'],
-        '0x1C09':['0','Leather Skirt(left)'],
-        '0x1C08':['0','Leather Skirt(right)'],
-        '0x13C5':['0','Leather Sleeves(left)'],
-        '0x13CD':['0','Leather Sleeves(right)'],
-        '0x2786':['0','Leather Suneate(mono)'],
-        '0x13D3':['0','Leather Tunic(left)'],
-        '0x13CC':['0','Leather Tunic(right)'],
-        '0x2781':['1','Light Platemail Jingasa(mono)'],
-        '0x140F':['1','Norse Helm(left)'],
-        '0x140E':['1','Norse Helm(right)'],
-        '0x1F0B':['0','Orc Helm(left)'],
-        '0x1F0C':['0','Orc Helm(right)'],
-        '0x141B':['0','Orc Mask(mono)'],
-        '0x141C':['0','Orc Mask(mono)'],
-        '0x1412':['1','Plate Helm(left)'],
-        '0x1419':['1','Plate Helm(right)'],
-        '0x1410':['1','Platemail Arms(left)'],
-        '0x1417':['1','Platemail Arms(right)'],
-        '0x2785':['1','Platemail Battle Kabuto(mono)'],
-        '0x277D':['1','Platemail Do(mono)'],
-        '0x1414':['1','Platemail Gloves(left)'],
-        '0x1418':['1','Platemail Gloves(right)'],
-        '0x1413':['1','Platemail Gorget(mono)'],
-        '0x278D':['1','Platemail Haidate(mono)'],
-        '0x2775':['1','Platemail Hatsuburi(mono)'],
-        '0x2780':['1','Platemail Hiro Sode(mono)'],
-        '0x141A':['1','Platemail Legs(left)'],
-        '0x1411':['1','Platemail Legs(right)'],
-        '0x2779':['1','Platemail Mempo(mono)'],
-        '0x2788':['1','Platemail Suneate(mono)'],
-        '0x1416':['1','Platemail Tunic(left)'],
-        '0x1415':['1','Platemail Tunic(right)'],
-        '0x2B71':['0','Raven Helm(mono)'],
-        '0x13EB':['1','Ringmail Gloves(left)'],
-        '0x13F2':['1','Ringmail Gloves(right)'],
-        '0x13F1':['1','Ringmail Leggings(left)'],
-        '0x13F0':['1','Ringmail Leggings(right)'],
-        '0x13EF':['1','Ringmail Sleeves(left)'],
-        '0x13EE':['1','Ringmail Sleeves(right)'],
-        '0x13ED':['1','Ringmail Tunic(left)'],
-        '0x13EC':['1','Ringmail Tunic(right)'],
-        '0x1543':['0','Skullcap(mono)'],
-        '0x1544':['0','Skullcap(mono)'],
-        '0x2784':['1','Small Platemail Jingasa(mono)'],
-        '0x2789':['1','Standard Platemail Kabuto(mono)'],
-        '0x1717':['0','Straw Hat(mono)'],
-        '0x1C02':['3','Studded Armor(mono)'],
-        '0x1C03':['3','Studded Armor(mono)'],
-        '0x1C0D':['3','Studded Bustier(left)'],
-        '0x1C0C':['3','Studded Bustier(right)'],
-        '0x277C':['3','Studded Do(mono)'],
-        '0x13D5':['3','Studded Gloves(left)'],
-        '0x13DD':['3','Studded Gloves(right)'],
-        '0x13D6':['3','Studded Gorget(mono)'],
-        '0x278B':['3','Studded Haidate(mono)'],
-        '0x277F':['3','Studded Hiro Sode(mono)'],
-        '0x13E1':['3','Studded Leggings(left)'],
-        '0x13DA':['3','Studded Leggings(right)'],
-        '0x279D':['3','Studded Mempo(mono)'],
-        '0x13D4':['3','Studded Sleeves(left)'],
-        '0x13DC':['3','Studded Sleeves(right)'],
-        '0x2787':['3','Studded Suneate(mono)'],
-        '0x13E2':['3','Studded Tunic(left)'],
-        '0x13DB':['3','Studded Tunic(right)'],
-        '0x1716':['0','Tall Straw Hat(mono)'],
-        '0x1549':['0','Tribal Mask A(mono)'],
-        '0x154B':['0','Tribal Mask B(mono)'],
-        '0x171B':['0','Tricorne Hat(mono)'],
-        '0x2B72':['0','Vulture Helm(mono)'],
-        '0x1714':['0','Wide-brim Hat(mono)'],	
-        '0x2B73':['0','Winged Helm(mono)'],
-        '0x1718':['0',"Wizard's Hat(mono)"],	
-        '0x2B6C':['0','Woodland Arms(mono)'],
-        '0x2B67':['0','Woodland Chest(mono)'],
-        '0x2B6A':['0','Woodland Gauntlets(mono)'],
-        '0x2B69':['0','Woodland Gorget(mono)'],
-        '0x2B6B':['0','Woodland Leggings(mono)'],
-        '0x4049':['0','Gargish Leather Chest'],
-        '0x404A':['0','Gargish Leather Chest'],
-        '0x404C':['0','Gargish Leather Kilt'],
-        '0x4047':['0','Gargish Leather Arms'],
-        '0x4066':['0','Gargish Cloth Leggings'],
-        '0x0284':['1','Gargish Stone Arms'],
-        '0x4056':['1','Gargish Platemail Legs'],
-        '0x030A':['1','Gargish Platemail Tunic'],
-        '0x404E':['0','Gargish Leather Leggings'],
-        '0x4050':['1','Gargish Platemail Arms'],
-        '0x405C':['1','Gargish Stone Kilt'],
-        '0x405D':['1','Gargish Stone Leggings'],
-        '0x405E':['1','Gargish Stone Leggings'],
-        '0x4058':['1','Gargish Stone Arms'],
-        '0x4057':['1','Gargish Stone Arms'],
-        '0x405A':['1','Gargish Stone Chest'],
-        '0x4D0A':['1','Gargish Stone Amulet'],
-        '0x4062':['0','Gargish Cloth Chest'],
-        '0x404B':['0','Gargish Leather Kilt'],
-        '0x4210':['0','Gargish Necklace'],
-        '0x4052':['1','Gargish Platemail Chest'],
-        '0x4053':['1','Gargish Platemail Kilt'],
-        '0x4066':['0','Gargish Cloth Leggings'],
-        '0x4048':['0','Gargish Leather Sleeves'],
-        '0x4064':['0','Gargish Cloth Kilt'],
-        '0x404D':['0','Gargish Leather Shorts'],
+        { //graphic: intrinsicLMCBonus
+        '0x153F':'0','0x140D':'1','0x140C':'1','0x1545':'0','0x1454':'3','0x144F':'3','0x144E':'3','0x1453':'3','0x1450':'3','0x1455':'3',
+        '0x1451':'3','0x1456':'3','0x1457':'3','0x1452':'3','0x13BB':'1','0x13C0':'1','0x2774':'1','0x13C3':'1','0x13BE':'1','0x13C4':'1',
+        '0x13BF':'1','0x1409':'1','0x1408':'1','0x2778':'1','0x1547':'0','0x171A':'0','0x1C07':'0','0x1C06':'0','0x1C05':'1','0x1C04':'1',
+        '0x1713':'0','0x2777':'1','0x140B':'1','0x140A':'1','0x2B75':'3','0x2B76':'3','0x2B78':'3','0x2B77':'3','0x2B74':'3','0x171C':'0',
+        '0x2798':'0','0x2FC8':'0','0x2FC6':'0','0x2FC7':'0','0x2FC9':'0','0x2FCA':'0','0x2FC5':'0','0x1C0B':'0','0x1C0A':'0','0x1DB9':'0',
+        '0x1DBA':'0','0x277B':'0','0x13C6':'0','0x13CE':'0','0x13C7':'0','0x278A':'0','0x277E':'0','0x2776':'0','0x13D2':'0','0x13CB':'0',
+        '0x277A':'0','0x278E':'0','0x2793':'0','0x2792':'0','0x2791':'0','0x1C01':'0','0x1C00':'0','0x1C09':'0','0x1C08':'0','0x13C5':'0',
+        '0x13CD':'0','0x2786':'0','0x13D3':'0','0x13CC':'0','0x2781':'1','0x140F':'1','0x140E':'1','0x1F0B':'0','0x1F0C':'0','0x141B':'0',
+        '0x141C':'0','0x1412':'1','0x1419':'1','0x1410':'1','0x1417':'1','0x2785':'1','0x277D':'1','0x1414':'1','0x1418':'1','0x1413':'1',
+        '0x278D':'1','0x2775':'1','0x2780':'1','0x141A':'1','0x1411':'1','0x2779':'1','0x2788':'1','0x1416':'1','0x1415':'1','0x2B71':'0',
+        '0x13EB':'1','0x13F2':'1','0x13F1':'1','0x13F0':'1','0x13EF':'1','0x13EE':'1','0x13ED':'1','0x13EC':'1','0x1543':'0','0x1544':'0',
+        '0x2784':'1','0x2789':'1','0x1717':'0','0x1C02':'3','0x1C03':'3','0x1C0D':'3','0x1C0C':'3','0x277C':'3','0x13D5':'3','0x13DD':'3',
+        '0x13D6':'3','0x278B':'3','0x277F':'3','0x13E1':'3','0x13DA':'3','0x279D':'3','0x13D4':'3','0x13DC':'3','0x2787':'3','0x13E2':'3',
+        '0x13DB':'3','0x1716':'0','0x1549':'0','0x154B':'0','0x171B':'0','0x2B72':'0','0x1714':'0','0x2B73':'0','0x1718':'0','0x2B6C':'0',
+        '0x2B67':'0','0x2B6A':'0','0x2B69':'0','0x2B6B':'0','0x4049':'0','0x404A':'0','0x404C':'0','0x4047':'0','0x4066':'0','0x0284':'1',
+        '0x4056':'1','0x030A':'1','0x404E':'0','0x4050':'1','0x405C':'1','0x405D':'1','0x405E':'1','0x4058':'1','0x4057':'1','0x405A':'1',
+        '0x4D0A':'1','0x4062':'0','0x404B':'0','0x4210':'0','0x4052':'1','0x4053':'1','0x4066':'0','0x4048':'0','0x4064':'0','0x404D':'0',
         }
     var hpi = propertiesObj['HitPointIncrease'] || 0;
     var stam = propertiesObj['StaminaIncrease'] || 0;
@@ -1065,7 +941,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold + 3)
             return 'LMC Misc Armor';
         }
-
+    Debug('Trash: Armor failed all previous checks');
     return false;
     }
 
@@ -1220,23 +1096,6 @@ function VerifyOpenContainer(containerSerial,delay)
     return true;
     }
 
-// function MoveAll()
-// 	{
-//     Orion.CharPrint(self,1159,"Select 'From' container");
-// 	Orion.WaitForAddObject('myTarget');
-// 	var fromContainer = Orion.GetSerial('myTarget');
-//     Orion.CharPrint(self,1159,"Select 'To' container");
-// 	Orion.WaitForAddObject('myTarget');
-// 	var toContainer = Orion.GetSerial('myTarget');
-//     VerifyOpenContainer(fromContainer);
-//     var item = Orion.FindType(any,any,fromContainer)[0];
-//     while(item)
-//         {
-//         Orion.MoveItem(item,0,toContainer);
-//         Orion.Wait(1200);
-//         item = Orion.FindType(any,any,fromContainer)[0];
-//         }
-// 	}
 var debug = false;
 function Debug(msg)
     {
