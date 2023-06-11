@@ -48,9 +48,9 @@
 		"prefix": "for",
 		"body": 
 			[
-			"for(var ${1:i} = 0;i<${2:arr}.length;i++)",
+			"for(var ${1:i}=0;i<${2:arr}.length;i++)",
 			"\t{",
-			"\tvar ${3:ele} = ${2:arr}[${1:i}]",
+			"\tvar ${3:ele} = ${2:arr}[${1:i}];",
 			"\t${4://body}",
 			"\t}"
 			],
