@@ -1,3 +1,5 @@
+var fileName = '/AliCatalogueJSON2' + '.json'
+var searchDistance = 5
 function ASCII_Input()
     {
 	 var text = "\n/'-| Imperatrix |-'\\\n\\,-| PvP Gear |-,/"
@@ -112,7 +114,7 @@ function CatalogueRowColumn()
             })
         TextWindow.Print(']\n\n')
         }
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliCatalogueJSON' + '.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Remove(tmpFilePath);
     tmpFile.Open(tmpFilePath);
@@ -127,7 +129,7 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
     {
     Orion.RemoveDisplayTimer('idleTimer');
     Orion.ClearFakeMapObjects();
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliCatalogueJSON' + '.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var outArr = [];
@@ -305,7 +307,7 @@ function DiscordPush(msg)
 	
 function ReadCatalogue()
     {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliCatalogueJSON' + '.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var outArr = [];
@@ -333,7 +335,7 @@ function ReadCatalogue()
     
 function StraticsFormatCatalogueTable()
     {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliCatalogueJSON' + '.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var outArr = [];
@@ -369,7 +371,7 @@ function StraticsFormatCatalogueTable()
 
 function SalesCheck()
     {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliCatalogueJSON' + '.json';
+    var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var prevCatalogue = [];
@@ -398,7 +400,7 @@ function SalesCheck()
 
 function RowColumnScanEnumerateSafes()
     {
-    var safes = Orion.FindTypeEx('0x9C18|0x9C19',any,ground,'item',20).map(function(safe)
+    var safes = Orion.FindTypeEx('0x9C18|0x9C19',any,ground,'item',searchDistance).map(function(safe)
         {
         return [safe.Serial(), safe.X(), safe.Y()];
         })
