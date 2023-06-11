@@ -329,6 +329,8 @@ function WalkSpawn()
 		AliWalkTo(x,y,0,0,255,20);
 		Orion.Wait(10);
         }
+    DiscordPush(Player.Name() + ': Cu Farmer Died')
+    Orion.LogOut();
 	}
 
 function RareAlert()
