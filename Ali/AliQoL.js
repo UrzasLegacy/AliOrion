@@ -617,36 +617,61 @@ function DropDraggedToContainer() //v2
 		}
 	}
 
-function DropDraggedHere() //v2
+function DropDraggedHere() //v3
     {
-    var validTiles = Orion.GetTilesInRect('land', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)
-        .filter(function(tile)
-            {
-            Orion.SetSearchArea(tile.X(),tile.Y(),tile.X(),tile.Y());
-            var mobCheck = Orion.FindType(any,any,ground,'live').length == 0;
-            var itemCheck = Orion.FindType(any,any,ground,'item').length < 5;
-            return mobCheck && itemCheck;
-            });
-    Orion.ResetSearchArea();
-    var validTile = null;
-    for(var i=0;i<validTiles.length;i++)
+    if(!Orion.Dragging())
+        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
+    var range = 2;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.Dragging() && Orion.Now() < endTimeMain)
         {
-        if(Orion.GetPathArray(validTiles[i].X(),validTiles[i].Y(),validTiles[i].Z(),0,2,2,0)[0])
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
             {
-            validTile = validTiles[i];
-            break;
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
             }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.Dragging())
+            hash['' + validTileX + validTileY + validTileZ] = true;
         }
-    if(validTile)
-        {
-        var validTileX = validTile.X();
-        var validTileY = validTile.Y();
-        var validTileZ = validTile.Z();
-        Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
-        Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
-        }
-    else 
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function AddToDropQueue()
@@ -691,9 +716,8 @@ function DropFromQueue(_)
                 var validTiles = Orion.GetTilesInRect('land', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)
                     .filter(function(tile)
                         {
-                        Orion.SetSearchArea(tile.X(),tile.Y(),tile.X(),tile.Y());
-                        var mobCheck = Orion.FindType(any,any,ground,'live').length == 0;
-                        var itemCheck = Orion.FindType(any,any,ground,'item').length < 8;
+                        var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tile.X() + ',' + tile.Y() + ',' + tile.Z()).length == 0;
+                        var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tile.X() + ',' + tile.Y() + ',' + tile.Z()).length < 8;
                         return mobCheck && itemCheck;
                         });
                 Orion.ResetSearchArea();
