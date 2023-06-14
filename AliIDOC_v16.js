@@ -27,11 +27,14 @@ function Autostart()
     Orion.Print(outMsg);
     Gump();
     //Orion.Exec('GMJournalScan',true);
-	var sign = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-		{
-        var itemProps = item.Properties();
-		return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, 'Collapsing In:');
-		})[0];
+	var sign = Orion.FindTypeEx(any,any,ground,'item',24).sort(function(a,b)
+        {
+        return a.Distance() - b.Distance();
+        }).filter(function(item)
+            {
+            var itemProps = item.Properties();
+            return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, 'Collapsing In:');
+            })[0];
     while(!sign)
         {
         Orion.CharPrint(self,1159,'No sign found!');
@@ -41,11 +44,14 @@ function Autostart()
         var barrels = Orion.FindType('0x0FAE|0x0E77|0x1EB5', any, ground, ' ', '20');
         if(barrels.length > 6)
             break;
-        sign = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+        sign = Orion.FindTypeEx(any,any,ground,'item',24).sort(function(a,b)
             {
-            var itemProps = item.Properties();
-            return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, 'Collapsing In:');
-            })[0];
+            return a.Distance() - b.Distance();
+            }).filter(function(item)
+                {
+                var itemProps = item.Properties();
+                return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, 'Collapsing In:');
+                })[0];
         }
 	if(sign)
         {
