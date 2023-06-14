@@ -7,16 +7,12 @@ var keepTrainingArmor = true;
 var serialIndex = 1;
 var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
     [
-        [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"]],
+        [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'] ],
+        [],
         [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestItem", 'EvalKeep'],],
         [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'] ],
-        [], //blank row
-        [ [100, 30, serialIndex++, "MoveAll0Skill", 'MoveAllJewelBySkill',[0]], [100, 30, serialIndex++, "MoveAll1Skill", 'MoveAllJewelBySkill',[1]], [100, 30, serialIndex++, "MoveAll2Skill", 'MoveAllJewelBySkill',[2]], ],
-        [ [100, 30, serialIndex++, "MoveAll3Skill", 'MoveAllJewelBySkill',[3]], [100, 30, serialIndex++, "MoveAll4Skill", 'MoveAllJewelBySkill',[4]], [100, 30, serialIndex++, "MoveAll5Skill", 'MoveAllJewelBySkill',[5]], ],
-        [], //blank row
-        [ [100, 30, serialIndex++, "TestJewelry", 'testEvalJewelry'], [100, 30, serialIndex++, "TestArmor", 'testEvalArmor'], [100, 30, serialIndex++, "TestWeapon", 'testEvalWeapon'], ],
-        [ [100, 30, serialIndex++, "SortJewelry", "testSortJewelry"], [100, 30, serialIndex++, "SortArmor", "testSortArmor"], [100, 30, serialIndex++, "SortWeapons", "testSortWeapon"], ],
-
+        [],
+        [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
     ]
 
 function Gump()
@@ -141,6 +137,7 @@ function MoveAllJewelBySkill(skillIntTarget)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Archery:true,Healing:true,
         }
     Orion.CharPrint(self,1159,"Select 'From' container");
 	Orion.WaitForAddObject('myTarget');
@@ -776,7 +773,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x2798':'0','0x2FC8':'0','0x2FC6':'0','0x2FC7':'0','0x2FC9':'0','0x2FCA':'0','0x2FC5':'0','0x1C0B':'0','0x1C0A':'0','0x1DB9':'0',
         '0x1DBA':'0','0x277B':'0','0x13C6':'0','0x13CE':'0','0x13C7':'0','0x278A':'0','0x277E':'0','0x2776':'0','0x13D2':'0','0x13CB':'0',
         '0x277A':'0','0x278E':'0','0x2793':'0','0x2792':'0','0x2791':'0','0x1C01':'0','0x1C00':'0','0x1C09':'0','0x1C08':'0','0x13C5':'0',
-        '0x13CD':'0','0x2786':'0','0x13D3':'0','0x13CC':'0','0x2781':'1','0x140F':'1','0x140E':'1','0x1F0B':'0','0x1F0C':'0','0x141B':'0',
+        '0x13CD':'0','0x2786':'0','0x13D3':'0','0x13CC':'0','0x2781':'1','0x140F':'1','0x140E':'1','0x1F0B':'1','0x1F0C':'1','0x141B':'0',
         '0x141C':'0','0x1412':'1','0x1419':'1','0x1410':'1','0x1417':'1','0x2785':'1','0x277D':'1','0x1414':'1','0x1418':'1','0x1413':'1',
         '0x278D':'1','0x2775':'1','0x2780':'1','0x141A':'1','0x1411':'1','0x2779':'1','0x2788':'1','0x1416':'1','0x1415':'1','0x2B71':'0',
         '0x13EB':'1','0x13F2':'1','0x13F1':'1','0x13F0':'1','0x13EF':'1','0x13EE':'1','0x13ED':'1','0x13EC':'1','0x1543':'0','0x1544':'0',
@@ -838,27 +835,27 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var lrcThreshold = 10;
                 var lmcThreshold = lrc >= 20 ? 1 : 5;
                 var mrThreshold = 2;
-                var statThreshold = goodEater ? 8 : 12;
+                var statThreshold = goodEater ? 3 : 5;
                 break;
             case '1':
                 var lrcThreshold = 15;
-                var lmcThreshold = 8;
+                var lmcThreshold = 6;
                 var mrThreshold = 3;
-                var statThreshold = goodEater ? 15 : 20;
+                var statThreshold = goodEater ? 10 : 13;
                 break;
             case '0':
                 var lrcThreshold = 20;
-                var lmcThreshold = 10;
-                var mrThreshold = 4;
-                var statThreshold = goodEater ? 19 : 24;
+                var lmcThreshold = 6;
+                var mrThreshold = 3;
+                var statThreshold = goodEater ? 10 : 13;
                 break;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
             return 'LRC Vitality Armor';
-        if(lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold + 3)
+        if(lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
             return 'LMC Vitality Armor';
         if(stam > 5 && isArtifact)
-            return 'HP/Stam Armor';
+            return 'Misc HP/Stam Armor';
         }
 
     if(stam >= 7)
@@ -872,16 +869,16 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 break
             default: //default to best case scenario
                 Debug('stam intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
-                Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
+                Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list');
             case '1':
-                var lrcThreshold = 20;
+                var lrcThreshold = 10;
                 var lmcThreshold = 6;
                 var statThreshold = 25;  
                 break
             case '0':
                 if(!hpi)
                     {
-                    Debug('Trash: Leather Stam Armor')
+                    Debug('Trash: Leather Stam Armor');
                     return false;
                     }
                 var lrcThreshold = 15;
@@ -892,13 +889,13 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalStats >= statThreshold - 5)
             {
             if(hpi)
-                return 'LRC Stam/HP Armor'
+                return 'LRC Stam/HP Armor';
             return 'LRC Stamina Armor';
             }
         if(lmc >= lmcThreshold && totalStats >= statThreshold)
             {
             if(hpi)
-                return 'LMC Stam/HP Armor'
+                return 'LMC Stam/HP Armor';
             return 'LMC Stamina Armor';
             }
         }
@@ -919,7 +916,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var lmcThreshold = 5;
                 var mrThreshold = 3;
                 var hprThreshold = 2;
-                var statThreshold = goodEater ? 3 : 6;
+                var statThreshold = goodEater ? 5 : 7;
                 break;
             case '1':
                 var lrcThreshold = 15;
@@ -933,12 +930,12 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var lmcThreshold = 10;
                 var mrThreshold = 4;
                 var hprThreshold = 4;
-                var statThreshold = goodEater ? 10 : 15;
+                var statThreshold = goodEater ? 10 : 13;
                 break;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
             return 'LRC Misc Armor';
-        if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold + 3)
+        if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold)
             return 'LMC Misc Armor';
         }
     Debug('Trash: Armor failed all previous checks');
@@ -1051,19 +1048,516 @@ function parseArmorProperties(armorProperties)
     return propertiesObj;
     }
 
-function AliLootSorter()
+function AliLootHouse()
     {
-    var multi = Orion.GetMultisRect().sort(function(a,b)
+    Orion.ClearFakeMapObjects();
+    Orion.ResetSearchArea();
+    Orion.IgnoreReset();
+    var unsortedBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
         {
-        var playerX = Player.X();
-        var playerY = Player.Y();
-		var distOne = Math.floor(Math.sqrt(Math.pow(a.x - playerX, 2) + Math.pow(a.y - playerY, 2)));
-		var distTwo = Math.floor(Math.sqrt(Math.pow(b.x - playerX, 2) + Math.pow(b.y - playerY, 2)));
-		return distOne - distTwo;
-		})[0];
-	if(!multi)
-		return Orion.CharPrint(self,1159,"House not found! Halting...");
-    Orion.Print(multi.x + ':' + multi.y)
+        return Orion.Contains(item.Properties(),'Unsorted');
+        })[0];
+    if(!unsortedBook)
+        return Orion.CharPrint(self,1159,'Unsorted Book Not Found!');
+    var unsortedX = unsortedBook.X();
+    var unsortedY = unsortedBook.Y();
+    var range = 2;
+    var unsortedX1 = unsortedX - range;
+    var unsortedY1 = unsortedY - range;
+    var unsortedX2 = unsortedX + range;
+    var unsortedY2 = unsortedY + range;
+    
+    Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
+    var unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+        {
+        var properties = item.Properties();
+        return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
+        }).sort(function(a,b)
+            {
+            var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+            var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+            return aContents - bContents;
+            })[0];
+    Orion.ResetSearchArea();
+    if(!unsortedContainer)
+        return Orion.CharPrint(self,1159,'No Containers to Sort!');
+    while(unsortedContainer)
+        {
+        Orion.ClearFakeMapObjects();
+        Orion.GetTilesInRect('land',unsortedX1, unsortedY1, unsortedX2, unsortedY2).forEach(function(tile,ind)
+            {
+            Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            });
+        Orion.AddFakeMapObject(10000, '0x051A', 1152, unsortedX, unsortedY, Player.Z());
+        var fullCheck = false;
+        var unsortedContainerSerial = unsortedContainer.Serial();
+        while(Orion.GetDistance(unsortedContainerSerial) > 2)
+            {
+            Orion.WalkTo(unsortedContainer.X(),unsortedContainer.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(unsortedContainerSerial);
+        var items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
+            {
+            return AliKeep(item);
+            });
+        while(items.length)
+            {
+            for(var i=0;i<items.length;i++)
+                {
+                Orion.MoveItem(items[i]);
+                Orion.Wait(1300);
+                var fullCheck = ((Orion.ObjAtLayer('backpack').Properties().match(/Contents: (\d+)\//) || [])[1] || 125) == 125
+                    || (Player.Weight() > Player.MaxWeight() - 20);
+                if(fullCheck)
+                    break;
+                }
+            if(fullCheck)
+                break;
+            items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
+                {
+                return AliKeep(item);
+                });
+            }
+        if(!fullCheck)
+            {
+            MoveTrashContainer(unsortedContainerSerial);
+            Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
+            unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+                {
+                var properties = item.Properties();
+                return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
+                }).sort(function(a,b)
+                    {
+                    var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                    var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                    return aContents - bContents;
+                    })[0];
+            Orion.ResetSearchArea();
+            }
+        else
+            {
+            PutAwayLoot();
+            }
+        Orion.Wait(500);
+        }
+    PutAwayLoot();
+    }
+function TestMoveTrash()
+    {
+        MoveTrashContainer(0x432E0189)  
+    }
+
+function MoveTrashContainer(serial)
+    {
+    Orion.ResetSearchArea();
+    Orion.ClearFakeMapObjects();
+    if(serial === undefined)
+        {
+        Orion.CharPrint(self,1159,'Target trash container');
+        Orion.WaitForAddObject('myTarget');
+        serial = Orion.GetSerial('myTarget');
+        }
+    var trashBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Trash');
+        })[0];
+    if(!trashBook)
+        return Orion.CharPrint(self,1159,'Trash Book Not Found!');
+    var trashX = trashBook.X();
+    var trashY = trashBook.Y();
+    var range = 1;
+    var trashX1 = trashX - range;
+    var trashY1 = trashY - range;
+    var trashX2 = trashX + range;
+    var trashY2 = trashY + range;
+    var validTiles = Orion.GetTilesInRect('land',trashX1, trashY1, trashX2, trashY2).filter(function(tile,ind)
+        {
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        if(tile.Z() != Player.Z() || (tileX == trashX && tileY == trashY))
+            return false;
+        Orion.AddFakeMapObject(ind, '0x051A', 1159, tileX, tileY, tile.Z());
+        var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+        var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+        return mobCheck && itemCheck;
+        })
+    Orion.AddFakeMapObject(10000, '0x051A', 1152, trashX, trashY, Player.Z());
+    if(!validTiles.length)
+        {
+        DiscordPush(Player.Name() + ' ran out of space for trash containers');
+        Orion.Terminate('all');
+        }
+    var validTile = validTiles.shift();
+    var validTileX = validTile.X();
+    var validTileY = validTile.Y();
+    var trashContainer = Orion.FindObject(serial);
+    var startTime = Orion.Now();
+    var endTime = startTime + 3000;
+    while(trashContainer.X() != validTileX || trashContainer.Y() != validTileY)
+        {
+        while(trashContainer.Distance() > 2)
+            {
+            Orion.WalkTo(trashContainer.X(),trashContainer.Y());
+            Orion.Wait(200);
+            }
+        Orion.Say('i wish to release this');
+        if(Orion.WaitForTarget(2000))
+            {
+            Orion.TargetObject(serial);
+            var check = Orion.WaitJournal('(no longer secure)',startTime,endTime,'item',serial);
+            if(!check)
+                var check = Orion.InJournal('This is not locked down or secured.', 'my', '0', 'any', startTime, endTime);
+            if(check)
+                {
+                while(!Orion.Dragging())
+                    {
+                    Orion.DragItem(serial);
+                    Orion.Wait(500);
+                    }
+                while(Orion.GetDistance(validTileX,validTileY) > 2)
+                    {
+                    Orion.WalkTo(validTileX,validTileY);
+                    Orion.Wait(200);
+                    }
+                Orion.DropDraggedItem('ground',validTileX,validTileY,Player.Z())
+                while(Orion.Dragging())
+                    {
+                    Orion.Wait(200);
+                    }
+                startTime = Orion.Now() - 500;
+                endTime = startTime + 3500;
+                Orion.Say('i wish to secure this');
+                if(Orion.WaitForTarget(3000))
+                    {
+                    Orion.TargetObject(serial);
+                    check = Orion.WaitJournal('Secure!',startTime,endTime,'item',serial);
+                    if(check)
+                        continue;
+                    }
+                }
+            }
+        validTile = validTiles.shift()
+        var validTileX = validTile.X();
+        var validTileY = validTile.Y();
+        Orion.Wait(1300);
+        }
+    }
+
+function PutAwayLoot()
+    {
+    Orion.ResetSearchArea();
+    var skillMods = 
+        {
+        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
+        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
+        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Archery:true,Healing:true,
+        }
+    var playerBackpack = Orion.GetSerial(backpack);
+    var items = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return AliKeep(item.Serial());
+        })
+    if(items.length === 0)
+        return Orion.CharPrint(self,1159,'No items to put away!');
+    var jewelry = [];
+    var weapons = [];
+    var armor = [];
+    var shields = [];
+    for(var i=0;i<items.length;i++)
+        {
+        var item = items[i];
+        var props = item.Properties();
+        if(Orion.Contains('0x1F06|0x1086|0x108A|0x1F09', item.Graphic()))
+            {
+            jewelry.push(item);
+            continue;
+            }
+        if(props.indexOf('Two-handed Weapon') > -1 || props.indexOf('One-handed Weapon') > -1)
+            {
+            weapons.push(item);
+            continue;
+            }
+        if(props.indexOf("Poison Resist") > -1 && props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1)
+            {
+            armor.push(item);
+            continue;
+            }
+        shields.push(item);
+        }
+
+    //Put Away Jewels
+    var jewelryArr = [[],[],[],[],[],[]];
+    for(var i=0;i<jewelry.length;i++)
+        {
+        var item = jewelry[i];
+        var parse = parseJewelryProperties(item.Properties());
+        var skillInt = CountMatchingMods(parse,skillMods)
+        jewelryArr[skillInt].push(item.Serial());
+        }
+    for(var i=0;i<jewelryArr.length;i++)
+        {
+        var skillIntArr = jewelryArr[i];
+        if(skillIntArr.length === 0)
+            continue;
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            Orion.Print(i)
+            return properties.indexOf('Jewelry ' + i + ' Skill') > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Jewelry ' + i + ' Skill');
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerSkills)
+            {
+            DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerSkills.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerSkills.Serial());
+        for(var j=0;j<skillIntArr.length;j++)
+            {
+            var jewel = skillIntArr[j];
+            while(Orion.GetContainer(jewel) == playerBackpack)
+                {
+                Orion.MoveItem(jewel,0,sortContainerSkills.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerSkills.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerSkills.Serial());
+                sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerSkills)
+                    {
+                    DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerSkills.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerSkills.Serial());
+                }
+            }
+        }
+
+    //Put away armor
+    var containerNames = ['Vitality','Haste','Restoration','Misc'];
+    var armorArr = [[],[],[],[]]
+    for(var i=0;i<armor.length;i++)
+        {
+        var item = armor[i];
+        var itemSerial = item.Serial()
+        var result = AliKeep(itemSerial);
+        switch(result)
+            {
+            case 'LRC Vitality Armor':
+            case 'LMC Vitality Armor':
+                armorArr[0].push(itemSerial);
+                break;
+            case 'LRC Stamina Armor':
+            case 'LMC Stamina Armor':
+                armorArr[1].push(itemSerial);
+                break;
+            case 'LRC Misc Armor':
+            case 'LMC Misc Armor':
+                armorArr[2].push(itemSerial);
+                break;
+            case 'LRC Stam/HP Armor':
+            case 'LMC Stam/HP Armor':
+            case 'Misc HP/Stam Armor':
+            case 'Luck Armor':
+            case 'Training Armor':
+                armorArr[3].push(itemSerial);
+                break;
+            default:
+                break;
+            }
+        }
+    for(var i=0;i<armorArr.length;i++)
+        {
+        var armorCategoryArr = armorArr[i];
+        var armorCategoryName = containerNames[i];
+        if(armorCategoryArr.length === 0)
+            continue;
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Armor ' + armorCategoryName) > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Armor ' + armorCategoryName);
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerArmor)
+            {
+            DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerArmor.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerArmor.Serial());
+        for(var j=0;j<armorCategoryArr.length;j++)
+            {
+            var armor = armorCategoryArr[j];
+            while(Orion.GetContainer(armor) == playerBackpack)
+                {
+                Orion.MoveItem(armor,0,sortContainerArmor.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerArmor.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerArmor.Serial());
+                sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerArmor)
+                    {
+                    DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerArmor.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerArmor.Serial());
+                }
+            }
+        }
+
+    //Weapons / Shields
+    var weapons = weapons.concat(shields);
+    if(weapons.length)
+        {    
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Weapon') > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Weapon');
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerWeapon)
+            {
+            DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerWeapon.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerWeapon.Serial());
+        for(var i=0;i<weapons.length;i++)
+            {
+            var weapon = weapons[i];
+            var weaponSerial = weapon.Serial();
+            if(!AliKeep(weaponSerial))
+                continue;
+            while(Orion.GetContainer(weaponSerial) == playerBackpack)
+                {
+                Orion.MoveItem(weaponSerial,0,sortContainerWeapon.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerWeapon.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerWeapon.Serial());
+                sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerWeapon)
+                    {
+                    DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerWeapon.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerWeapon.Serial());
+                }
+            }
+        }    
     }
 
 function DropDraggedToContainer() //v2
@@ -1081,7 +1575,21 @@ function DropDraggedToContainer() //v2
 			Orion.AddObject('dropContainer', lastSerial);
 		}
 	}
-
+function DropDraggedToContainer2() //v2
+	{//Reduce mouse movements when transferring items.
+    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
+    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
+    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
+	var dropContainer = Orion.FindObject('dropContainer2');
+	if(dropContainer && Orion.Dragging())
+		Orion.DropDraggedItem('dropContainer2');	
+	else
+		{
+		var lastSerial = Orion.GetSerial('dropContainer2');
+		if(Orion.WaitForAddObject('dropContainer2') != 1)
+			Orion.AddObject('dropContainer2', lastSerial);
+		}
+	}
 function VerifyOpenContainer(containerSerial,delay)
     {
     var startTime = Orion.Now();
@@ -1105,4 +1613,75 @@ function Debug(msg)
         TextWindow.Open();
     Orion.Print(msg);
     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
+    }
+
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+function DropDraggedHere() //v3
+    {
+    if(!Orion.Dragging())
+        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
+    var range = 2;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.Dragging() && Orion.Now() < endTimeMain)
+        {
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
+            {
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
+            }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.Dragging())
+            hash['' + validTileX + validTileY + validTileZ] = true;
+        }
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
