@@ -532,12 +532,13 @@ function KeepWeapon(propertiesObj,props)
     if(wepObj['FasterCasting'] === -1)
         numProps--;
     if(isHitSpell || wepObj['HitDispel'] || wepObj['HitMagicArrow'])
-        var imbueProps = numProps - 1;
-    else
-        var imbueProps = numProps;
-    var isImbuable = imbueProps <= 4;
+        {
+        TextWindow.Print('debug: ' + numProps)
+        numProps--;
+        TextWindow.Print('debug: ' + numProps)
+        }
+    var isImbuable = numProps <= 4;
     var isEleDamage = props.indexOf('Physical Damage 100%') == -1
-    Debug('numProps: ' + numProps)
     if(isBokuto && isSplinter)
         {
         if(isAntique && !isOverCapSplinter) //Reject any boks that aren't overcap splinter
@@ -833,7 +834,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
-                var lmcThreshold = lrc >= 20 ? 1 : 5;
+                var lmcThreshold = lrc >= 20 ? 0 : 5;
                 var mrThreshold = 2;
                 var statThreshold = goodEater ? 3 : 5;
                 break;
@@ -1567,7 +1568,7 @@ function DropDraggedToContainer() //v2
     //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
 	var dropContainer = Orion.FindObject('dropContainer');
 	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
 		var lastSerial = Orion.GetSerial('dropContainer');
@@ -1582,7 +1583,7 @@ function DropDraggedToContainer2() //v2
     //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
 	var dropContainer = Orion.FindObject('dropContainer2');
 	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer2');	
+		Orion.DropDraggedItem('dropContainer2');
 	else
 		{
 		var lastSerial = Orion.GetSerial('dropContainer2');
@@ -1684,4 +1685,83 @@ function DropDraggedHere() //v3
         }
     if(!validTiles.length)
         Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+    }
+
+function UserSearchInput()
+    {
+    var skillsSearch = {'Magery':10,'Swordsmanship':10,'Parrying':10,'ResistingSpells':10,'EvaluatingIntelligence':10}
+    var modsSearch = {'DefenseChanceIncrease':5,'DamageIncrease':25}
+    SearchJewelry(30,skillsSearch,modsSearch)
+    }
+
+function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //{'Threshold': 45,'Magery':10,'EvaluatingIntelligence':10,'Mysticism':10},{'HitChanceIncrease':15}
+    {
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var items = [];
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i]
+        if(!container)
+            Orion.Print(container)
+        Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,container.Serial(),'item', 'finddistance', '', true).forEach(function(item)
+            {
+            items.push(item);
+            })
+        }
+    Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,ground,'item', 22).forEach(function(item)
+        {
+        items.push(item);
+        });
+    Orion.Print(items.length)
+    var pass = items.filter(function(item)
+        {
+        var itemObj = Orion.FindObject(item);
+        var itemProps = itemObj.Properties();
+        var itemPropsObject = parseJewelryProperties(itemProps);
+        return AliCompareJewels(itemPropsObject,skillsThreshold,skillsSearchObject,modsSearchObject);
+        })
+    Orion.Print(pass.length)
+    pass.forEach(function(keeper)
+        {
+        Orion.TestItemColor(keeper, 1152);
+        });
+    }
+
+function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,modsSearchObject)//{'Magery':10,'EvaluatingIntelligence':10,'Mysticism':10},{'HitChanceIncrease':15}
+    {
+    var skillAmount = 0;
+    for(var prop in skillsSearchObject)
+        {
+        if(itemToCompare.hasOwnProperty(prop))
+            {
+            if(itemToCompare[prop] < skillsSearchObject[prop])
+                return false;
+            else
+                skillAmount += itemToCompare[prop];
+            }
+        }
+    if(skillAmount < skillsThreshold)
+        return false;
+    for (var prop in modsSearchObject)
+        {
+        if(!itemToCompare.hasOwnProperty(prop) || itemToCompare[prop] < modsSearchObject[prop]) 
+            return false;
+        }
+    return true;
     }
