@@ -209,6 +209,20 @@ function VSpricetest()
 
 	}
 
+function VSTarget()
+	{
+	Orion.WaitForAddObject('myTarget');
+	var obj = Orion.FindObject('myTarget');
+	var itemName = obj.Name();
+	var split = itemName.split(' ');
+	split.sort(function(a,b)
+		{
+		return b.length - a.length;
+		})
+	var searchString = split[0] + ' ' + split[1] + ' ' + split[2]
+	VSsearch(searchString);
+	}
+
 function VSsearch(text)
 	{
 	Orion.WaitContextMenuID(self, 1016);
@@ -257,7 +271,7 @@ function VSsearch(text)
 				return +commaNeg
 				});
 		}
-	CloseGumps();
+	//CloseGumps();
 	return prices;
 	}
 	
