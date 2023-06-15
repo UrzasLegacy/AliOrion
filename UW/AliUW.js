@@ -14,9 +14,15 @@
         //https://discord.com/api/webhooks/1103791296381976606/stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
         //You'll need to grab your hook number, in this example it is 1103791296381976606
         //and your key, in this example it is stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
-        //var discordHook = '1103791296381976606' //Change this to your hook
-        //var discordKey = 'stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx' //Change this to your key
-
+        //Private Discord: This will be where GM notifications are sent
+        
+        var discordHook = '887268637315047444'; //Put your Discord WebHook here.
+        var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
+        //Public Discord: Announce starting times for friends
+        var publicAnnounce = true; //Set this to false if you are not using public Discord announcements
+        var publicDiscordHook = '1118601536273141830' //Change this to your hook
+        var publicDiscordKey = 'vmp3N9aLChq57JpeiQ1BfxuKvKo5WC_0Ajj74E1v_BOkgMqkUfeSot2togSNR-eEoelz' //Change this to your key
+    
     //Profiles
         //There are two types of profiles, ingame profile and Orion Assistant profile. You can set up one ingame profile and one OA profile and all characters can share them.
         //Saving profiles in Orion can be finicky with more than one client open, so it is recommended to only have ONE client running when changing and saving settings.
@@ -121,8 +127,6 @@ var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oat
 var useCleanseByFire = false; //boolean. Attempt to self cure poison
 var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder.
 var useDiscordPush = true; //true, false. Set to true to use Discord notifications for JournalScan
-var discordHook = '887268637315047444'; //Put your Discord WebHook here.
-var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
 
 var useFeint = false;
 var feintSpecial = 'Primary';
@@ -2305,6 +2309,8 @@ function BossSequence(_)
                 Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
                 if(Player.Serial() != leadSampSerial)
                     Orion.Wait(Orion.Random(5,11) * 500);
+                if(publicAnnounce && Player.Serial() == leadHealerSerial)
+                    PublicDiscordPush('UW Boss Died! Next UW will start in 30 minutes.');
                 TerminateAll('BossSequence');
                 AliWalkTo(corpse[0].X(),corpse[0].Y());
                 ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
@@ -2877,11 +2883,25 @@ function DiscordPush(message)
 	Orion.HttpPost(bot, "content=" + message);
 	}
 
+function PublicDiscordPush(message)
+	{
+	var bot = Orion.RegRead('publicDiscordConfig') || SetPublicDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
 function SetDiscordRegistryEntry()
     {
     var discordConfig = "https://discordapp.com/api/webhooks/" + discordHook + '/' + discordKey;
     var registryName = 'discordConfig';
     Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+function SetPublicDiscordRegistryEntry()
+    {
+    var publicDiscordConfig = "https://discordapp.com/api/webhooks/" + publicDiscordHook + '/' + publicDiscordKey;
+    var registryName = 'publicDiscordConfig';
+    Orion.RegWrite(registryName, publicDiscordConfig);
     return discordConfig;
     }
 
@@ -4014,8 +4034,8 @@ function TrainPeacemaking()
 			Orion.WaitForTarget(1000);
 			if(Orion.InJournal('instrument shall you', ' ', 0, any, Orion.Now() - 3000, Orion.Now() + 3000))
 				{
-				var a = Orion.FindType(instruments)
-				Orion.TargetObject(a[0])
+				var a = Orion.FindType(instruments);
+				Orion.TargetObject(a[0]);
 				Orion.WaitForTarget(1000);
 				Orion.TargetObject(self);
 				}
