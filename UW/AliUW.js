@@ -2307,10 +2307,10 @@ function BossSequence(_)
                 Orion.AddDisplayTimer('bossReset', 1805000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
                 Shared.AddVar('bossDeathStamp',Orion.Now());
                 Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
+                if(publicAnnounce && Player.Serial() == leadHealerSerial)
+                    PublicDiscordPush('UW Boss Died! Next UW will start in about 30 minutes.');
                 if(Player.Serial() != leadSampSerial)
                     Orion.Wait(Orion.Random(5,11) * 500);
-                if(publicAnnounce && Player.Serial() == leadHealerSerial)
-                    PublicDiscordPush('UW Boss Died! Next UW will start in 30 minutes.');
                 TerminateAll('BossSequence');
                 AliWalkTo(corpse[0].X(),corpse[0].Y());
                 ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
@@ -2902,7 +2902,7 @@ function SetPublicDiscordRegistryEntry()
     var publicDiscordConfig = "https://discordapp.com/api/webhooks/" + publicDiscordHook + '/' + publicDiscordKey;
     var registryName = 'publicDiscordConfig';
     Orion.RegWrite(registryName, publicDiscordConfig);
-    return discordConfig;
+    return publicDiscordConfig;
     }
 
 function WalkToRadiusBorder(targetSerial, distance) 
