@@ -15,6 +15,104 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
     ]
 
+function JewelrySearchGump() 
+	{
+    var skills =
+        [
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Clear'
+        ]
+    var mods = 
+        [
+        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
+        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
+        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
+        'Clear'
+        ]
+
+    var title = "Ali Jewelry Search"
+    var startTime = Orion.Now();
+    var gump = Orion.CreateCustomGump(10420); 
+	var rowStart = 40;
+	var columnStart = 25;
+    var height = 560;
+    var width = 300;
+
+    gump.Clear();
+    gump.SetCallback('AliGumpCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    var xPos = columnStart;
+    var yPos = rowStart;
+    
+    var heightAdjust;
+    var value;
+    var shared;
+
+    heightAdjust = 25;
+
+
+    for(var i=0;i<8;i++)
+        {
+        var responseCode = i + 1;
+        shared = 'Skill ' + responseCode;
+        value = Shared.GetVar(shared,undefined);
+        gump.AddText(xPos,yPos,554,shared);
+        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,skills.length);
+        for(var j=0;j<skills.length;j++)
+            gump.AddComboBoxText(skills[j],0,value == skills[j] ? 1 : 0,115,'left');
+        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
+        gump.AddTooltip('Skill Minimum Value');
+        yPos += heightAdjust;
+        }
+    
+    gump.AddText(xPos + 35,yPos,554,'Minimum Total Skill Amount');
+    gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(2000, xPos + 205 + 3, yPos, 0, Shared.GetVar('Skill Amount',''), 28, 20);
+    gump.AddTooltip('The sum of any combination of the above skills must be at least this amount to pass');
+    yPos += heightAdjust * 2;
+
+
+    for(var i=0;i<8;i++)
+        {
+        var responseCode = i + 101;
+        shared = 'Mod ' + (responseCode - 100);
+        value = Shared.GetVar(shared,undefined);
+        gump.AddText(xPos,yPos,554,shared);
+        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,mods.length);
+        for(var j=0;j<mods.length;j++)
+            gump.AddComboBoxText(mods[j],0,value == mods[j] ? 1 : 0,150,'left');
+        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
+        gump.AddTooltip('Mod Minimum Value');
+        yPos += heightAdjust;
+        }
+
+    gump.AddButton(1000, 200, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddText(212,yPos + 20,554,'Search');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddButton(1001, 115, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddText(133,yPos + 20,554,'Clear');
+    gump.AddTooltip('Clear the search menu');
+
+    gump.Update();
+    Orion.Print('interval: ' + (Orion.Now() - startTime))
+	}
+
 function Gump()
     {
     var gump = Orion.CreateCustomGump(12002);
@@ -1689,7 +1787,7 @@ function DropDraggedHere() //v3
 
 function UserSearchInput()
     {
-    var skillsSearch = {'Magery':10,'Swordsmanship':10,'Parrying':10,'ResistingSpells':10,'EvaluatingIntelligence':10}
+    var skillsSearch = {'Magery':10,'Swordsmanship':10,'Parrying':10,'ResistingSpells':10,'EvaluateIntelligence':10}
     var modsSearch = {'DefenseChanceIncrease':5,'DamageIncrease':25}
     SearchJewelry(30,skillsSearch,modsSearch)
     }
@@ -1734,7 +1832,10 @@ function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //{'
         var itemObj = Orion.FindObject(item);
         var itemProps = itemObj.Properties();
         var itemPropsObject = parseJewelryProperties(itemProps);
-        return AliCompareJewels(itemPropsObject,skillsThreshold,skillsSearchObject,modsSearchObject);
+        var bool = AliCompareJewels(itemPropsObject,skillsThreshold,skillsSearchObject,modsSearchObject)
+        if(!bool)
+            Orion.TestItemColor(item,parseInt(itemObj.Color()))
+        return bool;
         })
     Orion.Print(pass.length)
     pass.forEach(function(keeper)
@@ -1765,3 +1866,102 @@ function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,mods
         }
     return true;
     }
+
+//Asset Types:
+//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
+//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
+//'textInput': A text input. Args: 'storedVarName'
+//'text': Text. Args: 'textString', textColor, xAdj, yAdj
+//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
+//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
+//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
+//'xSpacer': A blank asset spacer. Args: width
+//'ySpacer': A blank row spacer. Args: height
+//'tooltip': Add a tooltip to the previous asset. Args: 'text'
+
+
+function ClearVars()
+    {
+    Shared.ClearVars()
+    }
+function AliGumpCallback(_) 
+	{
+    var skills =
+        [
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Clear',
+        ]
+    var mods = 
+        [
+        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
+        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
+        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
+        'Clear',
+        ]
+    var code = CustomGumpResponse.ReturnCode();
+    Orion.Print('Code: ' + code)
+    if(code == 0)
+        return;
+    else if(code == 1000)
+        {
+        var skillObj = {};
+        var modObj = {};
+        var skillCheck = false;
+        for(var i=0;i<5;i++)
+            {
+            var responseCode = i + 1;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(skills[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Skill ' + responseCode);
+                    Shared.RemoveVar('Skill ' + responseCode + ' Value');
+                    continue;
+                    }
+                skillCheck = true;
+                Shared.AddVar('Skill ' + responseCode,skills[combo]);
+                Shared.AddVar('Skill ' + responseCode + ' Value',textEntry);
+                skillObj[skills[combo]] = +textEntry;
+                }
+            }
+        for(var i=0;i<9;i++)
+            {
+            var responseCode = i + 101;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            if(i==0) Orion.Print('combo: ' + combo)
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(mods[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Mod ' + (i + 1));
+                    Shared.RemoveVar('Mod ' + (i + 1) + ' Value');
+                    continue;
+                    }
+                Shared.AddVar('Mod ' + (i + 1),mods[combo]);
+                Shared.AddVar('Mod ' + (i + 1) + ' Value',textEntry);
+                modObj[mods[combo]] = +textEntry;
+                }
+            }
+        var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
+        Shared.AddVar('Skill Amount', skillAmount)
+        SearchJewelry(+skillAmount,skillObj,modObj)
+        Orion.Print(JSON.stringify(skillObj) + '\n' + JSON.stringify(modObj))
+        }
+    else if(code == 1001)
+        {
+        Shared.ClearVars();
+        }
+    else if(code == 1002)
+        {
+        Orion.Resend();
+        Orion.Wait(500);
+        }
+    //Orion.Print(gumpButtons);
+    //Shared.AddArray('gumpValues',gumpButtons);
+    Orion.Wait(50);
+    JewelrySearchGump();
+	}
