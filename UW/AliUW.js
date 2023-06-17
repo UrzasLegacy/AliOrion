@@ -15,13 +15,13 @@
         //You'll need to grab your hook number, in this example it is 1103791296381976606
         //and your key, in this example it is stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
         //Private Discord: This will be where GM notifications are sent
-        
+        var useDiscordPush = true; //true, false. Set to true to use Discord notifications for GM contact
         var discordHook = '887268637315047444'; //Put your Discord WebHook here.
         var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
         //Public Discord: Announce starting times for friends
         var publicAnnounce = true; //Set this to false if you are not using public Discord announcements
-        var publicDiscordHook = '1118601536273141830' //Change this to your hook
-        var publicDiscordKey = 'vmp3N9aLChq57JpeiQ1BfxuKvKo5WC_0Ajj74E1v_BOkgMqkUfeSot2togSNR-eEoelz' //Change this to your key
+        var publicDiscordHook = '1118601536273141830' //Change this to your public hook
+        var publicDiscordKey = 'vmp3N9aLChq57JpeiQ1BfxuKvKo5WC_0Ajj74E1v_BOkgMqkUfeSot2togSNR-eEoelz' //Change this to your public key
     
     //Profiles
         //There are two types of profiles, ingame profile and Orion Assistant profile. You can set up one ingame profile and one OA profile and all characters can share them.
@@ -65,10 +65,10 @@
 
     //Drop House
         //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
-        //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples) in this pouch for bots to restock themselves.
+        //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples,gems of salvation) in this pouch for bots to restock themselves.
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
-        var homeX = 4415; //Change this to an X coordinate adjacent your 
-        var homeY = 1499; //Change this to a Y coordinate near your Home recall spot
+        var homeX = 4415; //Change this to an X coordinate adjacent your repair bench
+        var homeY = 1499; //Change this to a Y coordinate adjacent your repair bench
 
     //Misc Tips
         //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
@@ -117,7 +117,7 @@ var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special
 var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby. If MultiTargeSpecial is false 2 or more mobs.
 var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
 var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
-var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times.
+var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times. Don't use with Onslaught
 var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
 var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
 var useConfidenceThresholdPercent = 80; //Percentage of self HP to attempt to cast confidence.
@@ -125,11 +125,7 @@ var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes b
 var evasionThresholdPercent = 50; //Percentage of self HP to attempt to cast Evasion.
 var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oathed during apple cooldown
 var useCleanseByFire = false; //boolean. Attempt to self cure poison
-var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder.
-var useDiscordPush = true; //true, false. Set to true to use Discord notifications for JournalScan
-
-var useFeint = false;
-var feintSpecial = 'Primary';
+var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder. This will sound if a GM tries to contact you
 
 Orion.Exec('JournalScan', true);
 var debug = false;
@@ -1199,8 +1195,8 @@ function ClearRoom()
             var barrelSerial = barrel.Serial();
             var barrelX = barrel.X();
             var barrelY = barrel.Y();
-            if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
-                Orion.UseAbility('primary');
+            if(!Orion.AbilityStatus(doubleStrikeSpecial) && Player.Mana() >= 15)
+                Orion.UseAbility(doubleStrikeSpecial);
             Orion.Wait(150);	
             if(barrel.Distance() > 1)
                 if(Orion.WalkTo(barrelX,barrelY))
@@ -1593,6 +1589,7 @@ function ____________HEALERS(_){}
 
 function UWHealBot()
     {
+    var musicalInstruments = '0x0E9C|0x0EB3|0x0E9E|0x0E9D|0x0EB2|0x2807'; //use Exceptional instruments!
     while(!Player.Dead())
         {
         Orion.Wait(250);
@@ -1600,8 +1597,29 @@ function UWHealBot()
             continue;
         if(!Orion.HaveTarget() && !Player.Frozen())
             Orion.Cast("Greater Heal");
-        else if(Player.Hits('%') < 40)
-            Orion.TargetObject(self);
+        else if(Player.Hits('%') < 80)
+            {
+            if(Orion.HaveTarget())
+                Orion.TargetObject(self);
+            if(Orion.SkillValue('Peacemaking') >= 1000)
+                {
+                Orion.Wait(500);
+                Orion.UseSkill('Peacemaking')
+                if(Orion.WaitForTarget(2000))
+                    {
+                    if(Orion.InJournal('instrument shall you', '', 0, 'any', timeStamp))
+                        {
+                        var instrument = Orion.FindType(musicalInstruments)[0];
+                        if(!instrument)
+                            return Orion.CharPrint(self,1159,'Out of instruments!');
+                        Orion.TargetObject(instrument);
+                        Debug('Switched instrument');
+                        Orion.WaitForTarget(2000);
+                        }
+                    Orion.TargetObject(self);
+                    }
+                }
+            }
         }
     }
 
@@ -1709,6 +1727,7 @@ function ScoutAhead()
         Orion.UseObject(ethy.Serial());
         Orion.Wait(1300);
         }
+    
     var hideCooldown = Orion.Now();
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
     if(ladder)
