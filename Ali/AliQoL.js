@@ -1342,3 +1342,44 @@ function WaitForAuctionItem()
 		Orion.Wait(1000);
 		}
 	}
+
+function SecureAndCoOwn(itemSerial)
+    {
+    if(itemSerial === undefined)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var itemSerial = Orion.GetSerial('myTarget');
+        }
+    var startTime = Orion.Now();
+    var target = Orion.FindObject(itemSerial);
+    var targetSerial = target.Serial();
+    while(true)
+        {
+        Orion.Say('i wish to secure this');
+        if(Orion.WaitForTarget(3000))
+            {
+            Orion.TargetObject(targetSerial);
+            var endTime = Orion.Now() + 4000;
+            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
+            if(check)
+                {
+                startTime = Orion.Now();
+                var gump = Orion.GetGump(any, '0x00000295');
+                while(!gump)
+                    {
+                    Orion.WaitContextMenuID(targetSerial, 600);
+                    Orion.RequestContextMenu(targetSerial);
+                    Orion.Wait(500);
+                    gump = Orion.GetGump(any, '0x00000295');
+                    }
+                gump.Select(Orion.CreateGumpHook(2));
+                endTime = Orion.Now() + 4000;
+                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
+                if(check)
+                    break;
+                }
+            }
+        Orion.Wait(100);
+        }
+    Orion.CharPrint(self,1159,'Secured and Access Set')
+    }
