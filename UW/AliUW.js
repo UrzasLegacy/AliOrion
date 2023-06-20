@@ -2106,7 +2106,13 @@ function GoFromHomeToLadderPosition()
     if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
         {
         var whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
+        while(!whirlpool)
+            {
+            AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1);
+            whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
+            }
         AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
+        Orion.Wait(500);
         var tempX = Player.X();
         var tempY = Player.Y();
         while(Player.X() == tempX && Player.Y() == tempY)
