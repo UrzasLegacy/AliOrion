@@ -152,6 +152,7 @@ function SmartStart()
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoFromHomeToLadderPosition();
                 EquipBossSuitByBotName();
+                Orion.Exec('HydraRecover',true);
                 var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
                 if(scoutWait)
                     {
@@ -1330,7 +1331,12 @@ function AsyncDiscord()
                 {
                 var instrument = Orion.FindType(musicalInstruments)[0];
                 if(!instrument)
-                    return Orion.CharPrint(self,1159,'Out of instruments!');
+                    {
+                    Orion.ResumeScript('UWHealBot');
+                    Orion.CancelTarget();
+                    Orion.Wait(100);
+                    return DiscordPush(Player.Name() + ' out of instruments!');
+                    }
                 Orion.TargetObject(instrument);
                 Debug('Switched instrument');
                 Orion.WaitForTarget(2000);
@@ -1829,6 +1835,36 @@ function HydraReset()
     Orion.ClearBadLocations();
     }
 
+function HydraRecover()
+    {
+    while(!Player.Dead())
+        {
+        Orion.Wait(5000);
+        if(Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length)
+            return;
+        }
+    Orion.PauseScript('all','Recover|JournalScan');
+    GoRez();
+    while(Player.LRC() < 100)
+        {
+        EquipBossSuitByBotName();
+        Orion.Wait(2000);
+        }
+    while(Player.Hits('%') < 100)
+        {
+        Orion.Cast('Greater Heal');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetObject(self)
+        Orion.Wait(500);
+        }
+    CharacterMaintenance();
+    Orion.Wait(1000);
+    MassAllMessage('TerminateAll');
+    Orion.Wait(2000);
+    MassAllMessage('SmartStart');
+    Orion.Wait(10000);
+    }
+
 function WaitForReset(_)
     {
     Shared.AddVar('leashing',false);
@@ -2142,7 +2178,7 @@ function GoFromHomeToLadderPosition()
     Orion.Wait(3000);
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
-    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1)//below deck
+    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, false, LichAttackWalk)//below deck
     Orion.Wait(1300);
 	}
 
@@ -2355,32 +2391,15 @@ function BossSequence(_)
             Orion.Wait(1000);
             }
         //handle death during boss fight
-        Debug2('Died');
-        DiscordPush(Player.Name() + ' Died');
         Orion.Wait(3000);
         Orion.WarMode(0);
         var gump = Orion.GetGump('any','0x000008AF');
         if(gump !== null)
             {
-            gump.Select(Orion.CreateGumpHook(2));
+            gump.Select(Orion.CreateGumpHook(2)); //gem of salvation rez
             Orion.Wait(300);
             }
-        while(Player.Dead())
-            {
-            LeaveUW();
-            var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
-            if(!ankh)
-                {
-                LeaveUW();
-                ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
-                if(!ankh)
-                    return Orion.CharPrint(self,1159,'No ankh found!')
-                }
-            Orion.Exec('AutoRes',true);
-            Orion.WalkTo(ankh.X(),ankh.Y())
-            Orion.Wait(500);
-            }
-        Debug2('Ressed');
+        GoRez();
         if(BossCheck() === 0)
             {
             Orion.Exec('AutoConfidence',true);
@@ -2389,8 +2408,30 @@ function BossSequence(_)
             GoToBossArena();
             }
         FindOwnCorpse();
-        Debug2('Recovered');
+        Debug2('Recovered during boss fight');
         }
+    }
+
+function GoRez()
+    {
+    Debug2('Died');
+    DiscordPush(Player.Name() + ' Died');
+    while(Player.Dead())
+        {
+        LeaveUW();
+        var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+        if(!ankh)
+            {
+            LeaveUW();
+            ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+            if(!ankh)
+                return Orion.CharPrint(self,1159,'No ankh found!')
+            }
+        Orion.Exec('AutoRes',true);
+        Orion.WalkTo(ankh.X(),ankh.Y())
+        Orion.Wait(1000);
+        }
+    Debug2('Ressed');
     }
 
 function CleanUpPublicCorpse()
@@ -3244,16 +3285,14 @@ function LichAttackWalk(_)
         return;
     Orion.ClearBadLocations();
     var mobGraphic = '0x0008';
-    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',12);
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',8);
     if(mobs.length)
         {
         var mob = mobs[0];
-        var x = mob.X();
-        var y = mob.Y();
         while(!Player.Dead() && mob.Exists())
             {
-            if(Orion.GetDistance(x,y) > 1)
-                Orion.WalkTo(x,y);
+            if(mob.Distance() > 1)
+                Orion.WalkTo(mob.X(),mob.Y());
             else
                 Orion.Attack(mob.Serial())
             Orion.Wait(500);
