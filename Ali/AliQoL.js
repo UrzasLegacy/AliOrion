@@ -713,7 +713,7 @@ function DropFromQueue(_)
             Shared.AddArray('dropQueue',tempArr);
             while(Orion.FindType(any).indexOf(itemSerial) > -1)
                 {
-                var validTiles = Orion.GetTilesInRect('land', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)
+                var validTiles = Orion.GetTilesInRect('land|any', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)
                     .filter(function(tile)
                         {
                         var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tile.X() + ',' + tile.Y() + ',' + tile.Z()).length == 0;
@@ -788,15 +788,26 @@ function LandGridToggle()
 		Orion.ClientOptionSet('MarkingLandTiles', 1)
 	}
 
-function toost()
+function AutoPriceSimple()
 	{
 	while(true)
 		{
-		if (Orion.WaitForPrompt(1000))
+		if(Orion.WaitForPrompt(1000))
 			Orion.SendPrompt('30000');
 		}
 	}
     
+function HighlightUnlocked()
+	{ //Highlights all items nearby that don't have 'Locked Down' in their tooltip
+	Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+		{
+		return !Orion.Contains(item.Properties(),'Locked Down');
+		}).forEach(function(item)
+			{
+			Orion.TestItemColor(item.Serial(),1152)
+			});
+	}
+
 function NeedleInAHayStack()
     { //v1
     var textSearch = 'Retouch';
