@@ -1843,7 +1843,7 @@ function HydraRecover()
         if(Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length)
             return;
         }
-    Orion.PauseScript('all','Recover|JournalScan');
+    Orion.PauseScript('all','HydraRecover|JournalScan');
     GoRez();
     while(Player.LRC() < 100)
         {
@@ -3623,7 +3623,7 @@ function SetBarrelSamp(_)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence';
+    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence|HydraRecover';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
