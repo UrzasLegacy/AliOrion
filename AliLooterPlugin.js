@@ -1775,18 +1775,6 @@ function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,mods
     return true;
     }
 
-//Asset Types:
-//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
-//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
-//'textInput': A text input. Args: 'storedVarName'
-//'text': Text. Args: 'textString', textColor, xAdj, yAdj
-//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
-//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
-//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
-//'xSpacer': A blank asset spacer. Args: width
-//'ySpacer': A blank row spacer. Args: height
-//'tooltip': Add a tooltip to the previous asset. Args: 'text'
-
 function JewelrySearchGump() 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
@@ -2145,15 +2133,3 @@ function AliGumpCallback(_)
     Orion.Wait(50);
     JewelrySearchGump();
 	}
-
-    function testDelete()
-        {var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
-            tmpFile = Orion.NewFile();
-            tmpFile.Open(tmpFilePath);
-            tmpFile.Remove();
-            // Orion.Wait(500)
-            // tmpFile.Open(tmpFilePath);
-            // Orion.Print("Recording To File: " + tmpFilePath); 
-            // tmpFile.Write(JSON.stringify(outArr));
-            // tmpFile.Close();
-        }
