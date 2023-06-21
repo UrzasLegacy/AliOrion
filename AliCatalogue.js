@@ -1,107 +1,94 @@
-var fileName = '/AliCatalogueJSON2' + '.json'
-var searchDistance = 5
-function ASCII_Input()
+var fileName = '/AliCatalogueJSON' + '.json'
+var searchDistance = 24
+
+function testreformat()
     {
-	 var text = "\n/'-| Imperatrix |-'\\\n\\,-| PvP Gear |-,/"
-//var text = '\n _____| | Imperatrix ______\n|/_/_/| | ____________/\n |_| PvP Gear  \n'
-//var text = '\n  _______| | Imperatrix __________ \n|/_/_/_/| |_________________/\n |_| PvP Gear   \n'
-    Orion.SendPrompt(text)
+    var string = "1:\nWakizashi of the cat\nWeight: 5 Stones\nAuction Item\nSplintering Weapon 20%\nHit Harm 50%\nHit Lower Defense 50%\nPrized\nEnhance Potions 10%\nLower Mana Cost 4%\nPhysical Damage 100%\nWeapon Damage 10 - 14\nWeapon Speed 2.5s\nStrength Requirement 20\nOne-handed Weapon\nSkill Required: Swordsmanship\nDurability 50 / 50\n* Requires The \"Stygian Abyss\" Expansion\nMajor Magic Item\nBid: 0p 0gp\nB/O: 0p 0gp\n"
+    var split = string.split('Weight:')
+    var split2 = split[0].split(':')
+    var split3 = split2[1]
+    Orion.Print(split3)
     }
 
-function Debug(msg)
+function CatalogueSafes()
     {
-    if(!TextWindow.IsOpened())
-        TextWindow.Open();
-    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-    }
-    
-function CatalogueRowColumn()
-    {
-    var amOwnerFlag = true; //set to true if you own the auction safes you are cataloguing, false if they are someone else's
-    var printToTextWindow = false;
+    var amOwnerFlag = false; //set to true if you own the auction safes you are cataloguing, false if they are someone else's
+    var printToTextWindow = true;
     var startTime = Orion.Now();
-    var safeRows = RowColumnScanEnumerateSafes(); //returns a sorted array of all safe info arrays
-    var safeCount = safeRows.reduce(function(sum,safeRow)
-        {
-        return sum + safeRow.length;
-        },0);
-    TextWindow.Print(JSON.stringify(safeRows))
+    var safes = FloorRowColumnScanEnumerateSafes(); //returns a sorted array of all safe info arrays
+    var safeCount = safes.length;
     var outArr = [];
     var index = 1;
     TextWindow.Open();
     TextWindow.Print('\\*');
-    for(var i=0;i<safeRows.length;i++)
+    for(var i=0;i<safes.length;i++)
         {
         AvoidTeleporters();
-        var safeRow = safeRows[i];
-        for(var j=0;j<safeRow.length;j++)
+        var safe = Orion.FindObject(safes[i][0]);
+        var gump = Orion.GetGump(any);
+        while(gump)
             {
-            var safe = Orion.FindObject(safeRow[j][0]);
-            var gump = Orion.GetGump(any);
-            while(gump)
-                {
-                Debug('Closing gump: ' + gump.ID());
-                gump.Select(Orion.CreateGumpHook(0));
-                Orion.Wait(200);
-                gump = Orion.GetGump(any);
-                }
-            while(safe.Distance() > 5)
-                {
-                Orion.WalkTo(safe.X(),safe.Y(),0,2)
-                Orion.Wait(500);
-                }
-            while(!Orion.GumpExists('generic', safe.Serial(), '0x000F3ED6'))
-                {
-                Debug('Catching Gump');
-                Orion.Wait(1300 - (Orion.Now() - startTime))
-                Orion.UseObject(safe.Serial());
-                startTime = Orion.Now();
-                Orion.WaitForGump(1300);
-                }
-            Debug('Caught');
-            var gump = Orion.GetGump(any, '0x000F3ED6');
-            var idle = false;
-            var commandList = gump.CommandList();
-            if(commandList && commandList.join().indexOf(' 1156414 ') > -1)
-                idle = true;
-            var textList = gump.TextList();
-            if(amOwnerFlag)
-                {
-                var platBid = textList[0] || 0;
-                var goldBid = textList[1] || 0;
-                var platBuy = textList[2] || 0;
-                var goldBuy = textList[3] || 0;
-                }
-            else
-                {
-                var platBid = textList[4] ? textList[4].slice(24) : '0';
-                var goldBid = textList[5] ? textList[5].slice(24) : '0';
-                var platBuy = textList[7] ? textList[7].slice(24) : '0';
-                var goldBuy = textList[8] ? textList[8].slice(24) : '0';
-                }
-            platBid = platBid.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,") || '0';
-            goldBid = goldBid.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-            platBuy = platBuy.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-            goldBuy = goldBuy.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-            Orion.SetSearchArea(safe.X(),safe.Y(),safe.Z() + 1,safe.X(),safe.Y(),safe.Z() + 12);
-            var saleItem = Orion.FindTypeEx(any,any,ground,'item',20).filter(function(item)
-                {
-                return !Orion.Contains(item.Graphic(),'0x0FF1|0x9C18|0x9C19');
-                })[0];
-            Orion.ResetSearchArea();
-            if(saleItem)
-                var saleItemProps = saleItem.Properties();
-            else
-                var saleItemProps = 'MissingItem';
-            Orion.CharPrint(self,1159,index + '/' + safeCount + ' ETA: ' + ((safeCount - index) * 2) + 's');
-            var outStr = index + ':\n' + JSON.parse(JSON.stringify(saleItemProps)) +  '\nBid: ' + platBid + 'p ' + goldBid + 'gp\n' + 'B/O: ' + platBuy + 'p ' + goldBuy + 'gp\n';
-            if(saleItem)
-                outArr.push([index++, outStr, saleItem.Serial(), safe.Serial(), idle]);
-            else
-                outArr.push([index++, outStr, 'No Item', safe.Serial(), null]);
-            if(printToTextWindow)
-                TextWindow.Print(outStr);
+            Debug('Closing gump: ' + gump.ID());
+            gump.Select(Orion.CreateGumpHook(0));
+            Orion.Wait(200);
+            gump = Orion.GetGump(any);
             }
+        while(safe.Distance() > 5)
+            {
+            Orion.WalkTo(safe.X(),safe.Y(),0,2)
+            Orion.Wait(500);
+            }
+        while(!Orion.GumpExists('generic', safe.Serial(), '0x000F3ED6'))
+            {
+            Debug('Catching Gump');
+            Orion.Wait(1300 - (Orion.Now() - startTime))
+            Orion.UseObject(safe.Serial());
+            startTime = Orion.Now();
+            Orion.WaitForGump(1300);
+            }
+        Debug('Caught');
+        var gump = Orion.GetGump(any, '0x000F3ED6');
+        var idle = false;
+        var commandList = gump.CommandList();
+        if(commandList && commandList.join().indexOf(' 1156414 ') > -1)
+            idle = true;
+        var textList = gump.TextList();
+        if(amOwnerFlag)
+            {
+            var platBid = textList[0] || 0;
+            var goldBid = textList[1] || 0;
+            var platBuy = textList[2] || 0;
+            var goldBuy = textList[3] || 0;
+            }
+        else
+            {
+            var platBid = textList[4] ? textList[4].slice(24) : '0';
+            var goldBid = textList[5] ? textList[5].slice(24) : '0';
+            var platBuy = textList[7] ? textList[7].slice(24) : '0';
+            var goldBuy = textList[8] ? textList[8].slice(24) : '0';
+            }
+        platBid = platBid.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,") || '0';
+        goldBid = goldBid.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+        platBuy = platBuy.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+        goldBuy = goldBuy.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+        Orion.SetSearchArea(safe.X(),safe.Y(),safe.Z() + 1,safe.X(),safe.Y(),safe.Z() + 12);
+        var saleItem = Orion.FindTypeEx(any,any,ground,'item',20).filter(function(item)
+            {
+            return !Orion.Contains(item.Graphic(),'0x0FF1|0x9C18|0x9C19');
+            })[0];
+        Orion.ResetSearchArea();
+        if(saleItem)
+            var saleItemProps = saleItem.Properties();
+        else
+            var saleItemProps = 'MissingItem';
+        Orion.CharPrint(self,1159,index + '/' + safeCount + ' ETA: ' + ((safeCount - index) * 2) + 's');
+        var outStr = index + ':\n' + JSON.parse(JSON.stringify(saleItemProps)) +  '\nBid: ' + platBid + 'p ' + goldBid + 'gp\n' + 'B/O: ' + platBuy + 'p ' + goldBuy + 'gp\n';
+        if(saleItem)
+            outArr.push([index++, outStr, saleItem.Serial(), saleItem.Name(), safe.Serial(), idle]);
+        else
+            outArr.push([index++, outStr, 'No Item', 'No Name', safe.Serial(), null]);
+        if(printToTextWindow)
+            TextWindow.Print(outStr);
         }
     if(printToTextWindow)
         {
@@ -141,18 +128,18 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
     var changeCheck = false;
     var idleSafes = outArr.filter(function(safe)
         {
-        return safe[4] === true;
+        return safe[5] === true;
         });
     idleSafes.forEach(function(safe)
         {
-        Orion.TestItemColor(safe[3],'1152')
+        Orion.TestItemColor(safe[4],'1152')
         });
     idleSafes = idleSafes.length;
     var negativeIndex = 0;
     for(var i=0;i<outArr.length;i++)
         {
         var safe = outArr[i];
-        if(safe[4] !== true)
+        if(safe[5] !== true)
             continue;
         while(Orion.DisplayTimerExists('idleTimer'))
             {
@@ -166,7 +153,7 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
         AvoidTeleporters(); 
         Orion.CharPrint(self,1159,'Idle Safes: ' + negativeIndex + '/' + idleSafes + '\nETA: ' + ((idleSafes - negativeIndex) * 5) + ' min')
         negativeIndex++;
-        var safeObj = Orion.FindObject(safe[3]);
+        var safeObj = Orion.FindObject(safe[4]);
         if(safeObj)
             {
             while(safeObj.Distance() > 5)
@@ -222,9 +209,9 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                         if(journalText == 'Gump choice successful.')
                             {
                             Debug('Auction started by journalCheck, index: ' + safe[0]);
-                            safe[4] = false;
+                            safe[5] = false;
                             changeCheck = true;
-                            Orion.TestItemColor(safe[3],'0');
+                            Orion.TestItemColor(safe[4],'0');
                             Orion.AddDisplayTimer('idleTimer', 300000, 'AboveChar', 'Circle|bar', 'Waiting for Idle Timer')
                             Debug('Cooldown: 300s')
                             Orion.SetTimer('StayLoggedIn');
@@ -256,7 +243,7 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                 }
             else
                 {
-                Orion.TestItemColor(safe[3],'0');
+                Orion.TestItemColor(safe[4],'0');
                 Debug('Auction already started');
                 }
             }
@@ -335,6 +322,7 @@ function ReadCatalogue()
     
 function StraticsFormatCatalogueTable()
     {
+    var raresMode = false;
     var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
@@ -350,9 +338,21 @@ function StraticsFormatCatalogueTable()
     TextWindow.Print('[TABLE]\n[TR]')
     outArr.forEach(function(safe,ind)
         {
-        var lineOut = safe[1].replace(/Bid:/,'Start:').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n([\w \-\']+)/g,':\n[B]$1[/B]').replace(/\n\n/,'\n').trim()
+        if(raresMode)
+            {
+            if(safe[3] == 'No Name')
+                var lineOut = safe[1].replace(/Bid: [\dgp\s]+/,'').replace(/Auction Item/,'').replace(/B\/O: [\dgp\s]+/,'').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n([\w \-\'\";\.\,]+)/g,':\n[B]' + 'No Item' + '[/B]').replace(/\n\n/,'\n').trim()      
+            else
+                {
+                var bbcLink = LinkFormatter(safe[3],'Search',true);
+                //var lineOut = safe[1].replace(/Bid:/,'Start:').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n([\w \-\'\";\.\,\:]+)/g,':\n[B]' + bbcLink + '[/B]').replace(/\n\n/,'\n').trim()  
+                var lineOut = safe[1].replace(/Bid:/,'Start:').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n(.+)/g,':\n[B]' + bbcLink + '[/B]').replace(/\n\n/,'\n').trim()  
+                }
+            }
+        else
+            var lineOut = safe[1].replace(/Bid:/,'Start:').replace(/Auction Item/,'').replace(/\n\n/,'\n').replace(/:\n(.+)/g,':\n[B]$1[/B]').replace(/\n\n/,'\n').trim()
      	TextWindow.Print('[TD][CENTER][COLOR=rgb(0, 0, 0)]' + lineOut + '[/COLOR][/CENTER][/TD]');
-     	outStr += lineOut + '\n'
+     	outStr += lineOut + '\n';
         if(ind == outArr.length - 1)
             TextWindow.Print('[/TR]');
         else if(ind && ((ind + 1) % 7) == 0)
@@ -367,6 +367,28 @@ function StraticsFormatCatalogueTable()
         //})
     //TextWindow.Print(']\n\n')
     tmpFile.Close();
+    }
+
+function LinkFormatter(itemName,type,bbCode)
+    {
+    switch(type)
+        {
+        case 'Search':
+            var formattedName = itemName.replace(/\s/g,'+') //https://wiki.stratics.com/index.php?search=Body+Fluid+Of+Queen+Ogre+Bee+Larva&title=Special%3ASearch&fulltext=Search
+            var outMsg = "\"https://wiki.stratics.com/index.php?search=" + formattedName + "&title=Special%3ASearch&fulltext=Search\"";
+            break;
+        case 'UO Link':
+            var formattedName = itemName.replace(/\s/g,'_')
+            var outMsg = "\"https://wiki.stratics.com/index.php?title=UO:" + formattedName + "\"";
+            break;
+        default:
+            var formattedName = itemName.replace(/\s/g,'_')
+            var outMsg = "\"https://wiki.stratics.com/index.php?title=" + formattedName + "\"";
+            break;
+        }
+    if(bbCode)
+        outMsg = "[URL=" + outMsg + ']' + itemName + "[/URL]"
+    return outMsg;
     }
 
 function SalesCheck()
@@ -398,45 +420,39 @@ function SalesCheck()
         Orion.CharPrint(self,1159,'No items sold');
     }
 
-function RowColumnScanEnumerateSafes()
+function FloorRowColumnScanEnumerateSafes()
     {
     var safes = Orion.FindTypeEx('0x9C18|0x9C19',any,ground,'item',searchDistance).map(function(safe)
         {
-        return [safe.Serial(), safe.X(), safe.Y()];
-        })
-    var safesSortedByY = safes.sort(function(a,b)
-        {
-        return a[2] - b[2];
-        })
-    var rowHash = {};
-    var safesSorted = [];
-    for(var i=0;i<safesSortedByY.length;i++)
-        {
-        var tempRow = [];
-        if(!rowHash[safesSortedByY[i][2]])
+        return [safe.Serial(), safe.X(), safe.Y(), safe.Z()];
+        }).sort(function(a,b)
             {
-            rowHash[safesSortedByY[i][2]] = true;
-            var tempSafes = safes.filter(function(safe)
-                {
-                return safe[2] == safesSortedByY[i][2];
-                })
-            tempSafes.sort(function(a,b)
-                {
+            if(a[3] != b[3])
+                return b[3] - a[3];
+            else if(a[2] != b[2])
+                return a[2] - b[2];
+            else
                 return a[1] - b[1];
-                }).forEach(function(safe)
-                    {
-                    tempRow.push(safe);
-                    });
-            safesSorted.push(tempRow);
-            }
-        }
+            })
     var index = 1;
-    safesSorted.forEach(function(row)
+    safes.forEach(function(safe)
         {
-        row.forEach(function(column)
-            {
-            Orion.CharPrint(column[0], 1159, index++)
-            });
+        Orion.CharPrint(safe[0], 1159, index++)
         });
-    return safesSorted;
+    return safes;
+    }
+
+function ASCII_Input()
+    {
+	 var text = "\n/'-| Imperatrix |-'\\\n\\,-| PvP Gear |-,/"
+//var text = '\n _____| | Imperatrix ______\n|/_/_/| | ____________/\n |_| PvP Gear  \n'
+//var text = '\n  _______| | Imperatrix __________ \n|/_/_/_/| |_________________/\n |_| PvP Gear   \n'
+    Orion.SendPrompt(text)
+    }
+
+function Debug(msg)
+    {
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
     }
