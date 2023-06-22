@@ -1029,7 +1029,7 @@ function FindOwnCorpse()
 function UltraTerminate()
     { //for debugging
     Shared.ClearVars();
-    Orion.Terminate('all','UltraTerminate');
+    Orion.Terminate('all','UltraTerminate|HydraRecover');
     Orion.Exec('Autostart',true)
     }
 
@@ -1859,8 +1859,9 @@ function HydraRecover()
         }
     CharacterMaintenance();
     Orion.Wait(1000);
-    MassAllMessage('TerminateAll');
+    MassAllMessage('UltraTerminate');
     Orion.Wait(2000);
+    Orion.ResumeScript('all');
     MassAllMessage('SmartStart');
     Orion.Wait(10000);
     }
@@ -3512,7 +3513,8 @@ function AliComFollower()
         'AwaitPing':true,
         'CureTarget':true,
         'HealTarget':true,
-        'KeyCheck':true
+        'KeyCheck':true,
+        'UltraTerminate':true,
         }
     Orion.RemoveAllUdpServers();
     var port = 39999;
