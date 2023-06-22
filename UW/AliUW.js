@@ -1512,12 +1512,7 @@ function AutoAttack()
         switch(enemyCount)
             {
             case 1:
-                if(useFeint && !Orion.BuffExists('feint'))
-                    {
-                    if(!Orion.AbilityStatus(feintSpecial))
-                        Orion.UseAbility(feintSpecial);
-                    }
-                else if(!isLeader && useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                if(!isLeader && useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
                     {
                     Orion.Cast('Onslaught');
                     var startTime = Orion.Now();
@@ -1862,7 +1857,8 @@ function HydraRecover()
     MassAllMessage('UltraTerminate');
     Shared.ClearVars();
     Orion.Terminate('all','HydraRecover');
-    Orion.Wait(8000);
+    Autostart();
+    Orion.Wait(3000);
     Orion.Exec('SmartStart',true);
     }
 
@@ -3294,9 +3290,8 @@ function LichAttackWalk(_)
             {
             if(mob.Distance() > 1)
                 Orion.WalkTo(mob.X(),mob.Y());
-            else
-                Orion.Attack(mob.Serial())
-            Orion.Wait(500);
+            Orion.Attack(mob.Serial())
+            Orion.Wait(150);
             }
         }
     }
