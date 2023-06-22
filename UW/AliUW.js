@@ -1862,10 +1862,8 @@ function HydraRecover()
     MassAllMessage('UltraTerminate');
     Shared.ClearVars();
     Orion.Terminate('all','HydraRecover');
-    Orion.Wait(2000);
-    Orion.ResumeScript('all');
-    MassAllMessage('SmartStart');
-    Orion.Wait(6000);
+    Orion.Wait(8000);
+    Orion.Exec('SmartStart',true);
     }
 
 function WaitForReset(_)
