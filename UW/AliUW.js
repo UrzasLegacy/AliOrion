@@ -1029,7 +1029,7 @@ function FindOwnCorpse()
 function UltraTerminate()
     { //for debugging
     Shared.ClearVars();
-    Orion.Terminate('all','UltraTerminate|HydraRecover');
+    Orion.Terminate('all','UltraTerminate');
     Orion.Exec('Autostart',true)
     }
 
@@ -1860,10 +1860,12 @@ function HydraRecover()
     CharacterMaintenance();
     Orion.Wait(1000);
     MassAllMessage('UltraTerminate');
+    Shared.ClearVars();
+    Orion.Terminate('all','HydraRecover');
     Orion.Wait(2000);
     Orion.ResumeScript('all');
     MassAllMessage('SmartStart');
-    Orion.Wait(10000);
+    Orion.Wait(6000);
     }
 
 function WaitForReset(_)
@@ -3285,7 +3287,7 @@ function LichAttackWalk(_)
     if(Orion.SkillValue('Swordsmanship') < 900)
         return;
     Orion.ClearBadLocations();
-    var mobGraphic = '0x0008';
+    var mobGraphic = '0x0018';
     var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',8);
     if(mobs.length)
         {
