@@ -1591,6 +1591,7 @@ function ____________HEALERS(_){}
 function UWHealBot()
     {
     var musicalInstruments = '0x0E9C|0x0EB3|0x0E9E|0x0E9D|0x0EB2|0x2807'; //use Exceptional instruments!
+    var timeStamp = Orion.Now();
     while(!Player.Dead())
         {
         Orion.Wait(250);
@@ -1602,7 +1603,7 @@ function UWHealBot()
             {
             if(Orion.HaveTarget())
                 Orion.TargetObject(self);
-            if(Orion.SkillValue('Peacemaking') >= 1000)
+            if(Orion.SkillValue('Peacemaking') >= 1000 && Orion.FindType(musicalInstruments).length)
                 {
                 Orion.Wait(500);
                 Orion.UseSkill('Peacemaking')
@@ -1610,9 +1611,14 @@ function UWHealBot()
                     {
                     if(Orion.InJournal('instrument shall you', '', 0, 'any', timeStamp))
                         {
+                        timeStamp = Orion.Now();
                         var instrument = Orion.FindType(musicalInstruments)[0];
                         if(!instrument)
-                            return Orion.CharPrint(self,1159,'Out of instruments!');
+                            {
+                            Orion.CharPrint(self,1159,'Out of instruments!');
+                            Orion.CancelTarget();
+                            continue;
+                            }
                         Orion.TargetObject(instrument);
                         Debug('Switched instrument');
                         Orion.WaitForTarget(2000);
@@ -1834,11 +1840,17 @@ function HydraRecover()
     {
     while(!Player.Dead())
         {
-        Orion.Wait(5000);
+        Orion.Wait(1000);
         if(Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length)
             return;
         }
     Orion.PauseScript('all','HydraRecover|JournalScan');
+    var gump = Orion.GetGump('any','0x000008AF');
+    if(gump !== null)
+        {
+        gump.Select(Orion.CreateGumpHook(2));
+        Orion.Wait(200);
+        }
     GoRez();
     while(Player.LRC() < 100)
         {
