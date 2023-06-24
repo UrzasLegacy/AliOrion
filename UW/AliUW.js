@@ -1737,7 +1737,7 @@ function ScoutAhead()
     
     var hideCooldown = Orion.Now();
     var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
-    if(ladder)
+    if(ladder && Player.X() > 6350)
         {
         //return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
         var tempX = Player.X();
