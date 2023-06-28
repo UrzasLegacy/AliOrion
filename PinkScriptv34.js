@@ -364,6 +364,41 @@ function PinkGump(_)
         }
     }
 
+function GMScan()
+	{
+	var useDiscordPush = true//profile.useDiscordPush;
+	var useAlarmSound = true//profile.useAlarmSound;
+    var closeUO = false;
+    var timeStamp = 0;
+    var gmCheck;
+	while(true)
+		{
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
+            {
+            return mob.Properties().indexOf('GM ') > -1;
+            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();    
+        if(gmCheck)
+            {
+			 if(useDiscordPush)
+			    DiscordPush(Player.Name() + ": GM");
+			if(useAlarmSound)
+			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+			Orion.PauseScript('all','GMScan');
+			Orion.Wait(500);
+			Orion.Terminate('all', 'GMScan');
+			Orion.StopWalking();
+			Orion.Wait(5000);
+			if(closeUO)
+			    {
+			    Orion.OAOptionSet('AutoReconnect', '0');
+			    Orion.CloseUO();
+			    }
+			}
+        Orion.Wait(3000);
+		}
+	}
+
 function GMJournalScan()
 	{
 	var bot = "https://discordapp.com/api/webhooks/"
