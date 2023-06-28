@@ -1298,3 +1298,375 @@ function isPointInRectangle(x1, y1, x2, y2, x3, y3) {
         //x2,y2 is the southeast corner
         return x3 >= x1 && x3 <= x2 && y3 >= y1 && y3 <= y2;
       }
+
+function DropHere(itemSerial) //v3
+    {
+    var playerBackpack = Orion.GetSerial(backpack);
+    var range = 1;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.GetContainer(itemSerial) == playerBackpack && Orion.Now() < endTimeMain)
+        {
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
+            {
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
+            }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.GetContainer(itemSerial) == playerBackpack && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.GetContainer(itemSerial) == playerBackpack)
+            hash['' + validTileX + validTileY + validTileZ] = true;
+        }
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+    }
+
+function GetDirectionTo(targetX, targetY)
+      {
+      var dx = targetX - Player.X();
+      var dy = Player.Y() - targetY;
+      // Using atan2 to get the angle between the x-axis and the line
+      // between the origin and the point (dx, dy).
+      var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      // Making the angle positive and adjusting it to fit our direction definitions.
+      angle = (angle + 360) % 360;
+      // Dividing the circle into 8 sectors and determining the direction.
+      if (angle >= 22.5 && angle < 67.5)
+          return 1; // NorthEast
+      else if (angle >= 67.5 && angle < 112.5)
+          return 0; // North
+      else if (angle >= 112.5 && angle < 157.5)
+          return 7; // NorthWest
+      else if (angle >= 157.5 && angle < 202.5)
+          return 6; // West
+      else if (angle >= 202.5 && angle < 247.5)
+          return 5; // SouthWest
+      else if (angle >= 247.5 && angle < 292.5)
+          return 4; // South
+      else if (angle >= 292.5 && angle < 337.5)
+          return 3; // SouthEast
+      else
+          return 2; // East
+      }
+
+function GetDirectionFrom(targetX, targetY)
+      {
+      var dx = Player.X() - targetX;
+      var dy = targetY - Player.Y();
+      // Using atan2 to get the angle between the x-axis and the line
+      // between the origin and the point (dx, dy).
+      var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      // Making the angle positive and adjusting it to fit our direction definitions.
+      angle = (angle + 360) % 360;
+      // Dividing the circle into 8 sectors and determining the direction.
+      if (angle >= 22.5 && angle < 67.5)
+          return 1; // NorthEast
+      else if (angle >= 67.5 && angle < 112.5)
+          return 0; // North
+      else if (angle >= 112.5 && angle < 157.5)
+          return 7; // NorthWest
+      else if (angle >= 157.5 && angle < 202.5)
+          return 6; // West
+      else if (angle >= 202.5 && angle < 247.5)
+          return 5; // SouthWest
+      else if (angle >= 247.5 && angle < 292.5)
+          return 4; // South
+      else if (angle >= 292.5 && angle < 337.5)
+          return 3; // SouthEast
+      else
+          return 2; // East
+      }
+
+function TeleportToTileInFrontOfPlayer()
+    {
+    var range = 10;
+    var dx = 0;
+    var dy = 0;
+    var direction = Player.Direction() % 8;
+    switch(direction)
+        {
+        case 0: // North
+            dy = -range;
+            break;
+        case 1: // NorthEast
+            dx = range;
+            dy = -range;
+            break;
+        case 2: // East
+            dx = range;
+            break;
+        case 3: // SouthEast
+            dx = range;
+            dy = range;
+            break;
+        case 4: // South
+            dy = range;
+            break;
+        case 5: // SouthWest
+            dx = -range;
+            dy = range;
+            break;
+        case 6: // West
+            dx = -range;
+            break;
+        case 7: // NorthWest
+            dx = -range;
+            dy = -range;
+            break;
+        default:
+            Orion.Print("Invalid direction");
+            return;
+        }
+    if(!Orion.HaveTarget())
+        {
+        Orion.Cast('Teleport');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetTileRelative('land', dx, dy, Player.Z());
+        }
+    else
+        Orion.TargetTileRelative('land', dx, dy, Player.Z());
+    }
+
+function PaintVisionCone()
+    {
+    var playerX = Player.X();
+    var playerY = Player.Y();
+    var dx = 0;
+    var dy = 0;
+    var direction = Player.Direction() % 8;
+
+    switch(direction)
+        {
+        case 0: // North
+            dy = relativeY * -1;
+            break;
+        case 1: // NorthEast
+            dx = relativeX;
+            dy = relativeY * -1;
+            break;
+        case 2: // East
+            dx = relativeX * -1;
+            break;
+        case 3: // SouthEast
+            dx = relativeX * -1;
+            dy = relativeY;
+            break;
+        case 4: // South
+            dy = relativeY;
+            break;
+        case 5: // SouthWest
+            dx =  relativeX * -1;
+            dy = relativeY;
+            break;
+        case 6: // West
+            dx = relativeX * -1;
+            break;
+        case 7: // NorthWest
+            dx = relativeX * -1;
+            dy = relativeY * -1;
+            break;
+        default:
+            Orion.Print("Invalid direction");
+            return;
+        }
+    if(!Orion.HaveTarget())
+        {
+        Orion.Cast('Teleport');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetTileRelative('land', dx, dy, Player.Z());
+        }
+    else
+        Orion.TargetTileRelative('land', dx, dy, Player.Z());
+    }
+
+function HighlightInLos()
+    {
+    Orion.GetTilesInRect('land',Player.X() - 10,Player.Y() - 10,Player.X() + 10,Player.Y() + 10).forEach(function(tile,ind)
+        {
+        if(Orion.InLOS(tile.X(),tile.Y()))
+            Orion.AddFakeMapObject(ind, '0x051A', 1152, tile.X(), tile.Y(), tile.Z());
+        })
+    }
+
+function TeleportDirectional()
+    {
+    var range = 10;
+    var dx = 0;
+    var dy = 0;
+    var direction = (Player.Direction()) % 8;
+
+    switch(direction)
+        {
+        case 0: // North
+            dy = -range;
+            break;
+        case 1: // NorthEast
+            dx = range;
+            dy = -range;
+            break;
+        case 2: // East
+            dx = range;
+            break;
+        case 3: // SouthEast
+            dx = range;
+            dy = range;
+            break;
+        case 4: // South
+            dy = range;
+            break;
+        case 5: // SouthWest
+            dx = -range;
+            dy = range;
+            break;
+        case 6: // West
+            dx = -range;
+            break;
+        case 7: // NorthWest
+            dx = -range;
+            dy = -range;
+            break;
+        default:
+            Orion.Print("Invalid direction");
+            return;
+        }
+
+    var foundAlternative = false;
+
+    // If the target tile is untargetable, try expanding the search area.
+    if(!Orion.InLOS(dx, dy))
+        {
+        var maxRetries = 2;
+        for(var retry=0;retry<maxRetries;retry++)
+            {
+            // Expand the search area by the retry count.
+            var tiles = Orion.GetTilesInRect('land',dx-retry, dy-retry, dx+retry, dy+retry);
+
+            // Iterate over all tiles to find a targetable one.
+            for (var i=0;i<tiles.length;i++)
+                {
+                var tileDx = tiles[i].X - Player.X();
+                var tileDy = tiles[i].Y - Player.Y();
+                if(Orion.InLOS(tileDx, tileDy))
+                    {
+                        dx = tileDx;
+                        dy = tileDy;
+                    foundAlternative = true;
+                    break;
+                    }
+                }
+
+            // If a targetable tile was found, stop retrying.
+            if (foundAlternative)
+                break;
+            }
+        // If no targetable alternative was found, log an error and exit.
+        if(!foundAlternative)
+            return Orion.Print("Cannot target this tile or any adjacent tiles");
+        }
+
+    if(!Orion.HaveTarget())
+        {
+        Orion.Cast('Teleport');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetTileRelative('land', dx, dy, Player.Z());
+        }
+    else
+        Orion.TargetTileRelative('land', dx, dy, Player.Z());
+    }
+
+function DirectionalTeleport(direction,range)
+    {
+   // var range = 8;
+    var dx = 0;
+    var dy = 0;
+    //var direction = (Player.Direction() + 2) % 8;
+    var direction = (Player.Direction() + direction) % 8;
+    switch(direction)
+        {
+        case 0: // North
+            dy = -range;
+            break;
+        case 1: // NorthEast
+            dx = range;
+            dy = -range;
+            break;
+        case 2: // East
+            dx = range;
+            break;
+        case 3: // SouthEast
+            dx = range;
+            dy = range;
+            break;
+        case 4: // South
+            dy = range;
+            break;
+        case 5: // SouthWest
+            dx = -range;
+            dy = range;
+            break;
+        case 6: // West
+            dx = -range;
+            break;
+        case 7: // NorthWest
+            dx = -range;
+            dy = -range;
+            break;
+        default:
+            Orion.Print("Invalid direction");
+            return;
+        }
+    var coordX = Player.X() + dx;
+	var coordY = Player.Y() + dy;
+    if(!Orion.InLOS(coordX,coordY))
+        {
+        var tiles = Orion.GetTilesInRect('land',dx-1,dy-1,dx+1,dy+1).filter(function(tile)
+            {
+            return Orion.InLOS(tile.X(),tile.Y());
+            });
+        coordX = tiles[0].X();
+        coordY = tiles[0].Y();
+        }
+        
+    if(!Orion.HaveTarget())
+        {
+        Orion.Cast('Teleport');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetTile('land', coordX, coordY, Player.Z());
+        }
+    else
+        Orion.TargetTile('land', coordX, coordY, Player.Z());
+    }
