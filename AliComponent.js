@@ -106,6 +106,7 @@ function ComponentTraveler()
                     Orion.TargetObject(self);
                 Orion.Wait(500);
                 }
+            DropAllDeflect();
             if(RecallByGump('Main',loc) === false)
                 continue;
             var nearbyContainers = containerArr.filter(function(container)
@@ -131,6 +132,80 @@ function ComponentTraveler()
             }
         Orion.Wait(100);
         }
+    }
+
+function DropAllDeflect()
+    {
+    var deflect = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return item.Properties().indexOf('Bonus Type: Deflecting') > -1;
+        })[0];
+    while(deflect)
+        {
+        DropHere(deflect.Serial())
+        Orion.Wait(750);
+        deflect = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return item.Properties().indexOf('Bonus Type: Deflecting') > -1
+                || item.Properties().indexOf('Gargish') > -1;
+            })[0];
+        }
+    }
+
+function DropHere(itemSerial) //v3
+    {
+    var playerBackpack = Orion.GetSerial(backpack);
+    var range = 1;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.GetContainer(itemSerial) == playerBackpack && Orion.Now() < endTimeMain)
+        {
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land|any',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
+            {
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
+            }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.GetContainer(itemSerial) == playerBackpack && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.GetContainer(itemSerial) == playerBackpack)
+            hash['' + validTileX + validTileY + validTileZ] = true;
+        }
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function Recover()
