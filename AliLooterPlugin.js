@@ -2241,7 +2241,7 @@ function JewelryScoreSearchGump()
     {
     Orion.Exec('JewelryScoreSearch',true)
     }
-//#include AliLooterPlugin.js
+    
 function JewelryScoreSearch()
 	{
     var templates = [
