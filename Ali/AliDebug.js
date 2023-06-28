@@ -198,3 +198,13 @@ function GetAllUniqueGraphicsInContainer()
     TextWindow.Open();
     TextWindow.Print(outString.slice(0,-1));
     }
+
+function timeMyFunction(func, args)
+    {   //func: the function you want to time
+        //args: the arguments of the function in an array. Default: []
+        //Example: timeMyFunction(AddNumbers,[1,2])
+    var start = Orion.Now();
+    func.apply(null, args);
+    var time = Orion.Now() - start;
+    Orion.Print('Execution time: ' + time + 'ms');
+    }
