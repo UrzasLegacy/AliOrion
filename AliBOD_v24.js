@@ -3683,7 +3683,7 @@ function ImbuePoisResistM2()
 
 function ImbueEnerResistM2()
     {
-        ImbueItemsByFavorite(imbueFavorites.EnerResistM2)
+    ImbueItemsByFavorite(imbueFavorites.EnerResistM2)
     }
 
 function ImbueItemsByFavorite(imbueFavoriteName)
@@ -4273,7 +4273,6 @@ function ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementA
         Orion.Terminate('all');
         }
     }
-
 
 //You do not have enough resources to imbue this item.
 //You successfully imbue the item!
