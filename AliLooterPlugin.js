@@ -15,7 +15,20 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
     ]
 
-function Gump()
+function Gump_JewelryScoreSearch()
+    {
+    Orion.Exec('JewelryScoreSearch',true)
+    }
+function Gump_JewelryModSearch()
+    {
+    Orion.Exec('JewelryModSearch',true)
+    }
+function Gump_SorterHighlighter()
+    {
+    Orion.Exec('SorterHighlighter',true)
+    }
+
+function SorterHighlighter()
     {
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
@@ -1248,14 +1261,6 @@ function MoveTrashContainer(serial)
 function PutAwayLoot()
     {
     Orion.ResetSearchArea();
-    var skillMods = 
-        {
-        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
-        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
-        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
-        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Archery:true,Healing:true,
-        }
     var playerBackpack = Orion.GetSerial(backpack);
     var items = Orion.FindTypeEx(any).filter(function(item)
         {
@@ -1290,89 +1295,8 @@ function PutAwayLoot()
         }
 
     //Put Away Jewels
-    var jewelryArr = [[],[],[],[],[],[]];
-    for(var i=0;i<jewelry.length;i++)
-        {
-        var item = jewelry[i];
-        var parse = parseJewelryProperties(item.Properties());
-        var skillInt = CountMatchingMods(parse,skillMods)
-        jewelryArr[skillInt].push(item.Serial());
-        }
-    for(var i=0;i<jewelryArr.length;i++)
-        {
-        var skillIntArr = jewelryArr[i];
-        if(skillIntArr.length === 0)
-            continue;
-        Orion.ResetSearchArea();
-        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
-            {
-            var properties = item.Properties();
-            Orion.Print(i)
-            return properties.indexOf('Jewelry ' + i + ' Skill') > -1;
-            })[0];
-        if(!categoryBook)
-            {
-            DiscordPush('Category Book Missing: ' + 'Jewelry ' + i + ' Skill');
-            Orion.Terminate('all');
-            }
-        var categoryX = categoryBook.X();
-        var categoryY = categoryBook.Y();
-        var sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-            }).sort(function(a,b)
-                {
-                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                return bContents - aContents;
-                })[0];
-        if(!sortContainerSkills)
-            {
-            DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
-            Orion.Terminate('all');
-            }
-        while(sortContainerSkills.Distance() > 2)
-            {
-            Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
-            Orion.Wait(100);
-            }
-        VerifyOpenContainer(sortContainerSkills.Serial());
-        for(var j=0;j<skillIntArr.length;j++)
-            {
-            var jewel = skillIntArr[j];
-            while(Orion.GetContainer(jewel) == playerBackpack)
-                {
-                Orion.MoveItem(jewel,0,sortContainerSkills.Serial());
-                Orion.Wait(1300);
-                }
-            if(Orion.Contains(sortContainerSkills.Properties(),'Contents: 125'))
-                {
-                Orion.CloseGump('container',sortContainerSkills.Serial());
-                sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-                    {
-                    var properties = item.Properties();
-                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-                    }).sort(function(a,b)
-                        {
-                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        return bContents - aContents;
-                        })[0];
-                if(!sortContainerSkills)
-                    {
-                    DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
-                    Orion.Terminate('all');
-                    }
-                while(sortContainerSkills.Distance() > 2)
-                    {
-                    Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
-                    Orion.Wait(100);
-                    }
-                VerifyOpenContainer(sortContainerSkills.Serial());
-                }
-            }
-        }
+    Orion.Print(JSON.stringify(jewelry[0]))
+    PutAwayJewelry(jewelry)
 
     //Put away armor
     var containerNames = ['Vitality','Haste','Restoration','Misc'];
@@ -1559,6 +1483,180 @@ function PutAwayLoot()
                 }
             }
         }    
+    }
+
+function PutAwayJewelry(jewelry)
+    {
+    var playerBackpack = Orion.GetSerial(backpack);
+    var skillMods = 
+        {
+        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
+        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
+        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Archery:true,Healing:true,
+        }
+    var jewelryArr = [[],[],[],[],[],[]];
+    for(var i=0;i<jewelry.length;i++)
+        {
+        var item = jewelry[i];
+        var parse = parseJewelryProperties(item.Properties());
+        var skillInt = CountMatchingMods(parse,skillMods)
+        jewelryArr[skillInt].push(item);
+        }
+    for(var i=0;i<jewelryArr.length;i++)
+        {
+        var skillIntArr = jewelryArr[i];
+        if(skillIntArr.length === 0)
+            continue;
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Jewelry ' + i + ' Skill') > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Jewelry ' + i + ' Skill');
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                return b.Z() - a.Z();
+                });
+        if(sortContainerSkills.length < 5)
+            {
+            DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(Orion.GetDistance(categoryX,categoryY) > 2)
+            {
+            Orion.WalkTo(categoryX,categoryY);
+            Orion.Wait(100);
+            }
+        for(var j=0;j<skillIntArr.length;j++)
+            {
+            var jewel = skillIntArr[j];
+            var jewelSerial = jewel.Serial();
+            var parse = parseJewelryProperties(jewel.Properties());
+            var score = calculateTemplateValues(parse)[0][1];
+            Orion.Print(score)
+            var sortContainerScore;
+            if(score >= 140)
+                sortContainerScore = sortContainerSkills[0];
+            else if(score >= 120)
+                sortContainerScore = sortContainerSkills[1];
+            else if(score >= 100)
+                sortContainerScore = sortContainerSkills[2];
+            else if(score >= 80)
+                sortContainerScore = sortContainerSkills[3];
+            else
+                sortContainerScore = sortContainerSkills[4];
+            while(Orion.GetContainer(jewelSerial) == playerBackpack)
+                {
+                Orion.MoveItem(jewelSerial,0,sortContainerScore.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerScore.Properties(),'Contents: 125'))
+                {
+                DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills ' + score + ' Score Container Is Full!')
+                Orion.Terminate('all');
+                }
+            }
+        }
+    }
+
+function PutAwayJewelryOLD(jewelry)
+    {
+    var jewelryArr = [[],[],[],[],[],[]];
+    for(var i=0;i<jewelry.length;i++)
+        {
+        var item = jewelry[i];
+        var parse = parseJewelryProperties(item.Properties());
+        var skillInt = CountMatchingMods(parse,skillMods)
+        jewelryArr[skillInt].push(item.Serial());
+        }
+    for(var i=0;i<jewelryArr.length;i++)
+        {
+        var skillIntArr = jewelryArr[i];
+        if(skillIntArr.length === 0)
+            continue;
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            Orion.Print(i)
+            return properties.indexOf('Jewelry ' + i + ' Skill') > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Jewelry ' + i + ' Skill');
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerSkills)
+            {
+            DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerSkills.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerSkills.Serial());
+        for(var j=0;j<skillIntArr.length;j++)
+            {
+            var jewel = skillIntArr[j];
+            while(Orion.GetContainer(jewel) == playerBackpack)
+                {
+                Orion.MoveItem(jewel,0,sortContainerSkills.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerSkills.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerSkills.Serial());
+                sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerSkills)
+                    {
+                    DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerSkills.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerSkills.Serial());
+                }
+            }
+        }
     }
 
 function DropDraggedToContainer() //v2
@@ -1775,7 +1873,7 @@ function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,mods
     return true;
     }
 
-function JewelrySearchGump() 
+function JewelryModSearch() 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
     var tmpFile = Orion.NewFile();
@@ -2131,5 +2229,485 @@ function AliGumpCallback(_)
     //Orion.Print(gumpButtons);
     //Shared.AddArray('gumpValues',gumpButtons);
     Orion.Wait(50);
-    JewelrySearchGump();
+    JewelryModSearch();
 	}
+
+//Scorer
+function JewelryScoreSearchGump()
+    {
+    Orion.Exec('JewelryScoreSearch',true)
+    }
+function JewelryScoreSearchGump()
+    {
+    Orion.Exec('JewelryScoreSearch',true)
+    }
+//#include AliLooterPlugin.js
+function JewelryScoreSearch()
+	{
+    var templates = [
+        'MysticWrestle',
+        'NecroWrestle',
+        'MysticBalakai',
+        'NecroBalakai',
+        'Disarmcher',
+        'GlendaBasher',
+        'DSer',
+        'HSBokMage',
+        'LSBokMage',
+        'HSBokMystic',
+        'LSBokMystic',
+        'FoNMage',
+        'NoxMage',
+        'HolyFister',
+        'ArcherFister',
+        'any'
+    ];
+    var title = "Ali Jewelry Score Search"
+    var gump = Orion.CreateCustomGump(10421); 
+	var rowStart = 40;
+	var columnStart = 25;
+    var height = 175;
+    var width = 325;
+
+    gump.Clear();
+    gump.SetCallback('JewelryScoreCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    var xPos = columnStart;
+    var yPos = rowStart;
+    var heightAdjust = 25;
+
+    gump.AddText(xPos,yPos,554,'Template Name');
+    gump.AddText(xPos + 180,yPos,554,'Score');
+    gump.AddText(xPos + 240,yPos,554,'Skill');
+
+    var responseCode = 1;
+    yPos += heightAdjust;
+    gump.AddComboBox(responseCode, xPos, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,templates.length + 1);
+    for(var j=0;j<templates.length;j++)
+        gump.AddComboBoxText(templates[j],0,Shared.GetVar('Template Name',undefined) == templates[j] ? 1 : 0,115,'left');
+
+    gump.AddResizepic(xPos + 180, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(2, xPos + 180 + 3, yPos, 0, Shared.GetVar('Score',''), 28, 20);
+    gump.AddTooltip('Minimum Score');
+
+    gump.AddResizepic(xPos + 240, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(3, xPos + 240 + 3, yPos, 0, Shared.GetVar('Minimum Skill Amount',''), 28, 20);
+    gump.AddTooltip('Minimum Skill Amount');
+    yPos += heightAdjust * 2;
+
+    gump.AddButton(1000, xPos + 143, yPos, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddText(xPos + 143 + 11,yPos,554,'Search');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddButton(1001, xPos + 73, yPos, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddText(xPos + 73 + 17,yPos,554,'Clear');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddButton(1002, xPos + 270, yPos + 25, '22153', '22154', '22155', '0x0000');
+    gump.AddTooltip('Calculate Score');
+
+    gump.Update();
+	}
+
+function JewelryScoreCallback(_) 
+	{
+    var templates = [
+        'MysticWrestle',
+        'NecroWrestle',
+        'MysticBalakai',
+        'NecroBalakai',
+        'Disarmcher',
+        'GlendaBasher',
+        'DSer',
+        'HSBokMage',
+        'LSBokMage',
+        'HSBokMystic',
+        'LSBokMystic',
+        'FoNMage',
+        'NoxMage',
+        'HolyFister',
+        'ArcherFister',
+        'any'
+    ];
+    var code = CustomGumpResponse.ReturnCode();
+    if(code == 0)
+        return;
+    else if(code == 1000) //search
+        {
+        var combo = CustomGumpResponse.ComboBox(1);
+        var textEntry = CustomGumpResponse.Text(2);
+        var textEntry2 = CustomGumpResponse.Text(3) || '0';
+        if(combo == -1)
+            return Orion.CharPrint(self,1159,'Choose a template');
+        if(!textEntry)
+            return Orion.CharPrint(self,1159,'Enter a minimum score');
+        value = Shared.AddVar('Template Name',templates[combo]);
+        value = Shared.AddVar('Score',textEntry);
+        value = Shared.AddVar('Minimum Skill Amount',textEntry2);   
+        HighlightJewelryScore(templates[combo],textEntry,textEntry2);
+        }
+    else if(code == 1001)
+        {
+        Shared.ClearVars();
+        }
+    else if(code == 1002)
+        {
+        Orion.Exec('CalculateScore',true);
+        }
+    Orion.Wait(50);
+    JewelryScoreSearch();
+	}
+
+function CalculateScore()
+    {
+    Orion.WaitForAddObject('myTarget');
+    var exampleString = Orion.FindObject('myTarget').Properties();
+    //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nMysticism +20\nResisting Spells +20\nAntique\nDefense Chance Increase 20%\nFaster Cast Recovery 4\nEnhance Potions 35%\nMana Regeneration 4\nDurability 255 / 255\nMajor Artifact";
+    //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +100\nMana Regeneration 4\nFaster Cast Recovery 4\nEnhance Potions 35%\nDurability 255 / 255\nMajor Artifact";
+    //Debug(exampleString + '\n')
+    //var exampleString = "Ring\nWeight: 1 Stone\nNinjitsu +20\nNecromancy +15\nSpirit Speak +15\nAntique\nDexterity Bonus 8\nNight Sight\nHit Chance Increase 15%\nFaster Cast Recovery 3\nLower Reagent Cost 20%\nDurability 255 / 255\nMajor Artifact"
+
+    //var exampleString = "Resisting Spells +15\nEvaluate Intelligence +15\nMagery +20\nStrength Bonus 8\nDexterity Bonus 8\nEnhance Potions 25%\nDefense Chance Increase 15%\nDamage Increase 25%\n"
+
+    var parse = parseJewelryProperties(exampleString);
+    var values = calculateTemplateValues(parse);
+    //TextWindow.Open();
+    //TextWindow.Clear();
+    var outMsg = '';
+    values.forEach(function(value)
+        {
+        outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
+        });
+    //TextWindow.Print(outMsg)
+    Orion.Print(outMsg)
+    }
+
+function HighlightJewelryScore(templateString,score,skillInt)
+    {
+    var startTime = Orion.Now();
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var totalItems = 0;
+    var totalHighlighted = 0;
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i]
+        if(!container)
+            Orion.Print(container)
+        Orion.FindTypeEx('0x1F06|0x1086|0x108A|0x1F09',any,container.Serial(),'item', 'finddistance', '', true).filter(function(item)
+            {
+            Orion.TestItemColor(item.Serial(), item.Color())
+            totalItems++;
+            var parse = parseJewelryProperties(item.Properties());
+            var value = calculateTemplateValues(parse).filter(function(template)
+                {
+                if(templateString == 'any')
+                    return true;
+                return template[0] == templateString;  
+                })[0];
+            return value[1] && value[1] >= score && value[2] >= skillInt;
+            }).forEach(function(keeper)
+                {
+                totalHighlighted++;
+                Orion.TestItemColor(keeper.Serial(), 1152)
+                });
+        }
+    Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
+    }
+
+function HighlightContainersMultiColor()
+    {
+    var startTime = Orion.Now();
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var totalItems = 0;
+    var totalHighlighted = 0;
+    var fullItems = [];
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i]
+        if(container == 'ground')
+            containerSerial = 'ground';
+        else
+            containerSerial = container.Serial();
+        if(!container)
+            Orion.Print(container)
+        Orion.FindTypeEx('0x1F06|0x1086|0x108A|0x1F09',any,containerSerial,'item', 'finddistance', '', true).forEach(function(item)
+            {
+            var itemSerial = item.Serial();
+            Orion.TestItemColor(itemSerial, item.Color())
+            totalItems++;
+            var parse = parseJewelryProperties(item.Properties());
+            var value = calculateTemplateValues(parse)[0];
+            if(value[1] && value[1] >= 60 && value[2] >= 0)
+                fullItems.push([itemSerial,value[1],value[2]])
+            })
+        }
+    var colors = {
+        yellow: 1174,
+        blue: 1152,
+        purple: 1283,
+        pink: 2735,
+        green: 1969,
+        gray: 2029,
+        white: 2050, //2728
+    }
+    fullItems.forEach(function(keeper)
+        {
+        totalHighlighted++;
+        if(keeper[1] >= 140)
+            var color = colors.blue;
+        else if(keeper[1] >= 120)
+            var color = colors.yellow
+        else if(keeper[1] >= 100)
+            var color = colors.purple
+        else if(keeper[1] >= 80)
+            var color = colors.green
+        else if(keeper[1] >= 60)
+            var color = colors.white
+        Orion.TestItemColor(keeper[0], color)
+        });
+    Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
+    }
+
+function calculateTemplateValues(mods)
+    {
+    var templates = 
+        {
+        //Caster
+        MysticWrestle: {
+            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .63,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.67,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':6,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.2,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        NecroWrestle: {
+            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .63,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.67,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':6,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.2,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        MysticBalakai: {
+            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':0,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        NecroBalakai: {
+            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':0,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        //Dexxer
+        Disarmcher: {
+            'Archery':.83,'Swordsmanship':.67,'Parrying':.83,'ResistingSpells':.83,'Anatomy':.83,'Tactics':.83,'Healing':.83,
+            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':2,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':.67,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        GlendaBasher: {
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Healing': .83,'Ninjitsu': .83,'Bushido': .83,'Parrying': .53,'ResistingSpells': .83,
+            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':1.2,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':0,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        DSer: {
+            'Swordsmanship':.83,'Ninjitsu':.83,'Tactics':.53,'Parrying':.83,'ResistingSpells':.83,
+            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':1.2,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':0,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        //Hybrid
+        HSBokMage: {
+            'Swordsmanship': .53,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2,'DamageIncrease':.24,'LowerReagentCost':.5
+            },
+        LSBokMage: {
+            'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
+            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            },
+        HSBokMystic: {
+            'Swordsmanship': .53,'Mysticism': .53,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2,'DamageIncrease':.24,'LowerReagentCost':.5
+            },
+        LSBokMystic: {
+            'Swordsmanship': .83,'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
+            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            },
+        FoNMage: {
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Magery':.83,'EvaluateIntelligence':.83,'Parrying': .83,'ResistingSpells': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':.5
+            },
+        NoxMage: {
+            'Swordsmanship': .53,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
+            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            },
+        HolyFister: {
+            'Swordsmanship': .6,'Tactics':.4,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
+            'SwingSpeedIncrease':2,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        ArcherFister: {
+            'Archery': .6,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,
+            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1.25,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        }
+    var skillMods = 
+        {
+        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
+        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
+        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Healing:true, Archery:true,
+        }
+    var templateValues = [];
+    
+    for(var templateName in templates)
+        {
+        var template = templates[templateName];
+        var totalValue = 0;
+        var totalSkills = 0;
+        // Calculate the individual mod values
+        for(var mod in mods)
+            {
+            if(template.hasOwnProperty(mod))
+                {
+                var modValue = mods[mod] * template[mod];
+                totalValue += modValue;
+                if(skillMods.hasOwnProperty(mod))
+                    {
+                    totalValue += modValue;
+                    totalSkills += mods[mod];
+                    }
+                //Debug('Mod: ' + mod + ', Value: ' + modValue + ', Total Value: ' + totalValue);
+                }
+            }
+        templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
+        }
+
+    return templateValues.sort(function(a,b)
+        {
+        return b[1] - a[1];
+        });
+    }
+
+var modValueRanges =
+    { //[minimum,cap,overcap] OR [minimum,cap] OR [one possible value]
+    Magery: [5,15,20],
+    MaceFighting: [5,15,20],
+    Fencing: [5,15,20],
+    Musicianship: [5,15,20],
+    Swordsmanship: [5,15,20],
+    AnimalTaming: [5,15,20],
+    SpiritSpeak: [5,15,20],
+    Tactics: [5,15,20],
+    Wrestling: [5,15,20],
+    AnimalLore: [5,15,20],
+    Discordance: [5,15,20],
+    Focus: [5,15,20],
+    Parrying: [5,15,20],
+    Stealth: [5,15,20],
+    Anatomy: [5,15,20],
+    Bushido: [5,15,20],
+    EvaluateIntelligence: [5,15,20],
+    Mysticism: [5,15,20],
+    Necromancy: [5,15,20],
+    Archery: [5,15,20],
+    Chivalry: [5,15,20],
+    Healing: [5,15,20],
+    Ninjitsu: [5,15,20],
+    ResistingSpells: [5,15,20],
+    ManaIncrease: [1,5],
+    StaminaIncrease: [1,5],
+    StrengthBonus: [1,8,10],
+    DexterityBonus: [1,8,10],
+    IntelligenceBonus: [1,8,10],
+    ManaRegeneration: [1,3,44],
+    EnhancePotions: [15,25,35],
+    HitChanceIncrease: [5,15,20],
+    DefenseChanceIncrease: [5,15,20],
+    SwingSpeedIncrease: [5,10],
+    DamageIncrease: [15,25,35],
+    SpellDamageIncrease: [8,15,18],
+    FasterCastRecovery: [1,3,4],
+    FasterCasting: [1,1,1],
+    LowerManaCost: [1,8,10],
+    LowerReagentCost: [10,20,25],
+    PhysicalResist: [5,15,20],
+    FireResist: [5,15,20],
+    ColdResist: [5,15,20],
+    PoisonResist: [5,15,20],
+    EnergyResist: [5,15,20],
+    };
