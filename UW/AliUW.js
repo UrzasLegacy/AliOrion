@@ -1845,10 +1845,11 @@ function HydraRecover()
             return;
         }
     Orion.PauseScript('all','HydraRecover|JournalScan');
+    Orion.Wait(5000);
     var gump = Orion.GetGump('any','0x000008AF');
     if(gump !== null)
         {
-        gump.Select(Orion.CreateGumpHook(2));
+        gump.Select(Orion.CreateGumpHook(0));
         Orion.Wait(200);
         }
     GoRez();
