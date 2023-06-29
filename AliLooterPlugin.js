@@ -9,26 +9,14 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
     [
         [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'] ],
         [],
-        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestItem", 'EvalKeep'],],
+        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestKeeper", 'EvalKeep'],],
         [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'] ],
-        [],
         [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
+        [],
+        [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
     ]
 
-function Gump_JewelryScoreSearch()
-    {
-    Orion.Exec('JewelryScoreSearch',true)
-    }
-function Gump_JewelryModSearch()
-    {
-    Orion.Exec('JewelryModSearch',true)
-    }
-function Gump_SorterHighlighter()
-    {
-    Orion.Exec('SorterHighlighter',true)
-    }
-
-function SorterHighlighter()
+function Gump()
     {
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
@@ -205,6 +193,1193 @@ function HighlightTrash()
     HighlightContainersCall(false);
     }
 
+function AliLoot()  //v2
+    {
+    var corpse = Orion.FindTypeEx('0x2006|0x0ED0', any, ground, 2).filter(function(item)
+        {
+        return true// Orion.Contains(item.Properties(), 'An Evil One');
+        })[0];
+    if(!corpse)
+        return Orion.CharPrint(self,1159,'No corpse found');
+    var corpseSerial = corpse.Serial();
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    var endTime = Orion.Now() + 10000;
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0 && Orion.Now() < endTime && !Orion.GumpExists('container',corpseSerial))
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            var corpseInstanceSerial = corpseSerial;
+            }
+        else
+            var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+        }
+    else
+        return Orion.CharPrint(self,1159,'Corpse is empty')
+    var backpackSerial = Orion.GetSerial(backpack);
+    for(var attempts=0;attempts<2;attempts++)
+        {
+        var itemsInCorpse = Orion.FindTypeEx(any,any,corpseInstanceSerial);
+        for(var i=0;i<itemsInCorpse.length;i++)
+            {
+            var item = itemsInCorpse[i];
+            if(!item)
+                continue;
+            while(corpse.Distance() > 2)
+                {
+                Orion.WalkTo(corpse.X(),corpse.Y())
+                Orion.Wait(250);
+                }
+            var itemSerial = item.Serial();
+            if(AliKeep(itemSerial))
+                {
+                var endTime = Orion.Now() + 5000;
+                while(item.Container() !== backpackSerial)
+                    {
+                    if(Orion.Now() < endTime)
+                        Debug("Item wasn't picked up!\n" + item.Properties())
+                    Orion.MoveItem(itemSerial);
+                    Orion.Wait(1300);
+                    }
+                }
+            Orion.Wait(10);	
+            }
+        }	
+    }
+
+function AliLootHouse()
+    {
+    Orion.ClearFakeMapObjects();
+    Orion.ResetSearchArea();
+    Orion.IgnoreReset();
+    var unsortedBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Unsorted');
+        })[0];
+    if(!unsortedBook)
+        return Orion.CharPrint(self,1159,'Unsorted Book Not Found!');
+    var unsortedX = unsortedBook.X();
+    var unsortedY = unsortedBook.Y();
+    var range = 2;
+    var unsortedX1 = unsortedX - range;
+    var unsortedY1 = unsortedY - range;
+    var unsortedX2 = unsortedX + range;
+    var unsortedY2 = unsortedY + range;
+    
+    Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
+    var unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+        {
+        var properties = item.Properties();
+        return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
+        }).sort(function(a,b)
+            {
+            var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+            var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+            return aContents - bContents;
+            })[0];
+    Orion.ResetSearchArea();
+    if(!unsortedContainer)
+        return Orion.CharPrint(self,1159,'No Containers to Sort!');
+    while(unsortedContainer)
+        {
+        Orion.ClearFakeMapObjects();
+        Orion.GetTilesInRect('land',unsortedX1, unsortedY1, unsortedX2, unsortedY2).forEach(function(tile,ind)
+            {
+            Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            });
+        Orion.AddFakeMapObject(10000, '0x051A', 1152, unsortedX, unsortedY, Player.Z());
+        var fullCheck = false;
+        var unsortedContainerSerial = unsortedContainer.Serial();
+        while(Orion.GetDistance(unsortedContainerSerial) > 2)
+            {
+            Orion.WalkTo(unsortedContainer.X(),unsortedContainer.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(unsortedContainerSerial);
+        var items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
+            {
+            return AliKeep(item);
+            });
+        while(items.length)
+            {
+            for(var i=0;i<items.length;i++)
+                {
+                Orion.MoveItem(items[i]);
+                Orion.Wait(1300);
+                var fullCheck = ((Orion.ObjAtLayer('backpack').Properties().match(/Contents: (\d+)\//) || [])[1] || 125) == 125
+                    || (Player.Weight() > Player.MaxWeight() - 20);
+                if(fullCheck)
+                    break;
+                }
+            if(fullCheck)
+                break;
+            items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
+                {
+                return AliKeep(item);
+                });
+            }
+        if(!fullCheck)
+            {
+            MoveTrashContainer(unsortedContainerSerial);
+            Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
+            unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+                {
+                var properties = item.Properties();
+                return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
+                }).sort(function(a,b)
+                    {
+                    var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                    var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                    return aContents - bContents;
+                    })[0];
+            Orion.ResetSearchArea();
+            }
+        else
+            {
+            PutAwayLoot();
+            }
+        Orion.Wait(500);
+        }
+    PutAwayLoot();
+    }
+
+function PutAwayLoot()
+    {
+    Orion.ResetSearchArea();
+    var playerBackpack = Orion.GetSerial(backpack);
+    var items = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return AliKeep(item.Serial());
+        })
+    if(items.length === 0)
+        return Orion.CharPrint(self,1159,'No items to put away!');
+    var jewelry = [];
+    var weapons = [];
+    var armor = [];
+    var shields = [];
+    for(var i=0;i<items.length;i++)
+        {
+        var item = items[i];
+        var props = item.Properties();
+        if(Orion.Contains('0x1F06|0x1086|0x108A|0x1F09', item.Graphic()))
+            {
+            jewelry.push(item);
+            continue;
+            }
+        if(props.indexOf('Two-handed Weapon') > -1 || props.indexOf('One-handed Weapon') > -1)
+            {
+            weapons.push(item);
+            continue;
+            }
+        if(props.indexOf("Poison Resist") > -1 && props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1)
+            {
+            armor.push(item);
+            continue;
+            }
+        shields.push(item);
+        }
+
+    //Put Away Jewels
+    PutAwayJewelry(jewelry)
+
+    //Put away armor
+    var containerNames = ['Vitality','Haste','Restoration','Misc'];
+    var armorArr = [[],[],[],[]]
+    for(var i=0;i<armor.length;i++)
+        {
+        var item = armor[i];
+        var itemSerial = item.Serial()
+        var result = AliKeep(itemSerial);
+        switch(result)
+            {
+            case 'LRC Vitality Armor':
+            case 'LMC Vitality Armor':
+                armorArr[0].push(itemSerial);
+                break;
+            case 'LRC Stamina Armor':
+            case 'LMC Stamina Armor':
+                armorArr[1].push(itemSerial);
+                break;
+            case 'LRC Misc Armor':
+            case 'LMC Misc Armor':
+                armorArr[2].push(itemSerial);
+                break;
+            case 'LRC Stam/HP Armor':
+            case 'LMC Stam/HP Armor':
+            case 'Misc HP/Stam Armor':
+            case 'Luck Armor':
+            case 'Training Armor':
+                armorArr[3].push(itemSerial);
+                break;
+            default:
+                break;
+            }
+        }
+    for(var i=0;i<armorArr.length;i++)
+        {
+        var armorCategoryArr = armorArr[i];
+        var armorCategoryName = containerNames[i];
+        if(armorCategoryArr.length === 0)
+            continue;
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Armor ' + armorCategoryName) > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Armor ' + armorCategoryName);
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerArmor)
+            {
+            DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerArmor.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerArmor.Serial());
+        for(var j=0;j<armorCategoryArr.length;j++)
+            {
+            var armor = armorCategoryArr[j];
+            while(Orion.GetContainer(armor) == playerBackpack)
+                {
+                Orion.MoveItem(armor,0,sortContainerArmor.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerArmor.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerArmor.Serial());
+                sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerArmor)
+                    {
+                    DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerArmor.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerArmor.Serial());
+                }
+            }
+        }
+
+    //Weapons / Shields
+    var weapons = weapons.concat(shields);
+    if(weapons.length)
+        {    
+        Orion.ResetSearchArea();
+        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Weapon') > -1;
+            })[0];
+        if(!categoryBook)
+            {
+            DiscordPush('Category Book Missing: ' + 'Weapon');
+            Orion.Terminate('all');
+            }
+        var categoryX = categoryBook.X();
+        var categoryY = categoryBook.Y();
+        var sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+            {
+            var properties = item.Properties();
+            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+            }).sort(function(a,b)
+                {
+                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                return bContents - aContents;
+                })[0];
+        if(!sortContainerWeapon)
+            {
+            DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
+            Orion.Terminate('all');
+            }
+        while(sortContainerWeapon.Distance() > 2)
+            {
+            Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
+            Orion.Wait(100);
+            }
+        VerifyOpenContainer(sortContainerWeapon.Serial());
+        for(var i=0;i<weapons.length;i++)
+            {
+            var weapon = weapons[i];
+            var weaponSerial = weapon.Serial();
+            if(!AliKeep(weaponSerial))
+                continue;
+            while(Orion.GetContainer(weaponSerial) == playerBackpack)
+                {
+                Orion.MoveItem(weaponSerial,0,sortContainerWeapon.Serial());
+                Orion.Wait(1300);
+                }
+            if(Orion.Contains(sortContainerWeapon.Properties(),'Contents: 125'))
+                {
+                Orion.CloseGump('container',sortContainerWeapon.Serial());
+                sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
+                    {
+                    var properties = item.Properties();
+                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
+                    }).sort(function(a,b)
+                        {
+                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
+                        return bContents - aContents;
+                        })[0];
+                if(!sortContainerWeapon)
+                    {
+                    DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
+                    Orion.Terminate('all');
+                    }
+                while(sortContainerWeapon.Distance() > 2)
+                    {
+                    Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
+                    Orion.Wait(100);
+                    }
+                VerifyOpenContainer(sortContainerWeapon.Serial());
+                }
+            }
+        }    
+    }
+
+function DropDraggedToContainer() //v2
+	{//Reduce mouse movements when transferring items.
+    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
+    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
+    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
+	var dropContainer = Orion.FindObject('dropContainer');
+	if(dropContainer && Orion.Dragging())
+		Orion.DropDraggedItem('dropContainer');
+	else
+		{
+		var lastSerial = Orion.GetSerial('dropContainer');
+		if(Orion.WaitForAddObject('dropContainer') != 1)
+			Orion.AddObject('dropContainer', lastSerial);
+		}
+	}
+function DropDraggedToContainer2() //v2
+	{//Reduce mouse movements when transferring items.
+    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
+    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
+    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
+	var dropContainer = Orion.FindObject('dropContainer2');
+	if(dropContainer && Orion.Dragging())
+		Orion.DropDraggedItem('dropContainer2');
+	else
+		{
+		var lastSerial = Orion.GetSerial('dropContainer2');
+		if(Orion.WaitForAddObject('dropContainer2') != 1)
+			Orion.AddObject('dropContainer2', lastSerial);
+		}
+	}
+
+function DropDraggedHere() //v3
+    {
+    if(!Orion.Dragging())
+        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
+    var range = 2;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.Dragging() && Orion.Now() < endTimeMain)
+        {
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
+            {
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
+            }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.Dragging())
+            hash['' + validTileX + validTileY + validTileZ] = true;
+        }
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+    }
+
+function SecureAndCoOwn(itemSerial)
+    {
+    if(itemSerial === undefined)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var itemSerial = Orion.GetSerial('myTarget');
+        }
+    var startTime = Orion.Now();
+    var target = Orion.FindObject(itemSerial);
+    var targetSerial = target.Serial();
+    while(true)
+        {
+        Orion.Say('i wish to secure this');
+        if(Orion.WaitForTarget(3000))
+            {
+            Orion.TargetObject(targetSerial);
+            var endTime = Orion.Now() + 4000;
+            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
+            if(check)
+                {
+                startTime = Orion.Now();
+                var gump = Orion.GetGump(any, '0x00000295');
+                while(!gump)
+                    {
+                    Orion.WaitContextMenuID(targetSerial, 600);
+                    Orion.RequestContextMenu(targetSerial);
+                    Orion.Wait(500);
+                    gump = Orion.GetGump(any, '0x00000295');
+                    }
+                gump.Select(Orion.CreateGumpHook(2));
+                endTime = Orion.Now() + 4000;
+                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
+                if(check)
+                    break;
+                }
+            }
+        Orion.Wait(100);
+        }
+    Orion.CharPrint(self,1159,'Secured and Access Set')
+    }
+
+function JewelryModSearch() 
+	{
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
+    var tmpFile = Orion.NewFile();
+    tmpFile.Open(tmpFilePath);
+    var savedSearches = [];
+    var fileString = tmpFile.ReadAll(); 
+    if(fileString)
+        savedSearches = JSON.parse(fileString);
+    var skills =
+        [
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Clear'
+        ]
+    var mods = 
+        [
+        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
+        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
+        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
+        'Clear'
+        ]
+
+    var title = "Ali Jewelry Search"
+    //var startTime = Orion.Now();
+    var gump = Orion.CreateCustomGump(10420); 
+	var rowStart = 40;
+	var columnStart = 25;
+    var height = 650;
+    var width = 285;
+
+    gump.Clear();
+    gump.SetCallback('JewelryModSearchCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    var xPos = columnStart;
+    var yPos = rowStart;
+    
+    var heightAdjust;
+    var value;
+    var shared;
+
+    heightAdjust = 25;
+
+    for(var i=0;i<8;i++)
+        {
+        var responseCode = i + 1;
+        shared = 'Skill ' + responseCode;
+        value = Shared.GetVar(shared,undefined);
+        gump.AddText(xPos,yPos,554,shared);
+        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,skills.length);
+        for(var j=0;j<skills.length;j++)
+            gump.AddComboBoxText(skills[j],0,value == skills[j] ? 1 : 0,115,'left');
+        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
+        gump.AddTooltip('Skill Minimum Value');
+        yPos += heightAdjust;
+        }
+    
+    gump.AddText(xPos + 35,yPos,554,'Minimum Total Skill Amount');
+    gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(2000, xPos + 205 + 3, yPos, 0, Shared.GetVar('Skill Amount',''), 28, 20);
+    gump.AddTooltip('The sum of any combination of the above skills must be at least this amount to pass');
+    yPos += heightAdjust * 2;
+
+    for(var i=0;i<8;i++)
+        {
+        var responseCode = i + 101;
+        shared = 'Mod ' + (responseCode - 100);
+        value = Shared.GetVar(shared,undefined);
+        gump.AddText(xPos,yPos,554,shared);
+        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,mods.length);
+        for(var j=0;j<mods.length;j++)
+            gump.AddComboBoxText(mods[j],0,value == mods[j] ? 1 : 0,150,'left');
+        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
+        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
+        gump.AddTooltip('Mod Minimum Value');
+        yPos += heightAdjust;
+        }
+    yPos += heightAdjust;
+
+    gump.AddText(30,yPos - 20,554,'Saved Searches');
+    shared = Shared.GetVar('Save Name',undefined);
+    gump.AddComboBox(20000, xPos, yPos, '0x0BB8', 0, '0x0BB8', 160, -3,savedSearches.length);
+    for(var j=0;j<savedSearches.length;j++)
+        gump.AddComboBoxText(savedSearches[j][0],0,shared == savedSearches[j][0] ? 1 : 0,160,'left');
+    gump.AddButton(999, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Load Saved Criteria');
+    gump.AddText(211,yPos - 1,554,'Load');
+    gump.AddTooltip('Load Saved Criteria');
+
+    yPos += heightAdjust;
+    gump.AddResizepic(xPos, yPos , '0x0BB8', 160, 19);
+    gump.AddTextEntry(20001, xPos + 3, yPos, 0, '', 160, 20);
+    gump.AddTooltip('Enter Saved Search Name');
+    gump.AddButton(998, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Save Current Criteria');
+    gump.AddText(211,yPos - 1,554,'Save');
+    gump.AddTooltip('Save Current Criteria. Enter name to the left');
+
+    yPos += heightAdjust;
+    gump.AddButton(1000, xPos + 170, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddText(xPos + 170 + 11,yPos + 20,554,'Search');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddButton(1001, xPos + 85, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddText(xPos + 85 + 15,yPos + 20,554,'Clear');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddButton(997, xPos, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Delete currently selected saved search');
+    gump.AddText(xPos + 11,yPos + 20,554,'Delete');
+    gump.AddTooltip('Delete currently selected saved search');
+
+    gump.Update();
+    
+    //Orion.Print('interval: ' + (Orion.Now() - startTime))
+	}
+
+function JewelryModSearchCallback(_) 
+	{
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
+    var skills =
+        [
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Clear',
+        ]
+    var mods = 
+        [
+        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
+        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
+        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
+        'Clear',
+        ]
+    var code = CustomGumpResponse.ReturnCode();
+    //Orion.Print('Code: ' + code)
+    if(code == 0)
+        return;
+    else if(code == 1000)
+        {
+        var skillObj = {};
+        var modObj = {};
+        var skillCheck = false;
+        for(var i=0;i<8;i++)
+            {
+            var responseCode = i + 1;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(skills[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Skill ' + responseCode);
+                    Shared.RemoveVar('Skill ' + responseCode + ' Value');
+                    continue;
+                    }
+                skillCheck = true;
+                Shared.AddVar('Skill ' + responseCode,skills[combo]);
+                Shared.AddVar('Skill ' + responseCode + ' Value',textEntry);
+                skillObj[skills[combo]] = +textEntry;
+                }
+            }
+        for(var i=0;i<8;i++)
+            {
+            var responseCode = i + 101;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            //if(i==0) Orion.Print('combo: ' + combo)
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(mods[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Mod ' + (i + 1));
+                    Shared.RemoveVar('Mod ' + (i + 1) + ' Value');
+                    continue;
+                    }
+                Shared.AddVar('Mod ' + (i + 1),mods[combo]);
+                Shared.AddVar('Mod ' + (i + 1) + ' Value',textEntry);
+                modObj[mods[combo]] = +textEntry;
+                }
+            }
+        var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
+        Shared.AddVar('Skill Amount', skillAmount)
+        SearchJewelry(+skillAmount,skillObj,modObj)
+        //Orion.Print(JSON.stringify(skillObj) + '\n' + JSON.stringify(modObj))
+        }
+    else if(code == 1001)
+        {
+        Shared.ClearVars();
+        }
+    else if(code == 999) //Apply saved search
+        {
+        var tmpFile = Orion.NewFile();
+        tmpFile.Open(tmpFilePath);
+        var savedSearches = [];
+        var fileString = tmpFile.ReadAll(); 
+        if(fileString)
+            savedSearches = JSON.parse(fileString);
+        
+        Shared.ClearVars();
+        var combo = CustomGumpResponse.ComboBox(20000);
+        var savedSearch = savedSearches[combo];
+        if(!savedSearch)
+            return Orion.CharPrint(self,1159,'Couldn\'t find saved search')
+
+        var searchName = savedSearch[0];
+        var skillAmount = savedSearch[1];
+        var skillObj = savedSearch[2];
+        var modObj = savedSearch[3];
+        var i = 1;
+        for(prop in skillObj)
+            {
+            if(i > 9)
+                break;
+            Shared.AddVar('Skill ' + i,prop);
+            Shared.AddVar('Skill ' + i + ' Value',skillObj[prop]);
+            i++;
+            }
+        i = 1;
+        for(prop in modObj)
+            {
+            if(i > 9)
+                break;
+            Shared.AddVar('Mod ' + i,prop);
+            Shared.AddVar('Mod ' + i + ' Value',modObj[prop]);
+            i++;
+            }
+        Shared.AddVar('Skill Amount', skillAmount);
+        Shared.AddVar('Save Name',searchName);
+        }
+    else if(code == 998) //Save Search
+        {
+        var tmpFile = Orion.NewFile();
+        tmpFile.Open(tmpFilePath);
+        var savedSearches = [];
+        var fileString = tmpFile.ReadAll(); 
+        if(fileString)
+            savedSearches = JSON.parse(fileString);
+        var skillObj = {};
+        var modObj = {};
+        var skillCheck = false;
+        for(var i=0;i<8;i++)
+            {
+            var responseCode = i + 1;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(skills[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Skill ' + responseCode);
+                    Shared.RemoveVar('Skill ' + responseCode + ' Value');
+                    continue;
+                    }
+                Shared.AddVar('Skill ' + responseCode,skills[combo]);
+                Shared.AddVar('Skill ' + responseCode + ' Value',textEntry);
+                skillObj[skills[combo]] = +textEntry;
+                }
+            }
+        for(var i=0;i<8;i++)
+            {
+            var responseCode = i + 101;
+            var combo = CustomGumpResponse.ComboBox(responseCode);
+            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
+            if(combo > -1)
+                {
+                if(mods[combo] == 'Clear')
+                    {
+                    Shared.RemoveVar('Mod ' + (i + 1));
+                    Shared.RemoveVar('Mod ' + (i + 1) + ' Value');
+                    continue;
+                    }
+                Shared.AddVar('Mod ' + (i + 1),mods[combo]);
+                Shared.AddVar('Mod ' + (i + 1) + ' Value',textEntry);
+                modObj[mods[combo]] = +textEntry;
+                }
+            }
+        var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
+        var saveName = CustomGumpResponse.Text(20001)
+        if(!saveName)
+            return Orion.CharPrint(self,1159,'You must choose a name for the save');
+        var overwrite = false;
+        for(var i=0;i<savedSearches.length;i++)
+            {
+            var savedSearch = savedSearches[i];
+            if(saveName == savedSearch[0])
+                {
+                savedSearch[1] = skillAmount;
+                savedSearch[2] = skillObj;
+                savedSearch[3] = modObj;
+                overwrite = true;
+                break;
+                }
+            }
+        if(!overwrite)
+            {
+            savedSearches.push(
+                [
+                    saveName,
+                    skillAmount,
+                    skillObj,
+                    modObj
+                ])
+            }
+        Shared.AddVar('Skill Amount', skillAmount)
+        tmpFile.Remove();
+        tmpFile.Open(tmpFilePath);
+        Orion.Print("Recording To File: " + tmpFilePath); 
+        tmpFile.Write(JSON.stringify(savedSearches));
+        tmpFile.Close();
+        }
+    else if(code == 997) //Delete Saved Search
+        {
+        var tmpFile = Orion.NewFile();
+        tmpFile.Open(tmpFilePath);
+        var savedSearches = [];
+        var fileString = tmpFile.ReadAll(); 
+        if(fileString)
+            savedSearches = JSON.parse(fileString);
+        tmpFile.Close()
+        
+        var combo = CustomGumpResponse.ComboBox(20000);
+        var savedSearch = savedSearches[combo];
+        if(!savedSearch)
+            return Orion.CharPrint(self,1159,'Couldn\'t find saved search')
+
+        var outArr = savedSearches.filter(function(item)
+            {
+            return item[0] !== savedSearch[0];
+            })
+        tmpFile.Remove();
+        tmpFile.Open(tmpFilePath);
+        Orion.Print("Recording To File: " + tmpFilePath); 
+        tmpFile.Write(JSON.stringify(outArr));
+        tmpFile.Close();
+        }
+    //Orion.Print(gumpButtons);
+    //Shared.AddArray('gumpValues',gumpButtons);
+    Orion.Wait(50);
+    JewelryModSearch();
+	}
+
+//Scorer
+function JewelryScoreSearch()
+	{
+    var templates = [
+        'MysticWrestle',
+        'NecroWrestle',
+        'MysticBalakai',
+        'NecroBalakai',
+        'Disarmcher',
+        'GlendaBasher',
+        'DSer',
+        'HSBokMage',
+        'LSBokMage',
+        'HSBokMystic',
+        'LSBokMystic',
+        'FoNMage',
+        'NoxMage',
+        'HolyFister',
+        'SwordsArcherFister',
+        'MeleeArcherFister',
+        'any'
+    ];
+    var title = "Ali Jewelry Score Search"
+    var gump = Orion.CreateCustomGump(10421); 
+	var rowStart = 40;
+	var columnStart = 25;
+    var height = 175;
+    var width = 325;
+
+    gump.Clear();
+    gump.SetCallback('JewelryScoreCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    var xPos = columnStart;
+    var yPos = rowStart;
+    var heightAdjust = 25;
+
+    gump.AddText(xPos,yPos,554,'Template Name');
+    gump.AddText(xPos + 180,yPos,554,'Score');
+    gump.AddText(xPos + 240,yPos,554,'Skill');
+
+    var responseCode = 1;
+    yPos += heightAdjust;
+    gump.AddComboBox(responseCode, xPos, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,templates.length + 1);
+    for(var j=0;j<templates.length;j++)
+        gump.AddComboBoxText(templates[j],0,Shared.GetVar('Template Name',undefined) == templates[j] ? 1 : 0,115,'left');
+
+    gump.AddResizepic(xPos + 180, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(2, xPos + 180 + 3, yPos, 0, Shared.GetVar('Score',''), 28, 20);
+    gump.AddTooltip('Minimum Score');
+
+    gump.AddResizepic(xPos + 240, yPos , '0x0BB8', 28, 19);
+    gump.AddTextEntry(3, xPos + 240 + 3, yPos, 0, Shared.GetVar('Minimum Skill Amount',''), 28, 20);
+    gump.AddTooltip('Minimum Skill Amount');
+    yPos += heightAdjust * 2;
+
+    gump.AddButton(1000, xPos + 143, yPos, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddText(xPos + 143 + 11,yPos,554,'Search');
+    gump.AddTooltip('Highlight items that meet the criteria above');
+    gump.AddButton(1001, xPos + 73, yPos, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddText(xPos + 73 + 17,yPos,554,'Clear');
+    gump.AddTooltip('Clear the search menu');
+    gump.AddButton(1002, xPos + 270, yPos + 25, '22153', '22154', '22155', '0x0000');
+    gump.AddTooltip('Calculate Score');
+
+    gump.Update();
+	}
+
+function JewelryScoreCallback(_) 
+	{
+    var templates = [
+        'MysticWrestle',
+        'NecroWrestle',
+        'MysticBalakai',
+        'NecroBalakai',
+        'Disarmcher',
+        'GlendaBasher',
+        'DSer',
+        'HSBokMage',
+        'LSBokMage',
+        'HSBokMystic',
+        'LSBokMystic',
+        'FoNMage',
+        'NoxMage',
+        'HolyFister',
+        'SwordsArcherFister',
+        'MeleeArcherFister',
+        'any'
+    ];
+    var code = CustomGumpResponse.ReturnCode();
+    if(code == 0)
+        return;
+    else if(code == 1000) //search
+        {
+        var combo = CustomGumpResponse.ComboBox(1);
+        var textEntry = CustomGumpResponse.Text(2);
+        var textEntry2 = CustomGumpResponse.Text(3) || '0';
+        if(combo == -1)
+            return Orion.CharPrint(self,1159,'Choose a template');
+        if(!textEntry)
+            return Orion.CharPrint(self,1159,'Enter a minimum score');
+        Shared.AddVar('Template Name',templates[combo]);
+        Shared.AddVar('Score',textEntry);
+        Shared.AddVar('Minimum Skill Amount',textEntry2);   
+        HighlightJewelryScore(templates[combo],textEntry,textEntry2);
+        }
+    else if(code == 1001)
+        {
+        Shared.ClearVars();
+        }
+    else if(code == 1002)
+        {
+        var combo = CustomGumpResponse.ComboBox(1);
+        if(combo == -1 || templates[combo] == 'any')
+            {
+            Shared.AddVar('Template Name','any');
+            CalculateScoreCall()
+            }
+        else
+            {
+            Shared.AddVar('Template Name',templates[combo]);
+            CalculateScoreCall(templates[combo]);
+            }
+        }
+    Orion.Wait(50);
+    JewelryScoreSearch();
+	}
+
+function CalculateScoreCall(templateName)
+    {
+    if(!exampleString)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var exampleString = Orion.FindObject('myTarget').Properties();
+        }
+    var parse = parseJewelryProperties(exampleString);
+    var values = calculateTemplateValues(parse,templateName);
+    var outMsg = '';
+    values.forEach(function(value)
+        {
+        outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
+        });
+    //TextWindow.Print(outMsg)
+    Orion.Print(outMsg)
+    }
+
+function CalculateScore()
+    {
+    var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nFocus +20\nWrestling +20\nResisting Spells +20\nAntique\nFaster Cast Recovery 4\nEnhance Potions 35%\nMana Regeneration 4\nDurability 255 / 255\nMajor Artifact";
+    var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +15\nEvaluateIntelligence +15\nFocus +15\nWrestling +15\nResisting Spells +15\nAntique\nFaster Cast Recovery 3\nEnhance Potions 25%\nMana Regeneration 3\nDurability 255 / 255\nMajor Artifact";
+    var template = 'MysticWrestle' || undefined;
+    if(!exampleString)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var exampleString = Orion.FindObject('myTarget').Properties();
+        }
+  //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +100\nMana Regeneration 4\nFaster Cast Recovery 4\nEnhance Potions 35%\nDurability 255 / 255\nMajor Artifact";
+    //Debug(exampleString + '\n')
+    //var exampleString = "Ring\nWeight: 1 Stone\nNinjitsu +20\nNecromancy +15\nSpirit Speak +15\nAntique\nDexterity Bonus 8\nNight Sight\nHit Chance Increase 15%\nFaster Cast Recovery 3\nLower Reagent Cost 20%\nDurability 255 / 255\nMajor Artifact"
+
+    //var exampleString = "Resisting Spells +15\nEvaluate Intelligence +15\nMagery +20\nStrength Bonus 8\nDexterity Bonus 8\nEnhance Potions 25%\nDefense Chance Increase 15%\nDamage Increase 25%\n"
+
+    var parse = parseJewelryProperties(exampleString);
+    var values = calculateTemplateValues(parse,template);
+    //TextWindow.Open();
+    //TextWindow.Clear();
+    var outMsg = '';
+    values.forEach(function(value)
+        {
+        outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
+        });
+    //TextWindow.Print(outMsg)
+    Orion.Print(outMsg)
+    }
+
+function MultiColorScore()
+    {
+    var startTime = Orion.Now();
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var totalItems = 0;
+    var totalHighlighted = 0;
+    var fullItems = [];
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i]
+        if(container == 'ground')
+            containerSerial = 'ground';
+        else
+            containerSerial = container.Serial();
+        if(!container)
+            Orion.Print(container)
+        Orion.FindTypeEx('0x1F06|0x1086|0x108A|0x1F09',any,containerSerial,'item', 'finddistance', '', true).forEach(function(item)
+            {
+            var itemSerial = item.Serial();
+            Orion.TestItemColor(itemSerial, item.Color())
+            totalItems++;
+            var parse = parseJewelryProperties(item.Properties());
+            var value = calculateTemplateValues(parse)[0];
+            if(value[1] && value[1] >= 60 && value[2] >= 0)
+                fullItems.push([itemSerial,value[1],value[2]])
+            })
+        }
+    Orion.FindTypeEx('0x1F06|0x1086|0x108A|0x1F09',any,ground,'item', 24).forEach(function(item)
+        {
+        var itemSerial = item.Serial();
+        Orion.TestItemColor(itemSerial, item.Color())
+        totalItems++;
+        var parse = parseJewelryProperties(item.Properties());
+        var value = calculateTemplateValues(parse)[0];
+        if(value[1] && value[1] >= 60 && value[2] >= 0)
+            fullItems.push([itemSerial,value[1],value[2]])
+        })
+    var colors = {
+        yellow: 1174,
+        blue: 1152,
+        purple: 1283,
+        pink: 2735,
+        green: 1969,
+        gray: 2029,
+        white: 2050, //2728
+    }
+    fullItems.forEach(function(keeper)
+        {
+        var color;
+        if(keeper[1] >= 100)
+            color = colors.blue;
+        else if(keeper[1] >= 90)
+            color = colors.yellow
+        else if(keeper[1] >= 80)
+            color = colors.purple
+        else if(keeper[1] >= 70)
+            color = colors.green
+        else if(keeper[1] >= 60)
+            color = colors.white
+        if(color)
+            {
+            totalHighlighted++;
+            Orion.TestItemColor(keeper[0], color)
+            }
+        });
+    Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
+    }
+
+
+
+// var modValueRanges =
+//     { //[minimum,cap,overcap] OR [minimum,cap] OR [one possible value]
+//     Magery: [5,15,20],
+//     MaceFighting: [5,15,20],
+//     Fencing: [5,15,20],
+//     Musicianship: [5,15,20],
+//     Swordsmanship: [5,15,20],
+//     AnimalTaming: [5,15,20],
+//     SpiritSpeak: [5,15,20],
+//     Tactics: [5,15,20],
+//     Wrestling: [5,15,20],
+//     AnimalLore: [5,15,20],
+//     Discordance: [5,15,20],
+//     Focus: [5,15,20],
+//     Parrying: [5,15,20],
+//     Stealth: [5,15,20],
+//     Anatomy: [5,15,20],
+//     Bushido: [5,15,20],
+//     EvaluateIntelligence: [5,15,20],
+//     Mysticism: [5,15,20],
+//     Necromancy: [5,15,20],
+//     Archery: [5,15,20],
+//     Chivalry: [5,15,20],
+//     Healing: [5,15,20],
+//     Ninjitsu: [5,15,20],
+//     ResistingSpells: [5,15,20],
+//     ManaIncrease: [1,5],
+//     StaminaIncrease: [1,5],
+//     StrengthBonus: [1,8,10],
+//     DexterityBonus: [1,8,10],
+//     IntelligenceBonus: [1,8,10],
+//     ManaRegeneration: [1,3,44],
+//     EnhancePotions: [15,25,35],
+//     HitChanceIncrease: [5,15,20],
+//     DefenseChanceIncrease: [5,15,20],
+//     SwingSpeedIncrease: [5,10],
+//     DamageIncrease: [15,25,35],
+//     SpellDamageIncrease: [8,15,18],
+//     FasterCastRecovery: [1,3,4],
+//     FasterCasting: [1,1,1],
+//     LowerManaCost: [1,8,10],
+//     LowerReagentCost: [10,20,25],
+//     PhysicalResist: [5,15,20],
+//     FireResist: [5,15,20],
+//     ColdResist: [5,15,20],
+//     PoisonResist: [5,15,20],
+//     EnergyResist: [5,15,20],
+//     };
+
 function HighlightContainersCall(keep)
     {
     var startTime = Orion.Now();
@@ -245,183 +1420,6 @@ function HighlightContainersCall(keep)
                 });
         }
     Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
-    }
-
-function testEvalWeapon()
-    {
-    var startTime = testEvalItem(parseWeaponProperties,KeepWeapon);
-    Orion.Print('EvalWeaponMS: ' + (Orion.Now() - startTime))
-    }
-function testEvalJewelry()
-    {
-    var startTime = testEvalItem(parseJewelryProperties,KeepJewelry);
-    Orion.Print('EvalJewelryMS: ' + (Orion.Now() - startTime))
-    }
-function testEvalArmor()
-    {
-    var startTime = testEvalItem(parseArmorProperties,KeepArmor);
-    Orion.Print('EvalArmorMS: ' + (Orion.Now() - startTime))
-    }
-
-function testSortWeapon()
-    {
-    testSortItem(parseWeaponProperties,KeepWeapon)
-    }
-function testSortJewelry()
-    {
-    testSortItem(parseJewelryProperties,KeepJewelry)
-    }
-function testSortArmor()
-    {
-    testSortItem(parseArmorProperties,KeepArmor)
-    }
-
-function testEvalItem(parseFn,keepFn)
-    {
-    Orion.CharPrint(self,1159,'Target Item')
-    Orion.WaitForAddObject('myTarget');
-    var startTime = Orion.Now();
-    var item = Orion.FindObject('myTarget');
-    var parse = parseFn(item.Properties())
-    if(!TextWindow.IsOpened())
-        TextWindow.Open();
-    TextWindow.Clear();
-    for(mod in parse)
-        {
-        TextWindow.Print(mod + ': ' + parse[mod])
-        }
-    Orion.Print('Keeper: ' + keepFn(parse,item.Properties(),item.Graphic()));
-    return startTime;
-    }
-
-function testSortItem(parseFn,keepFn)
-    {
-    Orion.CharPrint(self,1159,'Target FROM container')
-    Orion.WaitForAddObject('myTarget');
-    var fromContainer = Orion.GetSerial('myTarget');
-    VerifyOpenContainer(fromContainer);
-    Orion.CharPrint(self,1159,'Target TO container')
-    Orion.WaitForAddObject('myTarget');
-    var toContainer = Orion.GetSerial('myTarget');
-    VerifyOpenContainer(toContainer);
-    var items = Orion.FindTypeEx(any,any,fromContainer).filter(function(item)
-        {
-        var parse = parseFn(item.Properties())
-        return keepFn(parse,item.Properties(),item.Graphic())
-        });
-    while(items.length)
-        {
-        for(var i=0;i<items.length;i++)
-            {
-            Orion.MoveItem(items[i].Serial(),0,toContainer);
-            Orion.Wait(1300);
-            }
-        items = Orion.FindTypeEx(any,any,fromContainer).filter(function(item)
-            {
-            var parse = parseFn(item.Properties())
-            return keepFn(parse,item.Properties(),item.Graphic())
-            });
-        }
-    }
-
-function LootCorpses()
-    {
-    var corpseStringIgnore = 'a horde minion corpse|a headless corpse';
-	var corpseGraphic = '0x2006';
-    var backpackSerial = Orion.GetSerial(backpack);
-    var corpses = Orion.FindTypeEx(corpseGraphic, any, ground, "", 2).filter(function(corpse)
-        {
-        return !Orion.Contains(corpse.Properties(), corpseStringIgnore);
-        });
-    if(!corpses.length)
-        return false;
-    var corpseId = corpses[corpses.length - 1];
-    var corpseIdSerial = corpseId.Serial();
-    if(!corpseId.IsCorpse())
-        {
-        Orion.Ignore(corpseIdSerial);
-        return true;
-        }
-    while(!Orion.GumpExists('container', corpseIdSerial))
-        {
-        Orion.OpenContainer(corpseIdSerial);
-        Orion.Wait(1300);
-        }
-    Orion.Print("Start Evaluate Item")
-    var itemsInCorpse = Orion.FindTypeEx('any', 'any', lastcontainer);
-    for(var i=0;i<itemsInCorpse.length;i++)
-        {
-        var item = itemsInCorpse[i];
-        var itemSerial = item.Serial();
-        if(item && item.Container() !== backpackSerial && AliKeep(itemSerial))
-            {
-            while(item.Container() !== backpackSerial)
-                {
-                Orion.MoveItem(itemSerial);
-                Orion.Wait(1300);
-                }
-            }				
-        }
-    Orion.Print("Finish Evaluate Items");
-    Orion.Ignore(corpseIdSerial);
-    return true;
-    }
-
-function LootCorpsesOLD()
-    {
-    var lootToBackpack = true;
-    var lootBagType = '';
-	var corpseGraphic = '0x2006';
-    var useLootCorpses = true;
-	if(useLootCorpses)
-        {
-		var corpses = Orion.FindTypeEx(corpseGraphic, any, ground, "", 2);
-		if(!corpses.length)
-	        return;
-	    var corpseId = corpses[corpses.length - 1];
-        var corpseIdSerial = corpseId.Serial();
-		if(!corpseId.IsCorpse())
-            {
-			Orion.Ignore(corpseIdSerial);
-			return;
-		    }
-		while(!Orion.GumpExists('container', corpseIdSerial))
-            {
-            Orion.OpenContainer(corpseIdSerial);
-            Orion.Wait(1300);
-            }
-		Orion.Print("Start Evaluate Item")
-		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
-		var lootbag = lootToBackpack ? Orion.GetSerial(backpack) : Orion.FindType(lootBagType, 'any', 'backpack')[0];
-		itemsInCorpse.forEach(function(item)
-            {
-			var itemInstance = Orion.FindObject(item);
-			if(itemInstance && itemInstance.Container() !== Player.Container() &&  itemInstance.Container() !== lootbag)
-                {
-				Orion.Print("Evaluate Item");
-				if(AliKeep(item))
-                    {
-					var movedItem = Orion.FindObject(item);
-					if(lootbag)
-                        {
-						Orion.MoveItem(item, 1000, lootbag);
-					    }
-					else
-                        {
-						Orion.MoveItem(item, 1000, 'backpack');
-					    }
-					var waitForLootbagIndex = 0;
-					while(movedItem.Container() !== lootbag && waitForLootbagIndex < 15)
-                        {
-						waitForLootbagIndex++;
-						Orion.Wait(100);
-					    }
-				    }
-			    }				
-		    });
-		Orion.Print("Finish Evaluate Items");
-		Orion.Ignore(corpseId.Serial());
-        }
     }
 
 function AliKeep(itemSerial)
@@ -868,7 +1866,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return 'LRC Vitality Armor';
         if(lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
             return 'LMC Vitality Armor';
-        if(stam > 5 && isArtifact)
+        if(isArtifact && stam && mr && lmc)
             return 'Misc HP/Stam Armor';
         }
 
@@ -1062,104 +2060,93 @@ function parseArmorProperties(armorProperties)
     return propertiesObj;
     }
 
-function AliLootHouse()
+
+
+function testEvalItem(parseFn,keepFn)
     {
-    Orion.ClearFakeMapObjects();
-    Orion.ResetSearchArea();
-    Orion.IgnoreReset();
-    var unsortedBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
+    Orion.CharPrint(self,1159,'Target Item')
+    Orion.WaitForAddObject('myTarget');
+    var startTime = Orion.Now();
+    var item = Orion.FindObject('myTarget');
+    var parse = parseFn(item.Properties())
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Clear();
+    for(mod in parse)
         {
-        return Orion.Contains(item.Properties(),'Unsorted');
-        })[0];
-    if(!unsortedBook)
-        return Orion.CharPrint(self,1159,'Unsorted Book Not Found!');
-    var unsortedX = unsortedBook.X();
-    var unsortedY = unsortedBook.Y();
-    var range = 2;
-    var unsortedX1 = unsortedX - range;
-    var unsortedY1 = unsortedY - range;
-    var unsortedX2 = unsortedX + range;
-    var unsortedY2 = unsortedY + range;
-    
-    Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
-    var unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-        {
-        var properties = item.Properties();
-        return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
-        }).sort(function(a,b)
-            {
-            var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-            var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-            return aContents - bContents;
-            })[0];
-    Orion.ResetSearchArea();
-    if(!unsortedContainer)
-        return Orion.CharPrint(self,1159,'No Containers to Sort!');
-    while(unsortedContainer)
-        {
-        Orion.ClearFakeMapObjects();
-        Orion.GetTilesInRect('land',unsortedX1, unsortedY1, unsortedX2, unsortedY2).forEach(function(tile,ind)
-            {
-            Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
-            });
-        Orion.AddFakeMapObject(10000, '0x051A', 1152, unsortedX, unsortedY, Player.Z());
-        var fullCheck = false;
-        var unsortedContainerSerial = unsortedContainer.Serial();
-        while(Orion.GetDistance(unsortedContainerSerial) > 2)
-            {
-            Orion.WalkTo(unsortedContainer.X(),unsortedContainer.Y());
-            Orion.Wait(100);
-            }
-        VerifyOpenContainer(unsortedContainerSerial);
-        var items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
-            {
-            return AliKeep(item);
-            });
-        while(items.length)
-            {
-            for(var i=0;i<items.length;i++)
-                {
-                Orion.MoveItem(items[i]);
-                Orion.Wait(1300);
-                var fullCheck = ((Orion.ObjAtLayer('backpack').Properties().match(/Contents: (\d+)\//) || [])[1] || 125) == 125
-                    || (Player.Weight() > Player.MaxWeight() - 20);
-                if(fullCheck)
-                    break;
-                }
-            if(fullCheck)
-                break;
-            items = Orion.FindType(any,any,unsortedContainerSerial).filter(function(item)
-                {
-                return AliKeep(item);
-                });
-            }
-        if(!fullCheck)
-            {
-            MoveTrashContainer(unsortedContainerSerial);
-            Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
-            unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-                {
-                var properties = item.Properties();
-                return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 0/') === -1;
-                }).sort(function(a,b)
-                    {
-                    var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                    var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                    return aContents - bContents;
-                    })[0];
-            Orion.ResetSearchArea();
-            }
-        else
-            {
-            PutAwayLoot();
-            }
-        Orion.Wait(500);
+        TextWindow.Print(mod + ': ' + parse[mod])
         }
-    PutAwayLoot();
+    Orion.Print('Keeper: ' + keepFn(parse,item.Properties(),item.Graphic()));
+    return startTime;
     }
-function TestMoveTrash()
+
+function testSortItem(parseFn,keepFn)
     {
-        MoveTrashContainer(0x432E0189)  
+    Orion.CharPrint(self,1159,'Target FROM container')
+    Orion.WaitForAddObject('myTarget');
+    var fromContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(fromContainer);
+    Orion.CharPrint(self,1159,'Target TO container')
+    Orion.WaitForAddObject('myTarget');
+    var toContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(toContainer);
+    var items = Orion.FindTypeEx(any,any,fromContainer).filter(function(item)
+        {
+        var parse = parseFn(item.Properties())
+        return keepFn(parse,item.Properties(),item.Graphic())
+        });
+    while(items.length)
+        {
+        for(var i=0;i<items.length;i++)
+            {
+            Orion.MoveItem(items[i].Serial(),0,toContainer);
+            Orion.Wait(1300);
+            }
+        items = Orion.FindTypeEx(any,any,fromContainer).filter(function(item)
+            {
+            var parse = parseFn(item.Properties())
+            return keepFn(parse,item.Properties(),item.Graphic())
+            });
+        }
+    }
+
+function VerifyOpenContainer(containerSerial,delay)
+    {
+    var startTime = Orion.Now();
+    var endTime = startTime + (delay || 5000);
+    while(!Orion.GumpExists('container',containerSerial))
+        {
+        if(Orion.Now() > endTime)
+            return false;
+        Orion.UseObject(containerSerial);
+        Orion.Wait(1000);
+        }
+    return true;
+    }
+
+var debug = false;
+function Debug(msg)
+    {
+    if(!debug)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    Orion.Print(msg);
+    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
+    }
+
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
     }
 
 function MoveTrashContainer(serial)
@@ -1258,233 +2245,6 @@ function MoveTrashContainer(serial)
         }
     }
 
-function PutAwayLoot()
-    {
-    Orion.ResetSearchArea();
-    var playerBackpack = Orion.GetSerial(backpack);
-    var items = Orion.FindTypeEx(any).filter(function(item)
-        {
-        return AliKeep(item.Serial());
-        })
-    if(items.length === 0)
-        return Orion.CharPrint(self,1159,'No items to put away!');
-    var jewelry = [];
-    var weapons = [];
-    var armor = [];
-    var shields = [];
-    for(var i=0;i<items.length;i++)
-        {
-        var item = items[i];
-        var props = item.Properties();
-        if(Orion.Contains('0x1F06|0x1086|0x108A|0x1F09', item.Graphic()))
-            {
-            jewelry.push(item);
-            continue;
-            }
-        if(props.indexOf('Two-handed Weapon') > -1 || props.indexOf('One-handed Weapon') > -1)
-            {
-            weapons.push(item);
-            continue;
-            }
-        if(props.indexOf("Poison Resist") > -1 && props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1)
-            {
-            armor.push(item);
-            continue;
-            }
-        shields.push(item);
-        }
-
-    //Put Away Jewels
-    Orion.Print(JSON.stringify(jewelry[0]))
-    PutAwayJewelry(jewelry)
-
-    //Put away armor
-    var containerNames = ['Vitality','Haste','Restoration','Misc'];
-    var armorArr = [[],[],[],[]]
-    for(var i=0;i<armor.length;i++)
-        {
-        var item = armor[i];
-        var itemSerial = item.Serial()
-        var result = AliKeep(itemSerial);
-        switch(result)
-            {
-            case 'LRC Vitality Armor':
-            case 'LMC Vitality Armor':
-                armorArr[0].push(itemSerial);
-                break;
-            case 'LRC Stamina Armor':
-            case 'LMC Stamina Armor':
-                armorArr[1].push(itemSerial);
-                break;
-            case 'LRC Misc Armor':
-            case 'LMC Misc Armor':
-                armorArr[2].push(itemSerial);
-                break;
-            case 'LRC Stam/HP Armor':
-            case 'LMC Stam/HP Armor':
-            case 'Misc HP/Stam Armor':
-            case 'Luck Armor':
-            case 'Training Armor':
-                armorArr[3].push(itemSerial);
-                break;
-            default:
-                break;
-            }
-        }
-    for(var i=0;i<armorArr.length;i++)
-        {
-        var armorCategoryArr = armorArr[i];
-        var armorCategoryName = containerNames[i];
-        if(armorCategoryArr.length === 0)
-            continue;
-        Orion.ResetSearchArea();
-        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Armor ' + armorCategoryName) > -1;
-            })[0];
-        if(!categoryBook)
-            {
-            DiscordPush('Category Book Missing: ' + 'Armor ' + armorCategoryName);
-            Orion.Terminate('all');
-            }
-        var categoryX = categoryBook.X();
-        var categoryY = categoryBook.Y();
-        var sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-            }).sort(function(a,b)
-                {
-                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                return bContents - aContents;
-                })[0];
-        if(!sortContainerArmor)
-            {
-            DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
-            Orion.Terminate('all');
-            }
-        while(sortContainerArmor.Distance() > 2)
-            {
-            Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
-            Orion.Wait(100);
-            }
-        VerifyOpenContainer(sortContainerArmor.Serial());
-        for(var j=0;j<armorCategoryArr.length;j++)
-            {
-            var armor = armorCategoryArr[j];
-            while(Orion.GetContainer(armor) == playerBackpack)
-                {
-                Orion.MoveItem(armor,0,sortContainerArmor.Serial());
-                Orion.Wait(1300);
-                }
-            if(Orion.Contains(sortContainerArmor.Properties(),'Contents: 125'))
-                {
-                Orion.CloseGump('container',sortContainerArmor.Serial());
-                sortContainerArmor = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-                    {
-                    var properties = item.Properties();
-                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-                    }).sort(function(a,b)
-                        {
-                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        return bContents - aContents;
-                        })[0];
-                if(!sortContainerArmor)
-                    {
-                    DiscordPush(Player.Name() + ' - Armor: ' + armorCategoryName + ' Containers Are Full Or Missing!')
-                    Orion.Terminate('all');
-                    }
-                while(sortContainerArmor.Distance() > 2)
-                    {
-                    Orion.WalkTo(sortContainerArmor.X(),sortContainerArmor.Y());
-                    Orion.Wait(100);
-                    }
-                VerifyOpenContainer(sortContainerArmor.Serial());
-                }
-            }
-        }
-
-    //Weapons / Shields
-    var weapons = weapons.concat(shields);
-    if(weapons.length)
-        {    
-        Orion.ResetSearchArea();
-        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Weapon') > -1;
-            })[0];
-        if(!categoryBook)
-            {
-            DiscordPush('Category Book Missing: ' + 'Weapon');
-            Orion.Terminate('all');
-            }
-        var categoryX = categoryBook.X();
-        var categoryY = categoryBook.Y();
-        var sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-            }).sort(function(a,b)
-                {
-                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                return bContents - aContents;
-                })[0];
-        if(!sortContainerWeapon)
-            {
-            DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
-            Orion.Terminate('all');
-            }
-        while(sortContainerWeapon.Distance() > 2)
-            {
-            Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
-            Orion.Wait(100);
-            }
-        VerifyOpenContainer(sortContainerWeapon.Serial());
-        for(var i=0;i<weapons.length;i++)
-            {
-            var weapon = weapons[i];
-            var weaponSerial = weapon.Serial();
-            if(!AliKeep(weaponSerial))
-                continue;
-            while(Orion.GetContainer(weaponSerial) == playerBackpack)
-                {
-                Orion.MoveItem(weaponSerial,0,sortContainerWeapon.Serial());
-                Orion.Wait(1300);
-                }
-            if(Orion.Contains(sortContainerWeapon.Properties(),'Contents: 125'))
-                {
-                Orion.CloseGump('container',sortContainerWeapon.Serial());
-                sortContainerWeapon = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-                    {
-                    var properties = item.Properties();
-                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-                    }).sort(function(a,b)
-                        {
-                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        return bContents - aContents;
-                        })[0];
-                if(!sortContainerWeapon)
-                    {
-                    DiscordPush(Player.Name() + ' - Weapon Containers Are Full Or Missing!')
-                    Orion.Terminate('all');
-                    }
-                while(sortContainerWeapon.Distance() > 2)
-                    {
-                    Orion.WalkTo(sortContainerWeapon.X(),sortContainerWeapon.Y());
-                    Orion.Wait(100);
-                    }
-                VerifyOpenContainer(sortContainerWeapon.Serial());
-                }
-            }
-        }    
-    }
-
 function PutAwayJewelry(jewelry)
     {
     var playerBackpack = Orion.GetSerial(backpack);
@@ -1548,13 +2308,13 @@ function PutAwayJewelry(jewelry)
             var score = calculateTemplateValues(parse)[0][1];
             Orion.Print(score)
             var sortContainerScore;
-            if(score >= 140)
+            if(score >= 100)
                 sortContainerScore = sortContainerSkills[0];
-            else if(score >= 120)
+            else if(score >= 90)
                 sortContainerScore = sortContainerSkills[1];
-            else if(score >= 100)
-                sortContainerScore = sortContainerSkills[2];
             else if(score >= 80)
+                sortContainerScore = sortContainerSkills[2];
+            else if(score >= 70)
                 sortContainerScore = sortContainerSkills[3];
             else
                 sortContainerScore = sortContainerSkills[4];
@@ -1570,233 +2330,6 @@ function PutAwayJewelry(jewelry)
                 }
             }
         }
-    }
-
-function PutAwayJewelryOLD(jewelry)
-    {
-    var jewelryArr = [[],[],[],[],[],[]];
-    for(var i=0;i<jewelry.length;i++)
-        {
-        var item = jewelry[i];
-        var parse = parseJewelryProperties(item.Properties());
-        var skillInt = CountMatchingMods(parse,skillMods)
-        jewelryArr[skillInt].push(item.Serial());
-        }
-    for(var i=0;i<jewelryArr.length;i++)
-        {
-        var skillIntArr = jewelryArr[i];
-        if(skillIntArr.length === 0)
-            continue;
-        Orion.ResetSearchArea();
-        var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
-            {
-            var properties = item.Properties();
-            Orion.Print(i)
-            return properties.indexOf('Jewelry ' + i + ' Skill') > -1;
-            })[0];
-        if(!categoryBook)
-            {
-            DiscordPush('Category Book Missing: ' + 'Jewelry ' + i + ' Skill');
-            Orion.Terminate('all');
-            }
-        var categoryX = categoryBook.X();
-        var categoryY = categoryBook.Y();
-        var sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-            {
-            var properties = item.Properties();
-            return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-            }).sort(function(a,b)
-                {
-                var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                return bContents - aContents;
-                })[0];
-        if(!sortContainerSkills)
-            {
-            DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
-            Orion.Terminate('all');
-            }
-        while(sortContainerSkills.Distance() > 2)
-            {
-            Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
-            Orion.Wait(100);
-            }
-        VerifyOpenContainer(sortContainerSkills.Serial());
-        for(var j=0;j<skillIntArr.length;j++)
-            {
-            var jewel = skillIntArr[j];
-            while(Orion.GetContainer(jewel) == playerBackpack)
-                {
-                Orion.MoveItem(jewel,0,sortContainerSkills.Serial());
-                Orion.Wait(1300);
-                }
-            if(Orion.Contains(sortContainerSkills.Properties(),'Contents: 125'))
-                {
-                Orion.CloseGump('container',sortContainerSkills.Serial());
-                sortContainerSkills = Orion.FindTypeEx(any,any,ground,'item','xyz: ' + categoryX + ',' + categoryY).filter(function(item)
-                    {
-                    var properties = item.Properties();
-                    return properties.indexOf('Contents: ') > -1 && properties.indexOf('Contents: 125/') === -1;
-                    }).sort(function(a,b)
-                        {
-                        var aContents = +((a.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        var bContents = +((b.Properties().match(/Contents: (\d+)/) || [])[1] || 125);
-                        return bContents - aContents;
-                        })[0];
-                if(!sortContainerSkills)
-                    {
-                    DiscordPush(Player.Name() + ' - Jewelry: ' + i + ' Skills Containers Are Full Or Missing!')
-                    Orion.Terminate('all');
-                    }
-                while(sortContainerSkills.Distance() > 2)
-                    {
-                    Orion.WalkTo(sortContainerSkills.X(),sortContainerSkills.Y());
-                    Orion.Wait(100);
-                    }
-                VerifyOpenContainer(sortContainerSkills.Serial());
-                }
-            }
-        }
-    }
-
-function DropDraggedToContainer() //v2
-	{//Reduce mouse movements when transferring items.
-    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
-    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
-    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
-	var dropContainer = Orion.FindObject('dropContainer');
-	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');
-	else
-		{
-		var lastSerial = Orion.GetSerial('dropContainer');
-		if(Orion.WaitForAddObject('dropContainer') != 1)
-			Orion.AddObject('dropContainer', lastSerial);
-		}
-	}
-function DropDraggedToContainer2() //v2
-	{//Reduce mouse movements when transferring items.
-    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
-    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
-    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
-	var dropContainer = Orion.FindObject('dropContainer2');
-	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer2');
-	else
-		{
-		var lastSerial = Orion.GetSerial('dropContainer2');
-		if(Orion.WaitForAddObject('dropContainer2') != 1)
-			Orion.AddObject('dropContainer2', lastSerial);
-		}
-	}
-function VerifyOpenContainer(containerSerial,delay)
-    {
-    var startTime = Orion.Now();
-    var endTime = startTime + (delay || 5000);
-    while(!Orion.GumpExists('container',containerSerial))
-        {
-        if(Orion.Now() > endTime)
-            return false;
-        Orion.UseObject(containerSerial);
-        Orion.Wait(1000);
-        }
-    return true;
-    }
-
-var debug = false;
-function Debug(msg)
-    {
-    if(!debug)
-        return;
-    if(!TextWindow.IsOpened())
-        TextWindow.Open();
-    Orion.Print(msg);
-    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-    }
-
-function DiscordPush(message)
-	{
-	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
-	Orion.HttpPost(bot, "content=" + message);
-	}
-
-function SetDiscordRegistryEntry()
-    {
-    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
-    var registryName = 'discordConfig';
-    Orion.RegWrite(registryName, discordConfig);
-    return discordConfig;
-    }
-
-function DropDraggedHere() //v3
-    {
-    if(!Orion.Dragging())
-        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
-    var range = 2;
-    var endTimeMain = Orion.Now() + 6000;
-    var hash = {};
-    while(Orion.Dragging() && Orion.Now() < endTimeMain)
-        {
-        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
-        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
-            .filter(function(tile)
-                {
-                var tileX = tile.X();
-                var tileY = tile.Y();
-                var tileZ = tile.Z();
-                if(tileZ != Player.Z())
-                    return false;
-                var tileHash = "" + tileX + tileY + tileZ;
-                if(hash[tileHash])
-                    return false;
-                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
-                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
-                return mobCheck && itemCheck;
-                });
-        if(!firstPassTiles.length)
-            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
-        var validTiles = [];
-        for(var i=0;i<firstPassTiles.length;i++)
-            {
-            var tile = firstPassTiles[i];
-            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
-            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
-                {
-                validTiles.push(tile);
-                if(validTiles.length >= 4)
-                    break;
-                }
-            }
-        var endTimeSub = Orion.Now() + 2000;
-        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
-            {
-            var validTile = validTiles.shift();
-            var validTileX = validTile.X();
-            var validTileY = validTile.Y();
-            var validTileZ = validTile.Z();
-            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
-            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
-            Orion.Wait(500);
-            }
-        if(validTile && Orion.Dragging())
-            hash['' + validTileX + validTileY + validTileZ] = true;
-        }
-    if(!validTiles.length)
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
-    }
-
-function UserSearchInput()
-    {
-    var argumentArray = 
-        [
-            'NameOfSearchPreset',
-            30, //Minimum Total Skills
-            {'Magery':10,'Swordsmanship':10,'Parrying':10,'ResistingSpells':10,'EvaluateIntelligence':10}, //skillsSearch - 'SkillNameNoSpaces': MinimumSpecificSkill
-            {'DefenseChanceIncrease':5,'DamageIncrease':25} //modsSearch - 'ModNameNoSpaces': MinimumSpecificMod
-        ]
-    TextWindow.Open()
-    TextWindow.Print(JSON.stringify(argumentArray))
-    SearchJewelry(argumentArray[1],argumentArray[2],argumentArray[3]);
     }
 
 function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //30,{'Magery':10,'EvaluatingIntelligence':10,'Mysticism':10},{'HitChanceIncrease':15}
@@ -1873,526 +2406,6 @@ function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,mods
     return true;
     }
 
-function JewelryModSearch() 
-	{
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
-    var tmpFile = Orion.NewFile();
-    tmpFile.Open(tmpFilePath);
-    var savedSearches = [];
-    var fileString = tmpFile.ReadAll(); 
-    if(fileString)
-        savedSearches = JSON.parse(fileString);
-    var skills =
-        [
-        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
-        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
-        'Clear'
-        ]
-    var mods = 
-        [
-        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
-        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
-        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
-        'Clear'
-        ]
-
-    var title = "Ali Jewelry Search"
-    //var startTime = Orion.Now();
-    var gump = Orion.CreateCustomGump(10420); 
-	var rowStart = 40;
-	var columnStart = 25;
-    var height = 650;
-    var width = 285;
-
-    gump.Clear();
-    gump.SetCallback('AliGumpCallback');
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
-    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
-    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
-    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
-    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
-    gump.Select('htmlgump');
-    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
-    gump.Select('gump');
-    
-    //Custom Assets
-	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
-	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
-    var xPos = columnStart;
-    var yPos = rowStart;
-    
-    var heightAdjust;
-    var value;
-    var shared;
-
-    heightAdjust = 25;
-
-    for(var i=0;i<8;i++)
-        {
-        var responseCode = i + 1;
-        shared = 'Skill ' + responseCode;
-        value = Shared.GetVar(shared,undefined);
-        gump.AddText(xPos,yPos,554,shared);
-        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,skills.length);
-        for(var j=0;j<skills.length;j++)
-            gump.AddComboBoxText(skills[j],0,value == skills[j] ? 1 : 0,115,'left');
-        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
-        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
-        gump.AddTooltip('Skill Minimum Value');
-        yPos += heightAdjust;
-        }
-    
-    gump.AddText(xPos + 35,yPos,554,'Minimum Total Skill Amount');
-    gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
-    gump.AddTextEntry(2000, xPos + 205 + 3, yPos, 0, Shared.GetVar('Skill Amount',''), 28, 20);
-    gump.AddTooltip('The sum of any combination of the above skills must be at least this amount to pass');
-    yPos += heightAdjust * 2;
-
-    for(var i=0;i<8;i++)
-        {
-        var responseCode = i + 101;
-        shared = 'Mod ' + (responseCode - 100);
-        value = Shared.GetVar(shared,undefined);
-        gump.AddText(xPos,yPos,554,shared);
-        gump.AddComboBox(responseCode, xPos + 50, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,mods.length);
-        for(var j=0;j<mods.length;j++)
-            gump.AddComboBoxText(mods[j],0,value == mods[j] ? 1 : 0,150,'left');
-        gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
-        gump.AddTextEntry(responseCode + 500, xPos + 205 + 3, yPos, 0, Shared.GetVar(shared + ' Value',''), 28, 20);
-        gump.AddTooltip('Mod Minimum Value');
-        yPos += heightAdjust;
-        }
-    yPos += heightAdjust;
-
-    gump.AddText(30,yPos - 20,554,'Saved Searches');
-    shared = Shared.GetVar('Save Name',undefined);
-    gump.AddComboBox(20000, xPos, yPos, '0x0BB8', 0, '0x0BB8', 160, -3,savedSearches.length);
-    for(var j=0;j<savedSearches.length;j++)
-        gump.AddComboBoxText(savedSearches[j][0],0,shared == savedSearches[j][0] ? 1 : 0,160,'left');
-    gump.AddButton(999, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Load Saved Criteria');
-    gump.AddText(211,yPos - 1,554,'Load');
-    gump.AddTooltip('Load Saved Criteria');
-
-    yPos += heightAdjust;
-    gump.AddResizepic(xPos, yPos , '0x0BB8', 160, 19);
-    gump.AddTextEntry(20001, xPos + 3, yPos, 0, '', 160, 20);
-    gump.AddTooltip('Enter Saved Search Name');
-    gump.AddButton(998, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Save Current Criteria');
-    gump.AddText(211,yPos - 1,554,'Save');
-    gump.AddTooltip('Save Current Criteria. Enter name to the left');
-
-    yPos += heightAdjust;
-    gump.AddButton(1000, xPos + 170, yPos + 20, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddText(xPos + 170 + 11,yPos + 20,554,'Search');
-    gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddButton(1001, xPos + 85, yPos + 20, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Clear the search menu');
-    gump.AddText(xPos + 85 + 15,yPos + 20,554,'Clear');
-    gump.AddTooltip('Clear the search menu');
-    gump.AddButton(997, xPos, yPos + 20, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Delete currently selected saved search');
-    gump.AddText(xPos + 11,yPos + 20,554,'Delete');
-    gump.AddTooltip('Delete currently selected saved search');
-
-    gump.Update();
-    
-    //Orion.Print('interval: ' + (Orion.Now() - startTime))
-	}
-
-
-function ClearVars()
-    {
-    Shared.ClearVars()
-    }
-
-function AliGumpCallback(_) 
-	{
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
-    var skills =
-        [
-        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
-        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
-        'Clear',
-        ]
-    var mods = 
-        [
-        'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
-        'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
-        'FasterCastRecovery','FasterCasting','LowerManaCost','SpellDamageIncrease','LowerReagentCost','SwingSpeedIncrease','DamageIncrease',
-        'Clear',
-        ]
-    var code = CustomGumpResponse.ReturnCode();
-    //Orion.Print('Code: ' + code)
-    if(code == 0)
-        return;
-    else if(code == 1000)
-        {
-        var skillObj = {};
-        var modObj = {};
-        var skillCheck = false;
-        for(var i=0;i<8;i++)
-            {
-            var responseCode = i + 1;
-            var combo = CustomGumpResponse.ComboBox(responseCode);
-            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
-            if(combo > -1)
-                {
-                if(skills[combo] == 'Clear')
-                    {
-                    Shared.RemoveVar('Skill ' + responseCode);
-                    Shared.RemoveVar('Skill ' + responseCode + ' Value');
-                    continue;
-                    }
-                skillCheck = true;
-                Shared.AddVar('Skill ' + responseCode,skills[combo]);
-                Shared.AddVar('Skill ' + responseCode + ' Value',textEntry);
-                skillObj[skills[combo]] = +textEntry;
-                }
-            }
-        for(var i=0;i<8;i++)
-            {
-            var responseCode = i + 101;
-            var combo = CustomGumpResponse.ComboBox(responseCode);
-            //if(i==0) Orion.Print('combo: ' + combo)
-            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
-            if(combo > -1)
-                {
-                if(mods[combo] == 'Clear')
-                    {
-                    Shared.RemoveVar('Mod ' + (i + 1));
-                    Shared.RemoveVar('Mod ' + (i + 1) + ' Value');
-                    continue;
-                    }
-                Shared.AddVar('Mod ' + (i + 1),mods[combo]);
-                Shared.AddVar('Mod ' + (i + 1) + ' Value',textEntry);
-                modObj[mods[combo]] = +textEntry;
-                }
-            }
-        var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
-        Shared.AddVar('Skill Amount', skillAmount)
-        SearchJewelry(+skillAmount,skillObj,modObj)
-        //Orion.Print(JSON.stringify(skillObj) + '\n' + JSON.stringify(modObj))
-        }
-    else if(code == 1001)
-        {
-        Shared.ClearVars();
-        }
-    else if(code == 999) //Apply saved search
-        {
-        var tmpFile = Orion.NewFile();
-        tmpFile.Open(tmpFilePath);
-        var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
-        if(fileString)
-            savedSearches = JSON.parse(fileString);
-        
-        Shared.ClearVars();
-        var combo = CustomGumpResponse.ComboBox(20000);
-        var savedSearch = savedSearches[combo];
-        if(!savedSearch)
-            return Orion.CharPrint(self,1159,'Couldn\'t find saved search')
-
-        var searchName = savedSearch[0];
-        var skillAmount = savedSearch[1];
-        var skillObj = savedSearch[2];
-        var modObj = savedSearch[3];
-        var i = 1;
-        for(prop in skillObj)
-            {
-            if(i > 9)
-                break;
-            Shared.AddVar('Skill ' + i,prop);
-            Shared.AddVar('Skill ' + i + ' Value',skillObj[prop]);
-            i++;
-            }
-        i = 1;
-        for(prop in modObj)
-            {
-            if(i > 9)
-                break;
-            Shared.AddVar('Mod ' + i,prop);
-            Shared.AddVar('Mod ' + i + ' Value',modObj[prop]);
-            i++;
-            }
-        Shared.AddVar('Skill Amount', skillAmount);
-        Shared.AddVar('Save Name',searchName);
-        }
-    else if(code == 998) //Save Search
-        {
-        var tmpFile = Orion.NewFile();
-        tmpFile.Open(tmpFilePath);
-        var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
-        if(fileString)
-            savedSearches = JSON.parse(fileString);
-        var skillObj = {};
-        var modObj = {};
-        var skillCheck = false;
-        for(var i=0;i<8;i++)
-            {
-            var responseCode = i + 1;
-            var combo = CustomGumpResponse.ComboBox(responseCode);
-            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
-            if(combo > -1)
-                {
-                if(skills[combo] == 'Clear')
-                    {
-                    Shared.RemoveVar('Skill ' + responseCode);
-                    Shared.RemoveVar('Skill ' + responseCode + ' Value');
-                    continue;
-                    }
-                Shared.AddVar('Skill ' + responseCode,skills[combo]);
-                Shared.AddVar('Skill ' + responseCode + ' Value',textEntry);
-                skillObj[skills[combo]] = +textEntry;
-                }
-            }
-        for(var i=0;i<8;i++)
-            {
-            var responseCode = i + 101;
-            var combo = CustomGumpResponse.ComboBox(responseCode);
-            var textEntry = CustomGumpResponse.Text(responseCode+500) || '1';
-            if(combo > -1)
-                {
-                if(mods[combo] == 'Clear')
-                    {
-                    Shared.RemoveVar('Mod ' + (i + 1));
-                    Shared.RemoveVar('Mod ' + (i + 1) + ' Value');
-                    continue;
-                    }
-                Shared.AddVar('Mod ' + (i + 1),mods[combo]);
-                Shared.AddVar('Mod ' + (i + 1) + ' Value',textEntry);
-                modObj[mods[combo]] = +textEntry;
-                }
-            }
-        var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
-        var saveName = CustomGumpResponse.Text(20001)
-        if(!saveName)
-            return Orion.CharPrint(self,1159,'You must choose a name for the save');
-        var overwrite = false;
-        for(var i=0;i<savedSearches.length;i++)
-            {
-            var savedSearch = savedSearches[i];
-            if(saveName == savedSearch[0])
-                {
-                savedSearch[1] = skillAmount;
-                savedSearch[2] = skillObj;
-                savedSearch[3] = modObj;
-                overwrite = true;
-                break;
-                }
-            }
-        if(!overwrite)
-            {
-            savedSearches.push(
-                [
-                    saveName,
-                    skillAmount,
-                    skillObj,
-                    modObj
-                ])
-            }
-        Shared.AddVar('Skill Amount', skillAmount)
-        tmpFile.Remove();
-        tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
-        tmpFile.Write(JSON.stringify(savedSearches));
-        tmpFile.Close();
-        }
-    else if(code == 997) //Delete Saved Search
-        {
-        var tmpFile = Orion.NewFile();
-        tmpFile.Open(tmpFilePath);
-        var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
-        if(fileString)
-            savedSearches = JSON.parse(fileString);
-        tmpFile.Close()
-        
-        var combo = CustomGumpResponse.ComboBox(20000);
-        var savedSearch = savedSearches[combo];
-        if(!savedSearch)
-            return Orion.CharPrint(self,1159,'Couldn\'t find saved search')
-
-        var outArr = savedSearches.filter(function(item)
-            {
-            return item[0] !== savedSearch[0];
-            })
-        tmpFile.Remove();
-        tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
-        tmpFile.Write(JSON.stringify(outArr));
-        tmpFile.Close();
-        }
-    //Orion.Print(gumpButtons);
-    //Shared.AddArray('gumpValues',gumpButtons);
-    Orion.Wait(50);
-    JewelryModSearch();
-	}
-
-//Scorer
-function JewelryScoreSearchGump()
-    {
-    Orion.Exec('JewelryScoreSearch',true)
-    }
-function JewelryScoreSearchGump()
-    {
-    Orion.Exec('JewelryScoreSearch',true)
-    }
-    
-function JewelryScoreSearch()
-	{
-    var templates = [
-        'MysticWrestle',
-        'NecroWrestle',
-        'MysticBalakai',
-        'NecroBalakai',
-        'Disarmcher',
-        'GlendaBasher',
-        'DSer',
-        'HSBokMage',
-        'LSBokMage',
-        'HSBokMystic',
-        'LSBokMystic',
-        'FoNMage',
-        'NoxMage',
-        'HolyFister',
-        'ArcherFister',
-        'any'
-    ];
-    var title = "Ali Jewelry Score Search"
-    var gump = Orion.CreateCustomGump(10421); 
-	var rowStart = 40;
-	var columnStart = 25;
-    var height = 175;
-    var width = 325;
-
-    gump.Clear();
-    gump.SetCallback('JewelryScoreCallback');
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
-    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
-    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
-    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
-    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
-    gump.Select('htmlgump');
-    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
-    gump.Select('gump');
-    
-    //Custom Assets
-	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
-	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
-    var xPos = columnStart;
-    var yPos = rowStart;
-    var heightAdjust = 25;
-
-    gump.AddText(xPos,yPos,554,'Template Name');
-    gump.AddText(xPos + 180,yPos,554,'Score');
-    gump.AddText(xPos + 240,yPos,554,'Skill');
-
-    var responseCode = 1;
-    yPos += heightAdjust;
-    gump.AddComboBox(responseCode, xPos, yPos, '0x0BB8', 0, '0x0BB8', 150, -3,templates.length + 1);
-    for(var j=0;j<templates.length;j++)
-        gump.AddComboBoxText(templates[j],0,Shared.GetVar('Template Name',undefined) == templates[j] ? 1 : 0,115,'left');
-
-    gump.AddResizepic(xPos + 180, yPos , '0x0BB8', 28, 19);
-    gump.AddTextEntry(2, xPos + 180 + 3, yPos, 0, Shared.GetVar('Score',''), 28, 20);
-    gump.AddTooltip('Minimum Score');
-
-    gump.AddResizepic(xPos + 240, yPos , '0x0BB8', 28, 19);
-    gump.AddTextEntry(3, xPos + 240 + 3, yPos, 0, Shared.GetVar('Minimum Skill Amount',''), 28, 20);
-    gump.AddTooltip('Minimum Skill Amount');
-    yPos += heightAdjust * 2;
-
-    gump.AddButton(1000, xPos + 143, yPos, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddText(xPos + 143 + 11,yPos,554,'Search');
-    gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddButton(1001, xPos + 73, yPos, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Clear the search menu');
-    gump.AddText(xPos + 73 + 17,yPos,554,'Clear');
-    gump.AddTooltip('Clear the search menu');
-    gump.AddButton(1002, xPos + 270, yPos + 25, '22153', '22154', '22155', '0x0000');
-    gump.AddTooltip('Calculate Score');
-
-    gump.Update();
-	}
-
-function JewelryScoreCallback(_) 
-	{
-    var templates = [
-        'MysticWrestle',
-        'NecroWrestle',
-        'MysticBalakai',
-        'NecroBalakai',
-        'Disarmcher',
-        'GlendaBasher',
-        'DSer',
-        'HSBokMage',
-        'LSBokMage',
-        'HSBokMystic',
-        'LSBokMystic',
-        'FoNMage',
-        'NoxMage',
-        'HolyFister',
-        'ArcherFister',
-        'any'
-    ];
-    var code = CustomGumpResponse.ReturnCode();
-    if(code == 0)
-        return;
-    else if(code == 1000) //search
-        {
-        var combo = CustomGumpResponse.ComboBox(1);
-        var textEntry = CustomGumpResponse.Text(2);
-        var textEntry2 = CustomGumpResponse.Text(3) || '0';
-        if(combo == -1)
-            return Orion.CharPrint(self,1159,'Choose a template');
-        if(!textEntry)
-            return Orion.CharPrint(self,1159,'Enter a minimum score');
-        value = Shared.AddVar('Template Name',templates[combo]);
-        value = Shared.AddVar('Score',textEntry);
-        value = Shared.AddVar('Minimum Skill Amount',textEntry2);   
-        HighlightJewelryScore(templates[combo],textEntry,textEntry2);
-        }
-    else if(code == 1001)
-        {
-        Shared.ClearVars();
-        }
-    else if(code == 1002)
-        {
-        Orion.Exec('CalculateScore',true);
-        }
-    Orion.Wait(50);
-    JewelryScoreSearch();
-	}
-
-function CalculateScore()
-    {
-    Orion.WaitForAddObject('myTarget');
-    var exampleString = Orion.FindObject('myTarget').Properties();
-    //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nMysticism +20\nResisting Spells +20\nAntique\nDefense Chance Increase 20%\nFaster Cast Recovery 4\nEnhance Potions 35%\nMana Regeneration 4\nDurability 255 / 255\nMajor Artifact";
-    //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +100\nMana Regeneration 4\nFaster Cast Recovery 4\nEnhance Potions 35%\nDurability 255 / 255\nMajor Artifact";
-    //Debug(exampleString + '\n')
-    //var exampleString = "Ring\nWeight: 1 Stone\nNinjitsu +20\nNecromancy +15\nSpirit Speak +15\nAntique\nDexterity Bonus 8\nNight Sight\nHit Chance Increase 15%\nFaster Cast Recovery 3\nLower Reagent Cost 20%\nDurability 255 / 255\nMajor Artifact"
-
-    //var exampleString = "Resisting Spells +15\nEvaluate Intelligence +15\nMagery +20\nStrength Bonus 8\nDexterity Bonus 8\nEnhance Potions 25%\nDefense Chance Increase 15%\nDamage Increase 25%\n"
-
-    var parse = parseJewelryProperties(exampleString);
-    var values = calculateTemplateValues(parse);
-    //TextWindow.Open();
-    //TextWindow.Clear();
-    var outMsg = '';
-    values.forEach(function(value)
-        {
-        outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
-        });
-    //TextWindow.Print(outMsg)
-    Orion.Print(outMsg)
-    }
-
 function HighlightJewelryScore(templateString,score,skillInt)
     {
     var startTime = Orion.Now();
@@ -2441,187 +2454,124 @@ function HighlightJewelryScore(templateString,score,skillInt)
     Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
     }
 
-function HighlightContainersMultiColor()
-    {
-    var startTime = Orion.Now();
-    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
-        {
-        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
-        });
-    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
-        {
-        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
-        });
-    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
-        {
-        return Orion.ObjAtLayer('backpack',npc.Serial())
-        }).map(function(npc)
-            {
-            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
-            return npcPack;
-            });
-    var containers = groundContainers.concat(packContainers).concat(npcContainers);
-    var totalItems = 0;
-    var totalHighlighted = 0;
-    var fullItems = [];
-    for(var i=0;i<containers.length;i++)
-        {
-        var container = containers[i]
-        if(container == 'ground')
-            containerSerial = 'ground';
-        else
-            containerSerial = container.Serial();
-        if(!container)
-            Orion.Print(container)
-        Orion.FindTypeEx('0x1F06|0x1086|0x108A|0x1F09',any,containerSerial,'item', 'finddistance', '', true).forEach(function(item)
-            {
-            var itemSerial = item.Serial();
-            Orion.TestItemColor(itemSerial, item.Color())
-            totalItems++;
-            var parse = parseJewelryProperties(item.Properties());
-            var value = calculateTemplateValues(parse)[0];
-            if(value[1] && value[1] >= 60 && value[2] >= 0)
-                fullItems.push([itemSerial,value[1],value[2]])
-            })
-        }
-    var colors = {
-        yellow: 1174,
-        blue: 1152,
-        purple: 1283,
-        pink: 2735,
-        green: 1969,
-        gray: 2029,
-        white: 2050, //2728
-    }
-    fullItems.forEach(function(keeper)
-        {
-        totalHighlighted++;
-        if(keeper[1] >= 140)
-            var color = colors.blue;
-        else if(keeper[1] >= 120)
-            var color = colors.yellow
-        else if(keeper[1] >= 100)
-            var color = colors.purple
-        else if(keeper[1] >= 80)
-            var color = colors.green
-        else if(keeper[1] >= 60)
-            var color = colors.white
-        Orion.TestItemColor(keeper[0], color)
-        });
-    Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
-    }
-
-function calculateTemplateValues(mods)
+function calculateTemplateValues(mods,templateName)
     {
     var templates = 
         {
         //Caster
         MysticWrestle: {
-            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .63,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.67,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':6,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':1.2,'DamageIncrease':0,'LowerReagentCost':.5
+            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .67,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':7,'LowerManaCost':1,'SpellDamageIncrease':.4,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.4
             },
         NecroWrestle: {
-            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .63,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.67,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':6,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':1.2,'DamageIncrease':0,'LowerReagentCost':.5
+            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .67,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':7,'LowerManaCost':1,'SpellDamageIncrease':.4,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.4
             },
         MysticBalakai: {
             'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':0,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.5
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':11,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.4
             },
         NecroBalakai: {
             'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':0,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':0,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.5
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':11,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.4
             },
         //Dexxer
         Disarmcher: {
-            'Archery':.83,'Swordsmanship':.67,'Parrying':.83,'ResistingSpells':.83,'Anatomy':.83,'Tactics':.83,'Healing':.83,
-            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':2,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'Archery':.83,'Swordsmanship':.83,'SwordsmanshipCut':10,'Parrying':.83,'ResistingSpells':.83,'Anatomy':.83,'Tactics':.83,'Healing':.83,'Fencing':.53,'MaceFighting':.53,'Magery':.53,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':1,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':.67,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':0
             },
         GlendaBasher: {
             'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Healing': .83,'Ninjitsu': .83,'Bushido': .83,'Parrying': .53,'ResistingSpells': .83,
-            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':1.2,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':0,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':0
             },
         DSer: {
             'Swordsmanship':.83,'Ninjitsu':.83,'Tactics':.53,'Parrying':.83,'ResistingSpells':.83,
-            'StrengthBonus':.88,'DexterityBonus':.88,'IntelligenceBonus':.88,'ManaIncrease':.8,'StaminaIncrease':1.2,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':0,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
             },
         //Hybrid
         HSBokMage: {
-            'Swordsmanship': .53,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2,'DamageIncrease':.24,'LowerReagentCost':.5
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         LSBokMage: {
             'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
-            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.47,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         HSBokMystic: {
-            'Swordsmanship': .53,'Mysticism': .53,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2,'DamageIncrease':.24,'LowerReagentCost':.5
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Mysticism': .53,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         LSBokMystic: {
             'Swordsmanship': .83,'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
-            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.47,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         FoNMage: {
             'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Magery':.83,'EvaluateIntelligence':.83,'Parrying': .83,'ResistingSpells': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':.5
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':.4
             },
         NoxMage: {
-            'Swordsmanship': .53,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':10,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
-            'SwingSpeedIncrease':2,'DamageIncrease':.32,'LowerReagentCost':.5
+            'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'MaceFighting': .83,'Fencing': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         HolyFister: {
-            'Swordsmanship': .6,'Tactics':.4,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1.25,'SpellDamageIncrease':.53,
-            'SwingSpeedIncrease':2,'DamageIncrease':.5,'LowerReagentCost':0
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Tactics':.4,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'Fencing':.53,'MaceFighting':.53,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.44,'LowerReagentCost':0
             },
-        ArcherFister: {
-            'Archery': .6,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,
-            'StrengthBonus':.75,'DexterityBonus':.75,'IntelligenceBonus':1,'ManaIncrease':.8,'StaminaIncrease':.8,
-            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.83,
-            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1.25,'SpellDamageIncrease':0,
-            'SwingSpeedIncrease':2.5,'DamageIncrease':.5,'LowerReagentCost':0
+        SwordsArcherFister: {
+            'Archery': .83,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,'Swordsmanship':.83,'SwordsmanshipCut':10,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        MeleeArcherFister: {
+            'Archery': .6,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,'Bushido':.83,'Fencing':.53,'MaceFighting':.53,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
             },
         }
     var skillMods = 
@@ -2632,82 +2582,120 @@ function calculateTemplateValues(mods)
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
         Throwing:true,Healing:true, Archery:true,
         }
-    var templateValues = [];
-    
-    for(var templateName in templates)
+    var specialBonus = 
+        {
+        'EnhancePotions':[35,5],
+        'FasterCastRecovery':[4,5],
+        }
+    if(templateName == undefined)
+        {
+        var templateValues = [];
+        for(var templateName in templates)
+            {
+            var template = templates[templateName];
+            var totalValue = 0;
+            var totalSkills = 0;
+            // Calculate the individual mod values
+            for(var mod in mods)
+                {
+                if(template.hasOwnProperty(mod))
+                    {
+                    if(template[mod] == 0)
+                        continue;
+                    if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                        mods[mod] = template[mod + 'Cut'];
+                    var modValue = mods[mod] * template[mod];
+                    totalValue += modValue;
+                    if(specialBonus.hasOwnProperty(mod) && mods[mod] == specialBonus[mod][0])
+                        totalValue += specialBonus[mod][1];
+                    if(skillMods.hasOwnProperty(mod))
+                        totalSkills += mods[mod];
+                    }
+                }
+            templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
+            }
+        return templateValues.sort(function(a,b)
+            {
+            return b[1] - a[1];
+            });
+        }
+    else
         {
         var template = templates[templateName];
         var totalValue = 0;
         var totalSkills = 0;
-        // Calculate the individual mod values
+        var outArr = [];
         for(var mod in mods)
             {
             if(template.hasOwnProperty(mod))
                 {
+                if(template[mod] == 0)
+                    continue;
+                if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                    mods[mod] = template[mod + 'Cut'];
                 var modValue = mods[mod] * template[mod];
-                totalValue += modValue;
-                if(skillMods.hasOwnProperty(mod))
+                var tempArr = [mod, mods[mod], template[mod], modValue];
+                if(specialBonus.hasOwnProperty(mod) && mods[mod] >= specialBonus[mod][0])
                     {
-                    totalValue += modValue;
-                    totalSkills += mods[mod];
+                    tempArr.push(specialBonus[mod][1]);
+                    totalValue += specialBonus[mod][1];
                     }
-                //Debug('Mod: ' + mod + ', Value: ' + modValue + ', Total Value: ' + totalValue);
+                else
+                    tempArr.push(0);
+                if(skillMods.hasOwnProperty(mod))
+                    totalSkills += mods[mod];
+                totalValue += modValue;
+                tempArr.push(totalValue);
+                outArr.push(tempArr);
                 }
             }
-        templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
+        Gump_DisplayInfo(templateName, outArr);
+        return [[templateName,+totalValue.toFixed(),totalSkills]]
         }
-
-    return templateValues.sort(function(a,b)
-        {
-        return b[1] - a[1];
-        });
     }
 
-var modValueRanges =
-    { //[minimum,cap,overcap] OR [minimum,cap] OR [one possible value]
-    Magery: [5,15,20],
-    MaceFighting: [5,15,20],
-    Fencing: [5,15,20],
-    Musicianship: [5,15,20],
-    Swordsmanship: [5,15,20],
-    AnimalTaming: [5,15,20],
-    SpiritSpeak: [5,15,20],
-    Tactics: [5,15,20],
-    Wrestling: [5,15,20],
-    AnimalLore: [5,15,20],
-    Discordance: [5,15,20],
-    Focus: [5,15,20],
-    Parrying: [5,15,20],
-    Stealth: [5,15,20],
-    Anatomy: [5,15,20],
-    Bushido: [5,15,20],
-    EvaluateIntelligence: [5,15,20],
-    Mysticism: [5,15,20],
-    Necromancy: [5,15,20],
-    Archery: [5,15,20],
-    Chivalry: [5,15,20],
-    Healing: [5,15,20],
-    Ninjitsu: [5,15,20],
-    ResistingSpells: [5,15,20],
-    ManaIncrease: [1,5],
-    StaminaIncrease: [1,5],
-    StrengthBonus: [1,8,10],
-    DexterityBonus: [1,8,10],
-    IntelligenceBonus: [1,8,10],
-    ManaRegeneration: [1,3,44],
-    EnhancePotions: [15,25,35],
-    HitChanceIncrease: [5,15,20],
-    DefenseChanceIncrease: [5,15,20],
-    SwingSpeedIncrease: [5,10],
-    DamageIncrease: [15,25,35],
-    SpellDamageIncrease: [8,15,18],
-    FasterCastRecovery: [1,3,4],
-    FasterCasting: [1,1,1],
-    LowerManaCost: [1,8,10],
-    LowerReagentCost: [10,20,25],
-    PhysicalResist: [5,15,20],
-    FireResist: [5,15,20],
-    ColdResist: [5,15,20],
-    PoisonResist: [5,15,20],
-    EnergyResist: [5,15,20],
-    };
+function Gump_DisplayInfo(templateName, outArr)
+    {
+    var gump = Orion.CreateCustomGump(10422);
+    var rowStart = 30;
+	var columnStart = 25;
+    var heightAdjust = 25;
+    var height = (outArr.length + 1) * 25 + 40;
+    var width = 575;
+
+    gump.Clear();
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + templateName + ' Info' + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    var yPos = rowStart + heightAdjust;
+    var columns = [55,157,245,328,402,491];
+    var columns2 = [25,175,260,335,410,495,560];
+    var symbols = ["",'x','=','+','=',""];
+    var strings = ['Mod','Amount','Weight','Value','Bonus','Total'];
+    for(var i=0;i<strings.length;i++)
+        {
+        gump.AddText(columns[i],rowStart,554,'<big>' + strings[i] + '</big>');
+        }
+    for(var i=0;i<outArr.length;i++)
+        {
+        var lineArr = outArr[i];
+        for(var j=0;j<lineArr.length;j++)
+            {
+            if(typeof lineArr[j] == 'number' && j != 1)
+                var text = lineArr[j].toFixed(2)
+            else
+                var text = lineArr[j];
+            gump.AddText(columns2[j],yPos,554,text);
+            gump.AddText(columns2[j] + 50,yPos,554,symbols[j]);
+            }
+        yPos += heightAdjust;
+
+        }
+    gump.Update()
+    }

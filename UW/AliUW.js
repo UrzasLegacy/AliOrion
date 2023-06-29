@@ -1,3 +1,4 @@
+//#include OA/AliLooterPlugin.js
 //Settings and Pregame Setup
     //I will walk you through all of this as necessary, but I wanted to write everything down for you as well.
 
@@ -447,8 +448,8 @@ function GoHome()
 
 function LootUW()
     {
-    ListLoot("UWLoot|Gold|ignoreLists|UWIgnore")
-    //ListLoot('BotLoot', "ignorelist")
+    AliLootUW("UWLoot|Gold|ignoreLists|UWIgnore")
+    //AliLootUW('BotLoot', "ignorelist")
     }
 
 function Tithe()
@@ -2384,7 +2385,7 @@ function BossSequence(_)
                     Orion.Wait(Orion.Random(5,11) * 500);
                 TerminateAll('BossSequence');
                 AliWalkTo(corpse[0].X(),corpse[0].Y());
-                ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+                AliLootUW();
                 Orion.Wait(Orion.Random(4,9) * 1000);
                 var ethy = Orion.FindTypeEx(any).filter(function(item)
                     {
@@ -2464,7 +2465,7 @@ function CleanUpPublicCorpse()
         }
     Orion.RemoveDisplayTimer('publicCorpse');
     Orion.Wait(100);
-    ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+    AliLootUW();
     }
 
 function JournalScan()
@@ -2754,7 +2755,68 @@ function CloseAllGumps(_)
         }
     }
 
-function ListLoot(findList)  //v2
+function AliLootUW()  //v2
+    {
+    var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(), 'An Evil One');
+        })[0];
+    if(!corpse)
+        return Orion.CharPrint(self,1159,'No corpse found');
+    var corpseSerial = corpse.Serial();
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    var endTime = Orion.Now() + 10000;
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0 && Orion.Now() < endTime && !Orion.GumpExists('container',corpseSerial))
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            var corpseInstanceSerial = corpseSerial;
+            }
+        else
+            var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+        }
+    else
+        return Orion.CharPrint(self,1159,'Corpse is empty')
+    var backpackSerial = Orion.GetSerial(backpack);
+    for(var attempts=0;attempts<2;attempts++)
+        {
+        var itemsInCorpse = Orion.FindTypeEx(any,any,corpseInstanceSerial);
+        for(var i=0;i<itemsInCorpse.length;i++)
+            {
+            var item = itemsInCorpse[i];
+            if(!item)
+                continue;
+            while(corpse.Distance() > 2)
+                {
+                Orion.WalkTo(corpse.X(),corpse.Y())
+                Orion.Wait(250);
+                }
+            var itemSerial = item.Serial();
+            if(AliKeep(itemSerial))
+                {
+                var endTime = Orion.Now() + 5000;
+                while(item.Container() !== backpackSerial)
+                    {
+                    if(Orion.Now() < endTime)
+                        Debug("Item wasn't picked up!\n" + item.Properties())
+                    Orion.MoveItem(itemSerial);
+                    Orion.Wait(1300);
+                    }
+                }
+            Orion.Wait(10);	
+            }
+        }	
+    }
+
+function AliLootOld(findList)  //v2
     {
     var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
         {
@@ -2783,36 +2845,6 @@ function ListLoot(findList)  //v2
             }
         else
             {
-            if(Player.Serial() == leadSampSerial)
-                {
-                var totals = {};
-                for(var i=0;i<instanceSerials.length;i++)
-                    {
-                    var corpseInstance = instanceSerials[i];
-                    var items = Orion.FindTypeEx(any,any,corpseInstance);
-                    for(var j=0;j<items.length;j++)
-                        {
-                        var item = items[j];
-                        var itemProps = item.Properties();
-                        var lastLine = itemProps.match(/.+$/) || '';
-                        if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
-                            continue;
-                        if(totals[lastLine])
-                            totals[lastLine]++;
-                        else
-                            totals[lastLine] = 1;
-                        }
-                    }
-                totals['Run Type'] = 'All In Luck';
-                totals['Team Size'] = 6;
-                totals['Luck Leader'] = Player.Luck();
-                totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
-                TextWindow.Open();
-                TextWindow.Clear();
-                var outMsg = 'a'
-                TextWindow.Print(JSON.stringify(totals))
-                AppendMagic(totals)
-                }
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
         }
