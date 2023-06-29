@@ -1569,9 +1569,9 @@ function AutoInsure()
     var searchFrequency = 1000;
     while(!Player.Dead())
         {
-        var items = Orion.FindType(any).filter(function(item)
+        var items = Orion.FindTypeEx(any).filter(function(item)
             {
-            return !Orion.Contains(obj.Properties(),'insured|blessed|cursed') && AliKeep(item);
+            return !Orion.Contains(item.Properties(),'insured|blessed|cursed') && AliKeep(item.Serial());
             });
         if(items.length && !Orion.HaveTarget())
             {
