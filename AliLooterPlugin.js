@@ -193,14 +193,15 @@ function HighlightTrash()
     HighlightContainersCall(false);
     }
 
-function AliLoot()  //v2
+function AliLootUW()  //v2
     {
-    var corpse = Orion.FindTypeEx('0x2006|0x0ED0', any, ground, 2).filter(function(item)
+    var corpse = Orion.FindTypeEx('0x2006', any, ground, 10).filter(function(item)
         {
-        return true// Orion.Contains(item.Properties(), 'An Evil One');
+        return Orion.Contains(item.Properties(), 'An Evil One');
         })[0];
     if(!corpse)
         return Orion.CharPrint(self,1159,'No corpse found');
+    Debug2('Corpse Found')
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
     var endTime = Orion.Now() + 10000;
@@ -220,6 +221,7 @@ function AliLoot()  //v2
             }
         else
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+        Debug2('Instance: ' + corpseInstanceSerial)
         }
     else
         return Orion.CharPrint(self,1159,'Corpse is empty')
@@ -1428,6 +1430,7 @@ function AliKeep(itemSerial)
 	if(!item)
         return false;
 	//loot by graphic
+    Debug('Item: ' + item.Name())
     var itemGraphic = item.Graphic();
 	if(lootItems[itemGraphic])
         return 'Kept by Item Graphic';
@@ -2124,16 +2127,16 @@ function VerifyOpenContainer(containerSerial,delay)
     return true;
     }
 
-var debug = false;
-function Debug(msg)
-    {
-    if(!debug)
-        return;
-    if(!TextWindow.IsOpened())
-        TextWindow.Open();
-    Orion.Print(msg);
-    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-    }
+// var debug = false;
+// function Debug(msg)
+//     {
+//     if(!debug)
+//         return;
+//     if(!TextWindow.IsOpened())
+//         TextWindow.Open();
+//     Orion.Print(msg);
+//     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
+//     }
 
 function DiscordPush(message)
 	{
