@@ -1686,8 +1686,6 @@ function Autostart(_)
             }
         }
     Orion.Wait(1000);
-    Shared.AddVar('debug',debug);
-    Shared.AddVar('debug2',debug2);
     if(Player.Serial() == leadHealerSerial)
         {
 		var role = 'leader';
@@ -2803,36 +2801,6 @@ function ListLoot(findList)  //v2
             }
         else
             {
-            if(Player.Serial() == leadSampSerial)
-                {
-                var totals = {};
-                for(var i=0;i<instanceSerials.length;i++)
-                    {
-                    var corpseInstance = instanceSerials[i];
-                    var items = Orion.FindTypeEx(any,any,corpseInstance);
-                    for(var j=0;j<items.length;j++)
-                        {
-                        var item = items[j];
-                        var itemProps = item.Properties();
-                        var lastLine = itemProps.match(/.+$/) || '';
-                        if(lastLine.length == 0 || !Orion.Contains(lastLine,'Artifact|Magic Item'))
-                            continue;
-                        if(totals[lastLine])
-                            totals[lastLine]++;
-                        else
-                            totals[lastLine] = 1;
-                        }
-                    }
-                totals['Run Type'] = 'All In Luck';
-                totals['Team Size'] = 6;
-                totals['Luck Leader'] = Player.Luck();
-                totals['TTK'] = Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0);
-                TextWindow.Open();
-                TextWindow.Clear();
-                var outMsg = 'a'
-                TextWindow.Print(JSON.stringify(totals))
-                AppendMagic(totals)
-                }
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
         }
@@ -3159,7 +3127,7 @@ function HydraCheck(_)
 
 function Debug(msg)
     {
-    if(Shared.GetVar('debug',false) !== true)
+    if(!debug)
         return;
     if(!TextWindow.IsOpened())
         TextWindow.Open();
@@ -3168,7 +3136,7 @@ function Debug(msg)
 
 function Debug2(msg)
     {
-    if(Shared.GetVar('debug2',false) !== true)
+    if(!debug2)
         return;
     if(!TextWindow.IsOpened())
         TextWindow.Open();
@@ -3366,67 +3334,6 @@ function Jiggle(type,chance)
             break;
         default:
             break;
-        }
-    }
-
-function AppendMagic(input)
-    {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliUWTracker.txt';
-    var tmpFile = Orion.NewFile();
-    if(!tmpFile.Append(tmpFilePath))
-        return Orion.CharPrint(self,1159,'Something went wrong trying to append file: ' + fileNameString);
-    var inputString = JSON.stringify(input);
-    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
-    tmpFile.Write(Orion.Time() + ': ' + inputString + '\n');
-    tmpFile.Close();
-    }
-
-    function RetrieveMagic()
-    {
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliUWTracker.txt';
-    var tmpFile = Orion.NewFile();
-    if(!tmpFile.Open(tmpFilePath))
-        return Orion.CharPrint(self,1159,'Something went wrong trying to open file: ' + fileNameString);
-    var outputString = tmpFile.ReadAll();
-    tmpFile.Close();
-    var replace = outputString.replace(/\\/g,'');
-    var replaceAgain = replace.replace(/\d\d:\d\d:\d\d\.\d\d\d: /g,'');
-    var lines = Orion.Split(replaceAgain,'\n').filter(function(line)
-        {
-        var obj = JSON.parse(line)
-        var legArt = obj["Legendary Artifact"] || 0
-        var majArt = obj["Major Artifact"] || 0
-        var greatArt = obj["Greater Artifact"] || 0
-        var lessArt = obj["Lesser Artifact"] || 0
-        var majMag = obj["Major Magic Item"] || 0
-        var greatMag = obj["Greater Magic Item"] || 0
-        var lessMag = obj["Lesser Magic Item"] || 0
-        var total = legArt + majArt + greatArt + lessArt + majMag + greatMag + lessMag
-        return Orion.Contains(line,"Luck Leader Full Run") && total > 73 && total < 78
-        });
-    var linesLength = lines.length;
-    var red = lines.reduce(function(sumObj,line)
-        {
-        var json = JSON.parse(line);
-        for(prop in json)
-            {
-            if(typeof sumObj !== 'object')
-                sumObj = {};
-            if(sumObj[prop] == undefined)
-                sumObj[prop] = json[prop];
-            else
-                {
-                sumObj[prop] += json[prop]
-                }
-            }
-        return sumObj
-        },{})
-    TextWindow.Open()
-    TextWindow.Print('Runs: ' + linesLength)
-    for(prop in red)
-        {
-        var average = (red[prop] / linesLength).toFixed(2)
-        TextWindow.Print(prop + ': ' + average)
         }
     }
 

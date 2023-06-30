@@ -219,7 +219,10 @@ function AliLootUW()  //v2
             var corpseInstanceSerial = corpseSerial;
             }
         else
+            {
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+            }
+        Debug('instanceMatch: lastcontainer = ' + Orion.GetSerial(lastcontainer) + ' corpseInstance = ' + corpseInstanceSerial)
         }
     else
         return Orion.CharPrint(self,1159,'Corpse is empty')
