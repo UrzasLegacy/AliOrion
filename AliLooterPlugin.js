@@ -1,7 +1,7 @@
 var lootItems = {
     '0x400B': true, //shame crystals
     '0x0F87': true, //lucky coin
-    '0x0EED': true, //gold
+    //'0x0EED': true, //gold
 }
 var keepTrainingArmor = true;
 var serialIndex = 1;
@@ -201,7 +201,6 @@ function AliLootUW()  //v2
         })[0];
     if(!corpse)
         return Orion.CharPrint(self,1159,'No corpse found');
-    Debug2('Corpse Found')
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
     var endTime = Orion.Now() + 10000;
@@ -221,7 +220,6 @@ function AliLootUW()  //v2
             }
         else
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
-        Debug2('Instance: ' + corpseInstanceSerial)
         }
     else
         return Orion.CharPrint(self,1159,'Corpse is empty')
@@ -246,7 +244,7 @@ function AliLootUW()  //v2
                 while(item.Container() !== backpackSerial)
                     {
                     if(Orion.Now() < endTime)
-                        Debug("Item wasn't picked up!\n" + item.Properties())
+                        DebugLoot("Item wasn't picked up!\n" + item.Properties())
                     Orion.MoveItem(itemSerial);
                     Orion.Wait(1300);
                     }
@@ -1229,7 +1227,7 @@ function CalculateScore()
         var exampleString = Orion.FindObject('myTarget').Properties();
         }
   //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +100\nMana Regeneration 4\nFaster Cast Recovery 4\nEnhance Potions 35%\nDurability 255 / 255\nMajor Artifact";
-    //Debug(exampleString + '\n')
+    //DebugLoot(exampleString + '\n')
     //var exampleString = "Ring\nWeight: 1 Stone\nNinjitsu +20\nNecromancy +15\nSpirit Speak +15\nAntique\nDexterity Bonus 8\nNight Sight\nHit Chance Increase 15%\nFaster Cast Recovery 3\nLower Reagent Cost 20%\nDurability 255 / 255\nMajor Artifact"
 
     //var exampleString = "Resisting Spells +15\nEvaluate Intelligence +15\nMagery +20\nStrength Bonus 8\nDexterity Bonus 8\nEnhance Potions 25%\nDefense Chance Increase 15%\nDamage Increase 25%\n"
@@ -1430,7 +1428,7 @@ function AliKeep(itemSerial)
 	if(!item)
         return false;
 	//loot by graphic
-    Debug('Item: ' + item.Name())
+    DebugLoot('Item: ' + item.Name())
     var itemGraphic = item.Graphic();
 	if(lootItems[itemGraphic])
         return 'Kept by Item Graphic';
@@ -1455,7 +1453,7 @@ function AliKeep(itemSerial)
         //Handle shields, only luck
         if(Orion.Contains('0x1B72|0x1BC3|0x1BC4|0x1B7B|0x1B73|0x1B74|0x1B77|0x1B78|0x1B75|0x1B76|0x1BC5|0x1B79|0x1B7A', itemGraphic) && props.indexOf("Luck 150") > -1)
             return 'Luck Shield';
-        Debug('Trash: !isJewelry && !is2hWeapon && !is1hWeapon && !isArmor && not luck shield')
+        DebugLoot('Trash: !isJewelry && !is2hWeapon && !is1hWeapon && !isArmor && not luck shield:\n' + props)
         return false;
         }
 
@@ -1476,7 +1474,7 @@ function AliKeep(itemSerial)
         var parse = parseArmorProperties(props);
         return KeepArmor(parse,props,itemGraphic);
 	    }
-    Debug('Trash: Failed all other checks');
+    DebugLoot('Trash: Failed all other checks');
 	return false;
     }
 
@@ -1503,7 +1501,7 @@ function KeepWeapon(propertiesObj,props)
             !(props.indexOf('Tetsubo') > -1)
 		)
             {
-            Debug('Trash: Excluded Two Handed Weapon');
+            DebugLoot('Trash: Excluded Two Handed Weapon');
 			return false;
 		    }
 	    }
@@ -1523,7 +1521,7 @@ function KeepWeapon(propertiesObj,props)
 			props.indexOf('Sledge Hammer') > -1
 		)
             {
-            Debug('Trash: Excluded One Handed Weapon');
+            DebugLoot('Trash: Excluded One Handed Weapon');
 			return false;
 		    }
         }
@@ -1547,9 +1545,7 @@ function KeepWeapon(propertiesObj,props)
         numProps--;
     if(isHitSpell || wepObj['HitDispel'] || wepObj['HitMagicArrow'])
         {
-        TextWindow.Print('debug: ' + numProps)
         numProps--;
-        TextWindow.Print('debug: ' + numProps)
         }
     var isImbuable = numProps <= 4;
     var isEleDamage = props.indexOf('Physical Damage 100%') == -1
@@ -1557,7 +1553,7 @@ function KeepWeapon(propertiesObj,props)
         {
         if(isAntique && !isOverCapSplinter) //Reject any boks that aren't overcap splinter
             {
-            Debug('Trash: Antique Bok w/o Overcap Splinter')
+            DebugLoot('Trash: Antique Bok w/o Overcap Splinter')
             return false;
             }
         if(isOverCapSplinter)
@@ -1579,7 +1575,7 @@ function KeepWeapon(propertiesObj,props)
             return 'Imbuable Bok';
         if(numProps == 1)
             return 'One Mod Splinter Bok';
-        Debug('Trash: Splinter bok');
+        DebugLoot('Trash: Splinter bok');
         return false;		
         }
     var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") || props.indexOf("Broadsword") || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1;
@@ -1606,12 +1602,12 @@ function KeepWeapon(propertiesObj,props)
             return '20+/50+/50+ God Weapon';
         if(!isClean)
             {
-            Debug('Trash: Splinter non-bok isn\'t clean');
+            DebugLoot('Trash: Splinter non-bok isn\'t clean');
             return false;
             }
         if(isSlowWep && !wepObj['SwingSpeedIncrease'])
             {
-            Debug('Trash: Slow weapon without SSI');
+            DebugLoot('Trash: Slow weapon without SSI');
             return false;
             }
         if(isOverCapSplinter && isLowerD)
@@ -1626,7 +1622,7 @@ function KeepWeapon(propertiesObj,props)
             return 'Clean High Mana Leech AI Weapon';
         if(isDisarmWep && isOverCapSplinter && isLowerD)
             return 'Clean 25+/0+/50+ Butcher Knife';
-        Debug('Trash: Splinter weapon failed all previous checks');
+        DebugLoot('Trash: Splinter weapon failed all previous checks');
         return false;		
         }
     if(isAIWep)
@@ -1639,7 +1635,7 @@ function KeepWeapon(propertiesObj,props)
         if(isHitFatigue && isHitManaDrain && isHitStaminaLeech && isHitManaLeech)// && isHitLifeLeech)
             return 'PvM Hit Drainer';
         }
-    Debug('Trash: Non-splinter weapon failed all previous checks');
+    DebugLoot('Trash: Non-splinter weapon failed all previous checks');
     return false;
     }
 
@@ -1710,7 +1706,7 @@ function KeepJewelry(propertiesObj,props)
             {
             if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
                 return 'Str10/Dex10/Int10';
-            Debug('Trash: Zero skills, missing EP or DCI or MR');
+            DebugLoot('Trash: Zero skills, missing EP or DCI or MR');
             return false;
             }
         else if(overcapInt >= 4)
@@ -1721,7 +1717,7 @@ function KeepJewelry(propertiesObj,props)
         {
         if(overcapInt < 3)
             {
-            Debug('Trash: One skill mod and must have at least one of EP/DCI/HCI/FCR');
+            DebugLoot('Trash: One skill mod and must have at least one of EP/DCI/HCI/FCR');
             return false;
             }
         }
@@ -1730,18 +1726,18 @@ function KeepJewelry(propertiesObj,props)
     var statInt = CountMatchingMods(propertiesObj,statMods);
     if(skillInt >= 2 && statInt >= 3)
         {
-        Debug('Trash: 2+ skill mods and 3+ stat mods');
+        DebugLoot('Trash: 2+ skill mods and 3+ stat mods');
         return false;
         }
     var mageInt = CountMatchingMods(propertiesObj, mageMods);
     var dexxerInt = CountMatchingMods(propertiesObj, dexxerMods);
     var hybridInt = CountMatchingMods(propertiesObj, hybridMods);
-    Debug('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nstatInt: ' + statInt + '\nclean: ' + isClean);
+    DebugLoot('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nstatInt: ' + statInt + '\nclean: ' + isClean);
     if(mageInt + hybridInt >= targetModCount || dexxerInt + hybridInt >= targetModCount)
         return '7 or 8 good mods (or 6 if clean)';
     if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
         return 'Str10/Dex10/Int10';
-    Debug('Trash: Jewelry failed all previous checks');
+    DebugLoot('Trash: Jewelry failed all previous checks');
     return false;
     }
 
@@ -1758,17 +1754,17 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     var isArmor = props.indexOf("Poison Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1;
     if(!isArmor)
         {
-        Debug('Failed: Is Not Armor!');
+        DebugLoot('Failed: Is Not Armor!');
         return false
         }
     if(props.indexOf('Antique') > -1)
         {
-        Debug('Trash: Antique Armor');
+        DebugLoot('Trash: Antique Armor');
         return false;
         }
     if(props.indexOf("Fortified") > -1 && props.indexOf("Of Defense") > -1)
         {
-        Debug('Trash: Fortified Armor of Defense');
+        DebugLoot('Trash: Fortified Armor of Defense');
         return false;
         }
     if((props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1)
@@ -1776,7 +1772,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             {
             if(keepTrainingArmor)
                 return 'Training Armor';
-            Debug('Trash: Training Armor');
+            DebugLoot('Trash: Training Armor');
             return false;
             }
     var lmcArr = 
@@ -1830,21 +1826,21 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     var intrinsicLMCArr = lmcArr[itemGraphic];
     if(!intrinsicLMCArr)
         {
-        Debug('intrinsicLMC check defaulted on graphic: ' + itemGraphic + '\n' + props);
+        DebugLoot('intrinsicLMC check defaulted on graphic: ' + itemGraphic + '\n' + props);
         Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
         var intrinsicLMC = '3';
         }
     else
         var intrinsicLMC = intrinsicLMCArr[0];
         
-    Debug('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
+    DebugLoot('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
     
     if(hpi >= 3)
         { //treat as Vitality
         switch(intrinsicLMC)
             {
             default: //default to best case scenario
-                Debug('hpi intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
+                DebugLoot('hpi intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
@@ -1883,7 +1879,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var statThreshold = mr >= 2 ? 20 : 25;          
                 break
             default: //default to best case scenario
-                Debug('stam intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
+                DebugLoot('stam intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list');
             case '1':
                 var lrcThreshold = 10;
@@ -1893,7 +1889,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '0':
                 if(!hpi)
                     {
-                    Debug('Trash: Leather Stam Armor');
+                    DebugLoot('Trash: Leather Stam Armor');
                     return false;
                     }
                 var lrcThreshold = 15;
@@ -1924,7 +1920,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         switch(intrinsicLMC)
             {
             default: //default to best case scenario
-                Debug('General intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
+                DebugLoot('General intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
@@ -1953,7 +1949,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold)
             return 'LMC Misc Armor';
         }
-    Debug('Trash: Armor failed all previous checks');
+    DebugLoot('Trash: Armor failed all previous checks');
     return false;
     }
 
@@ -1983,7 +1979,7 @@ function parseJewelryProperties(jewelryProperties)
             if(targetMods[modName])
                 {
                 var modValue = parseInt(modMatch[2]) || 1;
-                Debug(modName + ': ' + modValue);
+                DebugLoot(modName + ': ' + modValue);
                 modsObj[modName] = modValue;
                 }
             }
@@ -2020,13 +2016,13 @@ function parseWeaponProperties(weaponProperties)
                 if(weaponProperties.indexOf('Faster Casting') === -1)
                     {
                     propertiesObj['FasterCasting'] = 1;
-                    Debug('Faster Casting: 1');
+                    DebugLoot('Faster Casting: 1');
                     }
                 }
             if(targetMods[modName] || (modName == 'Durability' && Orion.Contains(line,'%')))
                 {
                 var modValue = parseInt(modMatch[2]) || 1;
-                Debug(modName + ': ' + modValue);
+                DebugLoot(modName + ': ' + modValue);
                 propertiesObj[modName] = modValue;
                 }
             }
@@ -2055,7 +2051,7 @@ function parseArmorProperties(armorProperties)
             if(targetMods[modName] || (modName == 'Durability' && Orion.Contains(line,'%')))
                 {
                 var modValue = parseInt(modMatch[2]) || 1;
-                Debug(modName + ': ' + modValue);
+                DebugLoot(modName + ': ' + modValue);
                 propertiesObj[modName] = modValue;
                 }
             }
@@ -2127,16 +2123,16 @@ function VerifyOpenContainer(containerSerial,delay)
     return true;
     }
 
-// var debug = false;
-// function Debug(msg)
-//     {
-//     if(!debug)
-//         return;
-//     if(!TextWindow.IsOpened())
-//         TextWindow.Open();
-//     Orion.Print(msg);
-//     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-//     }
+var debug = false;
+function DebugLoot(msg)
+    {
+    if(!debug)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    Orion.Print(msg);
+    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
+    }
 
 function DiscordPush(message)
 	{

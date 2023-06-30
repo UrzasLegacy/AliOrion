@@ -129,8 +129,8 @@ var useCleanseByFire = false; //boolean. Attempt to self cure poison
 var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder. This will sound if a GM tries to contact you
 
 Orion.Exec('JournalScan', true);
-var debug = false;
-var debug2 = true;
+var debug = true;
+var debug2 = false;
 var luckScum = false;
 //--#Start
 function _____________START(_){}
@@ -1566,19 +1566,32 @@ function AttackNearest()
 
 function AutoInsure() 
     {
-    var searchFrequency = 1000;
+    var searchFrequency = 5000;
+    var hash = {};
     while(!Player.Dead())
         {
         var items = Orion.FindTypeEx(any).filter(function(item)
             {
-            return !Orion.Contains(item.Properties(),'insured|blessed|cursed') && AliKeep(item.Serial());
+            if(hash[item.Serial()] || Orion.Contains(item.Properties(),'insured|blessed|cursed'))
+                return false;
+            var keep = AliKeep(item.Serial());
+            return keep && keep !== 'Kept by Item Graphic';
             });
         if(items.length && !Orion.HaveTarget())
             {
             Orion.WaitContextMenuID(self, 418);
             Orion.RequestContextMenu(self);
-            if(Orion.WaitForTarget(2000))
-                Orion.TargetObject(items[0]);
+            for(var i=0;i<items.length;i++)
+                {
+                var itemSerial = items[i].Serial()
+                var timeStamp = Orion.Now() - 10;
+                if(Orion.WaitForTarget(2000))
+                    Orion.TargetObject(itemSerial);
+                var check = Orion.WaitJournal('You cannot insure that|You have insured the item|You can only insure items that you have equipped or that are in your backpack|You cancel the insurance on the item',timeStamp,timeStamp + 2000)
+                if(check && check.Text() == 'You cannot insure that')
+                    hash[itemSerial] = true;
+                Orion.Wait(50);
+                }
             if(Orion.WaitForTarget(2000))
                 Orion.CancelTarget();
             }
