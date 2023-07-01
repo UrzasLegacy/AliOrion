@@ -1,5 +1,5 @@
 var fileName = '/AliCatalogueJSON' + '.json'
-var searchDistance = 24
+var searchDistance = 10
 
 function testreformat()
     {
@@ -12,7 +12,7 @@ function testreformat()
 
 function CatalogueSafes()
     {
-    var amOwnerFlag = false; //set to true if you own the auction safes you are cataloguing, false if they are someone else's
+    var amOwnerFlag = true; //set to true if you own the auction safes you are cataloguing, false if they are someone else's
     var printToTextWindow = true;
     var startTime = Orion.Now();
     var safes = FloorRowColumnScanEnumerateSafes(); //returns a sorted array of all safe info arrays
@@ -434,10 +434,10 @@ function FloorRowColumnScanEnumerateSafes()
             else
                 return a[1] - b[1];
             })
-    var index = 1;
-    safes.forEach(function(safe)
+    safes.forEach(function(safe,ind)
         {
-        Orion.CharPrint(safe[0], 1159, index++)
+        if(Player.Z() == safe[3])
+            Orion.CharPrint(safe[0], 1159, ind + 1)
         });
     return safes;
     }
