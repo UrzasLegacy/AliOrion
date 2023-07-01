@@ -262,7 +262,7 @@ function AliLootHouse()
     Orion.ClearFakeMapObjects();
     Orion.ResetSearchArea();
     Orion.IgnoreReset();
-    var unsortedBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
+    var unsortedBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'Unsorted');
         })[0];
@@ -1189,7 +1189,7 @@ function JewelryScoreCallback(_)
         if(combo == -1 || templates[combo] == 'any')
             {
             Shared.AddVar('Template Name','any');
-            CalculateScoreCall()
+            CalculateScoreCall();
             }
         else
             {
@@ -1581,7 +1581,7 @@ function KeepWeapon(propertiesObj,props)
         DebugLoot('Trash: Splinter bok');
         return false;		
         }
-    var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") || props.indexOf("Broadsword") || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1;
+    var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") > 1 || props.indexOf("Broadsword") > 1 || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1 || props.indexOf("War Axe") > -1 || props.indexOf("Hammer Pick") > -1;
     if(isSplinter)
         {
         var isBloodDrinker = wepObj['BloodDrinker'];
@@ -1770,14 +1770,6 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         DebugLoot('Trash: Fortified Armor of Defense');
         return false;
         }
-    if((props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1)
-        && (props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1))
-            {
-            if(keepTrainingArmor)
-                return 'Training Armor';
-            DebugLoot('Trash: Training Armor');
-            return false;
-            }
     var lmcArr = 
         { //graphic: intrinsicLMCBonus
         '0x153F':'0','0x140D':'1','0x140C':'1','0x1545':'0','0x1454':'3','0x144F':'3','0x144E':'3','0x1453':'3','0x1450':'3','0x1455':'3',
@@ -1838,6 +1830,22 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         
     DebugLoot('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
     
+
+    if((props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1)
+        && (props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1))
+            {
+            var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
+            if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 50)
+                {
+                return 'Training Armor';
+                }
+            else
+                {
+                DebugLoot('Trash: Training Armor');
+                return false;
+                }
+            }
+
     if(hpi >= 3)
         { //treat as Vitality
         switch(intrinsicLMC)
@@ -2161,7 +2169,7 @@ function MoveTrashContainer(serial)
         Orion.WaitForAddObject('myTarget');
         serial = Orion.GetSerial('myTarget');
         }
-    var trashBook = Orion.FindTypeEx('0x0FF1',any,ground,'item',24).filter(function(item)
+    var trashBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'Trash');
         })[0];
@@ -2598,6 +2606,7 @@ function calculateTemplateValues(mods,templateName)
             var totalValue = 0;
             var totalSkills = 0;
             // Calculate the individual mod values
+            var temp = 0;
             for(var mod in mods)
                 {
                 if(template.hasOwnProperty(mod))
@@ -2605,13 +2614,21 @@ function calculateTemplateValues(mods,templateName)
                     if(template[mod] == 0)
                         continue;
                     if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                        {
+                        temp = mods[mod];
                         mods[mod] = template[mod + 'Cut'];
+                        }
                     var modValue = mods[mod] * template[mod];
                     totalValue += modValue;
                     if(specialBonus.hasOwnProperty(mod) && mods[mod] == specialBonus[mod][0])
                         totalValue += specialBonus[mod][1];
                     if(skillMods.hasOwnProperty(mod))
                         totalSkills += mods[mod];
+                    if(temp)
+                        {
+                        mods[mod] = temp;
+                        temp = 0;
+                        }
                     }
                 }
             templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
@@ -2627,6 +2644,7 @@ function calculateTemplateValues(mods,templateName)
         var totalValue = 0;
         var totalSkills = 0;
         var outArr = [];
+        var temp = 0;
         for(var mod in mods)
             {
             if(template.hasOwnProperty(mod))
@@ -2634,7 +2652,10 @@ function calculateTemplateValues(mods,templateName)
                 if(template[mod] == 0)
                     continue;
                 if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                    {
+                    temp = mods[mod];
                     mods[mod] = template[mod + 'Cut'];
+                    }
                 var modValue = mods[mod] * template[mod];
                 var tempArr = [mod, mods[mod], template[mod], modValue];
                 if(specialBonus.hasOwnProperty(mod) && mods[mod] >= specialBonus[mod][0])
@@ -2646,6 +2667,11 @@ function calculateTemplateValues(mods,templateName)
                     tempArr.push(0);
                 if(skillMods.hasOwnProperty(mod))
                     totalSkills += mods[mod];
+                if(temp)
+                    {
+                    mods[mod] = temp;
+                    temp = 0;
+                    }
                 totalValue += modValue;
                 tempArr.push(totalValue);
                 outArr.push(tempArr);
