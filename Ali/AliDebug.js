@@ -1,4 +1,26 @@
 //--# AliDebug
+var debug = true;
+function Debug(msg,type)
+    {
+    if(!debug)
+        return;
+    if(type == undefined)
+        type = 1;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    switch(type)
+        {
+        case 1:
+            TextWindow.Print(Orion.Time() + '|-' + Player.Name() + ': ' + msg);
+            break;
+        case 2:
+            TextWindow.Print('DEBUG ' + Orion.Time() + '|-' + Player.Name() + ': ' + msg);
+            break;
+        default:
+            break;
+        }
+    }
+
 function GetTargetCoords()
     {
     var x = SelectedTile.X();
