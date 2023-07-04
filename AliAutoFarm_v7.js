@@ -470,7 +470,7 @@ function StaticAutoFarm()
 				Orion.Wait(1000);
 				Orion.CloseUO();
 				}
-			Orion.Wait(2000);
+			Orion.Wait(500);
 			if(useAutoLoot)
 				Orion.Wait(2000 + Orion.Random(3,16) * 100); //Looting Wait
 			else
@@ -1304,7 +1304,7 @@ function FindOwnCorpse()
 
 function AliLootOni()
     {
-    var corpseFind = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
+    var corpseFind = Orion.FindTypeEx('0x2006', any, ground, 1).filter(function(item)
         {
         return Orion.Contains(item.Properties(), 'An Oni Corpse');
         });
@@ -1316,6 +1316,11 @@ function AliLootOni()
     var endTime = Orion.Now() + 5000;
     do
         {
+		if(corpse.Distance() > 1)
+			{
+			Orion.CharPrint(self,1159,'Walking to corpse')
+			Orion.WalkTo(corpse.X(),corpse.Y())
+			}
 		Orion.CharPrint(self,1159,'Opening corpse')
 		var journalStamp = Orion.Now();
         Orion.UseObject(corpseSerial);
@@ -1328,7 +1333,7 @@ function AliLootOni()
 			return AliLootOni();
 			}
         instanceSerials = Orion.FindType(any,any,corpseSerial);
-        } while(instanceSerials.length == 0 && Orion.Now() < endTime && !Orion.GumpExists('container',corpseSerial))
+        } while(Orion.Now() < endTime && !Orion.GumpExists('container',instanceSerials[instanceSerials.length - 1]) && !Orion.GumpExists('container',corpseSerial))
     if(instanceSerials.length)
         {
         var test = Orion.FindObject(instanceSerials[0]);
