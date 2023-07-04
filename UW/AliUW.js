@@ -731,6 +731,7 @@ function CharacterMaintenance()
 
 function DropLoot()
     {
+    var artifactString = "Captain Johne’s Blade|Pincer|Equivocation|Abhorrence|Craven";
     Orion.Wait(1000);
     EquipBossSuitByBotName();
     Orion.Wait(1000);
@@ -755,17 +756,27 @@ function DropLoot()
         var boxSerial = box.Serial();
         AliWalkTo(box.X(),box.Y(),0,1);
         VerifyOpenContainer(boxSerial);
-        var loot = Orion.FindList('UWLoot')[0];
+        var loot = Orion.FindType(any).filter(function(item)
+            {
+            var obj = Orion.FindObject(item);
+            if(Orion.Contains(obj.Name(),artifactString))
+                return false
+            return AliKeep(item);
+            })[0];
         while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
             {
             var lootObj = Orion.FindObject(loot);
             var lootName = lootObj.Name();
-            if(lootObj)
-                Debug2('Moving ' + lootName);
             Orion.CharPrint(self,1159,'Moving loot: ' + lootName);
             Orion.MoveItem(loot,0,boxSerial);
             Orion.Wait(1100);
-            loot = Orion.FindList('UWLoot')[0];
+            Orion.FindType(any).filter(function(item)
+                {
+                var obj = Orion.FindObject(item);
+                if(Orion.Contains(obj.Name(),artifactString))
+                    return false
+                return AliKeep(item);
+                })[0];
             }
         var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
             {
@@ -2287,6 +2298,7 @@ function OpenUW(_)
     {
     Orion.CharPrint(self,1159,'Opening UW!');
     Debug2("Opening UW!");
+    //DiscordPush('Start UW')
     var componentArr =
         [
             '0x46FE',
@@ -2396,10 +2408,8 @@ function BossSequence(_)
                     Orion.Wait(Orion.Random(5,11) * 500);
                 TerminateAll('BossSequence');
                 AliWalkTo(corpse[0].X(),corpse[0].Y());
-                Debug('Entering AliLootUW');
-                AliLootUW();
-                Debug('Exiting AliLootUW');
                 //ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+                AliLootUW();
                 Orion.Wait(Orion.Random(4,9) * 1000);
                 var ethy = Orion.FindTypeEx(any).filter(function(item)
                     {
@@ -2729,13 +2739,19 @@ function MoveLoot(destinationContainerSerial)
         destinationContainerSerial = Orion.GetSerial('myTarget');
         }
     var containerObj = Orion.FindObject(destinationContainerSerial);
-    var loot = Orion.FindList('UWLoot')[0];
+    var loot = Orion.FindType(any).filter(function(item)
+        {
+        return AliKeep(item);
+        })[0];
     while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
         {
         Orion.CharPrint(self,1159,'Moving loot');
         Orion.MoveItem(loot,0,destinationContainerSerial);
         Orion.Wait(1100);
-        loot = Orion.FindList('UWLoot')[0];
+        loot = Orion.FindType(any).filter(function(item)
+            {
+            return AliKeep(item);
+            })[0];
         }
     if(!loot)
         return true;
@@ -3068,10 +3084,12 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     var playerX = Player.X();
     var playerY = Player.Y();
     var zeroMovement = playerX == x && playerY == y;
-    Orion.Print('zeroMovement: ' + zeroMovement)
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
+        {
+        Orion.Print('zeroMovement: ' + zeroMovement)
         Orion.ClearFakeMapObjects();
+        }
     if(pathTiles.length === 0 && !zeroMovement)
         return false;
     if(!zeroMovement)
@@ -3111,7 +3129,6 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
         return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
     return true;
     }
-
 
 function HydraCheck(_)
     {
