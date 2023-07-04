@@ -252,7 +252,7 @@ function AliLootUW()  //v2
                 while(item.Container() !== backpackSerial)
                     {
                     if(Orion.Now() < endTime)
-                        DebugLoot("Item wasn't picked up!\n" + item.Properties())
+                        DebugLoot("Item wasn't picked up!\n" + item.Properties());
                     Orion.MoveItem(itemSerial);
                     Orion.Wait(1300);
                     }
@@ -1724,7 +1724,7 @@ function KeepJewelry(propertiesObj,props)
     if(propertiesObj['Magery'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
         return '1/3 +20 Magery Jewel';
     var score = calculateTemplateValues(propertiesObj)[0][1];
-    Orion.Print('score: ' + score)
+    //Orion.Print('score: ' + score)
     if(score < 50)
         {
         DebugLoot('Trash: score < 50');

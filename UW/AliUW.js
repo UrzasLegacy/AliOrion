@@ -148,7 +148,7 @@ function SmartStart()
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())
                 {
-                if(Orion.FindList('UWLoot').length > 5 || DurabilityCheck() || ConsumablesCheck())
+                if(Orion.FindType(any).filter(function(item){return AliKeep(item)}).length > 5 || DurabilityCheck() || ConsumablesCheck())
                     CharacterMaintenance();
                 if(Orion.GetDistance(6313, 1711) > 50)
                     GoFromHomeToLadderPosition();
@@ -736,7 +736,7 @@ function DropLoot()
     EquipBossSuitByBotName();
     Orion.Wait(1000);
     EquipBossSuitByBotName();
-    if(Orion.FindList('UWLoot').length == 0)
+    if(Orion.FindType(any).filter(function(item){return AliKeep(item)}).length == 0)
         {
         Debug2('No loot to drop');
         return;
@@ -770,7 +770,7 @@ function DropLoot()
             Orion.CharPrint(self,1159,'Moving loot: ' + lootName);
             Orion.MoveItem(loot,0,boxSerial);
             Orion.Wait(1100);
-            Orion.FindType(any).filter(function(item)
+            loot = Orion.FindType(any).filter(function(item)
                 {
                 var obj = Orion.FindObject(item);
                 if(Orion.Contains(obj.Name(),artifactString))
