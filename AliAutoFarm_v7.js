@@ -439,7 +439,7 @@ function StaticAutoFarm()
 		}
     while(!Player.Dead())
         {
-		Orion.CharPrint(self, 1159, 'Searching for Mob');
+		//Orion.CharPrint(self, 1159, 'Searching for Mob');
         Orion.SetSearchArea(playerStartX-staticFarmRadius, playerStartY-staticFarmRadius, playerStartX+staticFarmRadius, playerStartY+staticFarmRadius);
         var mob = Orion.FindTypeEx(mobGraphic, any, ground, 'ignoreself|ignorefriends|near|live|mobile', 24, 'gray|criminal')[0];
         Orion.ResetSearchArea();
@@ -1366,7 +1366,7 @@ function AliLootOni()
             if(AliKeep(itemSerial))
                 {
                 var endTime = Orion.Now() + 5000;
-                while(item.Container() !== backpackSerial)
+                while(item.Container() == corpseInstanceSerial)
                     {
 					Orion.CharPrint(self,1159,'Picking up ' + item.Name())
                     if(Orion.Now() > endTime)
