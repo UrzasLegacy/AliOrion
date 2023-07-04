@@ -196,7 +196,7 @@ function ScheduledStart()
 		Orion.Wait(2000);
 		}
 	}
-	
+
 function initScripts()
 	{
 	//Orion.OAOptionSet('AutoReconnect', '1');
@@ -1316,11 +1316,13 @@ function AliLootOni()
     var endTime = Orion.Now() + 5000;
     do
         {
+		Orion.CharPrint(self,1159,'Opening corpse')
 		var journalStamp = Orion.Now();
         Orion.UseObject(corpseSerial);
 		var wait = Orion.WaitJournal('You did not earn the right to loot this creature!',journalStamp,journalStamp + 1300,'sys');
 		if(wait)
 			{
+			Orion.CharPrint(self,1159,'No rights, ignoring...')
 			Orion.Ignore(corpseSerial);
 			return AliLootOni();
 			}
@@ -1342,6 +1344,7 @@ function AliLootOni()
         }
     else
 		{
+		Orion.CharPrint(self,1159,'Corpse empty')
 		Orion.Ignore(corpseSerial);
         return AliLootOni();
 		}
@@ -1365,6 +1368,7 @@ function AliLootOni()
                 var endTime = Orion.Now() + 5000;
                 while(item.Container() !== backpackSerial)
                     {
+					Orion.CharPrint(self,1159,'Picking up ' + item.Name())
                     if(Orion.Now() > endTime)
 						{
                         DebugLoot("Item wasn't picked up!\n" + item.Properties());
@@ -1378,6 +1382,7 @@ function AliLootOni()
             }
 		Orion.Wait(10);
         }
+	Orion.CharPrint(self,1159,'Finished looting corpse');
     Orion.Ignore(corpseSerial);
 	Orion.Wait(100);
 	AliLootOni()
