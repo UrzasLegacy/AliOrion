@@ -4,6 +4,11 @@ var lootItems = {
     //'0x0EED': true, //gold
 }
 var keepTrainingArmor = true;
+
+var debug = false;
+
+
+
 var serialIndex = 1;
 var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
     [
@@ -15,7 +20,7 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [],
         [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
     ]
-
+    
 function Gump()
     {
     var gump = Orion.CreateCustomGump(12002);
@@ -351,6 +356,23 @@ function AliLootHouse()
         Orion.Wait(500);
         }
     PutAwayLoot();
+    }
+
+function HighlightPartiallyFilledBoxes()
+    {
+    Orion.FindTypeEx(any,any,ground,'item',3).forEach(function(item)
+        {
+        var props = item.Properties();
+        if(props.indexOf('Contents: ') > -1)
+            {
+            if(props.indexOf('Contents: 125/') > -1)
+                Orion.TestItemColor(item.Serial(), 1161)
+            else if(props.indexOf('Contents: 0/') == -1)
+                Orion.TestItemColor(item.Serial(), 1152)
+            else
+                Orion.TestItemColor(item.Serial(), item.Color())
+            }
+        })
     }
 
 function PutAwayLoot()
@@ -1664,7 +1686,7 @@ function CountJewelryOvercaps(propertiesObj)
 
 function KeepJewelry(propertiesObj,props)
     {
-    var isClean = props.indexOf('Antique') === -1 && props.indexOf('Imbued') === -1 && props.indexOf('Brittle') === -1;
+    var isClean = props.indexOf('Antique') === -1 && props.indexOf('Imbued') === -1;
     var targetModCount = isClean ? 6 : 7;
     var skillMods = 
         {
@@ -1672,13 +1694,13 @@ function KeepJewelry(propertiesObj,props)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Healing:true, Archery:true,
+        Throwing:true,Healing:true, Archery:true,Meditation:true,
         }
-    var statMods = 
-        {
-        StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,
-        StaminaIncrease:true,ManaIncrease:true,
-        }
+    // var statMods = 
+    //     {
+    //     StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,
+    //     StaminaIncrease:true,ManaIncrease:true,
+    //     }
     var mageMods = 
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,
@@ -1692,7 +1714,7 @@ function KeepJewelry(propertiesObj,props)
         {
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,EnhancePotions:true,
         StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,ManaRegeneration:true,
-        HitChanceIncrease:true,DefenseChanceIncrease:true,LowerManaCost:true,ManaIncrease:true,
+        HitChanceIncrease:true,DefenseChanceIncrease:true,LowerManaCost:true,ManaIncrease:true,Meditation:true,
         MaceFighting:true,Fencing:true,Swordsmanship:true,SwingSpeedIncrease:true,DamageIncrease:true,
         FasterCasting:true,Tactics:true,StaminaIncrease:true,Necromancy:true,FasterCastRecovery:true,
         AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Chivalry:true,Stealth:true,
@@ -1701,46 +1723,59 @@ function KeepJewelry(propertiesObj,props)
         return '1/3 +20 Chiv Samp Jewel';
     if(propertiesObj['Magery'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
         return '1/3 +20 Magery Jewel';
+    var score = calculateTemplateValues(propertiesObj)[0][1];
+    Orion.Print('score: ' + score)
+    if(score < 50)
+        {
+        DebugLoot('Trash: score < 50');
+        return false;
+        }
     var overcapInt = CountJewelryOvercaps(propertiesObj);
     var skillInt = CountMatchingMods(propertiesObj, skillMods);
     if(skillInt == 0)
         {
-        if(overcapInt == 0 && !propertiesObj['EnhancePotions'] || !propertiesObj['DefenseChanceIncrease'] || !propertiesObj['ManaRegeneration'])
+        if(overcapInt == 0 && (!propertiesObj['EnhancePotions'] || !propertiesObj['DefenseChanceIncrease'] || !propertiesObj['ManaRegeneration']))
             {
             if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
                 return 'Str10/Dex10/Int10';
-            DebugLoot('Trash: Zero skills, missing EP or DCI or MR');
+            if(score >= 80)
+                return '0skill,0overcaps,missing either EP,DCI or MR, but score >= 80'
+            DebugLoot('Trash: Zero skills, zero overcaps, and missing either EP, DCI or MR');
             return false;
             }
-        else if(overcapInt >= 4)
-            return 'No Skill, 4+ Overcaps';
-        targetModCount++;
+        else if(overcapInt >= 3)
+            return 'No Skill, 3+ Overcaps';
+        targetModCount++; //at this point, if its zero skill and failed the previous two checks, it must be 8 good mods to pass instead of 7
         }
     if(skillInt == 1 && !propertiesObj['EnhancePotions'] && !propertiesObj['DefenseChanceIncrease'] && !propertiesObj['HitChanceIncrease'] && !propertiesObj['FasterCastRecovery'])
         {
-        if(overcapInt < 3)
+        if(overcapInt < 3 && score < 80)
             {
-            DebugLoot('Trash: One skill mod and must have at least one of EP/DCI/HCI/FCR');
+            DebugLoot('Trash: One skill mod and must have at least one of EP/DCI/HCI/FCR/3+overcaps');
             return false;
             }
         }
     if(skillInt >= 4)
         return '4+ skill mods';
-    var statInt = CountMatchingMods(propertiesObj,statMods);
-    if(skillInt >= 2 && statInt >= 3)
-        {
-        DebugLoot('Trash: 2+ skill mods and 3+ stat mods');
-        return false;
-        }
+    // var statInt = CountMatchingMods(propertiesObj,statMods);
+    // if(skillInt >= 2 && statInt >= 3)
+    //     {
+    //     DebugLoot('Trash: 2+ skill mods and 3+ stat mods');
+    //     return false;
+    //     }
     var mageInt = CountMatchingMods(propertiesObj, mageMods);
     var dexxerInt = CountMatchingMods(propertiesObj, dexxerMods);
     var hybridInt = CountMatchingMods(propertiesObj, hybridMods);
-    DebugLoot('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nstatInt: ' + statInt + '\nclean: ' + isClean);
+    DebugLoot('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nclean: ' + isClean);
     if(mageInt + hybridInt >= targetModCount || dexxerInt + hybridInt >= targetModCount)
         return '7 or 8 good mods (or 6 if clean)';
     if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
         return 'Str10/Dex10/Int10';
-    DebugLoot('Trash: Jewelry failed all previous checks');
+    if(score && score >= 70)
+        {
+        return 'Failed all previous checks, but score >= 70'
+        }
+    DebugLoot('Trash: Jewelry failed all previous checks and score < 70');
     return false;
     }
 
@@ -1779,7 +1814,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x2798':'0','0x2FC8':'0','0x2FC6':'0','0x2FC7':'0','0x2FC9':'0','0x2FCA':'0','0x2FC5':'0','0x1C0B':'0','0x1C0A':'0','0x1DB9':'0',
         '0x1DBA':'0','0x277B':'0','0x13C6':'0','0x13CE':'0','0x13C7':'0','0x278A':'0','0x277E':'0','0x2776':'0','0x13D2':'0','0x13CB':'0',
         '0x277A':'0','0x278E':'0','0x2793':'0','0x2792':'0','0x2791':'0','0x1C01':'0','0x1C00':'0','0x1C09':'0','0x1C08':'0','0x13C5':'0',
-        '0x13CD':'0','0x2786':'0','0x13D3':'0','0x13CC':'0','0x2781':'1','0x140F':'1','0x140E':'1','0x1F0B':'1','0x1F0C':'1','0x141B':'0',
+        '0x13CD':'0','0x2786':'0','0x13D3':'0','0x13CC':'0','0x2781':'1','0x140F':'1','0x140E':'1','0x1F0B':'1','0x1F0C':'3','0x141B':'0',
         '0x141C':'0','0x1412':'1','0x1419':'1','0x1410':'1','0x1417':'1','0x2785':'1','0x277D':'1','0x1414':'1','0x1418':'1','0x1413':'1',
         '0x278D':'1','0x2775':'1','0x2780':'1','0x141A':'1','0x1411':'1','0x2779':'1','0x2788':'1','0x1416':'1','0x1415':'1','0x2B71':'0',
         '0x13EB':'1','0x13F2':'1','0x13F1':'1','0x13F0':'1','0x13EF':'1','0x13EE':'1','0x13ED':'1','0x13EC':'1','0x1543':'0','0x1544':'0',
@@ -1829,22 +1864,6 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         var intrinsicLMC = intrinsicLMCArr[0];
         
     DebugLoot('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
-    
-
-    if((props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1)
-        && (props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1))
-            {
-            var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
-            if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 50)
-                {
-                return 'Training Armor';
-                }
-            else
-                {
-                DebugLoot('Trash: Training Armor');
-                return false;
-                }
-            }
 
     if(hpi >= 3)
         { //treat as Vitality
@@ -1855,14 +1874,16 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
-                var lmcThreshold = lrc >= 20 ? 0 : 5;
+                var lmcThreshold = lrc >= 20 ? 0 : 4;
                 var mrThreshold = 2;
+                var hprThreshold = 0;
                 var statThreshold = goodEater ? 3 : 5;
                 break;
             case '1':
                 var lrcThreshold = 15;
                 var lmcThreshold = 6;
                 var mrThreshold = 3;
+                var hprThreshold = 2;
                 var statThreshold = goodEater ? 10 : 13;
                 break;
             case '0':
@@ -1935,10 +1956,10 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
-                var lmcThreshold = 5;
+                var lmcThreshold = 3;
                 var mrThreshold = 3;
                 var hprThreshold = 2;
-                var statThreshold = goodEater ? 5 : 7;
+                var statThreshold = goodEater ? 2 : 7;
                 break;
             case '1':
                 var lrcThreshold = 15;
@@ -1960,6 +1981,9 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold)
             return 'LMC Misc Armor';
         }
+    var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
+    if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 50)
+        return 'Training Armor';
     DebugLoot('Trash: Armor failed all previous checks');
     return false;
     }
@@ -2134,7 +2158,6 @@ function VerifyOpenContainer(containerSerial,delay)
     return true;
     }
 
-var debug = false;
 function DebugLoot(msg)
     {
     if(!debug)
@@ -2464,6 +2487,8 @@ function HighlightJewelryScore(templateString,score,skillInt)
     Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
     }
 
+
+
 function calculateTemplateValues(mods,templateName)
     {
     var templates = 
@@ -2578,6 +2603,13 @@ function calculateTemplateValues(mods,templateName)
             },
         MeleeArcherFister: {
             'Archery': .6,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,'Bushido':.83,'Fencing':.53,'MaceFighting':.53,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        NecroArcher: {
+            'Archery': .83,'ArcheryCut': 10,'Tactics':.83,'Anatomy':.83,'ResistingSpells': .83,'Necromancy':.83,'SpiritSpeak':.83,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
