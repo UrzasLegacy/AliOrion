@@ -1324,6 +1324,7 @@ function AliLootOni()
 			{
 			Orion.CharPrint(self,1159,'No rights, ignoring...')
 			Orion.Ignore(corpseSerial);
+			Orion.Wait(500);
 			return AliLootOni();
 			}
         instanceSerials = Orion.FindType(any,any,corpseSerial);
@@ -1346,6 +1347,7 @@ function AliLootOni()
 		{
 		Orion.CharPrint(self,1159,'Corpse empty')
 		Orion.Ignore(corpseSerial);
+		Orion.Wait(500);
         return AliLootOni();
 		}
     var backpackSerial = Orion.GetSerial(backpack);
@@ -1384,7 +1386,7 @@ function AliLootOni()
         }
 	Orion.CharPrint(self,1159,'Finished looting corpse');
     Orion.Ignore(corpseSerial);
-	Orion.Wait(100);
+	Orion.Wait(500);
 	AliLootOni()
     }
 
