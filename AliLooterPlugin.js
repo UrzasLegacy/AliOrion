@@ -2580,6 +2580,13 @@ function calculateTemplateValues(mods,templateName)
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':.4
             },
+        FoNNecro: {
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Necromancy':.83,'SpiritSpeak':.83,'Parrying': .83,'ResistingSpells': .83,'Healing':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':.4
+            },
         NoxMage: {
             'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'MaceFighting': .83,'Fencing': .83,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
