@@ -558,8 +558,9 @@ function StaticAutoFarm()
 				Orion.Wait(1000);
 				Orion.CloseUO();
 				}
+			Orion.Wait(2000);
 			if(useAutoLoot)
-				Orion.Wait(4000 + Orion.Random(3,16) * 100); //Looting Wait
+				Orion.Wait(2000 + Orion.Random(3,16) * 100); //Looting Wait
 			else
 				AliLootOni();
 			}
@@ -1436,6 +1437,7 @@ function AliLootOni()
             }
         }
     Orion.Ignore(corpseSerial);
+	AliLootOni()
     }
 
 function DebugLoot(msg)
