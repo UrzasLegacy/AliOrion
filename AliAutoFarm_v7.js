@@ -142,7 +142,7 @@ var profiles =
 		useCounterAttack: false, //true , false.
 		useConsecrateWeapon: false, //true , false.
 		useDivineFury: false, //true , false.
-		useAutoLoot: true,
+		useAutoLoot: false,
 		autolootAgentHotkey: 48, //JavaScript Event Keycode. Use https://keycode.info/
 		useConfidence: false, //true , false.
 			useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
@@ -1376,19 +1376,26 @@ function FindOwnCorpse()
 
 function AliLootOni()
     {
-    var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
+    var corpseFind = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
         {
         return Orion.Contains(item.Properties(), 'An Oni Corpse');
-        })[0];
-    if(!corpse)
+        });
+    if(!corpseFind.length)
         return Orion.CharPrint(self,1159,'No corpse found');
+	var corpse = corpseFind[0];
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
     var endTime = Orion.Now() + 5000;
     do
         {
+		var journalStamp = Orion.Now();
         Orion.UseObject(corpseSerial);
-        Orion.Wait(1300);
+		var wait = Orion.WaitJournal('You did not earn the right to loot this creature!',journalStamp,journalStamp + 1300,'sys');
+		if(wait)
+			{
+			Orion.Ignore(corpseSerial);
+			return AliLootOni();
+			}
         instanceSerials = Orion.FindType(any,any,corpseSerial);
         } while(instanceSerials.length == 0 && Orion.Now() < endTime && !Orion.GumpExists('container',corpseSerial))
     if(instanceSerials.length)
@@ -1406,7 +1413,10 @@ function AliLootOni()
         DebugLoot('instanceMatch: lastcontainer = ' + Orion.GetSerial(lastcontainer) + ' corpseInstance = ' + corpseInstanceSerial)
         }
     else
-        return Orion.CharPrint(self,1159,'Corpse is empty')
+		{
+		Orion.Ignore(corpseSerial);
+        return AliLootOni();
+		}
     var backpackSerial = Orion.GetSerial(backpack);
     for(var attempts=0;attempts<2;attempts++)
         {
@@ -1416,27 +1426,32 @@ function AliLootOni()
             var item = itemsInCorpse[i];
             if(!item)
                 continue;
-            while(corpse.Distance() > 2)
-                {
-                Orion.WalkTo(corpse.X(),corpse.Y());
-                Orion.Wait(250);
-                }
+            // while(corpse.Distance() > 2)
+            //     {
+            //     Orion.WalkTo(corpse.X(),corpse.Y());
+            //     Orion.Wait(250);
+            //     }
             var itemSerial = item.Serial();
             if(AliKeep(itemSerial))
                 {
                 var endTime = Orion.Now() + 5000;
                 while(item.Container() !== backpackSerial)
                     {
-                    if(Orion.Now() < endTime)
+                    if(Orion.Now() > endTime)
+						{
                         DebugLoot("Item wasn't picked up!\n" + item.Properties());
+						break;
+						}
                     Orion.MoveItem(itemSerial);
                     Orion.Wait(1100);
                     }
                 }
             Orion.Wait(10);	
             }
+		Orion.Wait(10);
         }
     Orion.Ignore(corpseSerial);
+	Orion.Wait(100);
 	AliLootOni()
     }
 
