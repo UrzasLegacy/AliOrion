@@ -5,7 +5,7 @@ var lootItems = {
 }
 var keepTrainingArmor = true;
 
-var debug = false;
+//var debug = false;
 
 
 
@@ -252,7 +252,7 @@ function AliLootUW()  //v2
                 while(item.Container() !== backpackSerial)
                     {
                     if(Orion.Now() < endTime)
-                        DebugLoot("Item wasn't picked up!\n" + item.Properties());
+                        DebugLoot("Item wasn't picked up!\n" + item.Properties() + '\nitemContainer: ' + item.Container() + '\nbackpack: ' + backpackSerial);
                     Orion.MoveItem(itemSerial);
                     Orion.Wait(1300);
                     }

@@ -1583,9 +1583,12 @@ function AutoInsure()
         {
         var items = Orion.FindTypeEx(any).filter(function(item)
             {
-            if(hash[item.Serial()] || Orion.Contains(item.Properties(),'insured|blessed|cursed'))
+            var itemSerial = item.Serial()
+            if(hash[itemSerial] || Orion.Contains(item.Properties(),'insured|blessed|cursed'))
                 return false;
-            var keep = AliKeep(item.Serial());
+            var keep = AliKeep(itemSerial);
+            if(!keep || keep == 'Kept by Item Graphic')
+                hash[itemSerial] = true;
             return keep && keep !== 'Kept by Item Graphic';
             });
         if(items.length && !Orion.HaveTarget())
