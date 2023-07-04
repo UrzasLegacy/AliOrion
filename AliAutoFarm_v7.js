@@ -1,5 +1,123 @@
+//#include OA/AliLooterPlugin.js
 //v7
+function BlockSweeper()
+	{
+	var blockItemGraphics = '0x0A27|0x2257|0x2256|0x1047';
+    while(true)
+        {
+        Orion.Wait(500);
+        var container = Orion.FindTypeEx(any).filter(function(item)
+        	{
+        	var itemProps = item.Properties();
+        	return Orion.Contains(itemProps,'Contents: ') && !Orion.Contains(itemProps,'Contents: 125')
+        	})[0];
+        Orion.SetSearchArea(162,643,189,683)
+        var item = Orion.FindTypeEx(blockItemGraphics,any,ground,'item|near',20)[0];
+        Orion.ResetSearchArea();
+        if(!item)
+        	{
+        	item = Orion.FindTypeEx(blockItemGraphics,any,ground,'item|near',4)[0];
+        	if(!item && container)
+        		{
+	        	var itemInPack = Orion.FindType(blockItemGraphics).filter(function(item)
+	        		{
+	        		return item != container.Serial()
+	        		})[0];
+	        	if(itemInPack)
+	        		{
+		           	Orion.MoveItem(itemInPack,0,container.Serial());
+		            Orion.Wait(500);
+	        		}
+        		}
+        	}
+        if(item)
+            {
+        	Orion.PauseScript('all','BandieBot|AutoAttack|JournalScan|BlockSweeper')
+           	if(item.Distance() > 2)
+           		Orion.WalkTo(item.X(),item.Y());
+           	if(container)
+            	Orion.MoveItem(item.Serial(),0,container.Serial());
+            else
+            	Orion.MoveItem(item.Serial());
+            Orion.Wait(1000);
+            }
+         else
+        		Orion.ResumeScript('all');
+        }
+	}
 
+function BlockScooper()
+    {
+    var blockItemGraphics = '0x0A27|0x2257|0x2256';
+    while(true)
+        {
+        var container = Orion.FindTypeEx(any).filter(function(item)
+        	{
+        	var itemProps = item.Properties();
+        	return Orion.Contains(itemProps,'Contents: ') && !Orion.Contains(itemProps,'Contents: 125')
+        	})[0];
+        var item = Orion.FindType(blockItemGraphics,any,ground,'item|near',2)[0];
+        var itemInPack = Orion.FindType(blockItemGraphics)[0];
+        if(item)
+            {
+           	if(container)
+            	Orion.MoveItem(item,0,container.Serial());
+            else
+            	Orion.MoveItem(item);
+            Orion.Wait(1000);
+            }
+        else if(itemInPack && container)
+        	{
+           	Orion.MoveItem(itemInPack,0,container.Serial());
+            Orion.Wait(1000);
+        	}
+        Orion.Wait(500)
+        }
+    }
+function StayHidden()
+    {
+    var startX = Player.X();
+    var startY = Player.Y();
+    while(!Player.Dead() && Player.X() == startX && Player.Y() == startY)
+        {
+        if(!Orion.BuffExists('hiding'))
+            {
+            AttackNearest();
+            Orion.Wait(1000);
+            Orion.UseSkill('Hiding');
+            }
+        Orion.Wait(250);
+        }
+    }
+function AutoConfidence()
+	{
+	while(!Player.Dead())
+		{
+		if(Player.Hits('%') < 70)
+			Orion.Cast('Confidence');
+		Orion.Wait(2000);
+		}
+	}
+
+function ScheduledStart()
+	{
+	Orion.Exec('StayHidden',true);
+	Orion.SetTimer('timer')
+	while(true)
+		{
+		if(isTargetHour(2))
+			{
+			Orion.Exec('WalkThroughCurrentFarm',true);
+			break;
+			}
+		if(Orion.Timer('timer') > 60000)
+			{
+			Orion.UseObject(backpack)
+			Orion.SetTimer('timer')
+			}
+		Orion.Wait(2000);
+		}
+	}
 
 var profiles = 
 	{
@@ -42,7 +160,7 @@ var profiles =
 				checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
 				checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
 			UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
-				insureFindList: 'BotLootNoGold', //create a find list with this name and set find criteria.
+				insureFindList: 'BotLoot', //create a find list with this name and set find criteria.
 				insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
 			searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
 		//useLootCorpses: true,
@@ -191,87 +309,16 @@ function terminateScripts()
 	Orion.Terminate('all', 'BandieBot|JournalScan|JournalScanGMonly|JournalScanNoEquipmentDamage');
 	}
 
-function BlockSweeper() //actively run to and pick up block items within 20 tiles
-    {
-    var blockItemGraphics = '0x0A27|0x2257|0x2256';
-    while(true)
-        {
-        Orion.Wait(500);
-        var container = Orion.FindTypeEx(any).filter(function(item)
-            {
-            var itemProps = item.Properties();
-            return Orion.Contains(itemProps,'Contents: ') && !Orion.Contains(itemProps,'Contents: 125')
-            })[0];
-        var item = Orion.FindTypeEx(blockItemGraphics,any,ground,'item|near',20)[0];
-        if(!item)
-            {
-            var itemInPack = Orion.FindType(blockItemGraphics).filter(function(item)
-                {
-                return item != container.Serial()
-                })[0];
-            if(container && itemInPack)
-                {
-                Orion.MoveItem(itemInPack,0,container.Serial());
-                Orion.Wait(500);
-                }
-            //if(Orion.ScriptRunning('StaticAutoFarm') < 0)
-                Orion.ResumeScript('all');
-            continue;
-            }
-        Orion.PauseScript('all','BandieBot|AutoAttack|JournalScan|BlockSweeper')
-        
-        if(item)
-            {
-               if(item.Distance() > 2)
-                   Orion.WalkTo(item.X(),item.Y());
-               if(container)
-                Orion.MoveItem(item.Serial(),0,container.Serial());
-            else
-                Orion.MoveItem(item.Serial());
-            Orion.Wait(1000);
-            }
-        }
-    }
-
-function BlockScooper() //passively pick up block items that happen to be nearby
-    {
-    var blockItemGraphics = '0x0A27|0x2257|0x2256';
-    while(true)
-        {
-        var container = Orion.FindTypeEx(any).filter(function(item)
-            {
-            var itemProps = item.Properties();
-            return Orion.Contains(itemProps,'Contents: ') && !Orion.Contains(itemProps,'Contents: 125')
-            })[0];
-        var item = Orion.FindType(blockItemGraphics,any,ground,'item|near',2)[0];
-        var itemInPack = Orion.FindType(blockItemGraphics)[0];
-        if(item)
-            {
-               if(container)
-                Orion.MoveItem(item,0,container.Serial());
-            else
-                Orion.MoveItem(item);
-            Orion.Wait(1000);
-            }
-        else if(itemInPack && container)
-            {
-               Orion.MoveItem(itemInPack,0,container.Serial());
-            Orion.Wait(1000);
-            }
-        Orion.Wait(500)
-        }
-    }
-	
 function Autostart()
 	{
     var journalScanType = profile.journalScanType;
 	Orion.Wait(1000);
     Orion.Terminate('all', 'Autostart');
-	while(!Orion.GumpExists('container',backpack))
-		{
-		Orion.UseObject(backpack);
-		Orion.Wait(1300);
-		}
+    while(!Orion.GumpExists('container',backpack))
+			{
+			Orion.UseObject(backpack);
+			Orion.Wait(1300);
+			}
 	Orion.Wait(1000);
 	Orion.Exec(journalScanType,true);
 	}
@@ -504,7 +551,7 @@ function StaticAutoFarm()
 				}
 			if(isTargetHour(11))
 				{
-				Orion.PauseScript('all','StaticAutoFarm|JournalScan');
+				Orion.PauseScript('all','StaticAutoFarm');
 				Orion.CharPrint(self,1159,'Stopping 1 hour before server down!');
 				Orion.Wait(500);
 				RecallByGump('Main','Home');
@@ -1044,9 +1091,11 @@ function AutoInsure()
 		}
 	while(listSearch && !Player.Dead())
 		{
-		Orion.UseIgnoreList(insureIgnore);
-		var item = Orion.FindList(insureFind);
-		Orion.ResetIgnoreList();
+		var item = Orion.FindList(insureFind).filter(function(it)
+			{
+			var obj = Orion.FindObject(it)
+			return obj && !Orion.Contains(obj.Properties(),'insured')
+			});
 		if(item && item.length && !Orion.HaveTarget())
 	    	{
 			Orion.WaitContextMenuID(self, 418);
@@ -1118,7 +1167,7 @@ function AddToDropQueue()
         Orion.Wait(1);
         }
     }
-
+	
 function DropFromQueue(_)
     {
     var endStamp = Orion.Now() + 5000;
@@ -1330,6 +1379,8 @@ function WalkThroughCurrentFarm()
 	if(profile.walkThrough == 'Oni')
 		{	
 		RecallByGump('Main','Dojo', 'Main', 'Dojo2');
+		
+		Orion.Exec('BlockSweeper',true);
 		WalkThrough([[987, 196, false, '67:337:w'],[66, 352, false, '63:524:w'],[103, 556, false, '76:691:w'],[176, 664, false,'176:664:w']]);
 		}
 	else if(profile.walkThrough == 'Primeval')
@@ -1347,7 +1398,7 @@ function WalkThroughCurrentFarm()
 		Orion.Wait(2000);
 		WalkThrough([[513, 584, false, '6994:1370:s'],[6936, 1092]]);
 		}
-	Orion.Wait(100);
+	Orion.Wait(200);
 	Orion.Exec('initScripts', true);
 	}
 
