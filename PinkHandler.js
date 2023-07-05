@@ -10,70 +10,70 @@ Shared.AddVar('debug',true);
 var scrollinfoAtlantic = //[skillname, categoryindex, skillindex, bookbutton, price]
 	[
 	//0 Misc Atlantic
-		["Arms Lore",           0,  0,  1044064,    299986],
-		["Begging",             0,  1,  1044066,    848998],
-		["Camping",             0,  2,  1044070,    59999],
-		["Cartography",         0,  3,  1044072,    1999990],
-		["Forensics",           0,  4,  1044079,    99997],
-		["Item Identification", 0,  5,  1044063,    49998],
-		["Taste Identification",0,  6,  1044096,    49998],
+		["Arms Lore",           0,  0,  1044064,    7199995],
+		["Begging",             0,  1,  1044066,    5175498],
+		["Camping",             0,  2,  1044070,    99996],
+		["Cartography",         0,  3,  1044072,    44999999],
+		["Forensics",           0,  4,  1044079,    45000],
+		["Item Identification", 0,  5,  1044063,    45000],
+		["Taste Identification",0,  6,  1044096,    45000],
 	//1 Combat Atlantic
-		["Anatomy",             1,  0,  1044061,    7399983],
-		["Archery",             1,  1,  1044091,    5099979],
-		["Fencing",             1,  2,  1044102,    349984],
-		["Focus",               1,  3,  1044110,    149983],
-		["Healing",             1,  4,  1044077,    5949987],
-		["Mace Fighting",       1,  5,  1044101,    449982],
-		["Parrying",            1,  6,  1044065,    5949978],
-		["Swordsmanship",       1,  7,  1044100,    8799983],
-		["Tactics",             1,  8,  1044087,    14999979],
-		["Throwing",            1,  9,  1044117,    1000000],
-		["Wrestling",           1,  10, 1044103,    1999980],
+		["Anatomy",             1,  0,  1044061,    7999999],
+		["Archery",             1,  1,  1044091,    9999999],
+		["Fencing",             1,  2,  1044102,    1899999],
+		["Focus",               1,  3,  1044110,    139999],
+		["Healing",             1,  4,  1044077,    9999999],
+		["Mace Fighting",       1,  5,  1044101,    4999999],
+		["Parrying",            1,  6,  1044065,    8599999],
+		["Swordsmanship",       1,  7,  1044100,    8999999],
+		["Tactics",             1,  8,  1044087,    20999999],
+		["Throwing",            1,  9,  1044117,    2999999],
+		["Wrestling",           1,  10, 1044103,    4799999],
 	//2 Trade Skills Atlantic
-		["Alchemy",             2,  0,  1044060,    13749985],
-		["Blacksmithing",       2,  1,  1044067,    5949143],
-		["Fletching",           2,  2,  1044068,    3999882],
-		["Carpentry",           2,  3,  1044071,    1998989],
-		["Cooking",             2,  4,  1044073,    9094996],
-		["Inscription",         2,  5,  1044083,    5999476],
-		["Lumberjacking",       2,  6,  1044104,    524983],
-		["Mining",              2,  7,  1044105,    499985],
-		["Tailoring",           2,  8,  1044094,    3824139],
-		["Tinkering",           2,  9,  1044097,    2989981],
+		["Alchemy",             2,  0,  1044060,    6999990],
+		["Blacksmithing",       2,  1,  1044067,    4999999],
+		["Fletching",           2,  2,  1044068,    4399997],
+		["Carpentry",           2,  3,  1044071,    4399997],
+		["Cooking",             2,  4,  1044073,    7989986],
+		["Inscription",         2,  5,  1044083,    5498985],
+		["Lumberjacking",       2,  6,  1044104,    499998],
+		["Mining",              2,  7,  1044105,    1499997],
+		["Tailoring",           2,  8,  1044094,    4999998],
+		["Tinkering",           2,  9,  1044097,    2469989],
 	//3 Magic Atlantic
-		["Bushido",             3,  0,  1044112,    39499994], 
-		["Chivalry",            3,  1,  1044111,    13749985],
-		["Eval Intelligence",   3,  2,  1044076,    11474990],
-		["Imbuing",             3,  3,  1044116,    13749985],
-		["Magery",              3,  4,  1044085,    22099990],
-		["Meditation",          3,  5,  1044106,    88999],
-		["Mysticism",           3,  6,  1044115,    9179987],
-		["Necromancy",          3,  7,  1044109,    13749985],
-		["Ninjitsu",            3,  8,  1044113,    29888887],
-		["Resisting Spells",    3,  9,  1044086,    4249558],
-		["Spellweaving",        3,  10, 1044114,    19899999],
-		["Spirit Speak",        3,  11, 1044092,    9179987],
+		["Bushido",             3,  0,  1044112,    19999999], 
+		["Chivalry",            3,  1,  1044111,    14799999],
+		["Eval Intelligence",   3,  2,  1044076,    14849998],
+		["Imbuing",             3,  3,  1044116,    14999999],
+		["Magery",              3,  4,  1044085,    29999999],
+		["Meditation",          3,  5,  1044106,    199999],
+		["Mysticism",           3,  6,  1044115,    11999999],
+		["Necromancy",          3,  7,  1044109,    24999997],
+		["Ninjitsu",            3,  8,  1044113,    22999999],
+		["Resisting Spells",    3,  9,  1044086,    14999999],
+		["Spellweaving",        3,  10, 1044114,    24999999],
+		["Spirit Speak",        3,  11, 1044092,    14899999],
 	//4 Wilderness 3499998
-		["Animal Lore",         4,  0,  1044062,    9179987],
-		["Animal Taming",       4,  1,  1044095,    49899992],
+		["Animal Lore",         4,  0,  1044062,    14999999],
+		["Animal Taming",       4,  1,  1044095,    75999997],
 		["Fishing",             4,  2,  1044078,    5689998],
-		["Herding",             4,  3,  1044080,    49993],
-		["Tracking",            4,  4,  1044098,    949983],
-		["Veterinary",          4,  5,  1044099,    11474991],
+		["Herding",             4,  3,  1044080,    999999],
+		["Tracking",            4,  4,  1044098,    7899999],
+		["Veterinary",          4,  5,  1044099,    22999998],
 	//5 Thievery Atlantic
-		["Detecting Hidden",    5,  0,  1044074,    4999991],
-		["Hiding",              5,  1,  1044081,    3499486],
-		["Lock Picking",        5,  2,  1044084,    2489982],
-		["Poisoning",           5,  3,  1044090,   9299994],
-		["Remove Trap",         5,  4,  1044108,    1999985],
-		["Snooping",            5,  5,  1044088,    1499996],
-		["Stealing",            5,  6,  1044093,    499496],
-		["Stealth",             5,  7,  1044107,    6999997],
+		["Detecting Hidden",    5,  0,  1044074,    4899999],
+		["Hiding",              5,  1,  1044081,    35399990],
+		["Lock Picking",        5,  2,  1044084,    9999999],
+		["Poisoning",           5,  3,  1044090,   39999997],
+		["Remove Trap",         5,  4,  1044108,    7999999],
+		["Snooping",            5,  5,  1044088,    1499995],
+		["Stealing",            5,  6,  1044093,    499999],
+		["Stealth",             5,  7,  1044107,    14999999],
 	//6 Bard Atlantic
-		["Discordance",         6,  0,  1044075,    14999979],
-		["Musicianship",        6,  1,  1044089,    6699994],
-		["Peacemaking",         6,  2,  1044069,    6499993],
-		["Provocation",         6,  3,  1044082,    7499998],
+		["Discordance",         6,  0,  1044075,    38999997],
+		["Musicianship",        6,  1,  1044089,    9999999],
+		["Peacemaking",         6,  2,  1044069,    9999999],
+		["Provocation",         6,  3,  1044082,    24999997],
 	]
 //------------------------------------------------------------------------------------------------------------------------------YAMATO
 var scrollinfoYamato = //[skillname, categoryindex, skillindex, bookbutton, price]
@@ -165,7 +165,7 @@ function Autostart()
         Orion.UseObject(backpack);
         Orion.Wait(1300);
         }
-    Orion.Exec('GMJournalScan',true);
+    Orion.Exec('GMScan',true);
     Orion.Exec('MonitorVendorsForSales',true);
     if(Orion.GetDistance(775,729) < 6 || Orion.GetDistance(794,749) < 6)
         {
@@ -314,7 +314,7 @@ function Gump()
     //tempArr.push([50,0,0,0,0,0,0])
     //Shared.AddArray('combo50', tempArr2);
     //Orion.Print(tempArr2.length)
-    Orion.Exec('GMJournalScan',true);
+    Orion.Exec('GMScan',true);
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
     gump.SetCallback('GumpCallback');
@@ -406,6 +406,41 @@ function GMJournalScan()
 					break;
 				}
 			}
+		}
+	}
+
+function GMScan()
+	{
+	var useDiscordPush = true//profile.useDiscordPush;
+	var useAlarmSound = true//profile.useAlarmSound;
+    var closeUO = true;
+    var timeStamp = 0;
+    var gmCheck;
+	while(true)
+		{
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
+            {
+            return mob.Properties().indexOf('GM ') > -1;
+            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();    
+        if(gmCheck)
+            {
+			 if(useDiscordPush)
+			    DiscordPush(Player.Name() + ": GM");
+			if(useAlarmSound)
+			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+			Orion.PauseScript('all','JournalScan');
+			Orion.Wait(500);
+			Orion.Terminate('all', 'JournalScan');
+			Orion.StopWalking();
+			Orion.Wait(5000);
+			if(closeUO)
+			    {
+			    Orion.OAOptionSet('AutoReconnect', '0');
+			    Orion.LogOut();
+			    }
+			}
+        Orion.Wait(3000);
 		}
 	}
 
@@ -543,7 +578,7 @@ function CheckAllNearbyVendors()
     TextWindow.Open();
     TextWindow.Clear();
     TextWindow.Print('---Starting Vendor Check---\nSymbols:\n+:\tWe are lower than them by more than 1 gp\n-:\tThey are lower than us\n=:\tWe are exactly 1 gp below their price\n==:Their price is exactly the same as ours\nSymbol SuggestedPrice/CurrentPrice:\tSkillName:\t[all prices on vendors]');
-    var vendors = Orion.FindTypeEx(any,any,ground,'live',15,'yellow').filter(function(npc)
+    var vendors = Orion.FindTypeEx(any,any,ground,'live',4,'yellow').filter(function(npc)
         {
         return Orion.Contains(npc.Properties(),'Shop Name:');
         });
@@ -685,16 +720,16 @@ function VSResultPinks()
                 Orion.Print('total: ' + totalVSprice)
                 var formatArray = FormatArray(resultArr)
 				var lowestPrice = resultArr[2] || resultArr[1] || resultArr[0];
-                if(lowestPrice < 30000)
+                if(lowestPrice < 45000)
                     {
                     tab = '\t\t';
-                    outMsg += "\\\t" + 30000 + ':\t'
+                    outMsg += "\\\t" + 45000 + ':\t'
                     }
 				else if(lowestPrice < currentPrice)
 					{
                     if(lowestPrice - 1 < 1000000)
                         tab = '\t\t';
-                    outMsg += "\\-\t" + (lowestPrice-1);
+                    outMsg += "-\t" + (lowestPrice-1);
 					}
 				else if((lowestPrice == currentPrice || lowestPrice - 1 == currentPrice))
                     {
@@ -714,7 +749,10 @@ function VSResultPinks()
                 outMsg += ' (' + resultArr.length + ':' + addArray.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,") + '): [' + formatArray + ']: Acc Total: ' + totalVSprice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
                 TextWindow.Print(outMsg);
                 if(pushToDiscord)
+                    {
+                    truncMsg = truncMsg.replace(/-/,'\\-');
                     Orion.HttpPost(bot,'content=' + truncMsg);
+                    }
 				}
 			}
 		else
@@ -940,7 +978,7 @@ function FullAutoVendor()
     var vendorInterval = 1000 * 60 * 60 * 1; //do a round of checking vendors every 1 hour;
     var saluteTimer = Orion.Now() + saluteInterval;
     var reportTimer = Orion.Now() + reportInterval;
-    var invCntTimer = 0;
+    var invCntTimer = Orion.Now() + invCntInterval;
     var vendorCheckTimer = 0;
     while(!Player.Dead())
         {
@@ -2920,6 +2958,48 @@ function CloseAllGumps()
         }
     }
 
+function AliVendorBuy()
+    {
+    // QoL function to make buying from player vendors less tedious. Just target the item you'd like to purchase.
+    // Also reports your total spending during your session. Resets when you close the client completely.
+    // Set to a keybind and check the 'Run one script' checkbox.
+
+    // WARNING WARNING WARNING
+    // Will purchase whatever you target without a confirmation prompt! Do not target something you don't intend to buy!
+    // WARNING WARNING WARNING
+
+    // To avoid accidentally buying overpriced items, you can enter a maximum price here:
+    var maximumPrice = 50000000; // less than or equal to
+
+
+    //No edit
+    Orion.CharPrint(self,1159,'Select item to purchase')
+    Orion.WaitForAddObject('myTarget')
+    var itemObj = Orion.FindObject('myTarget');
+    if(!itemObj)
+        return Orion.CharPrint(self,1159,'No item selected')
+    var itemProps = itemObj.Properties();
+    var itemPrice = +((itemProps.match(/Price: ([\d,]+)/) || [])[1] || '').replace(/,/g,'');
+    if(itemPrice > maximumPrice)
+        return Orion.CharPrint(self,1159,'No deal! Item overpriced!');
+    var totalSpentThisSession = Shared.GetVar('totalSpent',0) + itemPrice;
+    var itemSerial = itemObj.Serial();
+    Orion.WaitContextMenuID(itemSerial, 608);
+    Orion.RequestContextMenu(itemSerial);
+    if(Orion.WaitForGump(2000,true))
+        {
+        var gump = Orion.GetGump(any,'0x000F3E60');
+        if(gump)
+            {
+            gump.Select(Orion.CreateGumpHook(2));
+            Shared.AddVar('totalSpent',totalSpentThisSession);
+            var formattedWithCommas = totalSpentThisSession.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+            }
+        }
+    Orion.Wait(200);
+    Orion.Print('Total Spent: ' + formattedWithCommas + 'gp');
+    }
+    
 function PinkTokenCracker()
 	{
 	Orion.CharPrint(self,1159,'Select bag containing tokens')
@@ -3109,7 +3189,7 @@ function MakeWoodPulp()
                     {
                     Orion.CharPrint(self,1159,'Restocking Ingots');
                     if(!Restock('Iron Ingots', ingotGraphic, supplyContainer, 50, '0x0000'))
-                        return Orion.Terminate('all', 'GMJournalScan');
+                        return Orion.Terminate('all', 'GMScan');
                     }
             while(!Orion.FindType(tinkerToolGraphic)[1])
                 {
@@ -3117,7 +3197,7 @@ function MakeWoodPulp()
                     {
                     Orion.CharPrint(self,1159,'Restocking Tinker Tools');
                     if(!Restock('Tinker Tools', tinkerToolGraphic, supplyContainer, 0))
-                        return Orion.Terminate('all', 'GMJournalScan');
+                        return Orion.Terminate('all', 'GMScan');
                     }
                 else
                     {
@@ -3222,7 +3302,7 @@ function MakeBindersOLD()
                     {
                     Orion.CharPrint(self,1159,'Restocking Ingots');
                     if(!Restock('Iron Ingots', ingotGraphic, supplyContainer, 50, '0x0000'))
-                        return Orion.Terminate('all', 'GMJournalScan');
+                        return Orion.Terminate('all', 'GMScan');
                     }
                 while(!Orion.FindType(tinkerToolGraphic)[1])
                     {
@@ -3230,7 +3310,7 @@ function MakeBindersOLD()
                         {
                         Orion.CharPrint(self,1159,'Restocking Tinker Tools');
                         if(!Restock('Tinker Tools', tinkerToolGraphic, supplyContainer, 0))
-                            return Orion.Terminate('all', 'GMJournalScan');
+                            return Orion.Terminate('all', 'GMScan');
                         }
                     else
                         {
@@ -3357,7 +3437,7 @@ function MakeBindersOLD()
                 {
                 Orion.CharPrint(self,1159,'Restocking Ingots');
                 if(!Restock('Iron Ingots', ingotGraphic, supplyContainer, 50, '0x0000'))
-                    return Orion.Terminate('all', 'GMJournalScan');
+                    return Orion.Terminate('all', 'GMScan');
                 }
             while(!Orion.FindType(tinkerToolGraphic)[1])
                 {
@@ -3365,7 +3445,7 @@ function MakeBindersOLD()
                     {
                     Orion.CharPrint(self,1159,'Restocking Tinker Tools');
                     if(!Restock('Tinker Tools', tinkerToolGraphic, supplyContainer, 0))
-                        return Orion.Terminate('all', 'GMJournalScan');
+                        return Orion.Terminate('all', 'GMScan');
                     }
                 else
                     {
@@ -3380,7 +3460,7 @@ function MakeBindersOLD()
         if(Orion.Count(pulpGraphic, any, backpack, 0, false) < 10)
             {
             if(!Restock('Wood Pulp', pulpGraphic, supplyContainer, 100))
-                return Orion.Terminate('all', 'GMJournalScan');
+                return Orion.Terminate('all', 'GMScan');
             }
         if(firstPass)
             {
@@ -3436,7 +3516,7 @@ function MakeBinders()
                     {
                     Orion.CharPrint(self,1159,'Restocking Ingots');
                     if(!Restock('Iron Ingots', ingotGraphic, supplyContainer, 50, '0x0000'))
-                        return Orion.Terminate('all', 'GMJournalScan');
+                        return Orion.Terminate('all', 'GMScan');
                     }
                 while(!Orion.FindType(tinkerToolGraphic)[1])
                     {
@@ -3444,7 +3524,7 @@ function MakeBinders()
                         {
                         Orion.CharPrint(self,1159,'Restocking Tinker Tools');
                         if(!Restock('Tinker Tools', tinkerToolGraphic, supplyContainer, 0))
-                            return Orion.Terminate('all', 'GMJournalScan');
+                            return Orion.Terminate('all', 'GMScan');
                         }
                     else
                         {
@@ -3459,7 +3539,7 @@ function MakeBinders()
             if(Orion.Count(pulpGraphic, any, backpack, 0, false) < 10)
                 {
                 if(!Restock('Wood Pulp', pulpGraphic, supplyContainer, 100))
-                    return Orion.Terminate('all', 'GMJournalScan');
+                    return Orion.Terminate('all', 'GMScan');
                 }
             if(firstPassBinder)
                 {
@@ -3478,7 +3558,7 @@ function MakeBinders()
                         {
                         Orion.CharPrint(self,1159,'Restocking Ingots');
                         if(!Restock('Iron Ingots', ingotGraphic, supplyContainer, 50, '0x0000'))
-                            return Orion.Terminate('all', 'GMJournalScan');
+                            return Orion.Terminate('all', 'GMScan');
                         }
                 while(!Orion.FindType(tinkerToolGraphic)[1])
                     {
@@ -3486,7 +3566,7 @@ function MakeBinders()
                         {
                         Orion.CharPrint(self,1159,'Restocking Tinker Tools');
                         if(!Restock('Tinker Tools', tinkerToolGraphic, supplyContainer, 0))
-                            return Orion.Terminate('all', 'GMJournalScan');
+                            return Orion.Terminate('all', 'GMScan');
                         }
                     else
                         {
