@@ -270,7 +270,7 @@ function AvoidTeleporters()
     Shared.AddVar('AvoidTimer',Orion.Now() + 600000)
     var teleporters = Orion.FindTypeEx(any,any,ground,'item',22).filter(function(item)
         {
-        return item.Properties().toLowerCase().indexOf('teleporter') > -1;
+        return item.Properties().toLowerCase().indexOf('teleporter') > -1 && item.Z() == Player.Z();
         });
     Debug('Avoiding ' + teleporters.length + ' nearby teleporters');
     teleporters.forEach(function(teleporter,ind)
@@ -333,8 +333,8 @@ function StraticsFormatCatalogueTable()
     TextWindow.Open();
     TextWindow.Clear();
     var outStr = '';
-    var picAttach = '[ATTACH type="full" alt="imperatrix.png"]138957[/ATTACH]'
-    TextWindow.Print("[CENTER][COLOR=rgb(0, 0, 0)][B][SIZE=5]Visit [/SIZE][/B][/COLOR] [COLOR=rgb(147, 101, 184)][SIZE=6][B][FONT=tahoma][U]Impe[/U][/FONT][/B][/SIZE][/COLOR][COLOR=rgb(85, 57, 130)][SIZE=6][B][FONT=tahoma][U]ratrix[/U][/FONT][/B][/SIZE][/COLOR] [COLOR=rgb(0, 0, 0)] [SIZE=5][B]Trammel New Magincia[/B][/SIZE]\n[B][SIZE=5]PvP Jewelry and Weapons[/SIZE][/B]\n[SIZE=5]A light stroll northeast from the Moongate[/SIZE]\n\n" + picAttach + "[/COLOR]\n\n\n[COLOR=rgb(147, 101, 184)]╔═══════°∴,*⋅✲════ ✧･ﾟ: *✧･ﾟ:* ════°∴,*⋅✲════〖✰〗════✲⋅*,∴°════ *:･ﾟ✧*:･ﾟ✧ ════✲⋅*,∴°═══════╗[/COLOR] [COLOR=rgb(0, 0, 0)]\n[B][SIZE=5]I prefer a [I]laissez-faire[/I] approach so it's a bit of a toss-up whether I'll respond to DMs.[/SIZE]\n[SIZE=5]I appreciate your understanding![/SIZE]\n\n[SIZE=5]The numbers correspond to the respective safe labeled in the picture above.[/SIZE]\n[SIZE=5]CTRL+F is advised![/SIZE]\n[SIZE=5][ICODE]:)[/ICODE][/SIZE][/B][/COLOR]\n\n[COLOR=rgb(85, 57, 130)]╚═══ °∴,*⋅✲══════ ✧･ﾟ: *✧･ﾟ:* ══════°∴,*⋅✲════〖✰〗════✲⋅*,∴°══════ *:･ﾟ✧*:･ﾟ✧ ══════✲⋅*,∴° ═══╝[/COLOR]\n\n[/CENTER]");
+    //var picAttach = '[ATTACH type="full" alt="imperatrix.png"]138957[/ATTACH]'
+    //TextWindow.Print("[CENTER][COLOR=rgb(0, 0, 0)][B][SIZE=5]Visit [/SIZE][/B][/COLOR] [COLOR=rgb(147, 101, 184)][SIZE=6][B][FONT=tahoma][U]Impe[/U][/FONT][/B][/SIZE][/COLOR][COLOR=rgb(85, 57, 130)][SIZE=6][B][FONT=tahoma][U]ratrix[/U][/FONT][/B][/SIZE][/COLOR] [COLOR=rgb(0, 0, 0)] [SIZE=5][B]Trammel New Magincia[/B][/SIZE]\n[B][SIZE=5]PvP Jewelry and Weapons[/SIZE][/B]\n[SIZE=5]A light stroll northeast from the Moongate[/SIZE]\n\n" + picAttach + "[/COLOR]\n\n\n[COLOR=rgb(147, 101, 184)]╔═══════°∴,*⋅✲════ ✧･ﾟ: *✧･ﾟ:* ════°∴,*⋅✲════〖✰〗════✲⋅*,∴°════ *:･ﾟ✧*:･ﾟ✧ ════✲⋅*,∴°═══════╗[/COLOR] [COLOR=rgb(0, 0, 0)]\n[B][SIZE=5]I prefer a [I]laissez-faire[/I] approach so it's a bit of a toss-up whether I'll respond to DMs.[/SIZE]\n[SIZE=5]I appreciate your understanding![/SIZE]\n\n[SIZE=5]The numbers correspond to the respective safe labeled in the picture above.[/SIZE]\n[SIZE=5]CTRL+F is advised![/SIZE]\n[SIZE=5][ICODE]:)[/ICODE][/SIZE][/B][/COLOR]\n\n[COLOR=rgb(85, 57, 130)]╚═══ °∴,*⋅✲══════ ✧･ﾟ: *✧･ﾟ:* ══════°∴,*⋅✲════〖✰〗════✲⋅*,∴°══════ *:･ﾟ✧*:･ﾟ✧ ══════✲⋅*,∴° ═══╝[/COLOR]\n\n[/CENTER]");
     TextWindow.Print('[TABLE]\n[TR]')
     outArr.forEach(function(safe,ind)
         {
