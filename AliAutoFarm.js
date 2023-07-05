@@ -166,7 +166,7 @@ var profiles =
 	}
 
 var profile = profiles.Oni;
-
+var lootItems = {};
 function AutoConfidence()
 	{
 	while(!Player.Dead())
