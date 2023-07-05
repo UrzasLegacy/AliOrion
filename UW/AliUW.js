@@ -170,6 +170,7 @@ function SmartStart()
                     {
                     DetermineBarrelSamp();
                     WaitSyncLeader(); //Home position
+                    AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
@@ -1923,7 +1924,7 @@ function WaitForReset(_)
         if(HydraCheck())
             {
             AvoidDropdowns();
-            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
+            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
             while(!Player.Hidden())
                 {
                 if(!Orion.HaveTarget())
@@ -1950,7 +1951,7 @@ function WaitForReset(_)
         else if(Orion.Now() > stayLoggedTimer)
             {
             Orion.UseObject(backpack)
-            stayLoggedTimer = Orion.Now() + 60000
+            stayLoggedTimer = Orion.Now() + 30000
             Orion.Wait(1200);
             }
         Shared.AddVar('leashing',false);
