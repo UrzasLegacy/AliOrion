@@ -985,56 +985,96 @@ function StayHidden()
 
 function AutoInsure() 
 	{
-	var stringSearch = profile.useStringSearch;
-	var checkName = profile.checkNameString;
-	var checkProp = profile.checkPropString;
-	var listSearch = profile.UseListSearch;
-	var insureFind = profile.insureFindList;
-	var insureIgnore = profile.insureIgnoreList;
-	var searchFrequency = profile.searchFrequency;
-	while(stringSearch && !Player.Dead())
+	if(profile.useAutoLoot)
 		{
-		var item = Orion.FindTypeEx(any).filter(function (part) 
-					{
-					if(!Orion.Contains(part.Properties(), 'insured'))
-						{
-						if(checkName && !checkProp)
-							return Orion.Contains(part.Name(), checkName);
-						else if(checkProp && !checkName)
-							return Orion.Contains(part.Properties(), checkProp)      
-						else if(checkProp && checkName)
-							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
-						}
-					return false;
-	                })[0];
-	    if(item && !Orion.HaveTarget())
-	    	{
-			Orion.WaitContextMenuID(self, 418);
-    		Orion.RequestContextMenu(self);
-			if(Orion.WaitForTarget(2000))
-				Orion.TargetObject(item.Serial());
-			if(Orion.WaitForTarget(2000))
-				Orion.CancelTarget();
-			}
-		Orion.Wait(searchFrequency);
-		}
-	while(listSearch && !Player.Dead())
-		{
-		var item = Orion.FindList(insureFind).filter(function(it)
+		var stringSearch = profile.useStringSearch;
+		var checkName = profile.checkNameString;
+		var checkProp = profile.checkPropString;
+		var listSearch = profile.UseListSearch;
+		var insureFind = profile.insureFindList;
+		var insureIgnore = profile.insureIgnoreList;
+		var searchFrequency = profile.searchFrequency;
+		while(stringSearch && !Player.Dead())
 			{
-			var obj = Orion.FindObject(it)
-			return obj && !Orion.Contains(obj.Properties(),'insured')
-			});
-		if(item && item.length && !Orion.HaveTarget())
-	    	{
-			Orion.WaitContextMenuID(self, 418);
-			Orion.RequestContextMenu(self);
-			if(Orion.WaitForTarget(2000))
-				Orion.TargetObject(item[0]);
-			if(Orion.WaitForTarget(2000))
-				Orion.CancelTarget();
+			var item = Orion.FindTypeEx(any).filter(function (part) 
+						{
+						if(!Orion.Contains(part.Properties(), 'insured'))
+							{
+							if(checkName && !checkProp)
+								return Orion.Contains(part.Name(), checkName);
+							else if(checkProp && !checkName)
+								return Orion.Contains(part.Properties(), checkProp)      
+							else if(checkProp && checkName)
+								return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
+							}
+						return false;
+						})[0];
+			if(item && !Orion.HaveTarget())
+				{
+				Orion.WaitContextMenuID(self, 418);
+				Orion.RequestContextMenu(self);
+				if(Orion.WaitForTarget(2000))
+					Orion.TargetObject(item.Serial());
+				if(Orion.WaitForTarget(2000))
+					Orion.CancelTarget();
+				}
+			Orion.Wait(searchFrequency);
 			}
-		Orion.Wait(searchFrequency);
+		while(listSearch && !Player.Dead())
+			{
+			var item = Orion.FindList(insureFind).filter(function(it)
+				{
+				var obj = Orion.FindObject(it)
+				return obj && !Orion.Contains(obj.Properties(),'insured')
+				});
+			if(item && item.length && !Orion.HaveTarget())
+				{
+				Orion.WaitContextMenuID(self, 418);
+				Orion.RequestContextMenu(self);
+				if(Orion.WaitForTarget(2000))
+					Orion.TargetObject(item[0]);
+				if(Orion.WaitForTarget(2000))
+					Orion.CancelTarget();
+				}
+			Orion.Wait(searchFrequency);
+			}
+		}
+	else
+		{
+		var searchFrequency = 5000;
+		var hash = {};
+		while(!Player.Dead())
+			{
+			var items = Orion.FindTypeEx(any).filter(function(item)
+				{
+				var itemSerial = item.Serial()
+				if(hash[itemSerial] || Orion.Contains(item.Properties(),'insured|blessed|cursed'))
+					return false;
+				var keep = AliKeep(itemSerial);
+				if(!keep || keep == 'Kept by Item Graphic')
+					hash[itemSerial] = true;
+				return keep && keep !== 'Kept by Item Graphic';
+				});
+			if(items.length && !Orion.HaveTarget())
+				{
+				Orion.WaitContextMenuID(self, 418);
+				Orion.RequestContextMenu(self);
+				for(var i=0;i<items.length;i++)
+					{
+					var itemSerial = items[i].Serial()
+					var timeStamp = Orion.Now() - 10;
+					if(Orion.WaitForTarget(2000))
+						Orion.TargetObject(itemSerial);
+					var check = Orion.WaitJournal('You cannot insure that|You have insured the item|You can only insure items that you have equipped or that are in your backpack|You cancel the insurance on the item',timeStamp,timeStamp + 2000)
+					if(check && check.Text() == 'You cannot insure that')
+						hash[itemSerial] = true;
+					Orion.Wait(50);
+					}
+				if(Orion.WaitForTarget(2000))
+					Orion.CancelTarget();
+				}
+			Orion.Wait(searchFrequency);
+			}
 		}
 	}
 
@@ -1310,7 +1350,7 @@ function AliLootOni()
         });
     if(!corpseFind.length)
         return Orion.CharPrint(self,1159,'No corpse found');
-	var corpse = corpseFind[0];
+	var corpse = corpseFind[corpseFind.length - 1];
     var corpseSerial = corpse.Serial();
     var instanceSerials = Orion.FindType(any,any,corpseSerial);
     var endTime = Orion.Now() + 5000;
