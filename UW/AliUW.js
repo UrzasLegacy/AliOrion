@@ -128,6 +128,17 @@ var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oat
 var useCleanseByFire = false; //boolean. Attempt to self cure poison
 var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder. This will sound if a GM tries to contact you
 
+var lootItems = {
+    '0x400B': true, //shame crystals
+    '0x0F87': true, //lucky coin
+    '0x1F44': true, //wall of stone scroll
+    '0x1F47': true, //curse scroll
+    '0x1F4C': true, //recall scroll
+    '0x1F59': true, //mark scroll
+    '0x1F60': true, //gate scroll
+    //'0x0EED': true, //gold
+}
+
 Orion.Exec('JournalScan', true);
 var debug = true;
 var debug2 = false;

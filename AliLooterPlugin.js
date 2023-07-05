@@ -1,26 +1,7 @@
-var lootItems = {
-    '0x400B': true, //shame crystals
-    '0x0F87': true, //lucky coin
-    //'0x0EED': true, //gold
-}
+//var lootItems = { 0x0EED: true } //include this in your main file with a list of item graphics you'd like to loot
 var keepTrainingArmor = true;
 
-//var debug = false;
-
-
-
-var serialIndex = 1;
-var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
-    [
-        [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'] ],
-        [],
-        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestKeeper", 'EvalKeep'],],
-        [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'] ],
-        [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
-        [],
-        [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
-    ]
-    
+ 
 function Gump()
     {
     var gump = Orion.CreateCustomGump(12002);
@@ -48,6 +29,19 @@ function Gump()
     gump.Select('gump');
     gump.Update();
     }
+
+var serialIndex = 1;
+var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
+    [
+        [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'] ],
+        [],
+        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestKeeper", 'EvalKeep'],],
+        [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'] ],
+        [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
+        [],
+        [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
+    ]
+   
 
 function ModularGumpCallback(_) 
     {
@@ -1472,6 +1466,8 @@ function AliKeep(itemSerial)
 	//loot by graphic
     DebugLoot('Item: ' + item.Name())
     var itemGraphic = item.Graphic();
+    if(!lootItems)
+        lootItems = {};
 	if(lootItems[itemGraphic])
         return 'Kept by Item Graphic';
 	var props = item.Properties();
