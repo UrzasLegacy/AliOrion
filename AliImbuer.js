@@ -21,10 +21,10 @@ function initImbueFavorites(_)
         // DecrementTen
         // DecrementMax
         'LuckArmor':   [
-                ['Stamina Increase', '7', [Button.IncrementMax, Button.DecrementOne]],
-                ['Mana Increase', '7', [Button.IncrementMax, Button.DecrementOne]],
+                [ 'Stamina Increase', '7', [Button.IncrementMax, Button.DecrementOne] ],
+                ['Mana Increase', '7', [Button.IncrementMax, Button.DecrementOne] ],
                 ['Luck', '100', [Button.IncrementMax]],
-                ['Lower Mana Cost', '7%', [Button.IncrementMax, Button.DecrementOne]],
+                ['Lower Mana Cost', '7%', [Button.IncrementMax, Button.DecrementOne] ],
             ],
         'LuckJewels':	[
                 ['Throwing', '+15', [Button.IncrementMax]],
@@ -32,6 +32,13 @@ function initImbueFavorites(_)
                 ['Hit Chance Increase', '15%', [Button.IncrementMax]],
                 ['Damage Increase', '22%', [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne, Button.DecrementOne]],
                 ['Fire Resist', '6%', [Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,]],
+            ],
+        'LuckThrowingWep':	[
+                ['Swing Speed Increase', '30%', [Button.IncrementMax]],
+                ['Hit Chance Increase', '10%', [Button.IncrementTen,Button.DecrementOne]],
+                ['Damage Increase', '40%', [Button.IncrementMax, Button.DecrementTen]],
+                ['Luck', '120', [Button.IncrementMax]],
+                ['Hit Mana Leech', '33%', [Button.IncrementMax,Button.DecrementOne,Button.DecrementOne,Button.DecrementOne]],
             ],
         'PhysResistM2':	[ //max resist without using boura pelts
                 ['Physical Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
@@ -52,6 +59,11 @@ function initImbueFavorites(_)
     return imbueFavorites;
     }
 
+function ImbueLuckWep()
+    {
+    ImbueItemsByFavorite('LuckThrowingWep');
+    }
+    
 function ImbueLuckArmor()
     {
     ImbueItemsByFavorite('LuckArmor');
@@ -459,10 +471,75 @@ function initImbueMods(itemSerial)
         'Demon Slayer': [1114264, 202, 'Daemon Claw', '0x5721', '0x0000'],
         'Arachnid Slayer': [1114264, 201, 'Spider Carapace', '0x5720', '0x0000'],
         }
+
+    const throwMod =
+        {
+        'Spell Channeling': [1114248, 203, 'Silver Snake Skin', '0x5744', '0x0000'],
+        'Mage Weapon': [1114248, 202, 'Arcanic Rune Stone', '0x573C', '0x0000'],
+        'Faster Casting': [1114248, 201, 'Essence Of Achievement', '0x571C', '0x002F'],
+
+        'Damage Increase': [1114249, 202, 'Crystal Shards', '0x5738', '0x0000'],
+        'Swing Speed Increase': [1114249, 201, 'Essence Of Control', '0x571C', '0x048D'],
+
+        'Hit Poison Area': [1114250, 205, 'Raptor Teeth', '0x5747', '0x0000'],
+        'Hit Physical Area': [1114250, 204, 'Raptor Teeth', '0x5747', '0x0000'],
+        'Hit Fire Area': [1114250, 203, 'Raptor Teeth', '0x5747', '0x0000'],
+        'Hit Energy Area': [1114250, 202, 'Raptor Teeth', '0x5747', '0x0000'],
+        'Hit Cold Area': [1114250, 201, 'Raptor Teeth', '0x5747', '0x0000'],
+
+        'Hit Stamina Leech': [1114251, 215, 'Void Orb', '0x573E', '0x0000'],
+        'Hit Mana Leech': [1114251, 213, 'Void Orb', '0x573E', '0x0000'],
+        'Hit Magic Arrow': [1114251, 212, 'Essence Of Feeling', '0x571C', '0x0034'],
+        'Hit Lower Defense': [1114251, 211, 'Parasitic Plant', '0x3190', '0x0000'],
+        'Hit Lower Attack': [1114251, 210, 'Parasitic Plant', '0x3190', '0x0000'],
+        'Hit Lightning': [1114251, 209, 'Essence Of Passion', '0x571C', '0x0489'],
+        'Hit Life Leech': [1114251, 208, 'Void Orb', '0x573E', '0x0000'],
+        'Hit Harm': [1114251, 207, 'Parasitic Plant', '0x3190', '0x0000'],
+        'Hit Fireball': [1114251, 206, 'Fire Ruby', '0x3197', '0x0000'],
+        'Hit Dispel': [1114251, 202, 'Slith Tongue', '0x5746', '0x0000'],
+
+        'Luck': [1114252, 201, 'Chaga Mushroom', '0x5743', '0x0000'],
+
+        'Hit Chance Increase': [1114253, 202, 'Essence Of Precision', '0x571C', '0x0016'],
+        'Defense Chance Increase': [1114253, 201, 'Essence Of Singularity', '0x571C', '0x0497'],
+
+        'Physical Resist': [1114254, 205, 'Boura Pelt', '0x5742', '0x0000'],
+        'Poison Resist': [1114254, 204, 'Boura Pelt', '0x5742', '0x0000'],
+        'Fire Resist': [1114254, 203, 'Boura Pelt', '0x5742', '0x0000'],
+        'Energy Resist': [1114254, 202, 'Boura Pelt', '0x5742', '0x0000'],
+        'Cold Resist': [1114254, 201, 'Boura Pelt', '0x5742', '0x0000'],
+        
+        'Water Elemental Slayer': [1114263, 220, 'White Pearl', '0x3196', '0x0000'],
+        'Troll Slayer': [1114263, 219, 'White Pearl', '0x3196', '0x0000'],
+        'Terathan Slayer': [1114263, 218, 'White Pearl', '0x3196', '0x0000'],
+        'Spider Slayer': [1114263, 217, 'White Pearl', '0x3196', '0x0000'],
+        'Snow Elemental Slayer': [1114263, 216, 'White Pearl', '0x3196', '0x0000'],
+        'Snake Slayer': [1114263, 215, 'White Pearl', '0x3196', '0x0000'],
+        'Scorpion Slayer': [1114263, 214, 'White Pearl', '0x3196', '0x0000'],
+        'Poison Elemental Slayer': [1114263, 213, 'White Pearl', '0x3196', '0x0000'],
+        'Orc Slayer': [1114263, 212, 'White Pearl', '0x3196', '0x0000'],
+        'Ophidian Slayer': [1114263, 211, 'White Pearl', '0x3196', '0x0000'],
+        'Ogre Slayer': [1114263, 210, 'White Pearl', '0x3196', '0x0000'],
+        'Lizardman Slayer': [1114263, 209, 'White Pearl', '0x3196', '0x0000'],
+        'Gargoyle Slayer': [1114263, 208, 'White Pearl', '0x3196', '0x0000'],
+        'Fire Elemental Slayer': [1114263, 207, 'White Pearl', '0x3196', '0x0000'],
+        'Earth Elemental Slayer': [1114263, 206, 'White Pearl', '0x3196', '0x0000'],
+        'Dragon Slayer': [1114263, 205, 'White Pearl', '0x3196', '0x0000'],
+        'Blood Elemental Slayer': [1114263, 203, 'White Pearl', '0x3196', '0x0000'],
+        'Air Elemental Slayer': [1114263, 201, 'White Pearl', '0x3196', '0x0000'],
+
+        'Undead Slayer': [1114264, 207, 'Undying Flesh', '0x5731', '0x0000'],
+        'Reptile Slayer': [1114264, 206, 'Lava Serpent Crust', '0x572D', '0x0000'],
+        'Repond Slayer': [1114264, 205, 'Goblin Blood', '0x572C', '0x0000'],
+        'Fey Slayer': [1114264, 204, 'Fey Wings', '0x5726', '0x0000'],
+        'Elemental Slayer': [1114264, 203, 'Vial Of Vitriol', '0x5722', '0x0000'],
+        'Demon Slayer': [1114264, 202, 'Daemon Claw', '0x5721', '0x0000'],
+        'Arachnid Slayer': [1114264, 201, 'Spider Carapace', '0x5720', '0x0000'],
+        }
     var itemObj = Orion.FindObject(itemSerial);
     var itemProps = itemObj.Properties();
     if(Orion.Contains(itemProps, 'Skill Required: Throwing'))
-        return Orion.CharPrint(self,1159,'Throwing weapons currently unsupported! Boo gargoyles');//return throwingMod;
+        return throwMod;
     else if(Orion.Contains(itemProps, 'One-handed Weapon'))
         return weapon1hMod;
     else if(Orion.Contains(itemProps, 'Skill Required: Archery'))
