@@ -13,7 +13,7 @@ function StringSearch()
     var gump = Orion.CreateCustomGump(10423); 
 	var rowStart = 40;
 	var columnStart = 25;
-    var height = 650;
+    var height = 320;
     var width = 285;
 
     gump.Clear();
@@ -168,10 +168,10 @@ function StringSearchCallback(_)
         var searchStrings = savedSearch[1];
         var excludeIncludes = savedSearch[2];
 
-        for(var i=0;i<4;i++)
+        for(var i=0,j=1;i<4;i++,j++)
             {
-            Shared.AddVar('String ' + i,comboOptions[excludeIncludes[i]]);
-            Shared.AddVar('String ' + i + ' Value',searchStrings[i]);
+            Shared.AddVar('String ' + j,comboOptions[excludeIncludes[i]]);
+            Shared.AddVar('String ' + j + ' Value',searchStrings[i]);
             }
         }
     else if(code == 998) //Save Search
