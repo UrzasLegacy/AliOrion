@@ -1832,6 +1832,7 @@ function RecallBandieBuy()
 	Orion.Wait(500);
 	Orion.Terminate('all','JournalScan|RecallBandieBuy');
 	Orion.StopWalking();
+	Orion.Wait(200);
     RecallByGump('Main','Luna');
 	BandieBuy();
 	Orion.Wait(1500);
