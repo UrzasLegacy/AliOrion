@@ -1338,15 +1338,9 @@ function AliLootOni()
         {
         var test = Orion.FindObject(instanceSerials[0]);
         if(test && test.Graphic() !== '0x2006')
-            {
-            Orion.CharPrint(self,1159,'Corpse is public');
             var corpseInstanceSerial = corpseSerial;
-            }
         else
-            {
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
-            }
-        DebugLoot('instanceMatch: lastcontainer = ' + Orion.GetSerial(lastcontainer) + ' corpseInstance = ' + corpseInstanceSerial)
         }
     else
 		{
@@ -1355,7 +1349,6 @@ function AliLootOni()
 		Orion.Wait(500);
         return AliLootOni();
 		}
-    var backpackSerial = Orion.GetSerial(backpack);
     for(var attempts=0;attempts<2;attempts++)
         {
         var itemsInCorpse = Orion.FindTypeEx(any,any,corpseInstanceSerial);
@@ -1375,7 +1368,7 @@ function AliLootOni()
                 var endTime = Orion.Now() + 5000;
                 while(item.Container() == corpseInstanceSerial)
                     {
-					Orion.CharPrint(self,1159,'Picking up ' + item.Name())
+					Orion.CharPrint(self,1159,'Picking up ' + item.Name());
                     if(Orion.Now() > endTime)
 						{
                         DebugLoot("Item wasn't picked up!\n" + item.Properties());
@@ -1397,11 +1390,11 @@ function AliLootOni()
 
 function DebugLoot(msg)
     {
+	var debug = true;
     if(!debug)
         return;
     if(!TextWindow.IsOpened())
         TextWindow.Open();
-    Orion.Print(msg);
     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
     }
 

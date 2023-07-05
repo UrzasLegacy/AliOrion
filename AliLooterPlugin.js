@@ -227,7 +227,7 @@ function AliLootUW()  //v2
             {
             var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
             }
-        Debug('instanceMatch: lastcontainer = ' + Orion.GetSerial(lastcontainer) + ' corpseInstance = ' + corpseInstanceSerial)
+        //Debug('instanceMatch: lastcontainer = ' + Orion.GetSerial(lastcontainer) + ' corpseInstance = ' + corpseInstanceSerial)
         }
     else
         return Orion.CharPrint(self,1159,'Corpse is empty')
@@ -251,8 +251,11 @@ function AliLootUW()  //v2
                 var endTime = Orion.Now() + 5000;
                 while(item.Container() !== backpackSerial)
                     {
-                    if(Orion.Now() < endTime)
+                    if(Orion.Now() > endTime)
+                        {
                         DebugLoot("Item wasn't picked up!\n" + item.Properties() + '\nitemContainer: ' + item.Container() + '\nbackpack: ' + backpackSerial);
+                        break;
+                        }
                     Orion.MoveItem(itemSerial);
                     Orion.Wait(1300);
                     }
@@ -1094,15 +1097,22 @@ function JewelryScoreSearch()
         'Disarmcher',
         'GlendaBasher',
         'DSer',
+        'BokTamer',
         'HSBokMage',
         'LSBokMage',
         'HSBokMystic',
         'LSBokMystic',
+        'MysticDexxer',
         'FoNMage',
-        'NoxMage',
+        'FoNNecro',
         'HolyFister',
         'SwordsArcherFister',
         'MeleeArcherFister',
+        'NecroArcher',
+        'NoxMage',
+        'MysticDexxer',
+        'ThiefMage',
+        'DismountTamer',
         'any'
     ];
     var title = "Ali Jewelry Score Search"
@@ -1173,15 +1183,22 @@ function JewelryScoreCallback(_)
         'Disarmcher',
         'GlendaBasher',
         'DSer',
+        'BokTamer',
         'HSBokMage',
         'LSBokMage',
         'HSBokMystic',
         'LSBokMystic',
+        'MysticDexxer',
         'FoNMage',
-        'NoxMage',
+        'FoNNecro',
         'HolyFister',
         'SwordsArcherFister',
         'MeleeArcherFister',
+        'NecroArcher',
+        'NoxMage',
+        'MysticDexxer',
+        'ThiefMage',
+        'DismountTamer',
         'any'
     ];
     var code = CustomGumpResponse.ReturnCode();
@@ -1606,6 +1623,11 @@ function KeepWeapon(propertiesObj,props)
     var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") > 1 || props.indexOf("Broadsword") > 1 || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1 || props.indexOf("War Axe") > -1 || props.indexOf("Hammer Pick") > -1;
     if(isSplinter)
         {
+        if(isAntique)
+            {
+            DebugLoot('Trash: Antique Non-Bok Splinter')
+            return false;
+            }
         var isBloodDrinker = wepObj['BloodDrinker'];
         var isReactiveParalyze = wepObj['ReactiveParalyze'];
         var isDisarmWep = props.indexOf("Butcher Knife") > -1 && props.indexOf("Ornate Axe") > -1 && props.indexOf("War Cleaver") > -1 && props.indexOf("War Fork") > -1 && props.indexOf("Mace") > -1 && props.indexOf("Wand") > -1 && props.indexOf("Hatchet") > -1 && props.indexOf("Pickaxe") > -1;
@@ -1614,14 +1636,11 @@ function KeepWeapon(propertiesObj,props)
             return 'One Mod Splinter Weapon';
         if(numProps == 2)
             return 'Two Mod Splinter Weapon';
-        if(numProps == 3 && isReactiveParalyze)
-            return 'Three Mod Reactive Paralyze Weapon';
-        if((isHitSpell || isImbuable))
+        if(isImbuable && isReactiveParalyze)
+            return 'Imbuable Reactive Paralyze Weapon';
+        if(isOverCapSplinter && (isHitSpell || isImbuable))
             {
-            if(isEleDamage)
-                return 'Splinter Ele Weapon';
-            if(isOverCapSplinter)
-                return 'OverCap Splinter Weapon';
+            return 'OverCap Splinter Non-Bok';
             }
         if(isHitSpell && isLowerD && (isEleDamage || (isSlowWep && wepObj['SwingSpeedIncrease']) || isBloodDrinker || isReactiveParalyze || isSpellChanneling))
             return '20+/50+/50+ God Weapon';
@@ -1641,6 +1660,8 @@ function KeepWeapon(propertiesObj,props)
             return 'Clean 20/60+ Weapon';
         if(isHitSpell && isLowerD)
             return 'Clean 20/50/50+ Weapon';
+        if(isHitSpell && isEleDamage)
+            return 'Clean 20/50 ele Weapon';
         if(isHitSpell && isSpellChanneling)
             return 'Clean 20/50 SC Weapon';
         if(isAIWep && isHighManaLeech && (isHitSpell || (isLowerD && isImbuable)))
@@ -1652,11 +1673,11 @@ function KeepWeapon(propertiesObj,props)
         }
     if(isAIWep)
         {
-        var isHitFatigue = wepObj['HitFatigue'] >= 50;
-        var isHitManaDrain = wepObj['HitManaDrain'] >= 50;
-        var isHitStaminaLeech = wepObj['HitStaminaLeech'] >= 40;
-        var isHitManaLeech = wepObj['HitManaLeech'] >= 70;
-        //var isHitLifeLeech = wepObj['HitLifeLeech'] >= 70;
+        var isHitFatigue = wepObj['HitFatigue'] >= (isClean ? 20 : 50);
+        var isHitManaDrain = wepObj['HitManaDrain'] >= (isClean ? 20 : 50);
+        var isHitStaminaLeech = wepObj['HitStaminaLeech'] >= (isClean ? 20 : 40);
+        var isHitManaLeech = wepObj['HitManaLeech'] >= (isClean ? 40 : 70);
+        //var isHitLifeLeech = wepObj['HitLifeLeech'] >= (isClean ? 40 : 70);
         if(isHitFatigue && isHitManaDrain && isHitStaminaLeech && isHitManaLeech)// && isHitLifeLeech)
             return 'PvM Hit Drainer';
         }
@@ -1725,6 +1746,9 @@ function KeepJewelry(propertiesObj,props)
         return '1/3 +20 Magery Jewel';
     var score = calculateTemplateValues(propertiesObj)[0][1];
     //Orion.Print('score: ' + score)
+    
+    if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
+        return 'Str10/Dex10/Int10';
     if(score < 50)
         {
         DebugLoot('Trash: score < 50');
@@ -1736,10 +1760,8 @@ function KeepJewelry(propertiesObj,props)
         {
         if(overcapInt == 0 && (!propertiesObj['EnhancePotions'] || !propertiesObj['DefenseChanceIncrease'] || !propertiesObj['ManaRegeneration']))
             {
-            if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
-                return 'Str10/Dex10/Int10';
-            if(score >= 80)
-                return '0skill,0overcaps,missing either EP,DCI or MR, but score >= 80'
+            if(score >= 75)
+                return '0skill,0overcaps,missing either EP,DCI or MR, but score >= 75'
             DebugLoot('Trash: Zero skills, zero overcaps, and missing either EP, DCI or MR');
             return false;
             }
@@ -1769,8 +1791,6 @@ function KeepJewelry(propertiesObj,props)
     DebugLoot('mageInt: ' + mageInt + '\ndexxerInt: ' + dexxerInt + '\nhybridInt: ' + hybridInt + '\nskillInt: ' + skillInt + '\nclean: ' + isClean);
     if(mageInt + hybridInt >= targetModCount || dexxerInt + hybridInt >= targetModCount)
         return '7 or 8 good mods (or 6 if clean)';
-    if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
-        return 'Str10/Dex10/Int10';
     if(score && score >= 70)
         {
         return 'Failed all previous checks, but score >= 70'
@@ -1824,7 +1844,10 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x2B67':'0','0x2B6A':'0','0x2B69':'0','0x2B6B':'0','0x4049':'0','0x404A':'0','0x404C':'0','0x4047':'0','0x4066':'0','0x0284':'1',
         '0x4056':'1','0x030A':'1','0x404E':'0','0x4050':'1','0x405C':'1','0x405D':'1','0x405E':'1','0x4058':'1','0x4057':'1','0x405A':'1',
         '0x4D0A':'1','0x4062':'0','0x404B':'0','0x4210':'0','0x4052':'1','0x4053':'1','0x4066':'0','0x4048':'0','0x4064':'0','0x404D':'0',
+        '0x2FB8':'0',
         }
+        
+    var isClean = props.indexOf('Brittle') === -1 && props.indexOf('Imbued') === -1;
     var hpi = propertiesObj['HitPointIncrease'] || 0;
     var stam = propertiesObj['StaminaIncrease'] || 0;
     var mana = propertiesObj['ManaIncrease'] || 0;
@@ -1852,6 +1875,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
 
     var goodEater = damageEater || poisonEater || fireEater || coldEater || energyEater || kineticEater;
     var totalStats = hpi + stam + mana + str + dex + int;
+    var totalRegens = hpr + mr;
     var isArtifact = props.indexOf('Artifact') > -1;
     var intrinsicLMCArr = lmcArr[itemGraphic];
     if(!intrinsicLMCArr)
@@ -1878,24 +1902,46 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var mrThreshold = 2;
                 var hprThreshold = 0;
                 var statThreshold = goodEater ? 3 : 5;
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 2;
+                    statThreshold -= 5;
+                    }
                 break;
             case '1':
                 var lrcThreshold = 15;
                 var lmcThreshold = 6;
                 var mrThreshold = 3;
-                var hprThreshold = 2;
-                var statThreshold = goodEater ? 10 : 13;
+                var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
+                var statThreshold = goodEater ? 5 : 10;
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 2;
+                    statThreshold -= 5;
+                    }
                 break;
             case '0':
                 var lrcThreshold = 20;
                 var lmcThreshold = 6;
                 var mrThreshold = 3;
-                var statThreshold = goodEater ? 10 : 13;
+                var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
+                var statThreshold = goodEater ? 5 : 10;
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 2;
+                    statThreshold -= 5;
+                    }
                 break;
             }
-        if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
+        if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
             return 'LRC Vitality Armor';
-        if(lmc >= lmcThreshold && mr >= mrThreshold && totalStats >= statThreshold)
+        if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
             return 'LMC Vitality Armor';
         if(isArtifact && stam && mr && lmc)
             return 'Misc HP/Stam Armor';
@@ -1908,7 +1954,14 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '3':
                 var lrcThreshold = 15;
                 var lmcThreshold = 5;
-                var statThreshold = mr >= 2 ? 20 : 25;          
+                var statThreshold = mr >= 2 ? 20 : 25;   
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;   
+                if(isClean)
+                    {
+                    lmcThreshold -= 1;
+                    statThreshold -= 8;
+                    }    
                 break
             default: //default to best case scenario
                 DebugLoot('stam intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
@@ -1917,6 +1970,13 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var lrcThreshold = 10;
                 var lmcThreshold = 6;
                 var statThreshold = 25;  
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 4;
+                    statThreshold -= 8;
+                    }
                 break
             case '0':
                 if(!hpi)
@@ -1926,10 +1986,12 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     }
                 var lrcThreshold = 15;
                 var lmcThreshold = 5;
-                var statThreshold = mr >= 2 ? 20 : 25;  
+                var statThreshold = mr >= 2 ? 20 : 25;
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
                 break;
             }
-        if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalStats >= statThreshold - 5)
+        if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalStats >= statThreshold)
             {
             if(hpi)
                 return 'LRC Stam/HP Armor';
@@ -1957,32 +2019,50 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '3':
                 var lrcThreshold = 10;
                 var lmcThreshold = 3;
-                var mrThreshold = 3;
-                var hprThreshold = 2;
-                var statThreshold = goodEater ? 2 : 7;
+                var totalRegensThreshold = 6;
+                var statThreshold = goodEater ? 4 : 6;
+                if(lrc >= 20)
+                    statThreshold -= 2;
+                if(isClean)
+                    {
+                    lmcThreshold -= 4;
+                    statThreshold -= 2;
+                    }
                 break;
             case '1':
                 var lrcThreshold = 15;
                 var lmcThreshold = 8;
-                var mrThreshold = 3;
-                var hprThreshold = 3;
+                var totalRegensThreshold = 6;
                 var statThreshold = goodEater ? 7 : 11;  
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 6;
+                    statThreshold -= 4;
+                    }
                 break;
             case '0':
                 var lrcThreshold = 20;
-                var lmcThreshold = 10;
-                var mrThreshold = 4;
-                var hprThreshold = 4;
-                var statThreshold = goodEater ? 10 : 13;
+                var lmcThreshold = 8;
+                var totalRegensThreshold = 6;
+                var statThreshold = goodEater ? 8 : 13;
+                if(lrc >= lrcThreshold)
+                    statThreshold -= 5;
+                if(isClean)
+                    {
+                    lmcThreshold -= 6;
+                    statThreshold -= 4;
+                    }
                 break;
             }
-        if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
+        if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold)
             return 'LRC Misc Armor';
-        if(lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold &&  totalStats >= statThreshold)
+        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold)
             return 'LMC Misc Armor';
         }
     var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
-    if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 50)
+    if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60)
         return 'Training Armor';
     DebugLoot('Trash: Armor failed all previous checks');
     return false;
@@ -2160,6 +2240,7 @@ function VerifyOpenContainer(containerSerial,delay)
 
 function DebugLoot(msg)
     {
+    var debug = false;
     if(!debug)
         return;
     if(!TextWindow.IsOpened())
@@ -2544,6 +2625,13 @@ function calculateTemplateValues(mods,templateName)
             'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
             },
+        BokTamer: { 'TemplateMultiplier':.90,
+            'AnimalTaming':.83,'AnimalLore':.83,'Swordsmanship':.83,'Tactics':.53,'Parrying':.83,'ResistingSpells':.83,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
         //Hybrid
         HSBokMage: {
             'Swordsmanship': .83,'SwordsmanshipCut':10,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
@@ -2560,7 +2648,7 @@ function calculateTemplateValues(mods,templateName)
             'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
         HSBokMystic: {
-            'Swordsmanship': .83,'SwordsmanshipCut':10,'Mysticism': .53,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
@@ -2573,7 +2661,14 @@ function calculateTemplateValues(mods,templateName)
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.47,
             'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
             },
-        FoNMage: {
+        MysticDexxer: {
+            'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Fencing':.83,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.27,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.4,'LowerReagentCost':.4
+            },
+        FoNMage: { 'TemplateMultiplier':.95,
             'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Magery':.83,'EvaluateIntelligence':.83,'Parrying': .83,'ResistingSpells': .83,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
@@ -2615,12 +2710,26 @@ function calculateTemplateValues(mods,templateName)
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
             },
-        NecroArcher: {
-            'Archery': .83,'ArcheryCut': 10,'Tactics':.83,'Anatomy':.83,'ResistingSpells': .83,'Necromancy':.83,'SpiritSpeak':.83,
+        NecroArcher: { 'TemplateMultiplier':.95,
+            'Archery': .83,'ArcheryCut': 10,'Tactics':.83,'Anatomy':.83,'ResistingSpells': .83,'Necromancy':.83,'SpiritSpeak':.83,'Healing':.83,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        ThiefMage: { 'TemplateMultiplier':.95,
+            'Wrestling': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'Stealth':.83,'Stealing':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        DismountTamer: { 'TemplateMultiplier':.90,
+            'AnimalTaming':.83,'AnimalLore':.83,'Archery':.83,'Tactics':.53,'Magery':.83,'EvaluateIntelligence':.83,'ResistingSpells':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.27,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.24,'LowerReagentCost':.4
             },
         }
     var skillMods = 
@@ -2642,6 +2751,7 @@ function calculateTemplateValues(mods,templateName)
         for(var templateName in templates)
             {
             var template = templates[templateName];
+            var templateMultiplier = template['TemplateMultiplier'] || 1;
             var totalValue = 0;
             var totalSkills = 0;
             // Calculate the individual mod values
@@ -2670,6 +2780,7 @@ function calculateTemplateValues(mods,templateName)
                         }
                     }
                 }
+            totalValue *= templateMultiplier;
             templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
             }
         return templateValues.sort(function(a,b)
@@ -2680,6 +2791,7 @@ function calculateTemplateValues(mods,templateName)
     else
         {
         var template = templates[templateName];
+        var templateMultiplier = template['TemplateMultiplier'] || 1;
         var totalValue = 0;
         var totalSkills = 0;
         var outArr = [];
@@ -2716,18 +2828,19 @@ function calculateTemplateValues(mods,templateName)
                 outArr.push(tempArr);
                 }
             }
-        Gump_DisplayInfo(templateName, outArr);
+        totalValue *= templateMultiplier;
+        Gump_DisplayInfo(templateName, outArr,totalValue,templateMultiplier);
         return [[templateName,+totalValue.toFixed(),totalSkills]]
         }
     }
 
-function Gump_DisplayInfo(templateName, outArr)
+function Gump_DisplayInfo(templateName, outArr, totalValue, templateMultiplier)
     {
     var gump = Orion.CreateCustomGump(10422);
     var rowStart = 30;
 	var columnStart = 25;
     var heightAdjust = 25;
-    var height = (outArr.length + 1) * 25 + 40;
+    var height = (outArr.length + 3) * 25 + 40;
     var width = 575;
 
     gump.Clear();
@@ -2762,7 +2875,11 @@ function Gump_DisplayInfo(templateName, outArr)
             gump.AddText(columns2[j] + 50,yPos,554,symbols[j]);
             }
         yPos += heightAdjust;
-
         }
+    gump.AddText(columns2[3],yPos,554,'Template Multiplier:');
+    gump.AddText(columns2[5],yPos,554,templateMultiplier);
+    yPos += heightAdjust;
+    gump.AddText(columns2[3] + 20,yPos,554,'Adjusted Score:');
+    gump.AddText(columns2[5],yPos,554,totalValue.toFixed(2));
     gump.Update()
     }
