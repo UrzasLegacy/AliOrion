@@ -10,61 +10,61 @@ Shared.AddVar('debug',true);
 var scrollinfoAtlantic = //[skillname, categoryindex, skillindex, bookbutton, price]
 	[
 	//0 Misc Atlantic
-		["Arms Lore",           0,  0,  1044064,    7199995],
-		["Begging",             0,  1,  1044066,    5175498],
-		["Camping",             0,  2,  1044070,    99996],
-		["Cartography",         0,  3,  1044072,    44999999],
+		["Arms Lore",           0,  0,  1044064,    7199992],
+		["Begging",             0,  1,  1044066,    5175495],
+		["Camping",             0,  2,  1044070,    45000],
+		["Cartography",         0,  3,  1044072,    4999999],
 		["Forensics",           0,  4,  1044079,    45000],
 		["Item Identification", 0,  5,  1044063,    45000],
 		["Taste Identification",0,  6,  1044096,    45000],
 	//1 Combat Atlantic
-		["Anatomy",             1,  0,  1044061,    7999999],
+		["Anatomy",             1,  0,  1044061,    7999996],
 		["Archery",             1,  1,  1044091,    9999999],
-		["Fencing",             1,  2,  1044102,    1899999],
-		["Focus",               1,  3,  1044110,    139999],
-		["Healing",             1,  4,  1044077,    9999999],
-		["Mace Fighting",       1,  5,  1044101,    4999999],
+		["Fencing",             1,  2,  1044102,    1899996],
+		["Focus",               1,  3,  1044110,    89999],
+		["Healing",             1,  4,  1044077,    9999996],
+		["Mace Fighting",       1,  5,  1044101,    3999997],
 		["Parrying",            1,  6,  1044065,    8599999],
 		["Swordsmanship",       1,  7,  1044100,    8999999],
 		["Tactics",             1,  8,  1044087,    20999999],
-		["Throwing",            1,  9,  1044117,    2999999],
-		["Wrestling",           1,  10, 1044103,    4799999],
+		["Throwing",            1,  9,  1044117,    2999996],
+		["Wrestling",           1,  10, 1044103,    4799996],
 	//2 Trade Skills Atlantic
 		["Alchemy",             2,  0,  1044060,    6999990],
 		["Blacksmithing",       2,  1,  1044067,    4999999],
 		["Fletching",           2,  2,  1044068,    4399997],
-		["Carpentry",           2,  3,  1044071,    4399997],
+		["Carpentry",           2,  3,  1044071,    3999999],
 		["Cooking",             2,  4,  1044073,    7989986],
 		["Inscription",         2,  5,  1044083,    5498985],
 		["Lumberjacking",       2,  6,  1044104,    499998],
-		["Mining",              2,  7,  1044105,    1499997],
+		["Mining",              2,  7,  1044105,    1249998],
 		["Tailoring",           2,  8,  1044094,    4999998],
-		["Tinkering",           2,  9,  1044097,    2469989],
+		["Tinkering",           2,  9,  1044097,    1999998],
 	//3 Magic Atlantic
-		["Bushido",             3,  0,  1044112,    19999999], 
+		["Bushido",             3,  0,  1044112,    39999999], 
 		["Chivalry",            3,  1,  1044111,    14799999],
 		["Eval Intelligence",   3,  2,  1044076,    14849998],
-		["Imbuing",             3,  3,  1044116,    14999999],
-		["Magery",              3,  4,  1044085,    29999999],
-		["Meditation",          3,  5,  1044106,    199999],
-		["Mysticism",           3,  6,  1044115,    11999999],
-		["Necromancy",          3,  7,  1044109,    24999997],
+		["Imbuing",             3,  3,  1044116,    14999997],
+		["Magery",              3,  4,  1044085,    43000000],
+		["Meditation",          3,  5,  1044106,    199997],
+		["Mysticism",           3,  6,  1044115,    11999997],
+		["Necromancy",          3,  7,  1044109,    24999995],
 		["Ninjitsu",            3,  8,  1044113,    22999999],
-		["Resisting Spells",    3,  9,  1044086,    14999999],
-		["Spellweaving",        3,  10, 1044114,    24999999],
-		["Spirit Speak",        3,  11, 1044092,    14899999],
+		["Resisting Spells",    3,  9,  1044086,    14999997],
+		["Spellweaving",        3,  10, 1044114,    24799999],
+		["Spirit Speak",        3,  11, 1044092,    6999999],
 	//4 Wilderness 3499998
-		["Animal Lore",         4,  0,  1044062,    14999999],
+		["Animal Lore",         4,  0,  1044062,    9999999],
 		["Animal Taming",       4,  1,  1044095,    75999997],
 		["Fishing",             4,  2,  1044078,    5689998],
-		["Herding",             4,  3,  1044080,    999999],
+		["Herding",             4,  3,  1044080,    45000],
 		["Tracking",            4,  4,  1044098,    7899999],
 		["Veterinary",          4,  5,  1044099,    22999998],
 	//5 Thievery Atlantic
 		["Detecting Hidden",    5,  0,  1044074,    4899999],
-		["Hiding",              5,  1,  1044081,    35399990],
+		["Hiding",              5,  1,  1044081,    9999999],
 		["Lock Picking",        5,  2,  1044084,    9999999],
-		["Poisoning",           5,  3,  1044090,   39999997],
+		["Poisoning",           5,  3,  1044090,   11999999],
 		["Remove Trap",         5,  4,  1044108,    7999999],
 		["Snooping",            5,  5,  1044088,    1499995],
 		["Stealing",            5,  6,  1044093,    499999],
@@ -394,7 +394,7 @@ function GMJournalScan()
 			switch(checkarr[i])
 				{	
 				case 'GM':
-					Orion.HttpPost(bot, paramText);
+					DiscordPushPink(Player.Name() + ": GM");
 					//Orion.PlayWav('Alarm09.wav');
 					Orion.PauseScript('all', 'GMJournalScan');
                     Orion.Wait(1000);
@@ -408,6 +408,20 @@ function GMJournalScan()
 			}
 		}
 	}
+
+function DiscordPushPink(message)
+	{
+	var bot = Orion.RegRead('discordConfigPink') || SetPinkDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+    
+function SetPinkDiscordRegistryEntry()
+    {
+    var discordConfig = 'https://discordapp.com/api/webhooks/941921319463841843/7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI';
+    var registryName = 'discordConfigPink';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
 
 function GMScan()
 	{
@@ -426,7 +440,7 @@ function GMScan()
         if(gmCheck)
             {
 			 if(useDiscordPush)
-			    DiscordPush(Player.Name() + ": GM");
+			    DiscordPushPink(Player.Name() + ": GM");
 			if(useAlarmSound)
 			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
 			Orion.PauseScript('all','JournalScan');
@@ -633,6 +647,86 @@ function CheckAllNearbyVendors()
         }
     TextWindow.Print(outMsg);
     TextWindow.Print('---Ending Vendor Check---');
+    }
+
+function MonitorAllVendorBackpacks()
+    {
+    var vendors = Orion.FindTypeEx(any,any,ground,'live',4,'yellow').filter(function(npc)
+        {
+        return Orion.Contains(npc.Properties(),'Shop Name:');
+        });
+    var vendorList = [];
+    for(var i=0;i<vendors.length;i++)
+        {
+        var vendor = vendors[i];
+        var vendorSerial = vendor.Serial();
+        var vendorBackpack = Orion.ObjAtLayer('Backpack',vendorSerial);
+        if(vendorBackpack)
+            {
+            do 
+                {
+                var itemCount = (vendorBackpack.Properties().match(/Contents: (\d+)/) || [])[1];
+                if(!itemCount)
+                    {
+                    while(!Orion.GumpExists('paperdoll',vendorSerial))
+                        {
+                        Orion.WaitContextMenuID(vendorSerial,520);
+                        Orion.RequestContextMenu(vendorSerial);
+                        Orion.Wait(200);
+                        }
+                    Orion.CancelContextMenu();
+                    while(Orion.GumpExists('paperdoll',vendorSerial))
+                        {
+                        Orion.ClosePaperdoll(vendorSerial);
+                        Orion.Wait(200);
+                        }
+                    }
+                } while(!itemCount)
+            vendorList.push([vendorSerial,itemCount])
+            }
+        }
+    while(true)
+        {
+        for(var i=0;i<vendorList.length;i++)
+            {
+            var vendor = vendorList[i];
+            var vendorSerial = vendor[0];
+            var vendorBackpack = Orion.ObjAtLayer('Backpack',vendor[0]);
+            if(vendorBackpack)
+                {
+                do 
+                    {
+                    var itemCount = (vendorBackpack.Properties().match(/Contents: (\d+)/) || [])[1];
+                    if(!itemCount)
+                        {
+                        while(!Orion.GumpExists('paperdoll',vendor[0]))
+                            {
+                            Orion.WaitContextMenuID(vendor[0],520);
+                            Orion.RequestContextMenu(vendor[0]);
+                            Orion.Wait(200);
+                            }
+                        Orion.CancelContextMenu();
+                        while(Orion.GumpExists('paperdoll',vendor[0]))
+                            {
+                            Orion.ClosePaperdoll(vendor[0]);
+                            Orion.Wait(200);
+                            }
+                        }
+                    } while(!itemCount)
+                Orion.CharPrint(vendor[0],1159,itemCount + '/' + vendor[1]);
+                if(itemCount && itemCount != vendor[1])
+                    {
+                    Orion.Wait(60000);
+                    CheckAllNearbyVendors();
+                    DiscordPushPink(Player.Name() + ' Watched Vendors Restocking')
+                    Orion.Wait(60000);
+                    return Orion.Exec('MonitorAllVendorBackpacks');
+                    }
+                }
+            Orion.Wait(10);
+            }
+        Orion.Wait(5000);
+        }
     }
 
 function GetAllPinkPrices(containerSerial)
@@ -1327,7 +1421,7 @@ function SalesReport()
         return sales.reduce(function(sum,curr)
             {
             var tmpArr = [];
-		    for(var i=0,len=curr.length;i<len;i++)
+		    for(var i=0;i<curr.length;i++)
 		        {
 		        if(typeof curr[i] == 'string')
 		            tmpArr[i] = curr[i];
@@ -1345,7 +1439,7 @@ function SalesReport()
     var outStr = '**Report ' + shard + '**:';
     var overallTotal = 0;
     var gumpStr = '';
-    for(var i=0,len=totalSales.length;i<len;i++) //categories
+    for(var i=0;i<totalSales.length;i++) //categories
         {
         var categoryArr = totalSales[i];
         var groupName = categoryArr.shift();
@@ -1356,7 +1450,7 @@ function SalesReport()
             })
         var groupTotal = 0;
         outStr += '\n**' + groupName + '**\n';
-        for(var ii=0,len=categoryScrollInfo.length;ii<len;ii++) //values
+        for(var ii=0;ii<categoryScrollInfo.length;ii++) //values
             {
             if(categoryArr[ii] > 0)
                 {
