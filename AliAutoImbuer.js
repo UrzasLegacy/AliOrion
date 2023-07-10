@@ -1019,3 +1019,46 @@ function ImbueItemsInContainer(imbueFavorite)
             ImbueModByIncrements(items[i], supplyContainer, imbueFavorite[ii][0], imbueFavorite[ii][2], imbueFavorite[ii][1]);
     PressGumpInitialButton(Button.Close);
     }
+
+function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
+    {
+    if(!colorID)
+        var colorID = any;
+    if(!destinationContainerSerial)
+        var destinationContainerSerial = Orion.GetSerial(backpack);
+    while(!Orion.GumpExists('container', supplyContainerSerial))
+        {
+        Orion.CharPrint(self,1159,'Opening Supply Container');
+        if(supplyContainerSerial == Player.BankSerial())
+            Orion.Say('bank')
+        else
+            Orion.UseObject(supplyContainerSerial);
+        Orion.Wait(1300);
+        }
+    while(!Orion.GumpExists('container', destinationContainerSerial))
+        {
+        Orion.UseObject(destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    var needed = amount - Orion.Count(graphicID, colorID, destinationContainerSerial, 0, false);
+    var restockItem = Orion.FindType(graphicID, colorID, supplyContainerSerial);
+    if((needed > 0 || amount == 0) && !restockItem[0])
+        {
+        TextWindow.Open();
+        TextWindow.Print("Couldn't restock item: " + itemName);
+        Orion.Wait(100);
+        return false;
+        }
+    if(amount === 0)
+        {
+        Orion.MoveItem(restockItem[0], 0, destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    else if(needed > 0)
+        {
+        Orion.MoveItem(restockItem[0], needed, destinationContainerSerial);
+        Orion.Wait(1300);
+        }
+    Orion.Wait(100);
+    return true;
+    }
