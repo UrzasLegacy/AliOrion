@@ -402,9 +402,9 @@ function LeaveUW()
     Orion.SetBadLocation(6310,1705);
     Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
     Orion.SetBadLocation(6310,1704);
-    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1704, 0);
+    Orion.AddFakeMapObject(100001, '0x051A', 32, 6310, 1704, 0);
     Orion.SetBadLocation(6310,1703);
-    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1703, 0);
+    Orion.AddFakeMapObject(100002, '0x051A', 32, 6310, 1703, 0);
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid)) //Upper deck
         {
         var ladder = Orion.FindTypeEx('0x08A4|0x08A6|0x08A6', any, ground, 'near', 10)[0];
@@ -3102,9 +3102,9 @@ function AvoidDropdowns(_)
     Orion.SetBadLocation(6310,1705);
     Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
     Orion.SetBadLocation(6310,1704);
-    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1704, 0);
+    Orion.AddFakeMapObject(100001, '0x051A', 32, 6310, 1704, 0);
     Orion.SetBadLocation(6310,1703);
-    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1703, 0);
+    Orion.AddFakeMapObject(100002, '0x051A', 32, 6310, 1703, 0);
     }
 
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
