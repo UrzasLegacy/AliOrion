@@ -21,6 +21,11 @@ function Debug(msg,type)
         }
     }
 
+function ClearUdp()
+	{
+	Orion.RemoveAllUdpServers();
+	}
+    
 function GetTargetCoords()
     {
     var x = SelectedTile.X();
