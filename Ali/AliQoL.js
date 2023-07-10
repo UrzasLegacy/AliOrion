@@ -968,11 +968,6 @@ function ActivateChampSpawn()
 		Orion.TargetObject(altar);
 	}	
 
-function ClearUdp()
-	{
-	Orion.RemoveAllUdpServers();
-	}
-
 function BuyHorse()
     {
     var vendors = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(vendor)
