@@ -437,6 +437,7 @@ function PutAwayLoot()
             case 'LMC Stam/HP Armor':
             case 'Misc HP/Stam Armor':
             case 'Luck Armor':
+            case 'HCI or DCI Armor':
             case 'Training Armor':
                 armorArr[3].push(itemSerial);
                 break;
@@ -2003,9 +2004,14 @@ function KeepArmor(propertiesObj,props,itemGraphic)
 
     if(isArtifact)
         { //everything else
-        if(luck == 150) //keep 150 luck or 5 dci/hci artifact armor
+        var resistsObj = parseArmorResists(props);
+        var totalRes = resistsObj['TotalResists'];
+        var resThreshold = isClean ? 25 : 50;
+        if(luck == 150 && totalRes >= resThreshold) //keep 150 luck
+            {
             return 'Luck Armor';
-        if(hci == 5 || dci == 5) //keep 150 luck or 5 dci/hci artifact armor
+            }
+        if((hci == 5 || dci == 5) && mr && lmc && (hpi || hpr || lrc || totalRes > 25)) //keep 5 dci/hci artifact armor
             return 'HCI or DCI Armor';
         switch(intrinsicLMC)
             {
@@ -2052,14 +2058,14 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     }
                 break;
             }
-        if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold)
+        if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LRC Misc Armor';
-        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold)
+        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LMC Misc Armor';
+        var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
+        if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
+            return 'Training Armor';
         }
-    var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
-    if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60)
-        return 'Training Armor';
     DebugLoot('Trash: Armor failed all previous checks');
     return false;
     }
@@ -2170,6 +2176,40 @@ function parseArmorProperties(armorProperties)
     return propertiesObj;
     }
 
+function TestResits()
+    {
+    Orion.WaitForAddObject('myTarget');
+    var ob = Orion.FindObject('myTarget');
+    Orion.Print(JSON.stringify(parseArmorResists(ob.Properties())))
+    }
+
+function parseArmorResists(armorProperties)
+    {
+    var targetMods = 
+        {
+        PhysicalResist:true,FireResist:true,ColdResist:true,PoisonResist:true,EnergyResist:true
+        }
+    var lines = armorProperties.split("\n");
+    var propertiesObj = {};
+    var totalResists = 0;
+    lines.forEach(function(line)
+        {
+        var modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)?/);
+        if(modMatch)
+            {
+            var modName = modMatch[1].replace(/\s/g, '');
+            if(targetMods[modName])
+                {
+                var modValue = parseInt(modMatch[2]) || 0;
+                totalResists += modValue;
+                DebugLoot(modName + ': ' + modValue);
+                propertiesObj[modName] = modValue;
+                }
+            }
+        });
+    propertiesObj['TotalResists'] = totalResists;
+    return propertiesObj;
+    }
 
 
 function testEvalItem(parseFn,keepFn)
