@@ -371,7 +371,7 @@ function EquipUWSuitByBotName()
 
 function LeaveUW()
     {
-    if(!isPlayerInRectangle(6222, 1600, 6500, 1850) || AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1))
+    if(AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1 || !isPlayerInRectangle(6222, 1600, 6500, 1850)))
         return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     var ethy = Orion.FindTypeEx(any).filter(function(item)
@@ -399,10 +399,15 @@ function LeaveUW()
                 }
             }
         }
+    Orion.SetBadLocation(6310,1705);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
+    Orion.SetBadLocation(6310,1704);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1704, 0);
+    Orion.SetBadLocation(6310,1703);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1703, 0);
     if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid)) //Upper deck
         {
         var ladder = Orion.FindTypeEx('0x08A4|0x08A6|0x08A6', any, ground, 'near', 10)[0];
-        Orion.Print('test')
         if(ladder)
             {
             AliWalkTo(ladder.X(),ladder.Y(),0,1);
@@ -415,9 +420,14 @@ function LeaveUW()
                 }
             }
         }
-     AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1); //Below Deck
-     Orion.Wait(2000);
-     if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)) //Outside boat
+    Orion.ClearBadLocations();
+    if(AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1)) //Below Deck
+        {
+        Orion.Wait(1000);
+        if(Player.X() != 6324 || Player.Y() != 1711)
+            return LeaveUW();
+        }
+    if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)) //Outside boat
         {
         var rope = Orion.FindTypeEx(0x14FA, any, ground, ' ', 2)[0];
         if(rope)
@@ -2222,11 +2232,20 @@ function GoFromHomeToLadderPosition()
             }
         Orion.Wait(1300);
         }
-    AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)//outside boat
-    Orion.Wait(3000);
+    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
+        {
+        Orion.Wait(1000);
+        if(Player.X() != 6444 || Player.Y() != 1743)
+            return LeaveUW();
+        }
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
-    AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, false, LichAttackWalk)//below deck
+    if(AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, false, LichAttackWalk)) //below deck
+        {
+        Orion.Wait(1000);
+        if(Orion.GetDistance(6432,1699) > 5)
+            return LeaveUW();
+        }
     Orion.Wait(1300);
 	}
 
@@ -3079,6 +3098,13 @@ function AvoidDropdowns(_)
     AvoidRectangle(6305,1705,6308,1710);
     AvoidRectangle(6299,1713,6302,1718);
     AvoidRectangle(6305,1713,6308,1718);
+    AvoidRectangle(6305,1713,6308,1718);
+    Orion.SetBadLocation(6310,1705);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
+    Orion.SetBadLocation(6310,1704);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1704, 0);
+    Orion.SetBadLocation(6310,1703);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1703, 0);
     }
 
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
@@ -3486,7 +3512,7 @@ function AliComFollower()
     var port = 39999;
     var create = 1;
     var endTime = Orion.Now() + 5000;
-    while(create != 0 && Orion.Now() < endTime && port < 60099) 
+    while(create != 0 && Orion.Now() < endTime && port < 40099) 
         {
         create = Orion.CreateUdpServer('Coms', ++port);
         Orion.Wait(10);
