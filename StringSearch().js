@@ -4,20 +4,17 @@ function StringSearch()
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var savedSearches = [];
-    var fileString = tmpFile.ReadAll(); 
+    var fileString = tmpFile.ReadAll();
     if(fileString)
         savedSearches = JSON.parse(fileString);
 
     var title = "Ali String Search";
-    //var startTime = Orion.Now();
-    var gump = Orion.CreateCustomGump(10423); 
-	var rowStart = 40;
-	var columnStart = 25;
-    var height = 320;
-    var width = 285;
-
+    var gump = Orion.CreateCustomGump(10423);
     gump.Clear();
     gump.SetCallback('StringSearchCallback');
+
+    var height = 455;
+    var width = 288;
     gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
@@ -26,17 +23,19 @@ function StringSearch()
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
     gump.Select('gump');
-    
+
+    var rowStart = 40;
+	var columnStart = 25;
+    var heightAdjust = 25;
+
     var xPos = columnStart;
     var yPos = rowStart;
     
-    var heightAdjust;
     var value;
     var shared;
 
-    heightAdjust = 25;
     var comboOptions = ['Include','Exclude'];
-    for(var i=1;i<5;i++)
+    for(var i=1;i<11;i++)
         {
         var responseCode = i;
         shared = 'String ' + responseCode;
@@ -52,46 +51,45 @@ function StringSearch()
 
     yPos += heightAdjust;
 
-    gump.AddText(30,yPos - 20,554,'Saved Searches');
+    gump.AddText(33,yPos - 20,554,'Saved Searches');
     shared = Shared.GetVar('Save Name',undefined);
-    gump.AddComboBox(20000, xPos, yPos, '0x0BB8', 0, '0x0BB8', 160, -3,savedSearches.length);
+    gump.AddComboBox(20000, xPos + 3, yPos, '0x0BB8', 0, '0x0BB8', 160, -3,savedSearches.length);
     for(var j=0;j<savedSearches.length;j++)
         gump.AddComboBoxText(savedSearches[j][0],0,shared == savedSearches[j][0] ? 1 : 0,160,'left');
-    gump.AddButton(999, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(999, xPos + 173, yPos - 1, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Load Saved Criteria');
-    gump.AddText(211,yPos - 1,554,'Load');
+    gump.AddText(217,yPos - 1,554,'Load');
     gump.AddTooltip('Load Saved Criteria');
 
     yPos += heightAdjust;
-    gump.AddResizepic(xPos, yPos , '0x0BB8', 160, 19);
-    gump.AddTextEntry(20001, xPos + 3, yPos, 0, '', 160, 20);
+    gump.AddResizepic(xPos + 3, yPos , '0x0BB8', 160, 19);
+    gump.AddTextEntry(20001, xPos + 6, yPos, 0, '', 160, 20);
     gump.AddTooltip('Enter Saved Search Name');
-    gump.AddButton(998, xPos + 170, yPos - 1, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(998, xPos + 173, yPos - 1, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Save Current Criteria');
-    gump.AddText(211,yPos - 1,554,'Save');
+    gump.AddText(216,yPos - 1,554,'Save');
     gump.AddTooltip('Save Current Criteria. Enter name to the left');
 
     yPos += heightAdjust;
-    gump.AddButton(1000, xPos + 170, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(1000, xPos + 173, yPos + 20, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddText(xPos + 170 + 11,yPos + 20,554,'Search');
+    gump.AddText(xPos + 173 + 13,yPos + 20,554,'Search');
     gump.AddTooltip('Highlight items that meet the criteria above');
-    gump.AddButton(1001, xPos + 85, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(1001, xPos + 88, yPos + 20, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Clear the search menu');
-    gump.AddText(xPos + 85 + 15,yPos + 20,554,'Clear');
+    gump.AddText(xPos + 88 + 18,yPos + 20,554,'Clear');
     gump.AddTooltip('Clear the search menu');
-    gump.AddButton(997, xPos, yPos + 20, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(997, xPos + 3, yPos + 20, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Delete currently selected saved search');
-    gump.AddText(xPos + 11,yPos + 20,554,'Delete');
+    gump.AddText(xPos + 16,yPos + 20,554,'Delete');
     gump.AddTooltip('Delete currently selected saved search');
-    gump.AddButton(996, xPos, yPos + 45, '40028', '40028', '40018', '0x0000');
+    gump.AddButton(996, xPos + 173, yPos + 45, '40028', '40028', '40018', '0x0000');
     gump.AddTooltip('Move items that meet the criteria above');
-    gump.AddText(xPos + 11,yPos + 45,554,'Move');
+    gump.AddText(xPos + 173 + 15,yPos + 45,554,'Move');
     gump.AddTooltip('Move items that meet the criteria above');
 
     gump.Update();
-    
-    //Orion.Print('interval: ' + (Orion.Now() - startTime))
+
 	}
 
 function StringSearchCallback(_) 
@@ -101,23 +99,17 @@ function StringSearchCallback(_)
     var comboOptions = ['Include','Exclude'];
     if(code == 0)
         return;
-    else if(code == 1000)
+    else if(code == 1000) //Search Items
         {
         var searchStringsList = [];
         var excludeIncludesList = [];
-        for(var i=1;i<5;i++)
+        for(var i=1;i<11;i++)
             {
             var responseCode = i;
             var combo = CustomGumpResponse.ComboBox(responseCode);
             var textEntry = CustomGumpResponse.Text(responseCode+500) || '';
             if(combo > -1)
                 {
-                // if(comboOptions[combo] == 'Clear')
-                //     {
-                //     Shared.RemoveVar('String ' + responseCode);
-                //     Shared.RemoveVar('String ' + responseCode + ' Value');
-                //     continue;
-                //     }
                 Shared.AddVar('String ' + responseCode,comboOptions[combo]);
                 Shared.AddVar('String ' + responseCode + ' Value',textEntry);
                 searchStringsList.push(textEntry);
@@ -126,11 +118,11 @@ function StringSearchCallback(_)
             }
         SearchByStrings(searchStringsList,excludeIncludesList)
         }
-    else if(code == 996)
+    else if(code == 996) //Move Items
         {
         var searchStringsList = [];
         var excludeIncludesList = [];
-        for(var i=1;i<5;i++)
+        for(var i=1;i<11;i++)
             {
             var responseCode = i;
             var combo = CustomGumpResponse.ComboBox(responseCode);
@@ -146,9 +138,10 @@ function StringSearchCallback(_)
         var items = SearchByStrings(searchStringsList,excludeIncludesList)
         MoveItems(items)
         }
-    else if(code == 1001)
+    else if(code == 1001) //Clear entries
         {
         Shared.ClearVars();
+        ResetItemColors();
         }
     else if(code == 999) //Recall saved search
         {
@@ -168,7 +161,7 @@ function StringSearchCallback(_)
         var searchStrings = savedSearch[1];
         var excludeIncludes = savedSearch[2];
 
-        for(var i=0,j=1;i<4;i++,j++)
+        for(var i=0,j=1;i<10;i++,j++)
             {
             Shared.AddVar('String ' + j,comboOptions[excludeIncludes[i]]);
             Shared.AddVar('String ' + j + ' Value',searchStrings[i]);
@@ -184,7 +177,7 @@ function StringSearchCallback(_)
             savedSearches = JSON.parse(fileString);
         var searchStringsList = [];
         var excludeIncludesList = [];
-        for(var i=1;i<5;i++)
+        for(var i=1;i<11;i++)
             {
             var responseCode = i;
             var combo = CustomGumpResponse.ComboBox(responseCode);
@@ -258,8 +251,6 @@ function StringSearchCallback(_)
         tmpFile.Write(JSON.stringify(outArr));
         tmpFile.Close();
         }
-    //Orion.Print(gumpButtons);
-    //Shared.AddArray('gumpValues',gumpButtons);
     Orion.Wait(50);
     StringSearch();
 	}
@@ -307,13 +298,11 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
     for(var i=0;i<containers.length;i++)
         {
         var container = containers[i];
-        if(!container)
-            Orion.Print(container);
         Orion.FindTypeEx(any,any,container.Serial(),'item', 'finddistance', '', true).forEach(function(item)
             {
             var props = item.Properties();
             if(Orion.Contains(props,excludeString))
-                Orion.TestItemColor(item.Serial(),parseInt(item.Color()));
+                Orion.TestItemColor(item.Serial(),item.Color());
             else
                 {
                 var pass = searchStrings.every(function(string)
@@ -323,7 +312,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
                 if(pass)
                     items.push(item.Serial());
                 else
-                    Orion.TestItemColor(item.Serial(),parseInt(item.Color()));
+                    Orion.TestItemColor(item.Serial(),item.Color());
                 }
             });
         }
@@ -331,7 +320,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
         {
         var props = item.Properties();
         if(Orion.Contains(props,excludeString))
-            Orion.TestItemColor(item.Serial(),parseInt(item.Color()));
+            Orion.TestItemColor(item.Serial(),item.Color());
         else
             {
             var pass = searchStrings.every(function(string)
@@ -341,7 +330,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
             if(pass)
                 items.push(item.Serial());
             else
-                Orion.TestItemColor(item.Serial(),parseInt(item.Color()));
+                Orion.TestItemColor(item.Serial(),item.Color());
             }
         });
     Orion.Print('Items Found: ' + items.length);
@@ -352,7 +341,73 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
     return items;
     }
 
+function ResetItemColors()
+    {
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var items = [];
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i];
+        Orion.FindTypeEx(any,any,container.Serial(),'item', 'finddistance', '', true).forEach(function(item)
+            {
+            Orion.TestItemColor(item.Serial(),item.Color());
+            });
+        }
+    Orion.FindTypeEx(any,any,ground,'item', 22).forEach(function(item)
+        {
+        Orion.TestItemColor(item.Serial(),item.Color());
+        });
+    }
+
 function MoveItems(items)
+    {
+    Orion.CharPrint(self,1159,'Target FROM container')
+    Orion.WaitForAddObject('myTarget');
+    var fromContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(fromContainer);
+    Orion.CharPrint(self,1159,'Target TO container')
+    Orion.WaitForAddObject('myTarget');
+    var toContainerObj = Orion.FindObject('myTarget');
+    var toContainerProps = toContainerObj.Properties();
+    if(toContainerProps.indexOf('Contents: ') > -1)
+        {
+        var toContainer = toContainerObj.Serial();
+        var gridIndex = 0;
+        }
+    else
+        {
+        var toContainer = toContainerObj.Container();
+        var gridIndex = toContainerObj.GridIndex();
+        }
+    VerifyOpenContainer(toContainer);
+    for(var i=0;i<items.length;i++)
+        {
+        var item = items[i]
+        while(Orion.GetContainer(item) == fromContainer)
+            {
+            Orion.MoveItem(item,0,toContainer,-1,-1,-1,gridIndex);
+            Orion.Wait(1300);
+            }
+        }
+    }
+
+function MoveItemsOLD(items)
     {
     Orion.CharPrint(self,1159,'Target FROM container')
     Orion.WaitForAddObject('myTarget');
@@ -372,7 +427,6 @@ function MoveItems(items)
             }
         }
     }
-
 function VerifyOpenContainer(containerSerial,delay)
     {
     var startTime = Orion.Now();
