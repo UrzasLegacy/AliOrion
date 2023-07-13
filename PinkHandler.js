@@ -443,9 +443,9 @@ function GMScan()
 			    DiscordPushPink(Player.Name() + ": GM");
 			if(useAlarmSound)
 			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-			Orion.PauseScript('all','JournalScan');
+			Orion.PauseScript('all','GMScan');
 			Orion.Wait(500);
-			Orion.Terminate('all', 'JournalScan');
+			Orion.Terminate('all', 'GMScan');
 			Orion.StopWalking();
 			Orion.Wait(5000);
 			if(closeUO)
