@@ -138,11 +138,11 @@ var lootItems = {
     '0x1F60': true, //gate scroll
     //'0x0EED': true, //gold
 }
-
-Orion.Exec('JournalScan', true);
+Shared.AddVar('lootItems',lootItems);
 var debug = true;
 var debug2 = false;
 var luckScum = false;
+Orion.Exec('GMScan', true);
 //--#Start
 function _____________START(_){}
 
@@ -170,7 +170,7 @@ function SmartStart()
                     {
                     DetermineBarrelSamp();
                     WaitSyncLeader(); //Home position
-                    AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
+                    //AliWalkTo(6302, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
                     WaitForReset(); //wait for keys and for uw to be ready
                     Orion.RemoveDisplayTimer('bossReset');
                     }
@@ -371,7 +371,7 @@ function EquipUWSuitByBotName()
 
 function LeaveUW()
     {
-    if(AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1 || !isPlayerInRectangle(6222, 1600, 6500, 1850)))
+    if((Orion.GetDistance(1700,1560) < 100 && AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1)) || !isPlayerInRectangle(6222, 1600, 6500, 1850))
         return
     TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
     var ethy = Orion.FindTypeEx(any).filter(function(item)
@@ -1892,7 +1892,7 @@ function HydraRecover()
         if(Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length)
             return;
         }
-    Orion.PauseScript('all','HydraRecover|JournalScan');
+    Orion.PauseScript('all','HydraRecover|GMScan');
     Orion.Wait(5000);
     var gump = Orion.GetGump('any','0x000008AF');
     if(gump !== null)
@@ -2236,7 +2236,7 @@ function GoFromHomeToLadderPosition()
         {
         Orion.Wait(1000);
         if(Player.X() != 6444 || Player.Y() != 1743)
-            return LeaveUW();
+            return GoFromHomeToLadderPosition();
         }
     var randX = 6432 + Orion.Random(-1,2);
     var randY = 1699 + Orion.Random(-1,2);
@@ -2244,7 +2244,7 @@ function GoFromHomeToLadderPosition()
         {
         Orion.Wait(1000);
         if(Orion.GetDistance(6432,1699) > 5)
-            return LeaveUW();
+            return GoFromHomeToLadderPosition();
         }
     Orion.Wait(1300);
 	}
@@ -2527,31 +2527,41 @@ function CleanUpPublicCorpse()
     //ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
     }
 
-function JournalScan()
-    {
-    var msg = "GM";
-    while(true)
-        {
-        var check = Orion.WaitJournal(msg, Orion.Now(), 0);
-        var checkarr = Orion.Split(check.Text(), ' ')
-        for(var i = 0;i<checkarr.length;i++)
+function GMScan()
+	{
+    var bot = "https://discord.com/api/webhooks/941921319463841843/7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI";
+	var useDiscordPush = true;
+	var useAlarmSound = true;
+    var closeUO = false;
+    var timeStamp = 0;
+    var gmCheck;
+	while(true)
+		{
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
             {
-            if(checkArr[i])
-                {
-                if(useDiscordPush)
-                    DiscordPush(Player.Name() + ": GM")
-                if(useAlarmSound)
-                    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
-                Orion.Terminate('all', 'JournalScan');
-                Orion.Wait(1000);
-                Orion.StopWalking();
-                Orion.OAOptionSet('AutoReconnect', '0');
-                //Orion.CloseUO();
-                Orion.Wait(6000);
-                }
-            }
-        }
-    }
+            return mob.Properties().indexOf('GM ') > -1;
+            }).length || Orion.InJournal('GM ', '', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();    
+        if(gmCheck)
+            {
+            if(useDiscordPush)
+                Orion.HttpPost(bot, "content=" + Player.Name() + ": GM");
+			if(useAlarmSound)
+			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+			Orion.PauseScript('all','GMScan');
+			Orion.Wait(500);
+			Orion.Terminate('all', 'GMScan');
+			Orion.StopWalking();
+			Orion.Wait(5000);
+			if(closeUO)
+			    {
+			    Orion.OAOptionSet('AutoReconnect', '0');
+			    Orion.LogOut();
+			    }
+			}
+        Orion.Wait(3000);
+		}
+	}
 
 //--# Helpers
 function ____________HELPERS(_){}
@@ -3617,7 +3627,7 @@ function SetBarrelSamp(_)
 
 function TerminateAll(additionalScripts)
     {
-    var flag = 'TerminateAll|JournalScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence|HydraRecover';
+    var flag = 'TerminateAll|GMScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence|HydraRecover';
     if(additionalScripts !== undefined)
         flag += '|' + additionalScripts;
     Orion.PauseScript('all',flag);
