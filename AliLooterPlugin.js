@@ -1,7 +1,7 @@
 //var lootItems = { 0x0EED: true } //include this in your main file with a list of item graphics you'd like to loot
+//Shared.AddVar('lootItems',lootItems) //include this in your main file after your list of items
 var keepTrainingArmor = true;
 
- 
 function Gump()
     {
     var gump = Orion.CreateCustomGump(12002);
@@ -1467,8 +1467,7 @@ function AliKeep(itemSerial)
 	//loot by graphic
     DebugLoot('Item: ' + item.Name())
     var itemGraphic = item.Graphic();
-    if(!lootItems)
-        lootItems = {};
+    var lootItems = Shared.GetVar('lootItems',false) || {};
 	if(lootItems[itemGraphic])
         return 'Kept by Item Graphic';
 	var props = item.Properties();
@@ -1915,11 +1914,6 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 var statThreshold = goodEater ? 5 : 10;
                 if(lrc >= lrcThreshold)
                     statThreshold -= 5;
-                if(isClean)
-                    {
-                    lmcThreshold -= 2;
-                    statThreshold -= 5;
-                    }
                 break;
             case '0':
                 var lrcThreshold = 20;
