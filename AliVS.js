@@ -318,6 +318,7 @@ function SearchByMods(mods)
         Orion.RequestContextMenu('0x0373C887');
         Orion.Wait(500);
         }
+    VSButtonPress('Clear')
     for(var i=0;i<mods.length;i++)
         {
         var search = mods[i]
@@ -544,6 +545,7 @@ function VSButtonPress(buttonName,inputField)
 var vsSelections = {
     //Miscellaneous
     "Name":['1','1'],
+    "Clear":['2','2'],
     "ExcludeitemsonFelucca":["100"],
     "GargoylesOnly":["101"],
     "NotGargoylesOnly":["102"],
