@@ -2583,7 +2583,7 @@ function BossCheck(_)
 
 function SwitchToBarrelWep()
     {
-    var barrelWepGraphics = '0x0F4B';
+    var barrelWepGraphics = '0x0F4B|0x27A9';
     var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
         {
         return Orion.Contains(item.Properties(),'self repair');
