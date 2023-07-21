@@ -267,6 +267,108 @@ function SuitReader()
     gump.Update();
     }
 
+function SuitReaderCall(playerOrContainerSerial)
+	{
+    var propertiesList = 
+    [
+        ['Physical Resist', 0], //0
+        ['Fire Resist', 0],
+        ['Cold Resist', 0],
+        ['Poison Resist', 0],
+        ['Energy Resist', 0],
+        ['Damage Eater', 0], //5
+        ['Kinetic Eater', 0],
+        ['Fire Eater', 0],
+        ['Cold Eater', 0],
+        ['Poison Eater', 0],
+        ['Energy Eater', 0], //10
+        ['Enhance Potions', 0],
+        ['Damage Increase', 0],
+        ['Swing Speed Increase', 0],
+        ['Defense Chance Increase', 0],
+        ['Hit Chance Increase', 0], //15
+        ['Strength Bonus', 0],
+        ['Dexterity Bonus', 0],
+        ['Intelligence Bonus', 0],
+        ['Hit Point Increase', 0],
+        ['Stamina Increase', 0], //20
+        ['Mana Increase', 0],
+        ['Hit Point Regeneration', 0],
+        ['Stamina Regeneration', 0],
+        ['Mana Regeneration', 0],
+        ['Casting Focus', 0], //25
+        ['Faster Cast Recovery', 0],
+        ['Faster Casting', 0],
+        ['Lower Mana Cost', 0],
+        ['Lower Reagent Cost', 0],
+        ['Spell Damage Increase', 0], //30
+        ['Luck', 0],
+        ['Reflect Physical Damage', 0]
+    ]
+    var selected = Orion.FindObject(playerOrContainerSerial);
+    if(selected && selected.Mobile())
+        {
+        Orion.WaitContextMenuID(selected.Serial(), 520);
+        Orion.RequestContextMenu(selected.Serial());
+        var startTime = Orion.Now();
+        while(Orion.Now() < startTime + 2000 && !Orion.GumpExists('paperdoll', selected.Serial()))
+            Orion.Wait(100);
+        if(!Orion.GumpExists('paperdoll', selected.Serial()))
+            return Orion.CharPrint(self, 1159, "Target paperdoll didn't open");
+        Orion.Wait(100);
+        for(var i=1;i<25;i++)
+            {
+            var item = Orion.ObjAtLayer(i, selected.Serial());
+            if(!item)
+                continue;
+            var itemProps = item.Properties().split(/\r?\n/);
+            itemProps.forEach(function(prop)
+                {
+                if(!Orion.Contains(prop, '(total)'))
+                    {
+                    propertiesList.forEach(function(propPair)
+                        {
+                        var regex = "^" + propPair[0] + "\\s+(-?\\d+)?";
+                        var outcome = prop.match(regex);
+                        if(outcome)
+                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
+                        });
+                    }
+                });
+            }
+        }
+    else if(selected)
+        {
+        if(!Orion.OpenContainer(selected.Serial()))
+            return Orion.CharPrint(self, 1159, "Target container didn't open");
+        Orion.Wait(100);
+        var items = Orion.FindTypeEx(any,any,selected.Serial());
+        for(var i=0;i<items.length;i++)
+            {
+            var item = items[i];
+            if(!item)
+                continue;
+            var itemProps = item.Properties().split(/\r?\n/);
+            itemProps.forEach(function(prop)
+                {
+                if(!Orion.Contains(prop, '(total)'))
+                    {
+                    propertiesList.forEach(function(propPair)
+                        {
+                        var regex = "^" + propPair[0] + "\\s?(-?\\d+)?";
+                        var outcome = prop.match(regex);
+                        if(outcome)
+                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
+                        });
+                    }
+                });
+            }
+        }
+    else
+        return Orion.CharPrint(self, 1159, 'Target invalid');
+    return propertiesList;
+    }
+
 function AliVendorBuy()
     {
     // QoL function to make buying from player vendors less tedious. Just target the item you'd like to purchase.
