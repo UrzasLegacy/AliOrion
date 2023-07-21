@@ -642,18 +642,24 @@ function IDOCBarrels()
         if(!barrel)
             break;
         var cancelCheck = false;
+        var startSearchTime = Orion.Now() + 10000;
+        var searchFlag = true;
         while(barrel.Exists() && barrel.Color() != '0x0000')
             {
             if(Orion.GetDistance(startX,startY) > 0)
                 Orion.WalkTo(startX,startY,0,0,255,0);
             Orion.Wait(1000);
-            Orion.SetSearchArea(Wbound+1, Nbound+1, Ebound-1, Sbound-1);
-            var barrelInside = Orion.FindTypeEx('0x0FAE|0x0E77|0x1EB5', any, ground, 'near', '24')[0];
-            Orion.ResetSearchArea();
-            if(!barrelInside)
+            if(searchFlag && Orion.Now() > startSearchTime)
                 {
-                cancelCheck = true;
-                break;
+                Orion.SetSearchArea(Wbound+1, Nbound+1, Ebound-1, Sbound-1);
+                var barrelInside = Orion.FindTypeEx('0x0FAE|0x0E77|0x1EB5', any, ground, 'near', '24')[0];
+                Orion.ResetSearchArea();
+                if(!barrelInside)
+                    {
+                    cancelCheck = true;
+                    break;
+                    }
+                searchFlag = false;
                 }
             }
         if(cancelCheck)
@@ -680,13 +686,12 @@ function IDOCBarrels()
             break;
         if(barrel.Distance() > 1)
             Orion.WalkTo(barrel.X(), barrel.Y(), 0, 1, 255, 1);
-        else
-            Orion.Attack(barrel.Serial());
+        Orion.Attack(barrel.Serial());
         Orion.Wait(200);
         //Orion.Exec('DropGarbageHere',true);
 	 	}
     if(Orion.Dragging())
-         Orion.DropDraggedItem();
+        Orion.DropDraggedItem();
     while(!Player.Hidden())
         {
         Orion.UseSkill('Hiding');
