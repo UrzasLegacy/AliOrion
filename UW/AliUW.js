@@ -68,8 +68,8 @@
         //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
         //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples,gems of salvation) in this pouch for bots to restock themselves.
         //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
-        var homeX = 4415; //Change this to an X coordinate adjacent your repair bench
-        var homeY = 1499; //Change this to a Y coordinate adjacent your repair bench
+        var homeX = 1559; //Change this to an X coordinate adjacent your repair bench
+        var homeY = 1481; //Change this to a Y coordinate adjacent your repair bench
 
     //Misc Tips
         //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
@@ -202,7 +202,6 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
                 WaitSyncFollower(); //Home position
@@ -252,7 +251,6 @@ function SmartStart()
             if(!BossCheck())
                 {
                 CharacterMaintenance();
-                Orion.Exec('StayHidden',true);
                 Orion.Exec('StayLoggedIn',true);
                 EquipBossSuitByBotName();
                 WaitSyncFollower(); //Home position
@@ -749,6 +747,7 @@ function CharacterMaintenance()
         RepairGear();
     if(ConsumablesCheck())
          RestockConsumables();
+    Orion.Exec('StayHidden',true);
     }
 
 function DropLoot()
@@ -1134,7 +1133,6 @@ function GetKeys()
     CharacterMaintenance();
     Orion.Wait(500);
     EquipBossSuitByBotName();
-    Orion.Exec('StayHidden',true);
     Orion.Exec('StayLoggedIn',true);
     Orion.UdpSend(40420,'HaveKeys');
     }
@@ -2583,11 +2581,19 @@ function BossCheck(_)
 
 function SwitchToBarrelWep()
     {
+    var selfRepair = true;
     var barrelWepGraphics = '0x0F4B|0x27A9';
-    var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
+    if(selfRepair)
         {
-        return Orion.Contains(item.Properties(),'self repair');
-        })[0];
+        var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'self repair');
+            })[0];
+        }
+    else
+        {
+        var barrelWep = Orion.FindTypeEx('0x0F4B')[0]; 
+        }
     if(barrelWep)
         {
         var endTime = Orion.Now() + 10000;
