@@ -41,7 +41,7 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [],
         [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
         [],
-        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "StringSearch", 'StringSearch'] ],
+        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "StringSearch", 'StringSearch'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
     ]
    
 
@@ -1244,8 +1244,9 @@ function CalculateScoreCall(templateName)
         Orion.WaitForAddObject('myTarget');
         var exampleString = Orion.FindObject('myTarget').Properties();
         }
+    var template = templateName || undefined;
     var parse = parseJewelryProperties(exampleString);
-    var values = calculateTemplateValues(parse,templateName);
+    var values = calculateTemplateValues(parse,template);
     var outMsg = '';
     values.forEach(function(value)
         {
@@ -3492,3 +3493,58 @@ function MoveItems(items)
             }
         }
     }
+
+function PasteProperties() 
+	{
+    var title = "Ali Paste Properties";
+    var gump = Orion.CreateCustomGump(10423);
+    gump.Clear();
+    gump.SetCallback('PastePropertiesCallback');
+
+    var height = 83;
+    var width = 288;
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+
+    var rowStart = 40;
+	var columnStart = 25;
+    var xPos = columnStart;
+    var yPos = rowStart;
+
+    gump.AddResizepic(xPos, yPos , '0x0BB8', 170, 19);
+    gump.AddTextEntry(1, xPos + 3, yPos, 0, '', 170, 20);
+
+    gump.AddButton(2, xPos + 176, yPos, '40028', '40028', '40018', '0x0000');
+    gump.AddTooltip('Calculate Properties From String');
+    gump.AddText(xPos + 176 + 6,yPos,554,'Calculate');
+    gump.AddTooltip('Calculate Properties From String');
+    gump.Update();
+	}
+
+function PastePropertiesCallback(_) 
+	{
+    var code = CustomGumpResponse.ReturnCode();
+    if(code == 0)
+        return;
+    else if(code == 2) //Search Items
+        {
+        var textEntry = CustomGumpResponse.Text(1) || '';
+        var parse = parseJewelryProperties(textEntry);
+        var values = calculateTemplateValues(parse);
+        var outMsg = '';
+        values.forEach(function(value)
+            {
+            outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
+            });
+        Orion.Print(outMsg)
+        }
+    Orion.Wait(50);
+    PasteProperties();
+	}
+
