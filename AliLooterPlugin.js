@@ -1748,9 +1748,9 @@ function KeepJewelry(propertiesObj,props)
     
     if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
         return 'Str10/Dex10/Int10';
-    if(score < 50)
+    if(score < 70)
         {
-        DebugLoot('Trash: score < 50');
+        DebugLoot('Trash: score < 70');
         return false;
         }
     var overcapInt = CountJewelryOvercaps(propertiesObj);
@@ -1997,7 +1997,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 Orion.Print('32','Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
                 var lrcThreshold = 10;
-                var lmcThreshold = 3;
+                var lmcThreshold = lrc >= 20 ? 0 : 3;
                 var totalRegensThreshold = 6;
                 var statThreshold = goodEater ? 4 : 6;
                 if(lrc >= 20)
@@ -2024,6 +2024,8 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return 'LRC Misc Armor';
         if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LMC Misc Armor';
+        if(lrc >= 20 && mr >= 4 && hpr >= 3 && goodEater && totalStats >= 12)
+            return '20+ LRC no LMC Armor'
         var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
         if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
             return 'Training Armor';
