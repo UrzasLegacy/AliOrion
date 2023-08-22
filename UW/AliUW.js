@@ -2739,7 +2739,7 @@ function isPlayerInRectangle(x1, y1, x2, y2)
 function injuredCheck(range, threshold, healDead)
     {
     var flags = healDead ? 'mobile' : 'live';
-    var injureList = Orion.FindTypeEx(any, any, ground, flags, range, 'green').filter(function(part)
+    var injureList = Orion.FindTypeEx(any, any, ground, flags, range, 'green|blue').filter(function(part)
         {
         Orion.GetStatus(part.Serial());
         return part.Hits('%') < threshold || part.Poisoned();
@@ -3356,7 +3356,10 @@ function LichAttackWalk(_)
         return;
     Orion.ClearBadLocations();
     var mobGraphic = '0x0018';
-    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',8);
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',8).filter(function(mob)
+        {
+        return mob.X() < 6446;
+        });
     if(mobs.length)
         {
         var mob = mobs[0];
