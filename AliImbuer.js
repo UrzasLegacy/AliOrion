@@ -2,101 +2,89 @@
 //Engrave 'Imbuing' on a leather backpack and put it in your pack. This will hold your imbuing mats
 //Be near a soulforge and a secured container full of gems and basic imbuing mats to restock from. The script will ask you to target this container OR you can engrave this container 'Special Mats' to automatically use it
 //Describe your imbuing specs in the initImbueFavorites function object imbueFavorites
-//Run ImbueItemsByFavorite() with the name of your saved imbuing spec as the argument e.g., ImbueItemsByFavorite('LuckArmor')
+//Call ImbueItemsByFavorite() with the name of your saved imbuing spec as the argument e.g., ImbueItemsByFavorite('AsukaArmor')
 //Follow the instructions that appear over your character
 
+    //Mod Name: Exactly as it appears in the imbuing menu
+    //Verification String: New Value exactly as it appears with symbols and everything if they exist. i.e. 20% OR -30 OR 15 OR false if nothing
+    //Buttons pressed: how the script interacts with the gump buttons to get to the target value in order
+    //example
+    //'Name': [
+    //  ['Mod Name', 'Verification string', [buttons pressed to get to target value]],
+    //  ['Mod Name', 'Verification string', [buttons pressed to get to target value]],
+    //]
+    //Buttons:
+    // Button.IncrementOne
+    // Button.IncrementTen
+    // Button.IncrementMax
+    // Button.DecrementOne
+    // Button.DecrementTen
+    // Button.DecrementMax
 function initImbueFavorites(_)
     {
     const imbueFavorites =
         {
-        //example
-        //'Name': [
-        //  ['Mod Name', 'Verification string', [buttons pressed to get to target value]],
-        //  ['Mod Name', 'Verification string', [buttons pressed to get to target value]],
-        //]
-        // IncrementOne
-        // IncrementTen
-        // IncrementMax
-        // DecrementOne
-        // DecrementTen
-        // DecrementMax
-        'LuckArmor':   [
-                [ 'Stamina Increase', '7', [Button.IncrementMax, Button.DecrementOne] ],
-                ['Mana Increase', '7', [Button.IncrementMax, Button.DecrementOne] ],
-                ['Luck', '100', [Button.IncrementMax]],
+        'AsukaArmor':   [
                 ['Lower Mana Cost', '7%', [Button.IncrementMax, Button.DecrementOne] ],
+                ['Mana Increase', '7', [Button.IncrementMax, Button.DecrementOne] ],
+                ['Mana Regeneration', '1', [Button.DecrementMax]],
+                ['Lower Reagent Cost', '17%', [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne, Button.DecrementOne] ],
             ],
-        'LuckJewels':	[
-                ['Throwing', '+15', [Button.IncrementMax]],
-                ['Luck', '100', [Button.IncrementMax]],
-                ['Hit Chance Increase', '15%', [Button.IncrementMax]],
-                ['Damage Increase', '22%', [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne, Button.DecrementOne]],
-                ['Fire Resist', '6%', [Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,Button.IncrementOne,]],
+        'AsukaJewels':	[
+                ['Magery', '+13', [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
-        'LuckThrowingWep':	[
-                ['Swing Speed Increase', '30%', [Button.IncrementMax]],
-                ['Hit Chance Increase', '10%', [Button.IncrementTen,Button.DecrementOne]],
-                ['Damage Increase', '40%', [Button.IncrementMax, Button.DecrementTen]],
-                ['Luck', '120', [Button.IncrementMax]],
-                ['Hit Mana Leech', '33%', [Button.IncrementMax,Button.DecrementOne,Button.DecrementOne,Button.DecrementOne]],
-            ],
-        'PhysResistM2':	[ //max resist without using boura pelts
+        'PhysResistMaxMinus2':	[ //max resist without using boura pelts
                 ['Physical Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
-        'FireResistM2':	[
+        'FireResistMaxMinus2':	[
                 ['Fire Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
-        'ColdResistM2':	[
+        'ColdResistMaxMinus2':	[
                 ['Cold Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
-        'PoisResistM2':	[
+        'PoisResistMaxMinus2':	[
                 ['Poison Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
-        'EnerResistM2':	[
+        'EnerResistMaxMinus2':	[
                 ['Energy Resist', false, [Button.IncrementMax, Button.DecrementOne, Button.DecrementOne]],
             ],
         }
     return imbueFavorites;
     }
 
-function ImbueLuckWep()
+function AsukaArmor()
     {
-    ImbueItemsByFavorite('LuckThrowingWep');
+    ImbueItemsByFavorite('AsukaArmor');
     }
     
-function ImbueLuckArmor()
+function AsukaJewels()
     {
-    ImbueItemsByFavorite('LuckArmor');
+    ImbueItemsByFavorite('AsukaJewels');
     }
 
-function ImbueLuckJewels()
+function PhysResistMaxMinus2()
     {
-    ImbueItemsByFavorite('LuckJewels');
+    ImbueItemsByFavorite('PhysResistMaxMinus2')
     }
 
-function ImbuePhysResistM2()
+function FireResistMaxMinus2()
     {
-    ImbueItemsByFavorite('PhysResistM2')
+    ImbueItemsByFavorite('FireResistMaxMinus2')
     }
 
-function ImbueFireResistM2()
+function ColdResistMaxMinus2()
     {
-    ImbueItemsByFavorite('FireResistM2')
+    ImbueItemsByFavorite('ColdResistMaxMinus2')
     }
 
-function ImbueColdResistM2()
+function PoisResistMaxMinus2()
     {
-    ImbueItemsByFavorite('ColdResistM2')
+    ImbueItemsByFavorite('PoisResistMaxMinus2')
     }
 
-function ImbuePoisResistM2()
+function EnerResistMaxMinus2()
     {
-    ImbueItemsByFavorite('PoisResistM2')
-    }
-
-function ImbueEnerResistM2()
-    {
-    ImbueItemsByFavorite('EnerResistM2')
+    ImbueItemsByFavorite('EnerResistMaxMinus2')
     }
 
 // Do not edit below
@@ -129,7 +117,7 @@ function ImbueItemsByFavorite(imbueFavoriteName)
         })[0];
     if(!supplyContainerObj)
         {
-        Orion.CharPrint(self,1159,'Target supply container. It should contain gems and basic imbuing mats.\nAdvanced mats must be in your backpack already!')
+        Orion.CharPrint(self,1159,'Target resupply container. It should contain gems and basic imbuing mats.\nAdvanced mats must be in your backpack already!')
         Orion.WaitForAddObject('myTarget');
         var supplyContainer = Orion.GetSerial('myTarget');
         }
@@ -559,21 +547,7 @@ function initImbueMods(itemSerial)
 function ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementArr, verificationString)
     { //incrementArr example: [Button.IncrementOne,Button.IncrementTen,Button.IncrementMax,Button.DecrementOne,Button.DecrementTen,Button.DecrementMax]
     var gemAmount = 200;
-    var ingredient =
-        {
-        'Amethyst': '0x0F16',
-        'Diamond': '0x0F26',
-        'Citrine': '0x0F15',
-        'Amber': '0x0F25',
-        'Tourmaline': '0x0F18',
-        'Star Sapphire': '0x0F0F',
-        'Emerald': '0x0F10',
-        'Ruby': '0x0F13',
-        'Sapphire': '0x0F11',
-        'Magical Residue': '0x2DB1',
-        'Enchanted Essence': '0x2DB2',
-        'Relic Fragment': '0x2DB3',
-        }
+    var essenceAmmount = 30; //residue, essence, and relics
     var imbuingContainer = Orion.FindTypeEx(0x0E75).filter(function(container)
         {
         return Orion.Contains(container.Properties(), 'Engraved: Imbuing');
@@ -619,29 +593,29 @@ function ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementA
         switch(journalCheck.Text())
             {
             case "You do not have enough resources to imbue this item.":
-                if(!Restock('Amethyst', ingredient['Amethyst'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Amethyst', '0x0F16', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Diamond', ingredient['Diamond'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Diamond', '0x0F26', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Citrine', ingredient['Citrine'], supplyContainerSerial, gemAmount, false, imbuingContainerSerial))
+                if(!Restock('Citrine', '0x0F15', supplyContainerSerial, gemAmount, false, imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Amber', ingredient['Amber'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Amber', '0x0F25', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Tourmaline', ingredient['Tourmaline'], supplyContainerSerial, gemAmount, false, imbuingContainerSerial))
+                if(!Restock('Tourmaline', '0x0F18', supplyContainerSerial, gemAmount, false, imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Star Sapphire', ingredient['Star Sapphire'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Star Sapphire', '0x0F0F', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Emerald', ingredient['Emerald'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Emerald', '0x0F10', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Ruby', ingredient['Ruby'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Ruby', '0x0F13', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Sapphire', ingredient['Sapphire'], supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
+                if(!Restock('Sapphire', '0x0F11', supplyContainerSerial, gemAmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Magical Residue', ingredient['Magical Residue'], supplyContainerSerial, 30, false,  imbuingContainerSerial))
+                if(!Restock('Magical Residue', '0x2DB1', supplyContainerSerial, essenceAmmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Enchanted Essence', ingredient['Enchanted Essence'], supplyContainerSerial, 30, false,  imbuingContainerSerial))
+                if(!Restock('Enchanted Essence', '0x2DB2', supplyContainerSerial, essenceAmmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
-                if(!Restock('Relic Fragment', ingredient['Relic Fragment'], supplyContainerSerial, 30, false,  imbuingContainerSerial))
+                if(!Restock('Relic Fragment', '0x2DB3', supplyContainerSerial, essenceAmmount, false,  imbuingContainerSerial))
                     Orion.PauseScript('all');
                 GetImbueGump(true);
                 return ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementArr, verificationString);
@@ -652,6 +626,7 @@ function ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementA
                 GetImbueGump(true);
                 return ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementArr, verificationString);
             case "You must be near a soulforge to imbue an item.":
+                Orion.CharPrint(self,1159,'Move closer to a soulforge and resume script!')
                 Orion.PauseScript('all');
                 GetImbueGump(true);
                 return ImbueModByIncrements(itemSerial, supplyContainerSerial, mod, incrementArr, verificationString);
@@ -705,7 +680,7 @@ function GetImbueGump(initialBool, delay)
 	{
     if(!delay)
         var delay = 3000;
-    if(initialBool)
+    if(initialBool) //true for first imbuing gump window (categories), false for second
         var id = '0x000F3E93';
     else
         var id = '0x000F3E90';
@@ -743,7 +718,6 @@ function PressGumpSubButton(buttonCode, delay)
 
 function CloseAllGumps()
     {
-    //Orion.WaitForGump(1000);
     while(Orion.GetGump(any))
         {
         Orion.Print(Orion.GetGump(any).ID());

@@ -1,119 +1,6 @@
 var fileName = '/AliCatalogueJSON' + '.json'
 var searchDistance = 10
-
-function AliSafeStarter()
-    {
-    var uncheckedHue = 1159;
-    var checkedHue = 1152;
-    Orion.RemoveDisplayTimer('idleTimer');
-    Orion.ClearFakeMapObjects();
-    var safesHash = {};
-    var itemCooldown = Orion.Now();
-    var safes = Orion.FindTypeEx('0x9C18|0x9C19',any,ground,'item',searchDistance).filter(function(safe)
-        {
-        var safeSerial = safe.Serial();
-        Orion.TestItemColor(safeSerial,uncheckedHue);
-        return !safesHash[safeSerial];    
-        }).sort(function(a,b)
-            {
-            return a.Distance() - b.Distance();
-            });
-    for(var i=0;i<safes.length;i++)
-        {
-        var safe = safes[i];
-        var safeSerial = safe.Serial();
-        var safeX = safe.X();
-        var safeY = safe.Y();
-        AvoidTeleporters();
-        Orion.CharPrint(self,1159,'Safes Checked: ' + i + '/' + safes.length);
-        while(safe.Distance() > 5)
-            {
-            Orion.WalkTo(safeX,safeY,0,2);
-            Orion.Wait(500);
-            }
-        var anyGump = Orion.GetGump(any);
-        while(anyGump)
-            {
-            Debug('Closing gump: ' + anyGump.ID());
-            anyGump.Select(Orion.CreateGumpHook(0));
-            Orion.Wait(200);
-            anyGump = Orion.GetGump(any);
-            }
-        while(!Orion.GumpExists('generic', safeSerial, '0x000F3ED6'))
-            {
-            Debug('Catching Gump');
-            Orion.Wait(1300 - (Orion.Now() - itemCooldown))
-            Orion.UseObject(safeSerial);
-            itemCooldown = Orion.Now();
-            Orion.WaitForGump(1300);
-            }
-        var gump = Orion.GetGump(any, '0x000F3ED6');
-        var commandList = gump.CommandList();
-        if(commandList && commandList.join().indexOf(' 1156414 ') > -1)
-            {
-            while(Orion.DisplayTimerExists('idleTimer'))
-                {
-                if(Orion.Timer('StayLoggedIn') > 60000)
-                    {
-                    Orion.UseObject(backpack);
-                    Orion.SetTimer('StayLoggedIn');
-                    }
-                Orion.Wait(500);
-                }
-            Debug('Attempting to start auction');
-            var journalStart = Orion.Now();
-            gump.Select(Orion.CreateGumpHook(106));
-            var journalCheck = Orion.WaitJournal('before starting a new auction.', journalStart, journalStart + 3000, 'sys|oa');
-            Debug('journalCheck: ' + journalCheck);
-            if(journalCheck)
-                {
-                var seconds = Number(journalCheck.Text().match(/\d+/));
-                Debug('Cooldown: ' + seconds + 's')
-                if(seconds > 0)
-                    {
-                    Orion.AddDisplayTimer('idleTimer', seconds * 1000, 'AboveChar', 'Circle|bar', 'Waiting for Idle Timer')
-                    Orion.SetTimer('StayLoggedIn');
-                    Orion.Wait(200);
-                    }
-                Debug('Safe Started: ' + safeSerial);
-                Orion.TestItemColor(safeSerial,checkedHue);
-                safesHash[safeSerial] = true;
-                }
-            else
-                {
-                gump = Orion.GetGump(any, '0x000F3ED6');
-                commandList = gump.CommandList();
-                if(commandList.join().indexOf(' 1156415 ') > -1)
-                    {
-                    Debug('Safe Started: ' + safe[0]);
-                    Orion.TestItemColor(safeSerial,checkedHue);
-                    safesHash[safeSerial] = true;
-                    }
-                else
-                    {
-                    Debug('Timed out, trying again');
-                    i--;
-                    Orion.Wait(200);
-                    continue;
-                    }
-                }
-            }
-        else
-            {
-            Orion.TestItemColor(safeSerial,checkedHue);
-            Debug('Auction already started');
-            }
-        }
-    }
-
-function testreformat()
-    {
-    var string = "1:\nWakizashi of the cat\nWeight: 5 Stones\nAuction Item\nSplintering Weapon 20%\nHit Harm 50%\nHit Lower Defense 50%\nPrized\nEnhance Potions 10%\nLower Mana Cost 4%\nPhysical Damage 100%\nWeapon Damage 10 - 14\nWeapon Speed 2.5s\nStrength Requirement 20\nOne-handed Weapon\nSkill Required: Swordsmanship\nDurability 50 / 50\n* Requires The \"Stygian Abyss\" Expansion\nMajor Magic Item\nBid: 0p 0gp\nB/O: 0p 0gp\n"
-    var split = string.split('Weight:')
-    var split2 = split[0].split(':')
-    var split3 = split2[1]
-    Orion.Print(split3)
-    }
+var debug = false;
 
 function CatalogueSafes()
     {
@@ -214,18 +101,21 @@ function CatalogueSafes()
     Debug("Recording catalogue");
     tmpFile.Write(JSON.stringify(outArr));
     tmpFile.Close();
-    SafeStarter();
+    if(amOwnerFlag)
+        SafeStarter();
     }
 
 function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idleStatus] idleStatus is null if safe is empty and false if auction is running
     {
     Orion.RemoveDisplayTimer('idleTimer');
+    Orion.SetTimer('StayLoggedIn');
     Orion.ClearFakeMapObjects();
     var tmpFilePath = Orion.CurrentScriptDirPath() + fileName;
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var outArr = [];
     var fileString = tmpFile.ReadAll(); 
+    tmpFile.Close();
     if(fileString)
         outArr = JSON.parse(fileString);
     if(outArr.length == 0)
@@ -239,15 +129,19 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
         Orion.TestItemColor(safe[4],'1152')
         });
     var idleSafesLength = idleSafes.length;
+    if(idleSafesLength == 0)
+        return Orion.CharPrint(self,1159,'No idle safes in list');
     var negativeIndex = 0;
     for(var i=0;i<outArr.length;i++)
         {
         var safe = outArr[i];
         if(safe[5] !== true)
             continue;
-        AvoidTeleporters(); 
-        Orion.CharPrint(self,1159,'Idle Safes: ' + negativeIndex + '/' + idleSafesLength + '\nETA: ' + ((idleSafesLength - negativeIndex) * 5) + ' min');
-        negativeIndex++;
+        AvoidTeleporters();
+        var currTimer = Orion.DisplayTimerGetTime('idleTimer') + 1;
+        var idleMins = Math.floor(currTimer / 60000);
+        var eta = ((idleSafesLength - negativeIndex) * 5 + idleMins) + ' min'
+        Orion.CharPrint(self,1159,'Safes started: ' + negativeIndex + '/' + idleSafesLength + '\nETA: ' + eta);
         var safeSerial = safe[4];
         var safeObj = Orion.FindObject(safeSerial);
         var safeX = safeObj.X();
@@ -259,6 +153,15 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                 Orion.WalkTo(safeX,safeY,0,2);
                 Orion.Wait(500);
                 }
+            while(Orion.DisplayTimerExists('idleTimer'))
+                {
+                if(Orion.Timer('StayLoggedIn') > 60000)
+                    {
+                    Orion.UseObject(backpack);
+                    Orion.SetTimer('StayLoggedIn');
+                    }
+                Orion.Wait(500);
+                }
             var gump = Orion.GetGump(any);
             while(gump)
                 {
@@ -267,55 +170,39 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                 Orion.Wait(200);
                 gump = Orion.GetGump(any);
                 }
-            Orion.Wait(200);
-            startTime = 0;
-            while(!Orion.GumpExists('generic', safeSerial, '0x000F3ED6'))
+            var startTime = Orion.Now();
+            gump = Orion.GetGump(any, '0x000F3ED6');
+            while(!gump)
                 {
                 Debug('Catching Gump');
                 Orion.Wait(1300 - (Orion.Now() - startTime))
                 Orion.UseObject(safeSerial);
                 startTime = Orion.Now();
                 Orion.WaitForGump(1300);
+                gump = Orion.GetGump(any, '0x000F3ED6')
                 }
             Debug('Caught');
-            var gump = Orion.GetGump(any, '0x000F3ED6');
             var commandList = gump.CommandList();
             if(commandList && commandList.join().indexOf(' 1156414 ') > -1) //if 'Start Auction' cliloc found
                 {
-                while(Orion.DisplayTimerExists('idleTimer'))
-                    {
-                    if(Orion.Timer('StayLoggedIn') > 60000)
-                        {
-                        Orion.UseObject(backpack);
-                        Orion.SetTimer('StayLoggedIn');
-                        }
-                    Orion.Wait(500);
-                    }
                 Debug('Attempting to start auction');
-                var journalStart = Orion.Now();
+                var journalStart = Orion.Now() - 500;
+                var journalEnd = journalStart + 3500;
                 gump.Select(Orion.CreateGumpHook(106));
-                var journalCheck = Orion.WaitJournal('before starting a new auction.', journalStart, journalStart + 3000, 'sys|oa');
+                var journalCheck = Orion.WaitJournal('before starting a new auction.', journalStart, journalEnd, 'sys|oa');
                 Debug('journalCheck: ' + journalCheck);
                 if(journalCheck)
                     {
                     var seconds = Number(journalCheck.Text().match(/\d+/));
-                    Debug('Cooldown: ' + seconds + 's')
                     if(seconds > 0)
                         {
-                        Orion.AddDisplayTimer('idleTimer', seconds * 1000, 'AboveChar', 'Circle|bar', 'Waiting for Idle Timer')
+                        Orion.AddDisplayTimer('idleTimer', seconds * 1000, 'AboveChar', 'Circle|bar', 'Waiting for Cooldown');
                         Orion.SetTimer('StayLoggedIn');
+                        Debug('Cooldown: ' + seconds + 's');
+                        i--;
                         Orion.Wait(200);
+                        continue;
                         }
-                    Debug('Safe Started: ' + safeSerial);
-                    Orion.TestItemColor(safeSerial,safeObj.Color());
-                    safe[5] = true;
-                    tmpFile = Orion.NewFile();
-                    tmpFile.Remove(tmpFilePath);
-                    tmpFile.Open(tmpFilePath);
-                    Orion.Print("Recording To File: " + tmpFilePath); 
-                    Debug("Recording catalogue");
-                    tmpFile.Write(JSON.stringify(outArr));
-                    tmpFile.Close();
                     }
                 else
                     {
@@ -324,8 +211,9 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                     if(commandList.join().indexOf(' 1156415 ') > -1)
                         {
                         Debug('Safe Started: ' + safe[0]);
-                        Orion.TestItemColor(safeSerial,safeObj.Color());
-                        safe[5] = true;
+                        Orion.TestItemColor(safeSerial,'0');
+                        safe[5] = false;
+                        negativeIndex++;
                         tmpFile = Orion.NewFile();
                         tmpFile.Remove(tmpFilePath);
                         tmpFile.Open(tmpFilePath);
@@ -338,7 +226,6 @@ function SafeStarter() //[index, itemInfoString, saleItemSerial, safeSerial, idl
                         {
                         Debug('Timed out, trying again');
                         i--;
-                        negativeIndex--;
                         Orion.Wait(200);
                         continue;
                         }
@@ -545,6 +432,8 @@ function ASCII_Input()
 
 function Debug(msg)
     {
+    if(!debug)
+        return
     if(!TextWindow.IsOpened())
         TextWindow.Open();
     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);

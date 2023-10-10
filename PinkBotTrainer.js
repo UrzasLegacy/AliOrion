@@ -34,7 +34,7 @@ function TrainEvalResist()
 		 Orion.Wait(800);	 
 		}
 	}
-	
+
 function TrainNinjitsuTo60()
 	{ //cast mirror image, ready focus attack, attack mirror image. You need a melee weapon equipped
 	Orion.Exec('SkillGump', true, ['Ninjitsu', 'TrainNinjitsuTo60']);

@@ -1379,10 +1379,12 @@ function BribePossible(npcSerial)
 
 function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
     {
-    if(!colorID)
-        var colorID = any;
-    if(!destinationContainerSerial)
-        var destinationContainerSerial = Orion.GetSerial(backpack);
+    if(colorID == undefined)
+        colorID = any;
+    if(destinationContainerSerial == undefined)
+        destinationContainerSerial = Orion.GetSerial(backpack);
+    if(amount == undefined)
+        amount = 0;
     while(!Orion.GumpExists('container', supplyContainerSerial))
         {
         Orion.CharPrint(self,1159,'Opening Supply Container');
@@ -1394,16 +1396,16 @@ function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, de
         }
     while(!Orion.GumpExists('container', destinationContainerSerial))
         {
+        Orion.CharPrint(self,1159,'Opening Destination Container');
         Orion.UseObject(destinationContainerSerial);
         Orion.Wait(1300);
         }
     var needed = amount - Orion.Count(graphicID, colorID, destinationContainerSerial, 0, false);
     var restockItem = Orion.FindType(graphicID, colorID, supplyContainerSerial);
-    if((needed > 0 || amount == 0) && !restockItem[0])
+    if((needed > 0 || amount == 0) && !restockItem.length)
         {
         TextWindow.Open();
         TextWindow.Print("Couldn't restock item: " + itemName);
-        Orion.Wait(100);
         return false;
         }
     if(amount === 0)
@@ -1416,7 +1418,6 @@ function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, de
         Orion.MoveItem(restockItem[0], needed, destinationContainerSerial);
         Orion.Wait(1300);
         }
-    Orion.Wait(100);
     return true;
     }
 

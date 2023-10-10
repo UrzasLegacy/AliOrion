@@ -2,25 +2,25 @@ function SortInputToBag(input)
 	{
 	if (input == false)
 		input = ' '
-	Orion.CharPrint(self, 27, 'Target Source Bag');
-	Orion.WaitForAddObject('sourcebag')
+	Orion.CharPrint(self, 1159, 'Target Source Bag');
+	Orion.WaitForAddObject('sourcebag');
 	var items = Orion.FindTypeEx(any, any, 'sourcebag').filter(function (part) 
-					{
-	                return (Orion.Contains(part.Properties(), input))
-	                })
-	Orion.CharPrint(self, 27, 'Target Destination Bag');
+		{
+		return (Orion.Contains(part.Properties(), input));
+		})
+	Orion.CharPrint(self, 1159, 'Target Destination Bag');
 	Orion.WaitForAddObject('destbag');
 	for(i=0;i<items.length;i++)
 		{
 		Orion.MoveItem(items[i].Serial(), 0, 'destbag');
-		Orion.Wait(1100);
+		Orion.Wait(1300);
 		}
 	}
 
 function TextEntryGumpCallback(unused)
 	{
 	var code = CustomGumpResponse.ReturnCode();
-	//Orion.Print('Custom gump response code = ' + code);
+	Orion.Print('Custom gump response code = ' + code);
 	if (code == 0)
 		{
 		var gump = Orion.CreateCustomGump(1);
@@ -30,7 +30,6 @@ function TextEntryGumpCallback(unused)
 		{
 		var gump = Orion.CreateCustomGump(1);
 		var texts = CustomGumpResponse.Texts();
-		//gump.Close();
 		SortInputToBag(texts[0].Text());
 		}
 	}

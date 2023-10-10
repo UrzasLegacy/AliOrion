@@ -399,38 +399,38 @@ function GMScan()
 		}
 	}
 
-function GMScan()
-	{
-	var bot = "https://discordapp.com/api/webhooks/"
-        + '941921319463841843' //hook
-        + "/"
-        + '7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI'; //key
-    var paramText = "content=" + Player.Name() + ": GM";
-	var msg = 'GM';
-	while(true)
-		{
-		var check = Orion.WaitJournal(msg, Orion.Now(), 0);
-		Orion.Wait(100);
-        var checkarr = Orion.Split(check.Text(), ' ');
-		for(i = 0;i<checkarr.length;i++)
-			{
-			switch(checkarr[i])
-				{
-				case 'GM':
-					Orion.HttpPost(bot, paramText);
-					//Orion.PlayWav('Alarm09.wav');
-					Orion.PauseScript('all', 'GMScan');
-                    Orion.Wait(1000);
-                    Orion.StopWalking();
-					Orion.OAOptionSet('AutoReconnect', '0');
-					Orion.Wait(2000);			
-					break;	
-				default:
-					break;
-				}
-			}
-		}
-	}
+// function GMScan()
+// 	{
+// 	var bot = "https://discordapp.com/api/webhooks/"
+//         + '941921319463841843' //hook
+//         + "/"
+//         + '7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI'; //key
+//     var paramText = "content=" + Player.Name() + ": GM";
+// 	var msg = 'GM';
+// 	while(true)
+// 		{
+// 		var check = Orion.WaitJournal(msg, Orion.Now(), 0);
+// 		Orion.Wait(100);
+//         var checkarr = Orion.Split(check.Text(), ' ');
+// 		for(i = 0;i<checkarr.length;i++)
+// 			{
+// 			switch(checkarr[i])
+// 				{
+// 				case 'GM':
+// 					Orion.HttpPost(bot, paramText);
+// 					//Orion.PlayWav('Alarm09.wav');
+// 					Orion.PauseScript('all', 'GMScan');
+//                     Orion.Wait(1000);
+//                     Orion.StopWalking();
+// 					Orion.OAOptionSet('AutoReconnect', '0');
+// 					Orion.Wait(2000);			
+// 					break;	
+// 				default:
+// 					break;
+// 				}
+// 			}
+// 		}
+// 	}
     
 function Scurry(_)
 	{

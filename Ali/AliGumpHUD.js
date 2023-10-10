@@ -13,15 +13,15 @@
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 
 
-// var gumpAssets = 
-// [
-//     [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
-//     [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
-//     [ ['text','Sample Text Here',554,1,1] ],
-//     [ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
-//     [ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
-//     [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
-// ];
+var gumpAssets = 
+[
+    [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
+    [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
+    [ ['text','Sample Text Here',554,1,1] ],
+    [ ['textInput','Ignore Mobs'],['horizontalLine',30,0,0,'#FF660066',2],['verticalLine',30,0,0,'#FF660066',10] ],
+    [ ['comboBox', 'Single Target', 'Primary', 'Secondary'], ['comboBox', 'Two Targets', 'Primary', 'Secondary'], ['comboBox', 'Multi Target', 'Primary', 'Secondary']],
+    [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
+];
 
 function AliGumpRenderer() 
 	{
@@ -69,7 +69,7 @@ function AliGumpRenderer()
                     break;
                 case 'text':
                     var string = ele[1];
-                    var xAdj = ele[2];
+                    var xAdj = ele[3];
                     widthAdjust = (string.length * characterAdj) + xAdj// + 20;
                     break;
                 case 'horizontalLine':
@@ -77,7 +77,7 @@ function AliGumpRenderer()
                     break;
                 case 'verticalLine':
                     widthAdjust = ele[5];
-                    heightAdjust += ele[1];
+                    heightAdjust += ele[3];
                     break;
                 case 'xSpacer':
                     widthAdjust = ele[1];

@@ -31,7 +31,7 @@ var buttons = //xsize ysize CallBackID Text FunctionName
 
 function Gump()
     {
-    Orion.Exec('GMJournalScan',true);
+    Orion.Exec('GMScan',true);
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
     gump.SetCallback('GumpCallback');
@@ -585,46 +585,50 @@ function DiscordKeyInitialize()
     file.Close();
     }
 
-function GMJournalScan()
-    {
-    var file = Orion.NewFile();
-    var endTime = Orion.Now() + 5000;
-    while(!file.Opened() && Orion.Now() < endTime)
-        {
-        file.Open('discordkey.conf');
-        Orion.Wait(500);
-        }
-    var hook = file.Read();
-    var key = file.Read();
-    file.Close();
-    var bot = "https://discordapp.com/api/webhooks/" + hook + "/" + key;
-    var paramText = "content=" + Player.Name() + ": GM";
-    var msg = 'GM';
-    while(true)
-        {
-        var check = Orion.WaitJournal(msg, Orion.Now(), 0, ' ');
-        Orion.Wait(100);
-        var checkarr = Orion.Split(check.Text(), ' ');
-        for(i = 0;i<checkarr.length;i++)
+function GMScan()
+	{
+	var useDiscordPush = true//profile.useDiscordPush;
+	var useAlarmSound = true//profile.useAlarmSound;
+    var closeUO = false;
+    var timeStamp = 0;
+    var gmCheck;
+	while(true)
+		{
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
             {
-            switch(checkarr[i])
-                {
-                case 'GM':
-                    Orion.HttpPost(bot, paramText);
-                    //Orion.PlayWav('Alarm09.wav');
-                    Orion.PauseScript('all', 'GMJournalScan');
-                    Orion.Wait(1000);
-                    Orion.StopWalking();
-                    Orion.OAOptionSet('AutoReconnect', '0');
-                    Orion.Wait(2000);			
-                    break;	
-                default:
-                    break;
-                }
-            }
-        }
-    }
-
+            return mob.Properties().indexOf('GM ') > -1;
+            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();    
+        if(gmCheck)
+            {
+			 if(useDiscordPush)
+			    DiscordPush(Player.Name() + ": GM");
+			if(useAlarmSound)
+			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+			Orion.PauseScript('all','GMScan');
+			Orion.Wait(500);
+			Orion.Terminate('all', 'GMScan');
+			Orion.StopWalking();
+			Orion.Wait(5000);
+			if(closeUO)
+			    {
+			    Orion.OAOptionSet('AutoReconnect', '0');
+			    Orion.CloseUO();
+			    }
+			}
+        Orion.Wait(3000);
+		}
+	}
+function DiscordPush(msg)
+	{
+	var bot = "https://discordapp.com/api/webhooks/"
+        + '887268637315047444' //hook
+        + "/"
+        + 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //key
+    var paramText = "content=" + msg;
+	Orion.HttpPost(bot, paramText);
+	}
+	
 function RecallByGump(bookName,runeName,backupBook,backupRune) 
     {
     //create global variable runeIndex to increment through the book starting from 1

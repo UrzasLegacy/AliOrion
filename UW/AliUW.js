@@ -2675,7 +2675,7 @@ function GoldCheck(_)
 function DurabilityCheck(_)
     {
     //Orion.CharPrint(self,1159,'Checking equipment durability...');
-    var durabilityThreshold = 80
+    var durabilityThreshold = 50
     var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
     Orion.Print("Repair threshold set at: " + durabilityThreshold)
     for(var i=1;i<layers.length;i++)
