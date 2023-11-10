@@ -14,6 +14,7 @@ function PlayerDetector()
 		{
 		var startTime = Orion.Now();
 		//Orion.UseIgnoreList('PlayerDetectorIgnoreList');
+		//remove human flag and use these instead of any for graphic? '0x0190|0x0191|0x0192|0x0193|0x03DB|0x03DF|0x03E2|0x0084|0x00F6|0x00DC|0x0051|0x00D9|0x007A|0x0019|0x00DB|0x0015|0x00C9|0x00EE|0x00CD|0x04E6|0x0059|0x00B7|0x00B8|0x00B9|0x00BA|0x025D|0x025E|0x025F|0x0260|0x029A|0x029B|0x02B6|0x02B7|0x03DB|0x03DF|0x03E2'
 		var players = Orion.FindTypeEx(any,any,ground,'human|live|ignoreself',24,'blue|green|red|orange|gray')
 			.filter(function(npcCheck)
 				{
@@ -21,7 +22,7 @@ function PlayerDetector()
 					Orion.GetProfile(npcCheck.Serial());
 				//if(!npcCheck.ProfileReceived())
 				//	Orion.AddIgnoreListObject('PlayerDetectorIgnoreList', npcCheck.Serial());
-				return npcCheck.ProfileReceived();
+				return npcCheck.ProfileReceived() // || npcCheck.Dead();
 				});
 		//Orion.ResetIgnoreList();
 		var playerSerialList = players.map(function(obj){return obj.Serial()});

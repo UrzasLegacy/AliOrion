@@ -451,19 +451,19 @@ function TrainNinjitsuTo60()
 		WaitPingAdjusted(10);
 		}
 	}
+
 function TrainNinjitsu60to100()
 	{//stand somewhere you can reliably shadowjump
+	var waitTime = 600; //adjust to ping
 	Orion.ClientOptionSet('AlwaysRun', 0);
-	Orion.Exec('SkillGump', true, ['Ninjitsu', 'TrainNinjitsu60to100']);
 	var x1 = Player.X();
 	var x2 = Player.X()-1;
 	while(!Player.Dead())
 		{
-		Orion.ResumeScript('SkillGump');
 		if(!Player.Hidden())
 			{
 			Orion.UseSkill('Hiding');
-			WaitPingAdjusted(0);
+			Orion.Wait(200);
 			if(Player.X() == x1)
 				Orion.Step('w',false);
 			else
@@ -477,11 +477,11 @@ function TrainNinjitsu60to100()
 				Orion.TargetTile('land', x2, Player.Y(), Player.Z());
 			else
 				Orion.TargetTile('land', x1, Player.Y(), Player.Z());
-			WaitPingAdjusted(600);
+			Orion.Wait(waitTime);
 			}
 		else if(Orion.SkillValue('Meditation') > 400)
         	{
-        	WaitPingAdjusted(500);
+        	Orion.Wait(500);
             while(Player.Mana() < Player.MaxMana()) 
 				{
 				Orion.Wait(1000);

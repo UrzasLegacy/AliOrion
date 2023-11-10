@@ -165,7 +165,9 @@ var profiles =
 		}
 	}
 
+
 var profile = profiles.Oni;
+
 var lootItems = {};
 function AutoConfidence()
 	{
@@ -342,7 +344,7 @@ function AutoRearm()
             }
         while(!Orion.ObjAtLayer(wepString) && !Player.Dead())
             {
-            Orion.Equip(wep.Serial());
+            Orion.Equip(wep.Serial());	
             Orion.Wait(1300);
             }
         Orion.Wait(500);
@@ -700,7 +702,7 @@ function AutoGatherMobs()
 		GatherMobs();
 		Orion.Wait(500);
 		}
-	}	
+	}
 
 function GatherMobs()
 	{
@@ -2060,7 +2062,7 @@ function BuyHorse()
     while(!Orion.ObjAtLayer('Mount'))
         {
         Orion.Say('all follow me');
-        Orion.UseObject(horsey.Serial())
+        Orion.UseObject(horsey.Serial());
         Orion.Wait(1300);
         }
     }

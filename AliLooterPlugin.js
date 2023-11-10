@@ -139,7 +139,7 @@ function MoveAllJewelBySkill(skillIntTarget)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Archery:true,Healing:true,
+        Throwing:true,Archery:true,Healing:true,Musicianship:true,Discordance:true,
         }
     Orion.CharPrint(self,1159,"Select 'From' container");
 	Orion.WaitForAddObject('myTarget');
@@ -741,8 +741,8 @@ function JewelryModSearch()
         savedSearches = JSON.parse(fileString);
     var skills =
         [
-        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
-        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','Discordance','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Musicianship','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
         'Clear'
         ]
     var mods = 
@@ -864,8 +864,8 @@ function JewelryModSearchCallback(_)
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
     var skills =
         [
-        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
-        'Magery','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
+        'Anatomy','AnimalLore','AnimalTaming','Archery','Bushido','Chivalry','Discordance','EvaluateIntelligence','Fencing','Focus','Healing','MaceFighting',
+        'Magery','Musicianship','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
         'Clear',
         ]
     var mods = 
@@ -1694,7 +1694,7 @@ function CountJewelryOvercaps(propertiesObj)
         MaceFighting:15,Fencing:15,Swordsmanship:15,SwingSpeedIncrease:10,DamageIncrease:25,
         FasterCasting:1,Tactics:15,StaminaIncrease:5,Necromancy:15,FasterCastRecovery:3,
         AnimalTaming:15,AnimalLore:15,SpiritSpeak:15,Chivalry:15,Stealth:15,
-        Archery:15,Healing:15,Throwing:15,
+        Archery:15,Healing:15,Throwing:15,Musicianship:15,Discordance:15,
         Magery:15,Wrestling:15,Focus:15,EvaluateIntelligence:15,
         Mysticism:15,SpellDamageIncrease:18,LowerReagentCost:25,
         }
@@ -1714,7 +1714,7 @@ function KeepJewelry(propertiesObj,props)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Healing:true, Archery:true,Meditation:true,
+        Throwing:true,Healing:true, Archery:true,Meditation:true,Musicianship:true,Discordance:true,
         }
     // var statMods = 
     //     {
@@ -1737,7 +1737,7 @@ function KeepJewelry(propertiesObj,props)
         HitChanceIncrease:true,DefenseChanceIncrease:true,LowerManaCost:true,ManaIncrease:true,Meditation:true,
         MaceFighting:true,Fencing:true,Swordsmanship:true,SwingSpeedIncrease:true,DamageIncrease:true,
         FasterCasting:true,Tactics:true,StaminaIncrease:true,Necromancy:true,FasterCastRecovery:true,
-        AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Chivalry:true,Stealth:true,
+        AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Chivalry:true,Stealth:true,Musicianship:true,Discordance:true,
         }
     if(propertiesObj['Chivalry'] == 20 && propertiesObj['FasterCasting'] && propertiesObj['FasterCastRecovery'])
         return '1/3 +20 Chiv Samp Jewel';
@@ -2044,10 +2044,10 @@ function parseJewelryProperties(jewelryProperties)
         Necromancy:true,Archery:true,Chivalry:true,Healing:true,Ninjitsu:true,Throwing:true,ResistingSpells:true,ManaIncrease:true,
         StaminaIncrease:true,StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,ManaRegeneration:true,EnhancePotions:true,
         HitChanceIncrease:true,DefenseChanceIncrease:true,SwingSpeedIncrease:true,DamageIncrease:true,SpellDamageIncrease:true,
-        FasterCastRecovery:true,FasterCasting:true,LowerManaCost:true,LowerReagentCost:true,
+        FasterCastRecovery:true,FasterCasting:true,LowerManaCost:true,LowerReagentCost:true,Musicianship:true,Discordance:true,
         //bad mods
-        NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,Musicianship:true,
-        Provocation:true,Meditation:true,Discordance:true,Veterinary:true,Stealing:true,Peacemaking:true
+        NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,
+        Provocation:true,Meditation:true,Veterinary:true,Stealing:true,Peacemaking:true
         }
     var lines = jewelryProperties.split("\n");
     var modsObj = {};
@@ -2368,7 +2368,7 @@ function PutAwayJewelry(jewelry)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Archery:true,Healing:true,Meditation:true
+        Throwing:true,Archery:true,Healing:true,Meditation:true,Musicianship:true,Discordance:true
         }
     var jewelryArr = [[],[],[],[],[],[]];
     for(var i=0;i<jewelry.length;i++)
@@ -2471,7 +2471,7 @@ function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //30
         var container = containers[i];
         if(!container)
             Orion.Print(container);
-        Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,container.Serial(),'item', 'finddistance', '').forEach(function(item)
+        Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,container.Serial(),'item', 'finddistance', '',true).forEach(function(item)
             {
             items.push(item);
             });
@@ -2485,6 +2485,7 @@ function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //30
         var itemObj = Orion.FindObject(item);
         var itemProps = itemObj.Properties();
         var itemPropsObject = parseJewelryProperties(itemProps);
+        //Orion.Print(JSON.stringify(itemPropsObject))
         var bool = AliCompareJewels(itemPropsObject,skillsThreshold,skillsSearchObject,modsSearchObject);
         if(!bool)
             Orion.TestItemColor(item,itemObj.Color());
@@ -2731,6 +2732,27 @@ function calculateTemplateValues(mods,templateName)
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.27,
             'SwingSpeedIncrease':1.25,'DamageIncrease':.24,'LowerReagentCost':.4
             },
+        MeleeDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Fencing':.53,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
+            },
+        MysticMacerDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Mysticism':.83,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.4,'LowerReagentCost':.4
+            },  
+        SwordsArcherDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Swordsmanship':.83,'Archery':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
+            },  
         }
     var skillMods = 
         {
@@ -2738,7 +2760,7 @@ function calculateTemplateValues(mods,templateName)
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
         Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
-        Throwing:true,Healing:true, Archery:true,
+        Throwing:true,Healing:true, Archery:true,Musicianship:true,Discordance:true
         }
     var specialBonus = 
         {
@@ -3368,6 +3390,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
         excludeString = excludeString.slice(0,-1)
     var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
         {
+        Orion.Print(item.Name())
         return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
         });
     var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
@@ -3382,6 +3405,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
             var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
             return npcPack;
             });
+    Orion.Print(groundContainers.length)
     var containers = groundContainers.concat(packContainers).concat(npcContainers);
     var items = [];
     for(var i=0;i<containers.length;i++)
