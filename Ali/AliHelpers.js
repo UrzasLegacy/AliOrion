@@ -141,6 +141,17 @@ function VerifyOpenVendor(vendorSerial,vendorPack,delay)
     return true;
     }
 
+function CheckGumpCliloc(gumpID, clilocID)//check if clilocID is in gump. Return 1 if it is, 0 if not, and null if gump isn't found. 
+    {
+    if(Orion.WaitForGump(2000))
+        {
+        var gump = Orion.GetGump(any, gumpID)
+        if(gump !== null)
+            return gump.CommandList().filter(function(commandText){return Orion.Contains(commandText, clilocID)}).length;
+        }
+    return null;
+    }
+
 function PinkGumpButton(button, ms)
     {
     if(!ms)
