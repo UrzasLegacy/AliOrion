@@ -1,6 +1,6 @@
 function Main()
     {
-    var dyeTheTubs = true;
+    var dyeTheTubs = false;
     Orion.CharPrint(self,1159,'Select your supply container');
     Orion.WaitForAddObject('myTarget');
     var supplyContainerObj = Orion.FindObject('myTarget');
@@ -47,13 +47,16 @@ function MakeTrapBox(supplyContainer,storageContainer,dyeTheTubs)
     MageUnlock(crateSerial);
     while(crateInBackpack.Graphic() != _item.Crate.EastWest.Graphic)
         ToggleCrateState(crateSerial);
-    var currentColor = crateInBackpack.Color();
-    while(dyeTheTubs && crateInBackpack.Color() == currentColor)
+    if(dyeTheTubs)
         {
-        Orion.UseType(_item.DyeTub.Graphic);
-        if(Orion.WaitForTarget(3000))
-            Orion.TargetObject(crateSerial);
-        Orion.Wait(1300);
+        var currentColor = crateInBackpack.Color();
+        while(crateInBackpack.Color() == currentColor)
+            {
+            Orion.UseType(_item.DyeTub.Graphic);
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(crateSerial);
+            Orion.Wait(1300);
+            }
         }
     while(crateInBackpack.Container() == Orion.GetSerial(backpack))
         {
@@ -134,20 +137,29 @@ function CraftSmallCrate(supplyContainer)
                 }
             }
         Orion.CharPrint(self,1159,'Crafting Carpenter Tool');
-        CraftItem(tinkerToolGraphic, 9003, 10); 
+        CraftItem(tinkerToolGraphic, 9003, 10);
         }
     if(Orion.Count(boardGraphic, '0x0000', backpack, 0, false) < 10)
         {
         if(!Restock('Boards', boardGraphic, supplyContainer, 100, '0x0000'))
             return Orion.Terminate('all', 'GMScan');
         }
+    var startTime = Orion.Now();
     CraftItem(carpenterToolGraphic,9003,98); 
     Orion.Wait(1300);
-    var crate = Orion.FindTypeEx("0x0E7E|0x09A9")[0]
-    if(crate && !Orion.Contains(crate.Properties(),'Exceptional') && Orion.UseType(_item.Axe.Graphic) && Orion.WaitForTarget(2000))
+    var crate = Orion.FindTypeEx("0x0E7E|0x09A9")[0];
+    if(crate)
         {
-        Orion.TargetObject(crate.Serial());
-        Orion.Wait(500);
+        if(Orion.InJournal("Your tinker skill was insufficient to make the item lockable",'',0,any,startTime,Orion.Now()) || !Orion.Contains(crate.Properties(),'Exceptional'))
+            {
+            while(crate)
+                {
+                if(Orion.UseType(_item.Axe.Graphic) && Orion.WaitForTarget(2000))
+                    Orion.TargetObject(crate.Serial());
+                Orion.Wait(1300);
+                crate = Orion.FindTypeEx("0x0E7E|0x09A9")[0]
+                }
+            }
         }
     }
 
