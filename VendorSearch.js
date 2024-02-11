@@ -219,7 +219,11 @@ function VSTarget()
 		{
 		return b.length - a.length;
 		})
-	var searchString = split[0] + ' ' + split[1] + ' ' + split[2]
+	var searchString = split[0]
+	if(split[1])
+		searchString += " " + split[1]
+	if(split[2])
+		searchString += " " + split[2]
 	VSsearch(searchString);
 	}
 

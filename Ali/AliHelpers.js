@@ -270,6 +270,7 @@ function CloseAllGumps()
         }
     }
 
+
 function EquipWep(slayer, element, weapon, cameo)
 	{ //EquipWep('Reptile', 'Cold', 'Double Axe')
 	if(!slayer)
@@ -780,15 +781,11 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     if(openDoor === undefined) openDoor = 1;
     if(maxWalkingTime === undefined) maxWalkingTime = 300000;
     if(pathMarkers === undefined) pathMarkers = false;
-
     if(typeof startCallBackFn == 'function')
-        {
         startCallBackFn();
-        }
     var playerX = Player.X();
     var playerY = Player.Y();
     var zeroMovement = playerX == x && playerY == y;
-    Orion.Print('zeroMovement: ' + zeroMovement)
     var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
     if(pathMarkers)
         Orion.ClearFakeMapObjects();
@@ -820,13 +817,8 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
         Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
         Orion.Wait(1);
         }
-
     if(typeof endCallBackFn == 'function')
-        {
-        if(endCallBackFn())
-            return 'Hydra';
-        }
-
+        endCallBackFn()
     if(!zeroMovement && Orion.GetDistance(shortX,shortY) > 0)
         return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
     return true;

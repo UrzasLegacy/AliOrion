@@ -1,4 +1,10 @@
 //#include OA/AliLooterPlugin.js
+var leaderPort = 40420
+var followerPort = 39999
+
+// var leaderPort = 50420
+// var followerPort = 49999
+
 //Settings and Pregame Setup
     //I will walk you through all of this as necessary, but I wanted to write everything down for you as well.
 
@@ -1134,7 +1140,7 @@ function GetKeys()
     Orion.Wait(500);
     EquipBossSuitByBotName();
     Orion.Exec('StayLoggedIn',true);
-    Orion.UdpSend(40420,'HaveKeys');
+    Orion.UdpSend(leaderPort,'HaveKeys');
     }
 
 function ClearRoom()
@@ -1295,7 +1301,7 @@ function UWHealLeader()
     var nextDiscord = 0;
     var playerSerial = Player.Serial();
     var activeHealers = Shared.GetArray('healer',[]);
-    activeHealers.push([40420,playerSerial,Player.Name(),'leader'])
+    activeHealers.push([leaderPort,playerSerial,Player.Name(),'leader'])
     if(isBard)
         Orion.Exec('AsyncDiscord',true);
     while(true)
@@ -2113,7 +2119,7 @@ function KeyCheck()
         else
             var _pName = Player.Name();
         Debug2('Sends ' + keyCheck + ' Keycheck: ' + _pName);
-        Orion.UdpSend(40420,'KeyCheck:' + _pName);
+        Orion.UdpSend(leaderPort,'KeyCheck:' + _pName);
         }
     }
 
@@ -2538,7 +2544,7 @@ function GMScan()
         gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
             {
             return mob.Properties().indexOf('GM ') > -1;
-            }).length || Orion.InJournal('GM ', '', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
         timeStamp = Orion.Now();    
         if(gmCheck)
             {
@@ -3421,7 +3427,7 @@ function AliComLeader()
     {
     Shared.AddVar('myRole','leader');
     Orion.RemoveAllUdpServers();
-    var port = 40420;
+    var port = leaderPort;
     var create = Orion.CreateUdpServer('Coms', port);
     if(create != 0)
         return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
@@ -3528,10 +3534,11 @@ function AliComFollower()
         'UltraTerminate':true,
         }
     Orion.RemoveAllUdpServers();
-    var port = 39999;
+    var port = followerPort;
+    var lastPort = followerPort + 100;
     var create = 1;
     var endTime = Orion.Now() + 5000;
-    while(create != 0 && Orion.Now() < endTime && port < 40099) 
+    while(create != 0 && Orion.Now() < endTime && port < lastPort) 
         {
         create = Orion.CreateUdpServer('Coms', ++port);
         Orion.Wait(10);
@@ -3548,7 +3555,7 @@ function AliComFollower()
     Orion.CharPrint(self,1159,'Sending signal to leader');
     var outStr = 'Check:' + playerString + ':' + port;
     Debug2('Sending signal to leader: ' + JSON.stringify(outStr));
-    Orion.UdpSend(40420,outStr); //[cmd,[playerSerial,playerName,role],port]
+    Orion.UdpSend(leaderPort,outStr); //[cmd,[playerSerial,playerName,role],port]
     Orion.Wait(200);
     var pulseTime = Orion.Now() + 2000;
     while(true)
@@ -3566,7 +3573,7 @@ function AliComFollower()
             {
             Debug2('Retrying connection to leader: ' + JSON.stringify(outStr));
             Orion.CharPrint(self,1159,'Retrying connection to leader');
-            Orion.UdpSend(40420,outStr);
+            Orion.UdpSend(leaderPort,outStr);
             pulseTime = Orion.Now() + 5000;
             }
         }
@@ -3608,7 +3615,7 @@ function AwaitPing(_)
     if(Shared.GetVar('Desync',false))
         {
         Orion.CharPrint(self,1159,'Answering Call')
-        Orion.UdpSend(40420,'AnswerCall:' + Player.Serial());
+        Orion.UdpSend(leaderPort,'AnswerCall:' + Player.Serial());
         }
     }
 
@@ -3674,7 +3681,7 @@ function CureTarget(serial)
             {
             if(!obj.Poisoned())
                 {
-                var poisonCheck = Orion.FindTypeEx(any, any, ground, 'ignoreself|live', 10, 'green').filter(function(part)
+                var poisonCheck = Orion.FindTypeEx(any, any, ground, 'ignoreself|live', 10, 'green|blue').filter(function(part)
                     {
                     return part.Poisoned();
                     })[0];

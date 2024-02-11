@@ -458,6 +458,59 @@ function AutoInsure()
 		}
 	}
 
+    
+function AutoInsureInContainer() 
+    {
+    Orion.CharPrint(self,1159, "Target container with items you wish to uninsure")
+    Orion.WaitForAddObject('myTarget')
+    var container = Orion.GetSerial('myTarget')
+    var items = Orion.FindTypeEx(any,any,container).filter(function(props)
+        {
+        return !Orion.Contains(props,'insured')
+        })
+    while(items.length)
+        {
+        if(!Orion.HaveTarget())
+            {
+            Orion.WaitContextMenuID(self, 418);
+            Orion.RequestContextMenu(self);
+            }
+        if(Orion.WaitForTarget(2000))
+            Orion.TargetObject(items[0].Serial());
+        Orion.WaitForTarget(100)
+        Orion.Wait(100);
+        }
+    if(Orion.WaitForTarget(2000))
+        Orion.CancelTarget();
+    }
+
+function AutoUnInsureInContainer() 
+	{
+    Orion.CharPrint(self,1159, "Target container with items you wish to uninsure")
+    Orion.WaitForAddObject('myTarget')
+    var container = Orion.GetSerial('myTarget')
+    var items = Orion.FindTypeEx(any,any,container).filter(function(props)
+        {
+        return Orion.Contains(props,'insured')
+        })
+	while(items.length)
+		{
+	    if(!Orion.HaveTarget())
+	    	{
+			Orion.WaitContextMenuID(self, 418);
+    		Orion.RequestContextMenu(self);
+			}
+        if(Orion.WaitForTarget(2000))
+            Orion.TargetObject(items[0].Serial());
+        Orion.WaitForTarget(100)
+		Orion.Wait(100);
+		}
+    if(Orion.WaitForTarget(2000))
+        Orion.CancelTarget();
+	}
+
+
+
 function BagOfSendingGold() 
 	{
     var goldLimit = 58000;

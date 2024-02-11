@@ -13,7 +13,7 @@ var BuyRegsUntilHave = 1000000; //Buy reagents until you have at least this many
 var reagentMaxPurchasePrice = 25;  //Ignore reagents more expensive than this
 
 
-var numRunes = 15; //set to the number of rune locations to rotate through
+var numRunes = 15; //set to the number of rune locations to rotate through when purchasing bottles or regs
 
 //No edit
 var runeIndex = '1';
@@ -570,24 +570,9 @@ const reag = {
     GD: '0x0F8F',
     }
 
-function DiscordKeyInitialize()
-    {
-    var hook = '999457009227280446'
-    var key = 'X_5lXqC-IOh-z1EBVmVDTSTiQhHUUkvikbI2ikEaOBlh5BYUeArrqOK4qG5mB3-yVhTj'
-    var file = Orion.NewFile();
-    var endTime = Orion.Now() + 5000;
-    while(!file.Opened() && Orion.Now() < endTime)
-        {
-        file.Open('discordkey.conf');
-        Orion.Wait(500);
-        }
-    file.Write(hook + ' ' + key);
-    file.Close();
-    }
-
 function GMScan()
 	{
-	var useDiscordPush = true//profile.useDiscordPush;
+	var useDiscordPush = false//profile.useDiscordPush;
 	var useAlarmSound = true//profile.useAlarmSound;
     var closeUO = false;
     var timeStamp = 0;
@@ -619,12 +604,13 @@ function GMScan()
         Orion.Wait(3000);
 		}
 	}
+
 function DiscordPush(msg)
 	{
 	var bot = "https://discordapp.com/api/webhooks/"
-        + '887268637315047444' //hook
+        + '' //hook
         + "/"
-        + 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //key
+        + ''; //key
     var paramText = "content=" + msg;
 	Orion.HttpPost(bot, paramText);
 	}

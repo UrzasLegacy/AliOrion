@@ -1,0 +1,4132 @@
+//#include OA/AliLooterPlugin.js
+
+var leaderPort = 40420
+var followerPort = 39999
+
+// var leaderPort = 50420
+// var followerPort = 49999
+
+//Settings and Pregame Setup
+    //I will walk you through all of this as necessary, but I wanted to write everything down for you as well.
+
+    //Leaders
+        //Choose one of your healers to act as the central coordinator of the whole operation. Type "_info" ingame without the quotes and target your character to get your serial number
+        var leadHealerSerial = '0x0060404A';
+        //Choose one of your samps to get honor on the boss. This samp will also ignore wisps and stick to the boss to ensure maximum damage
+        var leadSampSerial = '0x006036C4';
+
+    //Discord
+        //You will need to set up a private Discord server for your notifications. Once you have this set up, you will go to the settings for your server:
+        //Settings > Integrations > View Webhooks > New Webhook > Click the newly created webhook > Copy Webhook URL
+        //You will paste that URL somewhere and it will look similar to this:
+        //https://discord.com/api/webhooks/1103791296381976606/stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
+        //You'll need to grab your hook number, in this example it is 1103791296381976606
+        //and your key, in this example it is stcNuh5IKucT8tLPJ205xAu5ixv5q8XbuPkDcGA60a7SWVPGjFp9rk3SV8RUkf8ONsvx
+        //Private Discord: This will be where GM notifications are sent
+        var useDiscordPush = true; //true, false. Set to true to use Discord notifications for GM contact
+        var discordHook = '887268637315047444'; //Put your Discord WebHook here.
+        var discordKey = 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //Put your Discord Bot Key here.
+        //Public Discord: Announce starting times for friends
+        var publicAnnounce = true; //Set this to false if you are not using public Discord announcements
+        var publicDiscordHook = '1128848058021589034' //Change this to your public hook
+        var publicDiscordKey = 'spb267Ts2R4HI58Ojtzn61GjPiTLDeGRMDNFXaT5KA7YcxOmfhJKVMTchk6HWOZITv3N' //Change this to your public key
+    
+    //Profiles
+        //There are two types of profiles, ingame profile and Orion Assistant profile. You can set up one ingame profile and one OA profile and all characters can share them.
+        //Saving profiles in Orion can be finicky with more than one client open, so it is recommended to only have ONE client running when changing and saving settings.
+        //I've created a function that will automatically change most settings to their recommended states, so once you create an OA profile and ingame profile,
+        //you can just run the AutoSettings() function (in Utilities) once at the beginning and then save your profiles to avoid needing to fiddle with a bunch of individual options.
+        //Once you have profiles created and set up, you will need to log in to each character individually, change them to the correct profiles, then log out and close the client.
+        //OA Profile
+            //Name doesn't matter. You'll want to set some hotkeys, Find lists and Dress lists. More info on these in the sections below.
+        //Ingame Profile
+            //Name doesn't matter. The AutoSettings() function should handle most of the options for the ingame profile.
+
+    //Hotkeys
+        //Recommended Hotkeys:
+            //SmartStart
+            //AliGumpRenderer
+            //UltraTerminate
+        //Check the Utilites section for anything else that looks interesting to you :)
+
+    //Dress Agent
+        //Each samp needs three suits set up in Agents > Dress. Healers only need Boss and UW suits
+        //One suit named "<character name> Boss" e.g., Freya Boss. This is your suit for killing the boss
+        //One suit named "<character name> UW" e.g., Freya UW. This is the suit pieces to enter UW
+        //One suit named "<character name> LRC" e.g., Freya LRC. This is an lrc suit to get back into vamp form
+
+    //Loot Lists
+        //Create a Find list named "UWLoot" and an Ignore list named "UWIgnore"
+            //Use the Lists tab of the Orion Assistant to set up a Find list of the criteria for the items you would like to loot.
+            //You can use Ignore lists to exclude certain types of items such as Cursed or 50 stone.
+            //I will get you set up with everything you need to know to customize your loot lists, and I'll share mine as a starting point,
+            //but ultimately it is up to you to decide what you'd like to loot.
+
+//Ingame Setup
+    //Runes
+        //Each character needs a runebook named 'Main' with runes inside named 'Home','UW Dock', and 'Tithe'
+        //Also include duplicates of each rune named 'Home2','UW Dock2','Tithe2' a couple steps away in case the first rune is blocked by a mob
+            //Home rune should be directly south of your drop house such that walking straight north will load the contents of the house
+            //UW Dock rune should be just north of the dock into UW
+            //Tithe rune should be near any ankh. Choose one that doesn't have difficult hostile mobs nearby
+        //My recall function only cares about the name of the rune, position in the book does not matter.
+
+    //Drop House
+        //Set up a repair bench anywhere on the first floor of the house, just make sure it's easily accessible and your characters can walk there without a teleporter.
+        //Within 5 tiles of the repair bench, secure a single pouch. Put consumables (apples,gems of salvation) in this pouch for bots to restock themselves.
+        //Within 5 tiles of the repair bench, secure as many wooden boxes as you'd like. Bots will stuff all their loot into these.
+        var homeX = 1350; //Change this to an X coordinate adjacent your repair bench
+        var homeY = 1441; //Change this to a Y coordinate adjacent your repair bench
+
+    //Misc Tips
+        //I've found that clearing barrels quickly burns your weapon durability, so I recommend each samp has a second weapon in their pack reforged to have
+            //self repair. It doesn't need to have any special stats besides that. Double strike will knock the barrels out faster, so you can choose a weapon with that
+            //as the Primary ability, but it's not really necessary with as much down time as there is between runs.
+        var doubleStrikeSpecial = 'Primary'; //Change this to whatever special Double Strike is for your barrel weapon of choice.
+        
+//Starting Instructions
+    //Once all of the setup is complete, the routine for starting the script is simple.
+    //Everything is set so that you just have to log all your characters in, wait a short while for the leader and followers to sync up, and then
+    //start the SmartStart function on your leader. All characters should then check their status (durability, restock, tithing points, gold, etc)
+    //and then go to their starting positions. The leader will lure hydras to the stern of the ship. 
+    //Next, the leader will check if the boss is already up or if UW is ready to be keyed and started. If the boss is already up, everyone 
+    //will regroup and just go in and fight, otherwise a barrel samp will be chosen randomly and everyone will wait at your drop house until keys are 
+    //ready. Then they'll regroup in UW and start the encounter. The lead samp will go in first and grab honor followed shortly after by the rest of your group.
+    //Once the boss is killed, your characters will loot according to your loot list and then leave UW, go home, check their status, and wait for the next cycle.
+    //The heal leader will stay behind and wait for the corpse to go public, loot it once it does, and then reset the cycle, standing in front of UW hidden,
+    //monitoring until UW resets.
+
+//Disclaimers
+    //I've taken pains to plan for every contingency I could think of, but having done large projects like this for people in the past, I know that inevitably
+    //some things will need to be tweaked to your liking or an unexpected bug might occur. Rest assured that I will work hard to have a quick turn around on any
+    //changes that might be needed and provide an updated version of the script to you. If a bug does occur, I ask that you try to take note of any circumstances
+    //or information that might help me. This can include searching your journal for any error messages (they'll show up as red text) or just details about what your 
+    //character was doing at the time the issue occurs. I'm confident that any issues that do arise will be remedied within the agreed upon 2 month support.
+
+    //This script is designed to be run completely AFK, but there's a chance a character could die and halt things. Your loot auto insures so there is no loss aside
+    //from the potential farming time missed until you notice and reset.
+
+    //I believe you mentioned that you will be running this on Atlantic. It is my recommendation that you consider moving your operation to a less populated shard
+    //if you have access to shard shields or are close to someone that can transfer loot for you. I've added behaviors that should give your characters less of
+    //a 'bot-like' appearance, but given enough time and repetitions, people will catch on and either page on you or, worse, try to interrupt you themselves in
+    //any number of ways that I can not predict. I've done farms similar to this for years and have had my fair share of technical arms races against
+    //trolls and vigilantes some of whom will, themselves, be scripters. It can become a full time job countering someone dedicated to being a thorn in your side.
+    
+    //As for GMs, if you are using paid accounts you are much more likely to be given leniency for being afk. Generally there is a three strike system before
+    //a permanent ban with strikes removed a year later. If you are able to get to your computer and respond to their simple questions, you'll likely never
+    //have a problem. Further, GMs are rarely active between 9pm and 6am Eastern, so running overnight is usually safe. I obviously cannot guarantee anything though.
+    //As a precaution, I recommend using accounts that are not tied to your main Mythic accounts in any way!
+
+var useSingleTargetSpecial = true; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
+var singleTargetSpecial = 'Secondary'; //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+var useOnslaught = true; //boolean. Set to true to use Onslaught when only 1 mob is nearby to attack.
+var useMultiTargetSpecial = false; //boolean. Set to true to use a special when only 1 mob is nearby to attack.
+var multiTargetSpecial = 'Primary'; //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+var useMomentumStrike = true; //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby. If MultiTargeSpecial is false 2 or more mobs.
+var useCounterAttack = true; //boolean. Set to true to maintain Counter Attack at all times.
+var useEnemyOfOne = true; //boolean. Set to true to maintain Enemy Of One at all times.
+var useConsecrateWeapon = false; //boolean. Set to true to maintain Consecrate Weapon at all times. Don't use with Onslaught
+var useDivineFury = true; //boolean, Set to true to maintain Divine Fury at all times.
+var useConfidence = true; //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
+var useConfidenceThresholdPercent = 80; //Percentage of self HP to attempt to cast confidence.
+var useEvasion = true; //boolean, Set to true to use Evasion when your HP goes below a threshold.
+var evasionThresholdPercent = 50; //Percentage of self HP to attempt to cast Evasion.
+var useRemoveCurse = true; //boolean. Attempt to use remove curse when Blood Oathed during apple cooldown
+var useCleanseByFire = false; //boolean. Attempt to self cure poison
+var useAlarmSound = true; //boolean, Put a wav file named "alarm.wav" in the Ultima Online folder. This will sound if a GM tries to contact you
+
+var lootItems = {
+    '0x400B': true, //shame crystals
+    '0x0F87': true, //lucky coin
+    '0x1F44': true, //wall of stone scroll
+    '0x1F47': true, //curse scroll
+    '0x1F4C': true, //recall scroll
+    '0x1F59': true, //mark scroll
+    '0x1F60': true, //gate scroll
+    //'0x0EED': true, //gold
+}
+Shared.AddVar('lootItems',lootItems);
+var debug = true;
+var debug2 = false;
+var luckScum = false;
+Orion.Exec('GMScan', true);
+//--#Start
+function _____________START(_){}
+
+function SmartStart()
+    {
+    var role = Shared.GetVar('myRole',false);
+    Orion.Exec('AutoInsure',true);
+    switch(role)
+        {
+        case 'leader':
+        	Orion.Exec('AliComLeader',true);
+            //WarmodePause(text);
+            MassAllMessage('StartSmartStart');
+            Shared.AddVar('HaveKeys',false);
+            if(!BossCheck())
+                {
+                if(Orion.FindType(any).filter(function(item){return AliKeep(item)}).length > 5 || DurabilityCheck() || ConsumablesCheck())
+                    CharacterMaintenance();
+                if(Orion.GetDistance(6313, 1711) > 50)
+                    GoFromHomeToLadderPosition();
+                EquipBossSuitByBotName();
+                Orion.Exec('HydraRecover',true);
+                var scoutWait = ScoutAhead(); //determine whether uw boss is up or not
+                if(scoutWait)
+                    {
+                    DetermineBarrelSamp();
+                    WaitSyncLeader(); //Home position
+                    //AliWalkTo(6302, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
+                    WaitForReset(); //wait for keys and for uw to be ready
+                    Orion.RemoveDisplayTimer('bossReset');
+                    }
+                else
+                    WaitSyncLeader(); //Home position
+                Orion.Wait(3000);
+                MassAllMessage('ResumeSmartStart'); //follower Home>Ladder position
+                WaitSyncLeader(); //Ladder position
+                WaitSyncLeader(); //Ready position
+                Orion.Cast('Greater Heal');
+                Orion.WaitForTarget(3000);
+                MassAllMessage('ResumeSmartStart'); //start boss sequence
+                Orion.ClearBadLocations(); 
+                Orion.Wait(1000);
+                GoToBossArena();
+                Jiggle('Walk',750);
+                }
+            initScripts();
+            BossSequence();
+            TerminateAll();
+            CleanUpPublicCorpse();
+            WaitSyncLeader(); //Debrief
+            Orion.Wait(500);
+            Orion.Exec('SmartStart');
+            break;
+        case 'dexxer':
+			Orion.Exec('AliComFollower',true);
+            Shared.AddVar('barrelSamp',false);
+            if(!BossCheck())
+                {
+                CharacterMaintenance();
+                Orion.Exec('StayLoggedIn',true);
+                EquipBossSuitByBotName();
+                WaitSyncFollower(); //Home position
+                Orion.Wait(1000);
+                if(Shared.GetVar('barrelSamp',false) === true)
+                    GetKeys();
+                Orion.PauseScript('SmartStart'); //wait for keys and for uw to be ready
+                GoFromHomeToLadderPosition();
+                WaitSyncFollower(); //Ladder position
+                GoFromLadderToReadyPosition();
+                if(Shared.GetVar('barrelSamp',false) === true)
+                    {
+                    OpenUW();
+                    var wepInHand = Orion.ObjAtLayer('RightHand') || Orion.ObjAtLayer('LeftHand');
+                    if(wepInHand && Orion.Contains(wepInHand.Properties(),'Self Repair'))
+                        {
+                        Orion.Wait(1300);
+                        EquipBossSuitByBotName();
+                        }
+                    }
+                WaitSyncFollower(); //ready position
+                Orion.PauseScript('SmartStart');
+                if(Player.Serial() != leadSampSerial)
+                    Orion.Wait(2500);
+                else
+                    {
+                    Orion.InvokeVirtue('Honor');
+                    Orion.Wait(500);
+                    Orion.Cast('Evasion');
+                    Orion.Wait(250);
+                    }
+                GoToBossArena();
+                }
+            initScripts();
+            BossSequence();
+            Shared.AddVar('barrelSamp',false);
+            CharacterMaintenance();
+            EquipBossSuitByBotName();
+            WaitSyncFollower(); //Debrief
+            Orion.Wait(1000);
+            TerminateAll();
+            Orion.Wait(500);
+            Orion.Exec('SmartStart');
+            break;
+        case 'healer':
+			Orion.Exec('AliComFollower',true);
+            if(!BossCheck())
+                {
+                CharacterMaintenance();
+                Orion.Exec('StayLoggedIn',true);
+                EquipBossSuitByBotName();
+                WaitSyncFollower(); //Home position
+                Orion.PauseScript('SmartStart');
+                GoFromHomeToLadderPosition();
+                WaitSyncFollower(); //Ladder position
+                GoFromLadderToReadyPosition();
+                WaitSyncFollower();
+                Orion.PauseScript('SmartStart');
+                Orion.Cast('Greater Heal');
+                Orion.WaitForTarget(3000);
+                GoToBossArena();
+                Jiggle('Walk',750);
+                }
+            initScripts();
+            BossSequence();
+            CharacterMaintenance();
+            EquipBossSuitByBotName();
+            WaitSyncFollower(); //Debrief
+            TerminateAll();
+            Orion.Wait(500);
+            Orion.Exec('SmartStart');
+            break;
+        default:
+            break;
+        }
+    }
+
+//--# Utilities
+function ____________UTILITIES(_){}
+
+function AutoSettings()
+    {
+    Orion.ClientOptionSet('ReduceFPSUnactiveWindow', 1); 
+    Orion.ClientOptionSet('AutoOpenDoorsMode', 1);       
+    Orion.ClientOptionSet('SmoothOpenDoors', 1);
+    Orion.ClientOptionSet('BlockRunWhileHidden', 0);
+    Orion.ClientOptionSet('AlwaysRun', 1);
+    Orion.ClientOptionSet('AutoAvoidObstacles', 1);
+    Orion.ClientOptionSet('FixStatusbarOSI', 1);
+    Orion.ClientOptionSet('ShowTimeInJournal', 1);       
+    Orion.ClientOptionSet('EnableLegibleJournal', 1);
+   
+    Orion.OAOptionSet('FastRotation', 1);
+    Orion.OAOptionSet('DressUseNewEquipPackets', 1);
+    Orion.OAOptionSet('JournalEcho', 1); 
+    }
+
+function initScripts()
+    {
+    var role = Shared.GetVar('myRole',false);
+    switch(role)
+        {
+        case 'leader':
+            Orion.Exec('UWHealBot', true);
+            Orion.Exec('UWHealLeader',true);
+            Orion.Wait(200);
+            Orion.Exec('UWAvoidBot', true, [6]);
+            break;
+        case 'dexxer':
+            var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
+            if(lord)
+                {
+                Debug2('Attempt Honor')
+                if(lord.Distance() > 5)
+                    Orion.WalkTo(lord.X(),lord.Y(),0,5);
+                if(!Orion.HaveTarget())
+                    Orion.InvokeVirtue('honor');
+                if(Orion.WaitForTarget(2000))
+                    Orion.TargetObject(lord.Serial());
+                }
+            Orion.Exec('AutoAttack', true);
+            Orion.Exec('AutoBuffs', true);
+            Orion.Wait(200);
+            Orion.Exec('UWSampMovement', true);
+            break;
+        case 'healer':
+            Orion.Exec('UWHealBot', true);
+            Orion.Wait(200);
+            Orion.Exec('UWAvoidBot', true, [6]);
+            break;
+        default:
+            break;
+        }
+    }
+
+function EquipBossSuitByBotName()
+    {
+    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+        var _pName = Player.Name().slice(5, Player.Name().length);
+    else
+        var _pName = Player.Name()
+    var setname = _pName + ' Boss'
+    Orion.Dress(setname);
+    }
+
+function EquipLRCSuitByBotName()
+    {
+    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+        var _pName = Player.Name().slice(5, Player.Name().length);
+    else
+        var _pName = Player.Name()
+    var setname = _pName + ' LRC'
+    Orion.Dress(setname);
+    }
+
+function EquipUWSuitByBotName()
+    {
+    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+        var _pName = Player.Name().slice(5, Player.Name().length);
+    else
+        var _pName = Player.Name()
+    var setname = _pName + ' UW'
+    Orion.Dress(setname);
+    }
+
+function LeaveUW()
+    {
+    if((Orion.GetDistance(1700,1560) < 100 && AliWalkTo(1700, 1560, 0, 0, 255, 4, 1, 1)) || !isPlayerInRectangle(6222, 1600, 6500, 1850))
+        return
+    TerminateAll('LeaveUW|GoHome|CharacterMaintenance');
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Player.Dead() && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //Boss area
+        {
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'near', 10)[0];
+        if(ladder)
+            {
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(ladder.Serial());
+                Orion.Wait(500);
+                }
+            }
+        }
+    Orion.SetBadLocation(6310,1705);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
+    Orion.SetBadLocation(6310,1704);
+    Orion.AddFakeMapObject(100001, '0x051A', 32, 6310, 1704, 0);
+    Orion.SetBadLocation(6310,1703);
+    Orion.AddFakeMapObject(100002, '0x051A', 32, 6310, 1703, 0);
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1,50000,false,HydraAvoid)) //Upper deck
+        {
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6|0x08A6', any, ground, 'near', 10)[0];
+        if(ladder)
+            {
+            AliWalkTo(ladder.X(),ladder.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(ladder.Serial());
+                Orion.Wait(500);
+                }
+            }
+        }
+    Orion.ClearBadLocations();
+    if(AliWalkTo(6447, 1743, 0, 0, 255, 4, 1, 1)) //Below Deck
+        {
+        Orion.Wait(1000);
+        if(Player.X() != 6324 || Player.Y() != 1711)
+            return LeaveUW();
+        }
+    if(AliWalkTo(6279, 1772, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid)) //Outside boat
+        {
+        var rope = Orion.FindTypeEx(0x14FA, any, ground, ' ', 2)[0];
+        if(rope)
+            {
+            AliWalkTo(rope.X(),rope.Y(),0,1);
+            var tempX = Player.X();
+            var tempY = Player.Y();
+            while(Player.X() == tempX && Player.Y() == tempY)
+                {
+                Orion.UseObject(rope.Serial());
+                Orion.Wait(500);
+                }
+            }
+        }
+    Orion.Wait(1000);
+    var randX = 1700 + Orion.Random(-3,4);
+    var randY = 1560 + Orion.Random(-3,4);
+    if(!AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1))//Umbra
+        return LeaveUW();
+    Orion.Wait(500);
+    }
+
+function GoHome()
+    {
+    if(Orion.GetDistance(homeX,homeY) > 50)
+        RecallByGump('Main', 'Home', 'Main', 'Home2');
+    Orion.WarMode(0);
+    AliWalkTo(homeX,homeY);
+    var bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 20)[0];
+    while(!bench)
+        {
+        Orion.Step('n');
+        Orion.Wait(250);
+        bench = Orion.FindTypeEx('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 20)[0];
+        }
+    var benchX = bench.X();
+    var benchY = bench.Y();
+    AliWalkTo(benchX,benchY,0,1);
+    }
+
+function LootUW()
+    {
+    AliLootUW("UWLoot|Gold|ignoreLists|UWIgnore")
+    //ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+    //AliLootUW('BotLoot', "ignorelist")
+    }
+
+function Tithe()
+    {
+    if(Orion.SkillValue('Chivalry') < 500)
+        return;
+    var tithingPoints = Player.TithingPoints();
+    Orion.Print('Current Tithing Points: ' + tithingPoints);
+    TerminateAll('Tithe|CharacterMaintenance');
+    if(Player.X() > 6000)
+        LeaveUW();
+    var ankh = Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+    if(!ankh)
+        RecallByGump('Main','Tithe','Main','Tithe2');
+    CloseAllGumps();
+    var endTime = Orion.Now() + 30000;
+    while(Player.TithingPoints() < 100000)
+        {
+        if(Orion.Now() > endTime)
+            return DiscordPush(Player.Name() + "couldn't tithe to 100,000");
+        var subEndTime = Orion.Now() + 5000;
+        var ankh = Orion.FindTypeEx('0x0005|0x0003|0x0004',any,ground,'item',20)[0];
+        if(!ankh)
+            return Orion.CharPrint(self,1159,'No ankh found!')
+        do
+            {
+            if(Orion.Now() > subEndTime)
+                return DiscordPush(Player.Name() + "couldn't find ankh!")
+            AliWalkTo(ankh.X(),ankh.Y(),0,1)
+            Orion.Wait(500);
+            } while(!Orion.FindType('0x0005|0x0002|0x0003|0x0004',any,ground,'item',2)[0])
+        Orion.WaitContextMenuID(ankh.Serial(), 412);
+        Orion.RequestContextMenu(ankh.Serial());
+        if(Orion.WaitForGump(3000))
+            {
+            var gump = Orion.GetGump('any','0x00000293');
+            if(gump !== null)
+                {
+                gump.Select(Orion.CreateGumpHook(1));
+                Orion.Wait(300);
+                if(Orion.WaitForGump(3000))
+                    {
+                    var gump2 = Orion.GetGump('any','0x00000293');
+                    if(gump2 !== null)
+                        {
+                        gump2.Select(Orion.CreateGumpHook(2));
+                        Orion.Wait(300);
+                        }
+                    else
+                        Debug2('Tithe: Second gump failed 2');
+                    }
+                else
+                    Debug2('Tithe: Second gump failed 1');
+                }
+            else
+                Debug2('Tithe: First gump failed 2');
+            }
+        else
+            Debug2('Tithe: First gump failed 1');
+        Orion.Wait(1000);
+        }
+    Orion.Wait(1500);
+    //Orion.Exec('WalkThroughCurrentFarm');
+    }
+
+function RepairGear()
+    {//v1
+    Orion.ResetSearchArea();
+    var durabilityThreshold = 50; //Durability below which to repair
+    //Equipment with less than 2 * durabilityThreshold will appear in yellow
+
+    var tinkerLowAlarm = true; //Leave false to ignore this repair type for the alarm
+    var blacksmithLowAlarm = true; //Set to true to get an alarm for this repair type running low
+    var carpentryLowAlarm = true;
+    var tailorLowAlarm = true;
+    var masonryLowAlarm = false;
+    var glassblowingLowAlarm = false;
+    var fletchingLowAlarm  = false;
+    
+    var alarmThreshold = 20; //If the repair bench gets below this number of scrolls for a repair type, send a discord message
+
+    var flavorText = false; //adds overhead emotes describing the amount of items you need to repair
+    
+    var repairDict = 
+        { //graphicString: buttonCode
+        // tinker: 2001 | bsmith: 2002 | carpenter: 2003 | tailor: 2006 | fletcher: 2009 | masonry: 2010
+        '0x170B': 2006,'0x2D2D': 2002,'0x2D21': 2002,'0x0F4A': 2002,'0x0F49': 2002,'0x0F4E': 2002,'0x0F4D': 2002,'0x0F48': 2002,'0x0F47': 2002,'0x0DF0': 2003,'0x0DF1': 2003,'0x26BD': 2002,'0x26C7': 2002,'0x27A8': 2003,'0x26BB': 2002,'0x26C5': 2002,'0x13B1': 2009,'0x13B2': 2009,'0x0F5F': 2002,'0x0F5E': 2002,'0x1B72': 2002,'0x1B73': 2002,
+        '0x26CB': 2002,'0x13F4': 2003,'0x13F5': 2003,'0x0F50': 2009,'0x0F4F': 2009,'0x1440': 2002,'0x1441': 2002,'0x0F52': 2002,'0x0F51': 2002,'0x27A9': 2002,'0x2D30': 2002,'0x2D24': 2002,'0x0F4C': 2002,'0x0F4B': 2002,'0x26BF': 2002,'0x26C9': 2002,'0x2D2A': 2009,'0x2D1E': 2009,'0x2D35': 2002,'0x2D29': 2002,'0x2D2C': 2002,
+        '0x2D20': 2002,'0x0F46': 2002,'0x0F45': 2002,'0x13F9': 2003,'0x13F8': 2003,'0x143E': 2002,'0x143F': 2002,'0x143C': 2002,'0x143D': 2002,'0x0F44': 2001,'0x0F43': 2001,'0x1B77': 2002,'0x1B76': 2002,'0x13FC': 2009,'0x13FD': 2009,'0x27AD': 2002,'0x13FE': 2002,'0x13FF': 2002,'0x1400': 2002,'0x1401': 2002,'0x27A7': 2002,
+        '0x26C0': 2002,'0x26CA': 2002,'0x13FA': 2002,'0x13FB': 2002,'0x2D2E': 2002,'0x2D22': 2002,'0x0F60': 2002,'0x0F61': 2002,'0x0F5D': 2002,'0x0F5C': 2002,'0x2D2B': 2009,'0x2D1F': 2009,'0x143A': 2002,'0x143B': 2002,'0x1B75': 2002,'0x1B74': 2002,'0x1B7B': 2002,'0x27A2': 2002,'0x27AE': 2001,'0x1BC5': 2002,'0x1BC4': 2002,
+        '0x2D34': 2002,'0x2D28': 2002,'0x0E85': 2001,'0x0E86': 2001,'0x26BE': 2002,'0x26C8': 2002,'0x0E88': 2001,'0x0E87': 2001,'0x0E8A': 2003,'0x0E89': 2003,'0x2D33': 2002,'0x2D27': 2002,'0x26C3': 2009,'0x26CD': 2009,'0x2D32': 2002,'0x2D26': 2002,'0x27AF': 2002,'0x26BC': 2002,'0x26C6': 2002,'0x13B5': 2002,'0x13B6': 2002,
+        '0x26BA': 2002,'0x26C4': 2002,'0x1402': 2002,'0x1403': 2002,'0x0EC5': 2001,'0x0EC4': 2001,'0x0FB4': 2001,'0x0FB5': 2001,'0x13E3': 2001,'0x13E4': 2001,'0x0F63': 2002,'0x0F62': 2002,'0x1B79': 2002,'0x1B78': 2002,'0x27AB': 2002,'0x27A3': 2002,'0x27A6': 2003,'0x1442': 2002,'0x1443': 2002,'0x13BA': 2002,'0x13B9': 2002,
+        '0x27A4': 2002,'0x13AF': 2002,'0x13B0': 2002,'0x2D2F': 2002,'0x2D23': 2002,'0x1404': 2002,'0x1405': 2002,'0x1438': 2002,'0x1439': 2002,'0x1406': 2002,'0x1407': 2002,'0x2D31': 2003,'0x2D25': 2003,'0x1B7A': 2003,'0x27A5': 2009,'0x153F': 2006,'0x140D': 2002,'0x140C': 2002,'0x1545': 2006,'0x1454': 2006,'0x144F': 2006,
+        '0x144E': 2006,'0x1453': 2006,'0x1450': 2006,'0x1455': 2006,'0x1451': 2006,'0x1456': 2006,'0x1457': 2006,'0x1452': 2006,'0x1F06': 2001,'0x1086': 2001,'0x13BB': 2002,'0x13C0': 2002,'0x2774': 2002,'0x13C3': 2002,'0x13BE': 2002,'0x13C4': 2002,'0x13BF': 2002,'0x1409': 2002,'0x1408': 2002,'0x2778': 2002,'0x1547': 2006,
+        '0x171A': 2006,'0x1C07': 2006,'0x1C06': 2006,'0x1C05': 2002,'0x1C04': 2002,'0x1713': 2006,'0x2777': 2002,'0x140B': 2002,'0x140A': 2002,'0x2B75': 2006,'0x2B76': 2006,'0x2B78': 2006,'0x2B77': 2006,'0x2B74': 2006,'0x171C': 2006,'0x2798': 2006,'0x2FC8': 2006,'0x2FC6': 2006,'0x2FC7': 2006,'0x2FC9': 2006,'0x2FCA': 2006,
+        '0x2FC5': 2006,'0x1C0B': 2006,'0x1C0A': 2006,'0x1DB9': 2006,'0x1DBA': 2006,'0x277B': 2006,'0x13C6': 2006,'0x13CE': 2006,'0x13C7': 2006,'0x278A': 2006,'0x277E': 2006,'0x2776': 2006,'0x13D2': 2006,'0x13CB': 2006,'0x277A': 2006,'0x278E': 2006,'0x2793': 2006,'0x2792': 2006,'0x2791': 2006,'0x1C01': 2006,'0x1C00': 2006,
+        '0x1C09': 2006,'0x1C08': 2006,'0x13C5': 2006,'0x13CD': 2006,'0x2786': 2006,'0x13D3': 2006,'0x13CC': 2006,'0x2781': 2002,'0x140F': 2002,'0x140E': 2002,'0x1F0B': 2006,'0x1F0C': 2006,'0x141B': 2006,'0x1412': 2002,'0x1419': 2002,'0x1410': 2002,'0x1417': 2002,'0x2785': 2002,'0x277D': 2002,'0x1414': 2002,'0x1418': 2002,
+        '0x1413': 2002,'0x278D': 2002,'0x2775': 2002,'0x2780': 2002,'0x141A': 2002,'0x1411': 2002,'0x2779': 2002,'0x2788': 2002,'0x1416': 2002,'0x1415': 2002,'0x2B71': 2003,'0x1F09': 2001,'0x108A': 2001,'0x13EB': 2002,'0x13F2': 2002,'0x13F1': 2002,'0x13F0': 2002,'0x13EF': 2002,'0x13EE': 2002,'0x13ED': 2002,'0x13EC': 2002,
+        '0x1543': 2006,'0x2784': 2002,'0x2789': 2002,'0x1717': 2006,'0x1C03': 2006,'0x1C0D': 2006,'0x1C0C': 2006,'0x277C': 2006,'0x13D5': 2006,'0x13DD': 2006,'0x13D6': 2006,'0x278B': 2006,'0x277F': 2006,'0x13E1': 2006,'0x13DA': 2006,'0x279D': 2006,'0x13D4': 2006,'0x13DC': 2006,'0x2787': 2006,'0x13E2': 2006,'0x13DB': 2006,
+        '0x1716': 2006,'0x1549': 2006,'0x154B': 2006,'0x171B': 2006,'0x2B72': 2003,'0x1714': 2006,'0x2B73': 2003,'0x1718': 2006,'0x2B6C': 2003,'0x2B67': 2003,'0x2B6A': 2003,'0x2B69': 2003,'0x2B6B': 2003,'0x153B': 2006,'0x2643': 2002,'0x1541': 2006,'0x2647': 2002,'0x2FB8': 2001,'0x1087': 2001,'0x4049': 2006,'0x404C': 2006,
+        '0x4047': 2006,'0x4D0A': 2010,'0x4066': 2006,'0x4644': 2001,'0x405A': 2010,'0x0284': 2006,'0x4056': 2002,'0x4D0B': 2002,'0x4211': 2001,'0x090A': 2002,'0x030A': 2002,'0x404E': 2006,'0x4050': 2002,'0x405C': 2010,'0x405D': 2010,'0x4058': 2010,'0x46B5': 2006,'0x4062': 2006,'0x404B': 2006,'0x4057': 2010,'0x46B4': 2006,
+        '0x4052': 2002,'0x13F7': 2001,'0x13F6': 2001,'0x1BC3': 2002,'0x0EC2': 2001,'0x0EC3': 2001,'0x13B3': 2003,'0x13B4': 2003,'0x26C2': 2009,'0x26CC': 2009,'0x26C1': 2002,'0x2F5B': 2001,'0x1712': 2006,'0x170D': 2006,'0x2309': 2006
+        }
+
+    //Do not edit below
+    var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
+    Orion.Print("Repair threshold set at: " + durabilityThreshold)
+    var outStrs = [];
+    for(var i=1;i<layers.length;i++)
+        {
+        if(Orion.ObjAtLayer(i))
+            {
+            var obj = Orion.ObjAtLayer(i);
+            var objProperties = obj.Properties();
+            var objDict = repairDict[obj.Graphic()];
+            if(!objDict && Orion.Contains(objProperties, 'Durability'))
+                Orion.Print('Item needs to be added: ' + obj.Graphic() + ': ' + obj.Name())
+            else if(Orion.Contains(objProperties, 'Durability'))
+                {
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/)
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold * 2 && min < max)
+                    outStrs.push(layers[obj.Layer()] + ':::' + obj.Name() + ':::' + min + ':::' + max);
+                }
+            }
+          }
+    if(!outStrs[0])
+        {
+        var gump = Orion.CreateCustomGump(11420);
+        if(gump)
+            gump.Close()
+        if(flavorText)
+            return Orion.CharPrint(self,1159,'*You check your equipment and find it is in perfect condition*')
+        return Orion.CharPrint(self,1159,'No repairs necessary')
+        }
+    else if(!flavorText)
+        Orion.Wait(1);
+    else if(outStrs.length == 1)
+        Orion.CharPrint(self,1159,'*You check your equipment and find something in need of repair*')
+    else if(outStrs.length < 3)
+        Orion.CharPrint(self,1159,'*You check your equipment and find some things that need your attention*')
+    else if(outStrs.length < 8)
+        Orion.CharPrint(self,1159,"*You check your equipment and make a mental note to not get hit so much in the future*") 
+    else if(outStrs.length < 20)
+        Orion.CharPrint(self,1159,"*You check what's left of your equipment and marvel that any of it is still attached to you given its abysmal condition*")
+    outStrs.sort(function(a,b)
+        {
+        var aSplit = Orion.Split(a,':::');
+        var bSplit = Orion.Split(b,':::');
+        var aMin = aSplit[2];
+        var bMin = bSplit[2];
+        var aMax = aSplit[3];
+        var bMax = bSplit[3];
+        return (aMax - aMin) - (bMax - bMin);
+        });
+    var rowAdj = 20;
+    var rowMargin = 20;
+    var columnMargin = 25;
+    var width = 450;
+    var height = (outStrs.length * rowAdj) + (rowMargin * 2);
+    var gump = Orion.CreateCustomGump(11420);
+    gump.Clear();
+    gump.AddResizepic(0, 0, 0xBB8, width, height);
+    // gump.AddColoredPolygone(1, 2, width - 3, height - 6, '#FF000000', 1, 7, 1); //gump border
+    for(var i=0;i<outStrs.length;i++)
+        {
+        var textColor = '0';
+        var str = outStrs[i];
+        var strSplit = Orion.Split(str,':::');
+        var layerName = strSplit[0];
+        var itemName = strSplit[1];
+        var minDura = +strSplit[2];
+        var maxDura = +strSplit[3];
+        if(minDura < durabilityThreshold)
+            textColor = '32';
+        else if(minDura < durabilityThreshold * 2)
+            textColor = '53'
+        gump.AddText(columnMargin, rowMargin + (rowAdj * i), '0', layerName, width - 250);
+        gump.AddText(columnMargin + 100, rowMargin + (rowAdj * i), textColor, itemName, width - 250);
+        gump.AddText(columnMargin + 320, rowMargin + (rowAdj * i), textColor, minDura + '/' + maxDura, width - 250);
+        }
+    gump.Update();
+    for(var i=1;i<layers.length;i++)
+        {
+        if(Orion.ObjAtLayer(i))
+            {
+            var obj = Orion.ObjAtLayer(i);
+            var objProperties = obj.Properties();
+            var objDict = repairDict[obj.Graphic()];
+            if(Orion.Contains(objProperties, 'Durability') && objDict)
+                {
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/)
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold && min < max)
+                    {
+                    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
+                    if(bench)
+                        {
+                        var repairType = objDict;
+                        var endTime = Orion.Now() + 10000;
+                        var repairGump = Orion.GetGump(any, '0x00002415');
+                        while(!repairGump && Orion.Now() < endTime)
+                            {
+                            Orion.UseObject(bench);
+                            Orion.WaitForGump(2000);
+                            repairGump = Orion.GetGump(any, '0x00002415');
+                            }
+                        if(repairGump !== null)
+                            {
+                            repairGump.Select(Orion.CreateGumpHook(repairType));
+                            var tinkerCount = tinkerLowAlarm && +repairGump.Text(1) < alarmThreshold;
+                            var blacksmithCount =  blacksmithLowAlarm && +repairGump.Text(3) < alarmThreshold;
+                            var carpentryCount =  carpentryLowAlarm && +repairGump.Text(5) < alarmThreshold;
+                            var tailorCount =  tailorLowAlarm && +repairGump.Text(7) < alarmThreshold;
+                            var masonryCount =  masonryLowAlarm && +repairGump.Text(9) < alarmThreshold;
+                            var glassblowingCount =  glassblowingLowAlarm && +repairGump.Text(11) < alarmThreshold;
+                            var fletchingCount = fletchingLowAlarm && +repairGump.Text(13) < alarmThreshold;
+                            if(tinkerCount || blacksmithCount || carpentryCount || tailorCount || masonryCount || glassblowingCount || fletchingCount)
+                                Orion.CharPrint(self,32,'Check repair bench!')  //DiscordPush(Orion.ShardName() + ': Check repair bench!');
+                            if(Orion.WaitForTarget(2000))
+                                Orion.TargetObject(obj.Serial());
+                            }
+                        Orion.WaitForGump(2000);
+                        }		   
+                    }
+                }
+            }
+        Orion.Wait(100);
+        }
+    Orion.Wait(1000);
+    for(var i=1;i<layers.length;i++)
+        {
+        if(Orion.ObjAtLayer(i))
+            {
+            var obj = Orion.ObjAtLayer(i);
+            var objProperties = obj.Properties();
+            var objDict = repairDict[obj.Graphic()];
+            if(objDict && Orion.Contains(objProperties, 'Durability'))
+                {
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/);
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold && min < max)
+                    {
+                    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
+                    if(bench)
+                        return RepairGear();
+                    }                   
+                }
+            }
+        }
+    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
+    gump = Orion.CreateCustomGump(11420);
+    if(bench && gump)
+        gump.Close();
+    repairGump = Orion.GetGump(any, '0x00002415');
+    if(repairGump)
+        repairGump.Close();
+    }
+
+function CharacterMaintenance()
+    {
+    if(isTargetHour(11))
+        Orion.LogOut();
+    LeaveUW();
+    if(Player.TithingPoints() < 30000)
+        Tithe();
+    GoHome();
+    GoldCheck();
+    DropLoot();
+    if(DurabilityCheck())
+        RepairGear();
+    if(ConsumablesCheck())
+         RestockConsumables();
+    Orion.Exec('StayHidden',true);
+    }
+
+function DropLoot()
+    {
+    var artifactString = "Captain Johne’s Blade|Pincer|Equivocation|Abhorrence|Craven";
+    Orion.Wait(1000);
+    EquipBossSuitByBotName();
+    Orion.Wait(1000);
+    EquipBossSuitByBotName();
+    if(Orion.FindType(any).filter(function(item){return AliKeep(item)}).length == 0)
+        {
+        Debug2('No loot to drop');
+        return;
+        }
+    var woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
+        {
+        return !Orion.Contains(box.Properties(),'Contents: 125')
+        }).sort(function(a,b)
+            {
+            var aContents = (a.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+            var bContents = (b.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+            return bContents - aContents;
+            });
+    while(woodenBoxes.length)
+        {
+        var box = woodenBoxes[0];
+        var boxSerial = box.Serial();
+        AliWalkTo(box.X(),box.Y(),0,1);
+        VerifyOpenContainer(boxSerial);
+        var loot = Orion.FindType(any).filter(function(item)
+            {
+            var obj = Orion.FindObject(item);
+            if(Orion.Contains(obj.Name(),artifactString))
+                return false
+            return AliKeep(item);
+            })[0];
+        while(loot && !Orion.Contains(box.Properties(),'Contents: 125'))
+            {
+            var lootObj = Orion.FindObject(loot);
+            var lootName = lootObj.Name();
+            Orion.CharPrint(self,1159,'Moving loot: ' + lootName);
+            Orion.MoveItem(loot,0,boxSerial);
+            Orion.Wait(1100);
+            loot = Orion.FindType(any).filter(function(item)
+                {
+                var obj = Orion.FindObject(item);
+                if(Orion.Contains(obj.Name(),artifactString))
+                    return false
+                return AliKeep(item);
+                })[0];
+            }
+        var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'III')
+            })[0];
+        while(primer && !Orion.Contains(box.Properties(),'Contents: 125'))
+            {
+            Debug2('Moving ' + primer.Name());
+            Orion.CharPrint(self,1159,'Moving Primer III');
+            Orion.MoveItem(primer.Serial(),0,boxSerial);
+            Orion.Wait(1100);
+            primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),'III')
+                })[0];
+            }
+        Orion.CloseGump('container',boxSerial);
+        if(!loot && !primer)
+            {
+            Trash();
+            return true;
+            }
+        woodenBoxes = Orion.FindTypeEx('0x0E7D|0x09AA',any,ground,'item',5).filter(function(box)
+            {
+            return !Orion.Contains(box.Properties(),'Contents: 125')
+            }).sort(function(a,b)
+                {
+                var aContents = (a.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+                var bContents = (b.Properties().match(/Contents: (\d+)/) || [])[1] || 0;
+                return bContents - aContents;
+                });
+        }
+    DiscordPush('Out of containers to put loot!');
+    return false;
+    }
+
+function Trash()
+    {
+    var artifactString = "Captain Johne’s Blade|Pincer|Equivocation|Abhorrence|Craven";
+    var artifact = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),artifactString)
+        })[0];
+    var primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+        {
+        return !Orion.Contains(item.Properties(),'III')
+        })[0];
+    var trashCan = Orion.FindTypeEx(any,any,'ground',10).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Trash')
+        })[0];
+    if(!trashCan)
+        {
+        Debug2('Trash can missing');
+        return Orion.CharPrint(self,1159,'Trash can missing');
+        }
+    while(primer)
+        {
+        AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
+        Debug2('Trashing: ' + primer.Name());
+        Orion.MoveItem(primer.Serial(),0,trashCan.Serial());
+        Orion.Wait(1100);
+        primer = Orion.FindTypeEx('0x1E22').filter(function(item)
+            {
+            return !Orion.Contains(item.Properties(),'III')
+            })[0];
+        }
+    while(artifact)
+        {
+        AliWalkTo(trashCan.X(),trashCan.Y(),0,1);
+        Debug2('Trashing ' + artifact.Name());
+        Orion.MoveItem(artifact.Serial(),0,trashCan.Serial());
+        Orion.Wait(1100);
+        artifact = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),artifactString)
+            })[0];
+        }
+    }
+
+function RestockConsumables()
+    {
+    var pouch = Orion.FindTypeEx('0x0E79',any,ground,'item',10)
+        .filter(function(item)
+            {
+            return !Orion.Contains(item.Properties(),'Contents: 0/');
+            })[0];
+    if(!pouch)
+        return DiscordPush('Supply pouch missing or empty!');
+    var pouchSerial = pouch.Serial();
+    if(pouch.Distance() > 2)
+        AliWalkTo(pouch.X(),pouch.Y(),0,1);
+    VerifyOpenContainer(pouch.Serial());
+    var consumables =
+        [
+            ['0x2FD8', 10, 'Enchanted Apples'],
+            //['0x1F13', 1, 'Gem of Salvation'],
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        var consumableGraphic = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        var consumableName = consumables[i][2];
+        var count = Orion.Count(consumableGraphic)
+        if(count < restockAmount)
+            {
+            Orion.Wait(200);
+            count = Orion.Count(consumableGraphic)
+            if(count < restockAmount)
+                {
+                var needed = restockAmount - count;
+                var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
+                if(!consumable)
+                    DiscordPush('UW House is out of ' + consumableName);
+                else if(needed >= 0)
+                    {
+                    Orion.MoveItem(consumable, needed);
+                    Orion.Wait(1100);
+                    i--;
+                    }
+                }
+            }
+        // else if(restockAmount == 0)
+        //     {
+        //     var check = Orion.FindType(consumableGraphic).length;
+        //     if(check < 1)
+        //         {
+        //         var consumable = Orion.FindType(consumableGraphic,any,pouchSerial)[0];
+        //         if(!consumable)
+        //             DiscordPush('UW House is out of ' + consumableName);
+        //         else
+        //             {
+        //             Orion.MoveItem(consumable);
+        //             Orion.Wait(1100);
+        //             i--;
+        //             }
+        //         }
+                
+        //     }
+        }
+    Orion.CloseGump('container',pouchSerial);
+    }
+
+function DropDraggedToContainer() //v2
+    {//Reduce mouse movements when transferring items.
+    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
+    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
+    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
+    var dropContainer = Orion.FindObject('dropContainer');
+    if(dropContainer && Orion.Dragging())
+        Orion.DropDraggedItem('dropContainer');	
+    else
+        {
+        var lastSerial = Orion.GetSerial('dropContainer');
+        if(Orion.WaitForAddObject('dropContainer') != 1)
+            Orion.AddObject('dropContainer', lastSerial);
+        }
+    }
+
+function DropDraggedHere() //v2
+    {
+    var validTiles = Orion.GetTilesInRect('land', Player.X()-1,Player.Y()-1, Player.X()+1,Player.Y()+1)
+        .filter(function(tile)
+            {
+            Orion.SetSearchArea(tile.X(),tile.Y(),tile.X(),tile.Y());
+            var mobCheck = Orion.FindType(any,any,ground,'live').length == 0;
+            var itemCheck = Orion.FindType(any,any,ground,'item').length < 5;
+            return mobCheck && itemCheck;
+            });
+    Orion.ResetSearchArea();
+    var validTile = null;
+    for(var i=0;i<validTiles.length;i++)
+        {
+        if(Orion.GetPathArray(validTiles[i].X(),validTiles[i].Y(),validTiles[i].Z(),0,2,2,0)[0])
+            {
+            validTile = validTiles[i];
+            break;
+            }
+        }
+    if(validTile)
+        {
+        var validTileX = validTile.X();
+        var validTileY = validTile.Y();
+        var validTileZ = validTile.Z();
+        Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
+        Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
+        }
+    else 
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    }
+
+function MoveAll()
+    {
+    Orion.CharPrint(self,1159,"Select 'From' container");
+    Orion.WaitForAddObject('myTarget');
+    var fromContainer = Orion.GetSerial('myTarget');
+    Orion.CharPrint(self,1159,"Select 'To' container");
+    Orion.WaitForAddObject('myTarget');
+    var toContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(fromContainer);
+    var item = Orion.FindType(any,any,fromContainer)[0];
+    while(item)
+        {
+        Orion.MoveItem(item,0,toContainer);
+        Orion.Wait(1200);
+        item = Orion.FindType(any,any,fromContainer)[0];
+        }
+    }
+
+function StayLoggedIn()
+    {
+    var startX = Player.X();
+    var startY = Player.Y();
+    while(!Player.Dead() && Player.X() == startX && Player.Y() == startY)
+        {
+        Orion.UseObject('backpack');
+        Orion.Wait(60000);
+        }
+    }
+
+function StayHidden()
+    {
+    var startX = Player.X();
+    var startY = Player.Y();
+    while(!Player.Dead() && Player.X() == startX && Player.Y() == startY)
+        {
+        if(!Orion.BuffExists('hiding'))
+            {
+            AttackNearest();
+            Orion.Wait(1000);
+            Orion.UseSkill('Hiding');
+            }
+        Orion.Wait(250);
+        }
+    }
+
+function FindOwnCorpse()
+    {
+    if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+        var _pName = Player.Name().slice(5, Player.Name().length);
+    else
+        var _pName = Player.Name()
+    var body = Orion.FindTypeEx(any, any, ground, 'ignoreself', 24).filter(function(part)
+		{
+		return Orion.Contains(part.Properties(), _pName)
+		})[0];
+	if(!body)
+		return false;
+	var bodyX = body.X();
+	var bodyY = body.Y();
+	var endTime = Orion.Now() + 5000;
+	while(Orion.GetDistance(bodyX,bodyY) > 1 || !Orion.ObjAtLayer(1))
+		{
+		if(Orion.Now() > endTime)
+			return false;
+    	Orion.WalkTo(bodyX, bodyY);
+        Orion.UseObject(body.Serial());
+		Orion.Wait(1300);
+		}
+	return true;
+    }
+
+function UltraTerminate()
+    { //for debugging
+    Shared.ClearVars();
+    Orion.Terminate('all','UltraTerminate');
+    Orion.Exec('Autostart',true)
+    }
+
+//--#BarrelBot
+function ____________BARRELS(_){}
+
+function GetKeys()
+    {
+    var locArr =
+        [
+            ['Flywheel',6426,1733], //0x46FE
+            ['Bearing Assembly',6436,1733],//0x0E74
+            ['Wire Spool',6426,1753],//0x4CDB
+            ['Power Core',6436,1753]//0x47E6
+        ];
+    var barrelCheck = false;
+    for(var i=0;i<locArr.length;i++)
+        {
+        var loc = locArr[i];
+        var component = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),loc[0]);
+            })[0];
+        if(!component)
+            {
+            barrelCheck = true;;
+            break;
+            }
+        }
+    if(barrelCheck)
+        {
+        GoFromHomeToLadderPosition();
+        Orion.PauseScript('StayHidden');
+        Orion.Wait(500);
+        Orion.Terminate('StayHidden');
+        SwitchToBarrelWep();
+        Orion.Exec('UWBarrelsHealSelf',true);
+        Orion.CharPrint(self,1159,'Getting keys');
+        for(var i=0;i<locArr.length;i++)
+            {
+            var loc = locArr[i];
+            var component = Orion.FindTypeEx(any).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),loc[0]);
+                })[0];
+            if(component)
+                continue;
+            var x = loc[1];
+            var y = loc[2];
+            AliWalkTo(x,y);
+            ClearRoom();
+            }
+        for(var i = 0;i<locArr.length;i++)
+            {
+            var loc = locArr[i];
+            var component = Orion.FindTypeEx(any).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),loc[0]);
+                })[0];
+            if(!component)
+                return GetKeys();
+            }
+        Orion.PauseScript('UWBarrelsHealSelf');
+        Orion.Wait(500);
+        Orion.Terminate('UWBarrelsHealSelf');
+        }
+    CharacterMaintenance();
+    Orion.Wait(500);
+    EquipBossSuitByBotName();
+    Orion.Exec('StayLoggedIn',true);
+    Orion.UdpSend(leaderPort,'HaveKeys');
+    }
+
+function ClearRoom()
+    {
+    Orion.IgnoreReset();
+    Orion.ClearFakeMapObjects();
+    Orion.Exec('UWBarrelsHealSelf',true);
+    var locker = Orion.FindTypeEx(0x285E, any, ground, 'near', 24);
+    var lockerX = locker[0].X();
+    var lockerY = locker[0].Y();
+    if(Player.X() > lockerX)
+        var x1 = lockerX + 4;
+    else
+        var x1 = lockerX - 4;
+    var y1 = lockerY;
+    var x2 = lockerX;
+    var y2 = lockerY;
+    var phase = 1;
+    while(!Player.Dead()) 
+        {
+        var mobcheck = Orion.FindTypeEx('0x00D7|0x013D|0x005C|0x0018', any, 'ground', 'inlos|near', 10)[0];
+        while(mobcheck && mobcheck.Exists())
+            {
+            if(mobcheck.Distance() > 1)
+                Orion.WalkTo(mobcheck.X(), mobcheck.Y());
+            else
+                Orion.Attack(mobcheck.Serial());
+            Orion.Wait(250);
+            if(!Orion.AbilityStatus('primary') && Player.Mana() >= 15)
+                Orion.UseAbility('primary');	
+            }
+        Orion.Wait(250);
+        if(Player.Stam('%') < 100 && Player.Hits()/Player.MaxHits() > .8)
+            {
+            Orion.Cast('Divine Fury');
+            Orion.Wait(1000);
+            }
+        while(Player.Hits('%') < 70)
+            {
+            Orion.Wait(100);
+            }
+        var keyGround = Orion.FindTypeEx('0x410B', any, ground, 'fast', 14)[0];
+        while(keyGround)
+            {
+            Orion.WalkTo(keyGround.X(), keyGround.Y());
+            Orion.MoveItem(keyGround.Serial());
+            Orion.Wait(500);
+            keyGround = Orion.FindTypeEx('0x410B', any, ground, 'fast', 14)[0];
+            }
+        var keyBackpack = Orion.FindType('0x410B')[0];
+        if(keyBackpack && Orion.WalkTo(lockerX,lockerY))
+            {
+            Orion.Wait(1300);
+            Orion.UseObject(keyBackpack);
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(locker[0].Serial());
+            Orion.Wait(1300);
+            keyBackpack = Orion.FindType('0x410B');
+            if(!keyBackpack[0])
+                break;
+            }
+        switch(phase)    
+            {
+            case 1:
+                break;
+            case 2:
+                x1 = lockerX - 2;
+                y1 = lockerY - 2;
+                x2 = lockerX + 2;
+                y2 = lockerY + 2;
+                break;
+            case 3:
+                x1 = lockerX - 4;
+                y1 = lockerY - 4;
+                x2 = lockerX + 4;
+                y2 = lockerY + 4;
+                break;
+            default:
+                break;
+            }
+        DrawSquare(x1,y1,x2,y2);
+        Orion.SetSearchArea(x1,y1,x2,y2);
+        var barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, '', 24).sort(function(barrelA,barrelB)
+            {
+            return barrelA.Distance() - barrelB.Distance();
+            });
+        Orion.ResetSearchArea();
+        Jiggle('Move',8);
+        if(barrels.length)
+            {
+            var barrel = barrels[0];
+            var barrelSerial = barrel.Serial();
+            var barrelX = barrel.X();
+            var barrelY = barrel.Y();
+            if(!Orion.AbilityStatus(doubleStrikeSpecial) && Player.Mana() >= 15)
+                Orion.UseAbility(doubleStrikeSpecial);
+            Orion.Wait(150);	
+            if(barrel.Distance() > 1)
+                if(Orion.WalkTo(barrelX,barrelY))
+                       Orion.Attack(barrelSerial);
+                   else
+                       Orion.Ignore(barrelSerial);
+            else
+                Orion.Attack(barrelSerial);
+            }
+        else
+            {
+            Orion.IgnoreReset();
+            Orion.SetSearchArea(x1,y1,x2,y2);
+            barrels = Orion.FindTypeEx('0x1EB5|0x0E77|0x0FAE', '0x0000', ground, '', 24).sort(function(barrelA,barrelB)
+                {
+                return barrelA.Distance() - barrelB.Distance();
+                });
+            Orion.ResetSearchArea();
+            Orion.ClearFakeMapObjects();
+            if(!barrels.length && phase < 3)
+                phase++;
+            }	    	
+        Orion.Wait(500);
+        }
+    Orion.Wait(10);
+    //Orion.WalkTo(6432, 1699, 0, 0);
+    }
+
+function UWBarrelsHealSelf()
+    {
+    while(!Player.Dead()) 
+        {
+        if(Player.Poisoned())
+            {
+            Orion.Cast('Cleanse By Fire');
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(self);
+            }
+        else if(Player.Hits('%') < 70)
+            {
+            Orion.Cast('Close Wounds')
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(self);
+            }
+        else if(Player.Hits('%') < 90)
+            {
+            if(!Orion.BuffExists('Confidence'))
+                Orion.Cast('Confidence');
+            }
+        Orion.Wait(250);
+        }
+    }
+
+//--#Leader
+function ____________LEADER(_){}
+
+function UWHealLeader()
+    {
+    var isBard = Orion.SkillValue('Musicianship') >= 1000 && Orion.SkillValue('Discordance') >= 1000;
+    Debug(isBard);
+    var discordCooldown = 8500;
+    var nextDiscord = 0;
+    var playerSerial = Player.Serial();
+    var activeHealers = Shared.GetArray('healer',[]);
+    activeHealers.push([leaderPort,playerSerial,Player.Name(),'leader'])
+    if(isBard)
+        Orion.Exec('AsyncDiscord',true);
+    while(true)
+        {
+        var target = injuredCheck(15,80);
+        if(target)
+            {
+            var targetSerial = target.Serial();
+            var healer = activeHealers.shift();
+            activeHealers.push(healer);
+            if(isBard && healer[1] == playerSerial)
+                {
+                var scriptRunning = Orion.ScriptRunning('AsyncDiscord');
+                if(scriptRunning < 0) //paused
+                    { 
+                    if(Orion.Now() > nextDiscord)
+                        {
+                        Debug('ResumeScript: AsyncDiscord');
+                        Orion.ResumeScript('AsyncDiscord');
+                        var healer = activeHealers.shift();
+                        activeHealers.push(healer);
+                        Debug('On resume, Skipping leadHealer to: ' + healer);
+                        nextDiscord = Orion.Now() + discordCooldown;
+                        }
+                    }
+                else if(scriptRunning > 0) //running
+                    {
+                    var healer = activeHealers.shift();
+                    activeHealers.push(healer);
+                    Debug('Skipping leadHealer to: ' + healer);
+                    }
+                }
+            Orion.TargetSystemSerial(target.Serial());
+            if(target.Poisoned())
+                {
+                Orion.UdpSend(healer[0],'CureTarget:' + targetSerial);
+                Debug('Send //CureTarget: ' + targetSerial);
+                Orion.Wait(1100);
+                }
+            else
+                {
+                Orion.UdpSend(healer[0],'HealTarget:' + targetSerial);
+                Debug('Send //HealTarget: ' + targetSerial);
+                Orion.Wait(500);
+                }
+            }
+        Orion.Wait(100);
+        }
+    }
+
+function AsyncDiscord()
+    {
+    Debug('Start AsyncDiscord');
+    var musicalInstruments = '0x0E9C|0x0EB3|0x0E9E|0x0E9D|0x0EB2|0x2807'; //use Exceptional instruments!
+    while(true)
+        {
+        Orion.PauseScript('UWHealBot');
+        if(Orion.HaveTarget())
+            Orion.CancelTarget();
+        Orion.Wait(100);
+        var timeStamp = Orion.Now();
+        Orion.UseSkill('Discordance');
+        if(Orion.WaitForTarget(2000))
+            {
+            if(Orion.InJournal('instrument shall you', '', 0, 'any', timeStamp))
+                {
+                var instrument = Orion.FindType(musicalInstruments)[0];
+                if(!instrument)
+                    {
+                    Orion.ResumeScript('UWHealBot');
+                    Orion.CancelTarget();
+                    Orion.Wait(100);
+                    return DiscordPush(Player.Name() + ' out of instruments!');
+                    }
+                Orion.TargetObject(instrument);
+                Debug('Switched instrument');
+                Orion.WaitForTarget(2000);
+                }
+            var lord = Orion.FindType('0x02C0', any, ground, 'live', 20, 'red|orange')[0];
+            if(lord)
+                Orion.TargetObject(lord);
+            else
+                Orion.CancelTarget();
+            var startTime = Orion.Now();
+            var endTime = startTime + 3000;
+            var result = Orion.WaitJournal("You play jarring music, suppressing your target's strength|That creature is already in discord.|You attempt to disrupt your target, but fail.",startTime,endTime,'sys')
+            if(result)
+                {
+                var text = result.Text();
+                Debug('WaitJournal: ' + text);
+                if(text == "You play jarring music, suppressing your target's strength." || text == "That creature is already in discord.")
+                    {
+                    Orion.ResumeScript('UWHealBot');
+                    Orion.Wait(100);
+                    break;
+                    }
+                }
+            }
+        Debug('Failed discord');
+        if(Orion.HaveTarget())
+            Orion.CancelTarget();
+        Orion.Wait(100);
+        Orion.ResumeScript('UWHealBot');
+        Orion.Wait(100);
+        Orion.PauseScript();
+        Orion.Wait(100);
+        }
+    Debug('Succeeded discord');
+    Orion.CharPrint(self,1159,'Successfully discorded!')
+    }
+//You play jarring music, suppressing your target's strength.
+//That creature is already in discord.
+//You attempt to disrupt your target, but fail.
+//--#Melee
+function ____________MELEE(_){}
+
+function UWSampMovement()
+    {
+    var rand = Orion.Random(2,6) * 50;
+    var isLeadSamp = Player.Serial() == leadSampSerial;
+    while(!Player.Dead())
+        {
+        Jiggle('Move',3);
+        var lord = Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange')[0];
+        if(luckScum && isLeadSamp && lord && lord.Hits() <= 1 && Orion.Contains(Orion.BuffDescription('Perfection'), 'Damage Bonus: 100'))
+            {
+            Orion.Wait(500);
+            if(lord.Hits() <= 1)
+                {
+                WalkToRadiusBorder(lord.Serial(),4);
+                if(Player.Luck() < 1000)
+                    {
+                    Orion.Dress('LeadLuck');
+                    Orion.Wait(500);
+                    }
+                Orion.Wait(250);
+                continue;
+                }
+            }
+        var wisp = Orion.FindTypeEx('0x00A5', any, ground, 'live|ignoreself', 24, 'red|orange');
+        if(!isLeadSamp && wisp.length)
+            {
+            Orion.Wait(rand);
+            wisp.forEach(function(mob)
+                {
+                Orion.TargetSystemSerial(mob);
+                Orion.Attack(mob);
+                Orion.Wait(10);
+                });
+            if(wisp[0].Distance() > 0)
+                if(!Orion.WalkTo(wisp[0].X(),wisp[0].Y(), 0, 0))
+                    if(!Orion.WalkTo(wisp[0].X(),wisp[0].Y(), 0, 0))
+                        Orion.Ignore(wisp[0].Serial());
+            var target = Orion.FindType('!0x033D|!0x00A4', any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red|orange')[0]; 
+            Orion.TargetSystemSerial(target);
+            Orion.Attack(target);
+            Orion.Wait(rand);
+            }
+        else if(lord)
+            {
+            Orion.Wait(rand);
+            if(lord.Distance() != 1)
+                WalkToRadiusBorder(lord.Serial(),1);
+                //Orion.WalkTo(lord.X(),lord.Y(), 0, 1);
+            }	
+        Orion.Wait(250);
+        }
+    }
+
+function AutoBuffs()
+    {
+    var nextSpellTime = 0;
+    var nextAppleTime = 0;
+    var nextEvadeTime = 0;
+    var timeStamp;
+    while(!Player.Dead())
+        {
+        timeStamp = Orion.Now();
+        if(Orion.BuffExists('Blood Oath') && timeStamp > nextAppleTime && Orion.FindType('0x2FD8').length)
+            {
+            Orion.UseType('0x2FD8');
+            nextAppleTime = timeStamp + 30000;
+            Orion.Wait(100);
+            }
+        timeStamp = Orion.Now();
+        if(timeStamp > nextSpellTime && Player.Mana() > 20)
+            {
+            if(useEvasion && timeStamp > nextEvadeTime && !Orion.BuffExists('Evasion') && Player.Hits('%') < evasionThresholdPercent)
+                {
+                Orion.Cast('Evasion');
+                nextSpellTime = timeStamp + 2000;
+                nextEvadeTime = timeStamp + 30000;
+                }
+            else if(useRemoveCurse && Orion.BuffExists('Blood Oath') && timeStamp > nextSpellTime)
+                {
+                Orion.Cast('Remove Curse');
+                nextSpellTime = timeStamp + 4000;
+                if(Orion.WaitForTarget(4000))
+                    Orion.TargetObject(self);
+                    }
+            else if(useConfidence && Player.Hits('%') < useConfidenceThresholdPercent && !Orion.BuffExists('Confidence'))
+                {
+                Orion.Cast('Confidence');
+                nextSpellTime = timeStamp + 1200;
+                }
+            else if(useEnemyOfOne && !Orion.Contains(Orion.BuffDescription('Enemy of One'), 'Shadowlord|creature'))
+                {
+                Orion.Cast('Enemy of One');
+                nextSpellTime = timeStamp + 2000;
+                }
+            else if(useCounterAttack && !Orion.BuffExists('Counter Attack'))
+                {
+                Orion.Cast('Counter Attack');
+                nextSpellTime = timeStamp + 2000;
+                }
+            else if(useConsecrateWeapon && !Orion.BuffExists('Consecrate Weapon'))
+                {
+                Orion.Cast('Consecrate Weapon');
+                nextSpellTime = timeStamp + 2000;
+                }
+            else if(useDivineFury && !Orion.BuffExists('Divine Fury'))
+                {
+                Orion.Cast('Divine Fury');
+                nextSpellTime = timeStamp + 2000;
+                }
+            }
+        Orion.Wait(100);
+        }
+    }
+
+function AutoAttack()
+    {
+    var isLeader = Player.Serial() == leadSampSerial;
+    while(!Player.Dead())
+        {
+        Orion.Wait(500);
+        var enemies = Orion.FindType('!0x033D|!0x00A4', any, ground, "live|ignoreself|ignorefriends", 2, 'gray|red|criminal|orange');
+        var enemyCount = enemies.length;
+        if(enemyCount === 0)
+            continue;
+        if(Orion.BuffExists('Blood Oath'))
+            {
+            Orion.WarMode(0);
+            continue;
+            }
+        AttackNearest();
+        switch(enemyCount)
+            {
+            case 1:
+                if(!isLeader && useOnslaught && !Orion.DisplayTimerExists('onslaughtTimer'))
+                    {
+                    Orion.Cast('Onslaught');
+                    var startTime = Orion.Now();
+                    var endTime = startTime + 3000;
+                    var check = Orion.WaitJournal("You deliver an onslaught of sword strikes!",startTime,endTime)
+                    if(check)
+                        Orion.AddDisplayTimer('onslaughtTimer', 6000, 'underChar', 'bar', 'Onslaught!', -100, 40, '1159', -1, '0xF0FF0BFF');
+                    }
+                else if(useSingleTargetSpecial && !Orion.AbilityStatus(singleTargetSpecial) && Player.Mana() >= 15)
+                    Orion.UseAbility(singleTargetSpecial);
+                break;
+            case 2:
+                if(useMomentumStrike)
+                    {
+                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                        Orion.Cast('Momentum Strike');
+                    }
+                else if(useMultiTargetSpecial)
+                    {
+                    if(!Orion.AbilityStatus(multiTargetSpecial) && Player.Mana() >= 15)
+                        Orion.UseAbility(multiTargetSpecial);
+                    }
+                break;
+            default: //more than 2 enemies
+                if(useMultiTargetSpecial)
+                    {
+                    if(!Orion.AbilityStatus(multiTargetSpecial) && Player.Mana() >= 15)
+                        Orion.UseAbility(multiTargetSpecial);
+                    }
+                else if(useMomentumStrike)
+                    {
+                    if(!Orion.BuffExists('Momentum Strike') && Player.Mana() >= 8)
+                        Orion.Cast('Momentum Strike');
+                    }
+                break;
+            }
+        }
+    }
+
+function AttackNearest()
+    {
+    Orion.ResetSearchArea();
+    var target = Orion.FindType('!0x033D|!0x00A4', any, ground, 'near|live|inlos|ignoreself|ignorefriends', 24, 'gray|criminal|red|orange')[0]; 
+    if(!target)
+        return;
+    Orion.TargetSystemSerial(target);
+    Orion.Attack(target);
+    }
+
+function AutoInsure() 
+    {
+    var searchFrequency = 5000;
+    var hash = {};
+    while(!Player.Dead())
+        {
+        var items = Orion.FindTypeEx(any).filter(function(item)
+            {
+            var itemSerial = item.Serial()
+            if(hash[itemSerial] || Orion.Contains(item.Properties(),'insured|blessed|cursed'))
+                return false;
+            var keep = AliKeep(itemSerial);
+            if(!keep || keep == 'Kept by Item Graphic')
+                hash[itemSerial] = true;
+            return keep && keep !== 'Kept by Item Graphic';
+            });
+        if(items.length && !Orion.HaveTarget())
+            {
+            Orion.WaitContextMenuID(self, 418);
+            Orion.RequestContextMenu(self);
+            for(var i=0;i<items.length;i++)
+                {
+                var itemSerial = items[i].Serial()
+                var timeStamp = Orion.Now() - 10;
+                if(Orion.WaitForTarget(2000))
+                    Orion.TargetObject(itemSerial);
+                var check = Orion.WaitJournal('You cannot insure that|You have insured the item|You can only insure items that you have equipped or that are in your backpack|You cancel the insurance on the item',timeStamp,timeStamp + 2000)
+                if(check && check.Text() == 'You cannot insure that')
+                    hash[itemSerial] = true;
+                Orion.Wait(50);
+                }
+            if(Orion.WaitForTarget(2000))
+                Orion.CancelTarget();
+            }
+        Orion.Wait(searchFrequency);
+        }
+    }
+
+//-#Healers
+function ____________HEALERS(_){}
+
+function UWHealBot()
+    {
+    var musicalInstruments = '0x0E9C|0x0EB3|0x0E9E|0x0E9D|0x0EB2|0x2807'; //use Exceptional instruments!
+    var timeStamp = Orion.Now();
+    while(!Player.Dead())
+        {
+        Orion.Wait(250);
+        if(Orion.FindType('0x02C0', any, ground,'live|ignoreself', 3, 'red').length)
+            continue;
+        if(!Orion.HaveTarget() && !Player.Frozen())
+            Orion.Cast("Greater Heal");
+        else if(Player.Hits('%') < 80)
+            {
+            if(Orion.HaveTarget())
+                Orion.TargetObject(self);
+            if(Orion.SkillValue('Peacemaking') >= 1000 && Orion.FindType(musicalInstruments).length)
+                {
+                Orion.Wait(500);
+                Orion.UseSkill('Peacemaking')
+                if(Orion.WaitForTarget(2000))
+                    {
+                    if(Orion.InJournal('instrument shall you', '', 0, 'any', timeStamp))
+                        {
+                        timeStamp = Orion.Now();
+                        var instrument = Orion.FindType(musicalInstruments)[0];
+                        if(!instrument)
+                            {
+                            Orion.CharPrint(self,1159,'Out of instruments!');
+                            Orion.CancelTarget();
+                            continue;
+                            }
+                        Orion.TargetObject(instrument);
+                        Debug('Switched instrument');
+                        Orion.WaitForTarget(2000);
+                        }
+                    Orion.TargetObject(self);
+                    }
+                }
+            }
+        }
+    }
+
+function SingleMageHealBot()
+    {
+    while(!Player.Dead())
+        {
+        while(!Orion.HaveTarget() && !Player.Frozen())
+            {
+            Orion.Cast('Greater Heal')
+            Orion.WaitForTarget(3000);
+            }
+        var target = injuredCheck(10, 65);
+        if(Player.Hits('%') < 80)
+            Orion.TargetObject(self);
+        else if(target && Orion.HaveTarget())
+            {
+            if(target.Poisoned())
+                {
+                Orion.CancelTarget();
+                Orion.Cast('Cure');
+                if(Orion.WaitForTarget(3000))
+                    Orion.TargetObject(target.Serial());	
+                }
+            else
+                Orion.TargetObject(target.Serial());
+            }
+        Orion.Wait(250);
+        }
+    }
+
+//--# Phases
+function ____________PHASES(_){}
+
+function Autostart(_)
+    {
+    if(Player.X() > 6000 && Orion.Now() < 20000)
+        {
+        while(Orion.ObjAtLayer('mount'))
+            {
+            Orion.UseObject(self)
+            Orion.Wait(500);
+            }
+        }
+    Orion.Wait(1000);
+    if(Player.Serial() == leadHealerSerial)
+        {
+		var role = 'leader';
+        Debug2('Chosen as Leader');
+        }
+    else if(Orion.SkillValue('Magery') >= 700)
+        {
+        var role = 'healer';
+        Debug2('Chosen as Healer');
+        }
+    else if(Orion.SkillValue('Swordsmanship') >= 1000)
+        {
+        var role = 'dexxer';
+        Debug2('Chosen as Dexxer');
+        }
+    else
+        {
+        var role = 'misc';
+        Debug2('Chosen as Misc');
+        }
+    Shared.AddVar('myRole',role);
+    if(Player.Serial() == leadHealerSerial)
+        Orion.Exec('AliComLeader',true);
+    else
+        Orion.Exec('AliComFollower',true);
+    VerifyOpenContainer(backpack);
+    // while(Orion.ObjAtLayer('mount'))
+    //     {
+    //     Orion.CharPrint(self,1159,'Dismounting to avoid Dismount debuff');
+    //     Orion.UseObject(self);
+    //     Orion.Wait(1300);
+    //     }
+    // Orion.Wait(1000);
+    // var ethy = Orion.FindTypeEx(any).filter(function(item)
+    //     {
+    //     return Orion.Contains(item.Properties(),'Mount Hue:');
+    //     })[0];
+    // while(ethy && !Orion.ObjAtLayer('mount'))
+    //     {
+    //     Orion.CharPrint(self,1159,'Remounting');
+    //     Orion.UseObject(ethy.Serial());
+    //     Orion.Wait(1300);
+    //     }
+    }
+
+function ScoutAhead()
+    {
+    TextWindow.Clear();
+    Shared.AddVar('leashing',false);
+    Orion.CharPrint(self,1159,'Scouting ahead');
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
+    
+    var hideCooldown = Orion.Now();
+    var ladder = Orion.FindType('0x08A6',any,ground,'item',2)[0];
+    if(ladder && Player.X() > 6350)
+        {
+        //return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(ladder);
+            Orion.Wait(1300);
+            }
+        }
+    do
+        {
+        Debug('HydraReset');
+        HydraReset();
+        } while(HydraCheck())
+    if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
+        {
+        Orion.CharPrint(self,1159,'UW is ready to be started! Sending out Barrel Samp Check')
+        return true;
+        }
+    if(Orion.DisplayTimerExists('bossReset'))
+        return true;
+    Orion.CharPrint(self,1159,'Checking if boss is up');
+    while(!Orion.HaveTarget())
+        {
+        Orion.Cast('Invisibility')
+        Orion.WaitForTarget(5000)
+        }
+    AliWalkTo(6308,1711);
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Orion.Step('n');
+        Orion.Wait(200);
+        }
+    Orion.Wait(200);
+    Orion.TargetObject(self);
+    Orion.Wait(500);
+    var bossCheck = Orion.FindType(any, any, ground, 'live|ignoreself', 24, 'red');
+    if(bossCheck.length)
+        Orion.CharPrint(self,1159,'Boss found! Resetting')
+    else
+        Orion.CharPrint(self,1159,'No boss. Wait for UW reset')
+    AliWalkTo(6401,1656);
+    var ladder2 = Orion.FindType('0x08A1',any,ground,'item',20);
+    if(ladder2.length == 0)
+        return Orion.CharPrint(self,1159,'Ladder not found!');
+    tempX = Player.X();
+    tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Orion.UseObject(ladder2);
+        Orion.Wait(500)
+        }
+    HydraReset();
+    Orion.Wait(1000);
+    while(!Player.Hidden())
+        {
+        if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+            {
+            Orion.UseSkill('Hiding');
+            Orion.Wait(500);
+            hideCooldown = Orion.Now() + 10000;
+            break;
+            }
+        Orion.Cast('Invisibility');
+        if(Orion.WaitForTarget(5000))
+            {
+            Orion.TargetObject(self);
+            Orion.Wait(1000);
+            }
+        }
+    if(bossCheck.length)
+        return false;
+    return true;
+    }
+
+function HydraReset()
+    {
+    AvoidDropdowns();
+    Debug('Walking to ready position')
+    var hydraResetCheck = AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraCheck)
+    Orion.Print('HydraResetCheck: ' + hydraResetCheck)
+    if(hydraResetCheck == 'Hydra')
+        {
+        Debug('Hydra found. Walking to stern')
+        AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash)
+        CheeseIt()
+        Orion.Cast('Invisibility');
+        Orion.WaitForTarget(5000);
+        Debug('Walking back to ready position')
+        AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        CheeseIt()
+        }
+    Orion.ClearBadLocations();
+    }
+
+function HydraRecover()
+    {
+    while(!Player.Dead())
+        {
+        Orion.Wait(1000);
+        if(Orion.FindTypeEx('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length)
+            return;
+        }
+    Orion.PauseScript('all','HydraRecover|GMScan');
+    Orion.Wait(5000);
+    var gump = Orion.GetGump('any','0x000008AF');
+    if(gump !== null)
+        {
+        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Wait(200);
+        }
+    GoRez();
+    while(Player.LRC() < 100)
+        {
+        EquipBossSuitByBotName();
+        Orion.Wait(2000);
+        }
+    while(Player.Hits('%') < 100)
+        {
+        Orion.Cast('Greater Heal');
+        if(Orion.WaitForTarget(3000))
+            Orion.TargetObject(self)
+        Orion.Wait(500);
+        }
+    CharacterMaintenance();
+    Orion.Wait(1000);
+    MassAllMessage('UltraTerminate');
+    Shared.ClearVars();
+    Orion.Terminate('all','HydraRecover');
+    Autostart();
+    Orion.Wait(3000);
+    Orion.Exec('SmartStart',true);
+    }
+
+function WaitForReset(_)
+    {
+    Shared.AddVar('leashing',false);
+    Orion.ClearBadLocations();
+    var hideCooldown = Orion.Now();
+    var stayLoggedTimer = Orion.Now();
+    while(true)
+        {
+        if(HydraCheck())
+            {
+            AvoidDropdowns();
+            AliWalkTo(6302, 1756, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid, HydraLeash);
+            while(!Player.Hidden())
+                {
+                if(!Orion.HaveTarget())
+                    {
+                    Orion.Cast('Invisibility');
+                    Orion.WaitForTarget(5000);
+                    }
+                Orion.TargetObject(self);
+                Orion.Wait(500);
+                Orion.Cast('Invisibility');
+                }
+            AliWalkTo(6313, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+            while(!Player.Hidden())
+                {
+                Orion.Cast('Invisibility');
+                if(Orion.WaitForTarget(5000))
+                    {
+                    Orion.TargetObject(self);
+                    Orion.Wait(1000);
+                    }
+                }
+            Orion.ClearBadLocations();
+            }
+        else if(Orion.Now() > stayLoggedTimer)
+            {
+            Orion.UseObject(backpack)
+            stayLoggedTimer = Orion.Now() + 30000
+            Orion.Wait(1200);
+            }
+        Shared.AddVar('leashing',false);
+        while(!Player.Hidden())
+            {
+            if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+                {
+                Orion.UseSkill('Hiding');
+                Orion.Wait(500);
+                hideCooldown = Orion.Now() + 10000;
+                break;
+                }
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
+        if(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length && Shared.GetVar('HaveKeys',false))
+            {
+            Orion.CharPrint(self,1159,'UW is ready to be started! Calling team to ready position')
+            break;
+            }
+        Orion.Wait(1000);
+        }
+    }
+
+function WaitSyncLeader(_)
+    { //wait for team readiness
+    var healerArr = Shared.GetArray('healer',[]);
+    var sampArr = Shared.GetArray('dexxer',[]);
+    var miscArr = Shared.GetArray('misc',[]);
+    var fullArr = healerArr.concat(sampArr.concat(miscArr));
+    var serialHash = {};
+    var desynced = true;
+    var hideCooldown = 0;
+    while(desynced)
+        {
+        Orion.Wait(100);
+        while(!Player.Hidden())
+            {
+            if(Orion.Now() > hideCooldown && Orion.SkillValue('Hiding') > 20)
+                {
+                Orion.UseSkill('Hiding');
+                Orion.Wait(500);
+                hideCooldown = Orion.Now() + 10000;
+                continue;
+                }
+            Orion.Cast('Invisibility');
+            if(Orion.WaitForTarget(5000))
+                {
+                Orion.TargetObject(self);
+                Orion.Wait(1000);
+                }
+            }
+        if(healerArr.length == 0)
+            {
+            Orion.CharPrint(self,1159,'No healers in team!');
+            Orion.Wait(1000);
+            continue;
+            }
+        if(sampArr.length == 0)
+            {
+            Orion.CharPrint(self,1159,'No dexxers in team!')
+            Orion.Wait(1000);
+            continue;
+            }
+        for(var i=0;i<fullArr.length;i++)
+            {
+            var unit = fullArr[i];
+            var unitPort = unit[0];
+            var unitSerial = unit[1];
+            var unitName = unit[2];
+            desynced = false;
+            Debug('serialHash: ' + unitName + ': ' + serialHash[unitSerial])
+            if(serialHash[unitSerial])
+                {
+                continue;
+                }
+            while(Orion.UdpRecv('Coms'))
+                Orion.Wait(100);
+            var endTime = Orion.Now() + 1000;
+            Orion.CharPrint(self,1159,'Pinging ' + unitName);
+            Orion.UdpSend(unitPort,'AwaitPing');
+            Debug('Send //AwaitPing: ' + unitName);
+            Shared.AddVar('AwaitAnswer',false);
+            var answer = Shared.GetVar('AwaitAnswer',false);
+            while(answer !== unitSerial && Orion.Now() < endTime)
+                {
+                Orion.Wait(200);
+                answer = Shared.GetVar('AwaitAnswer',false)
+                }
+            if(answer === unitSerial)
+                {
+                Orion.CharPrint(self,1159,unitName + ' Answered');
+                serialHash[unitSerial] = true;
+                }
+            while(Orion.UdpRecv('Coms'))
+                Orion.Wait(100);
+            desynced = true;
+            break;
+            }
+        }
+    //Orion.Wait(3000);
+    MassAllMessage('SetSync');
+    }
+
+function WaitSyncFollower(_)
+    { //wait for team readiness
+    Shared.AddVar('Desync',true);
+    while(Shared.GetVar('Desync'))
+        {
+        Orion.CharPrint(self,1159,'Awaiting sync');
+        Orion.Wait(1000);
+        }
+    }
+
+function PassSync()
+    {
+    Shared.AddVar('Desync',false);
+    }
+
+function KeyCheck()
+    {
+    var locArr =
+        [
+            ['Flywheel',6426,1733], //0x46FE
+            ['Bearing Assembly',6436,1733],//0x0E74
+            ['Wire Spool',6426,1753],//0x4CDB
+            ['Power Core',6436,1753]//0x47E6
+        ];
+    var keyCheck = false;
+    for(var i=0;i<locArr.length;i++)
+        {
+        var loc = locArr[i];
+        var component = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),loc[0]);
+            })[0];
+        if(component)
+            {
+            keyCheck = true;
+            break;
+            }
+        }
+    if(keyCheck)
+        {
+        if(Orion.Contains(Player.Name(), 'Lady|Lord'))
+            var _pName = Player.Name().slice(5, Player.Name().length);
+        else
+            var _pName = Player.Name();
+        Debug2('Sends ' + keyCheck + ' Keycheck: ' + _pName);
+        Orion.UdpSend(leaderPort,'KeyCheck:' + _pName);
+        }
+    }
+
+function DetermineBarrelSamp(_)
+    {
+    Shared.AddVar('barrelSampName','Unknown');
+    Orion.CharPrint(self,1159,'Choosing barrel samp...');
+    var samps = Shared.GetArray('dexxer',false);
+    while(!samps)
+        {
+        Orion.CharPrint(self,1159,'Waiting for samps to join...')
+        Orion.Wait(1000)
+        samps = Shared.GetArray('dexxer',false);
+        }
+    Debug('Sending KeyChecks')
+    for(var i=0;i<samps.length;i++)
+        {
+        var samp = samps[i];
+        Orion.UdpSend(samp[0],'KeyCheck');
+        }
+    Orion.Wait(2000);
+    //samps = samps.filter(function(samp){return Orion.Contains(samp[2], 'Genevieve')})
+    //var barrelSamp = samps[0];
+    var keyCheck = Shared.GetVar('barrelSampName');
+    if(keyCheck == 'Unknown')
+        {
+        var barrelSamp = samps[Orion.Random(0,samps.length)];
+        Shared.AddVar('barrelSampName',barrelSamp[2]);
+        }
+    else
+        {
+        samps = samps.filter(function(samp){return Orion.Contains(samp[2], keyCheck)})
+        var barrelSamp = samps[0];
+        }
+    Orion.UdpSend(barrelSamp[0],'SetBarrelSamp');
+    Debug('Send //SetBarrelSamp: ' + barrelSamp[2]);
+    }
+    
+function GoFromHomeToLadderPosition()
+    {
+    Orion.CharPrint(self,1159,'Going to Ladder position');
+	TerminateAll('GoFromHomeToLadderPosition|GetKeys');
+    Orion.Wait(Orion.Random(0,10) * 1000);
+    if(AliWalkTo(6432, 1633, 0, 0, 255, 4, 1, 1)) //uwboss area
+        {
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'item', 24)[0];
+        AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        var ladderSerial = ladder.Serial();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(ladderSerial);
+            Orion.Wait(1300);
+            }
+        }
+    if(AliWalkTo(6305, 1673, 0, 0, 255, 4, 1, 1, 50000, false, HydraAvoid)) //upper deck
+        {
+        var ladder = Orion.FindTypeEx('0x08A4|0x08A6', any, ground, 'item', 24)[0];
+        AliWalkTo(ladder.X(),ladder.Y(),0,1);
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(ladder.Serial());
+            Orion.Wait(500);    
+            }
+        }
+    if(Player.X() < 6000)
+        {
+        if(Orion.ObjAtLayer('Backpack').Map() != 3 || Orion.GetDistance(1700,1540) > 50)
+            RecallByGump('Main','UW Dock','Main','UW Dock2')
+        Jiggle('random',750);
+        while(Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(self);
+            Orion.Wait(1300);
+            }
+        Orion.Wait(Orion.Random(1,6) * 500);
+        Orion.Exec('UWSuitJournalCheck',true);
+        }
+    if(AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1))//uw dock
+        {
+        var whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
+        while(!whirlpool)
+            {
+            AliWalkTo(1700, 1636, 0, 0, 255, 4, 1, 1);
+            whirlpool = Orion.FindTypeEx('0x3789', any, ground, '', 24)[0];
+            }
+        AliWalkTo(whirlpool.X(),whirlpool.Y(),0,1);
+        Orion.Wait(500);
+        var tempX = Player.X();
+        var tempY = Player.Y();
+        while(Player.X() == tempX && Player.Y() == tempY)
+            {
+            Orion.UseObject(whirlpool.Serial());
+            Orion.Wait(1300);
+            }
+        Jiggle('random',1000);
+        var ethy = Orion.FindTypeEx(any).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'Mount Hue:')
+            })[0];
+        if(ethy)
+            {
+            Orion.UseObject(ethy.Serial());
+            Orion.Wait(1300);
+            }
+        EquipBossSuitByBotName();
+        while(ethy && !Orion.ObjAtLayer('Mount'))
+            {
+            Orion.UseObject(ethy.Serial());
+            Orion.Wait(1300);
+            }
+        Orion.Wait(1300);
+        }
+    if(AliWalkTo(6321, 1711, 0, 0, 255, 4, 1, 1,50000,false,SeaweedAvoid))//outside boat
+        {
+        Orion.Wait(1000);
+        if(Player.X() != 6444 || Player.Y() != 1743)
+            return GoFromHomeToLadderPosition();
+        }
+    var randX = 6432 + Orion.Random(-1,2);
+    var randY = 1699 + Orion.Random(-1,2);
+    if(AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, false, LichAttackWalk)) //below deck
+        {
+        Orion.Wait(1000);
+        if(Orion.GetDistance(6432,1699) > 5)
+            return GoFromHomeToLadderPosition();
+        }
+    Orion.Wait(1300);
+	}
+
+function UWSuitJournalCheck()
+    {
+    var endTime = Orion.Now() + 10000;
+    while(Player.Y() < 1585 && Orion.Now() < endTime)
+        {
+        var check = Orion.InJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!",'sys')
+        if(check)
+            {
+            if(check.Text() == "You couldn't hope to survive proceeding without the proper equipment...")
+                EquipUWSuitByBotName();
+            else if(check.Text() == "You cannot proceed while mounted or flying!")
+                {
+                while(Orion.ObjAtLayer("Mount"))
+                    {
+                    Orion.UseObject(self);
+                    Orion.Wait(500);
+                    }
+                }
+            Orion.Wait(100);
+            Orion.ClearJournal("You couldn't hope to survive proceeding without the proper equipment...|You cannot proceed while mounted or flying!")
+            }
+        Orion.Wait(500);
+        }
+    Orion.Wait(1500);
+    EquipBossSuitByBotName();
+    }
+
+function GoFromLadderToReadyPosition(_)
+    {//this function is to move from Sync position to Ready position 
+    Orion.CharPrint(self,1159,'Moving from safe to ready position');
+    Debug2('Moving from safe to ready position');
+    var ethy = Orion.FindTypeEx(any).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(),'Mount Hue:');
+        })[0];
+    while(ethy && !Orion.ObjAtLayer('mount'))
+        {
+        Orion.CharPrint(self,1159,'Remounting');
+        Orion.UseObject(ethy.Serial());
+        Orion.Wait(1300);
+        }
+    Orion.Wait(Orion.Random(0,10) * 500);
+    var ladder = Orion.FindTypeEx('0x08A6',any,ground,'item',2)[0];
+    if(!ladder)
+        {
+        Debug2("Couldn't find rope ladder!");
+        return Orion.CharPrint(self,1159,"Couldn't find rope ladder!");
+        }
+    Debug2("Moving to rope ladder");
+    AliWalkTo(ladder.X(),ladder.Y(),0,1);
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Debug2("Using ladder");
+        Orion.UseObject(ladder.Serial());
+        Orion.Wait(1300);
+        }
+    var randX = 6315 + Orion.Random(-2,3);
+    var randY = 1706 + Orion.Random(-3,4);
+    if(Shared.GetVar('barrelSamp',false))
+        {
+        Debug2("Walking to Winch Assembly");
+        AliWalkTo(6311, 1705, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        }
+    else if(Player.Serial() == leadSampSerial)
+        {
+        Debug2("Walking to Lead Samp Position");
+        AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('Turn',250);
+        }
+    else
+        {
+        Debug2("Walking to Ready Position");
+        AliWalkTo(randX, randY, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('random',500);
+        }
+    }
+
+function OpenUW(_)
+    {
+    Orion.CharPrint(self,1159,'Opening UW!');
+    Debug2("Opening UW!");
+    DiscordPush('Start UW')
+    var componentArr =
+        [
+            '0x46FE',
+            '0x4CDB',
+            '0x47E6',
+            '0x0E74',
+        ];
+    var nameArr =
+        [
+            'Flywheel',
+            'Wire Spool',
+            'Power Core',
+            'Bearing Assembly',
+        ];
+    var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+    if(!winch)
+        return Orion.CharPrint(self,1159, "Couldn't find winch!");
+    var winchSerial = winch.Serial();
+    AliWalkTo(winch.X(),winch.Y());
+    var parse = ParseWinch();
+    for(var i=0;i<parse.length;i++)
+        {
+        var currentParse = parse[i];
+        if(currentParse)
+            continue;
+        var component = Orion.FindType(componentArr[i])[0];
+        if(!component)
+            {
+            Orion.CharPrint(self,1159,"Couldn't find component: " + nameArr[i]);
+            continue;
+            }
+        Orion.CharPrint(self,1159, 'Inserting ' + nameArr[i]);
+        Debug2('Inserting ' + nameArr[i])
+        Orion.MoveItem(component,0,winchSerial)
+        Orion.Wait(1300);
+        var reParse = ParseWinch();
+        if(reParse[i] == false)
+            i--;
+        }
+    var lever = Orion.FindTypeEx('0x108C|0x108E',any,ground,'item',20)[0];
+    if(!lever)
+        {
+        Debug2('Lever not found!');
+        return Orion.CharPrint(self,1159,'Lever not found!');
+        }
+    AliWalkTo(lever.X(),lever.Y());
+    while(Orion.FindType('0x07CD','0x0B99',ground,'item','xyz: 6306, 1708').length)
+        {
+        Debug2('Using lever');
+        Orion.UseObject(lever.Serial())
+        Orion.Wait(500);
+        }
+    if(Player.Serial() == leadSampSerial)
+        {
+        Debug2("Walking to Lead Samp Position from winch");
+        AliWalkTo(6308, 1711, 0, 0, 255, 4, 1, 1, 50000, true, HydraAvoid);
+        Jiggle('Turn',750);
+        }
+    else
+        Jiggle('random',500);
+    }
+
+function GoToBossArena(_)
+    {
+    var entryTiles = 
+        [
+            [6306,1711],
+            [6307,1711],
+            [6308,1711],
+        ]
+    var entryTile = entryTiles[Orion.Random(0,entryTiles.length)]
+    Orion.CharPrint(self,1159,'Going to boss arena');
+    Debug2('Going to boss arena')
+    AliWalkTo(entryTile[0], entryTile[1]);
+    var tempX = Player.X();
+    var tempY = Player.Y();
+    while(Player.X() == tempX && Player.Y() == tempY)
+        {
+        Debug2('Stepping into boss arena')
+        Orion.Step('n');
+        Orion.Wait(500);
+        }
+    }
+
+function BossSequence(_)
+    {
+    Orion.CharPrint(self,1159,'Starting Boss Sequence!');
+    Debug2('Starting Boss Sequence!');
+    Shared.AddVar('bossStartStamp',Orion.Now());
+    while(true)
+        {
+        initScripts();
+        while(!Player.Dead())
+            {
+            var corpse = Orion.FindTypeEx('0x2006', any, ground, 'item', 23).filter(function(mob)
+                {
+                return Orion.Contains(mob.Properties(),'Evil');
+                });
+            if(corpse.length)
+                {
+                Orion.AddDisplayTimer('bossReset', 1805000, 'UnderChar', 'Circle|Bar', 'Waiting for Reset',0,40);
+                Shared.AddVar('bossDeathStamp',Orion.Now());
+                Orion.Print('Boss TTK: ' + (Shared.GetVar('bossDeathStamp',0) - Shared.GetVar('bossStartStamp',0))) + 'ms';
+                if(publicAnnounce && Player.Serial() == leadHealerSerial)
+                    PublicDiscordPush('UW Boss Died! Next UW will start in about 30 minutes.');
+                if(Player.Serial() != leadSampSerial)
+                    Orion.Wait(Orion.Random(5,11) * 500);
+                TerminateAll('BossSequence');
+                AliWalkTo(corpse[0].X(),corpse[0].Y());
+                //ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+                AliLootUW();
+                Orion.Wait(Orion.Random(4,9) * 1000);
+                var ethy = Orion.FindTypeEx(any).filter(function(item)
+                    {
+                    return Orion.Contains(item.Properties(),'Mount Hue:');
+                    })[0];
+                while(ethy && !Orion.ObjAtLayer('mount'))
+                    {
+                    Orion.CharPrint(self,1159,'Remounting');
+                    Orion.UseObject(ethy.Serial());
+                    Orion.Wait(1300);
+                    }
+                return;
+                }
+            Orion.Wait(1000);
+            }
+        //handle death during boss fight
+        Orion.Wait(3000);
+        Orion.WarMode(0);
+        var gump = Orion.GetGump('any','0x000008AF');
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(2)); //gem of salvation rez
+            Orion.Wait(300);
+            }
+        GoRez();
+        if(BossCheck() === 0)
+            {
+            Orion.Exec('AutoConfidence',true);
+            GoFromHomeToLadderPosition();
+            GoFromLadderToReadyPosition();
+            GoToBossArena();
+            }
+        FindOwnCorpse();
+        Debug2('Recovered during boss fight');
+        }
+    }
+
+function GoRez()
+    {
+    Debug2('Died');
+    DiscordPush(Player.Name() + ' Died');
+    while(Player.Dead())
+        {
+        LeaveUW();
+        var ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+        if(!ankh)
+            {
+            LeaveUW();
+            ankh = Orion.FindTypeEx('0x0005|0x0002|0x0003|0x0004',any,ground,'item',20)[0];
+            if(!ankh)
+                return Orion.CharPrint(self,1159,'No ankh found!')
+            }
+        Orion.Exec('AutoRes',true);
+        Orion.WalkTo(ankh.X(),ankh.Y())
+        Orion.Wait(1000);
+        }
+    Debug2('Ressed');
+    }
+
+function CleanUpPublicCorpse()
+    {
+    Orion.IgnoreReset();
+    Orion.AddDisplayTimer('publicCorpse',150000, 'AboveChar', 'Circle|Bar', 'Waiting for Public Corpse');
+	var corpse = Orion.FindTypeEx('0x2006', any, ground, 23).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(), 'An Evil One');
+        })[0];
+    if(!corpse)
+        return Orion.CharPrint(self,1159,'No corpse found!')
+    AliWalkTo(corpse.X(),corpse.Y());
+    Orion.UseObject(corpse.Serial());
+    Orion.Wait(2000);
+    var corpseInstanceSerial = Orion.GetSerial(lastcontainer)
+    while(Orion.GumpExists('container',corpseInstanceSerial))
+        {
+        Orion.Wait(100);
+        }
+    Orion.RemoveDisplayTimer('publicCorpse');
+    Orion.Wait(100);
+    AliLootUW();
+    //ListLoot("UWLoot|Gold|ignoreLists|UWIgnore");
+    }
+
+function GMScan()
+	{
+    var bot = "https://discord.com/api/webhooks/941921319463841843/7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI";
+	var useDiscordPush = true;
+	var useAlarmSound = true;
+    var closeUO = false;
+    var timeStamp = 0;
+    var gmCheck;
+	while(true)
+		{
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
+            {
+            return mob.Properties().indexOf('GM ') > -1;
+            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();    
+        if(gmCheck)
+            {
+            if(useDiscordPush)
+                Orion.HttpPost(bot, "content=" + Player.Name() + ": GM");
+			if(useAlarmSound)
+			    Orion.PlayWav('GMAlert.wav'); //default sound can be changed by putting a different .wav in the Ultima Online Classic folder.
+			Orion.PauseScript('all','GMScan');
+			Orion.Wait(500);
+			Orion.Terminate('all', 'GMScan');
+			Orion.StopWalking();
+			Orion.Wait(5000);
+			if(closeUO)
+			    {
+			    Orion.OAOptionSet('AutoReconnect', '0');
+			    Orion.LogOut();
+			    }
+			}
+        Orion.Wait(3000);
+		}
+	}
+
+//--# Helpers
+function ____________HELPERS(_){}
+
+function WaitForSpecificGump(delay, type, serial, id)
+	{
+	var endTime = Orion.Now() + delay;
+    while(!Orion.GumpExists(type, serial, id) && Orion.Now() < endTime)
+	    Orion.Wait(10);
+	if(Orion.GumpExists(type, serial, id))
+		return Orion.GetGump(serial, id);
+	return false;
+	}
+
+function BossCheck(_)
+    {
+    return Orion.FindType('0x02C0', any, ground, 'live|ignoreself', 24, 'red|orange').length;
+    }
+
+function SwitchToBarrelWep()
+    {
+    var selfRepair = false;
+    var barrelWepGraphics = '0x0F4B|0x27A9';
+    if(selfRepair)
+        {
+        var barrelWep = Orion.FindTypeEx(barrelWepGraphics).filter(function(item)
+            {
+            return Orion.Contains(item.Properties(),'self repair');
+            })[0];
+        }
+    else
+        {
+        var barrelWep = Orion.FindTypeEx('0x0F4B')[0]; 
+        }
+    if(barrelWep)
+        {
+        var endTime = Orion.Now() + 10000;
+        var barrelWepSerial = barrelWep.Serial();
+        var leftHand = Orion.ObjAtLayer('LeftHand')
+        while((!leftHand || leftHand.Serial() != barrelWepSerial) && Orion.Now() < endTime)
+            {
+            Orion.Equip(barrelWepSerial);
+            Orion.Wait(1100);
+            leftHand = Orion.ObjAtLayer('LeftHand');
+            }
+        }
+    }
+
+function AutoConfidence(_)
+    {
+    while(Player.Hits('%') < 100)
+        {
+        Orion.Cast('Confidence');
+        Orion.Wait(7000);
+        }
+    }
+
+function AutoRes(_)
+    {
+    while(Player.Dead())
+        {
+        var gump = Orion.GetGump('any','0x000008AF');
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(2));
+            Orion.Wait(200);
+            }
+        Orion.Wait(1000);
+        }
+    }
+
+function CheeseIt(_)
+    {
+    Debug('CheeseIt')
+    Shared.AddVar('leashing',false);
+    Orion.Wait(500);
+    while(!Player.Hidden())
+        {
+        if(!Orion.HaveTarget())
+            {
+            Debug('Casting invis 2');
+            Orion.Cast('Invisibility');
+            Orion.WaitForTarget(5000);
+            }
+        Orion.TargetObject(self);
+        Orion.Wait(500);
+        }
+    }
+
+function GoldCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking gold...');
+    Orion.WaitContextMenuID(self, 416);
+    Orion.RequestContextMenu(self);
+    var goldInt = 1000000;
+    if(Orion.WaitForGump(5000,true))
+        {
+        var gump = Orion.GetGump(any, '0x000F3E9F');
+        var goldUnf = gump.Text(0);
+        var goldNoSymbols = goldUnf.replace(/[,+]/g,'');
+        Orion.Print('Gold: ' + goldNoSymbols)
+        goldInt = +goldNoSymbols;
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(0));
+            Orion.Wait(100);
+            }
+        }
+    if(goldInt < 1000000)
+        DiscordPush(Player.Name() + ' running low on gold. Restock soon!');
+    }
+
+function DurabilityCheck(_)
+    {
+    //Orion.CharPrint(self,1159,'Checking equipment durability...');
+    var durabilityThreshold = 80
+    var layers = [0,'RightHand','LeftHand','Shoes','Pants','Shirt','Helmet','Gloves','Ring','Talisman','Necklace','Hair','Waist','InnerTorso','Bracelet','Face','Beard','MidTorso','Earrings','Arms','Cloak','Backpack','Robe','Eggs','Legs']
+    Orion.Print("Repair threshold set at: " + durabilityThreshold)
+    for(var i=1;i<layers.length;i++)
+        {
+        var obj = Orion.ObjAtLayer(i);
+        if(obj)
+            {
+            var objProperties = obj.Properties();
+            if(Orion.Contains(objProperties, 'Durability'))
+                {
+                var dura = obj.Properties().match(/Durability (\d+) \/ (\d+)/) || [];
+                var min = +dura[1];
+                var max = +dura[2];
+                if(dura[0] && min < durabilityThreshold && min < max)
+                    {
+                    Orion.Print('Repair needed!')
+                    return true;
+                    }
+                }
+            }
+        }
+    //Orion.CharPrint(self,)
+    return false;
+    }
+
+function ConsumablesCheck(_)
+    {
+    Orion.CharPrint(self,1159,'Checking consumables...');
+    Debug2('Checking consumables...');
+    var consumables =
+        [
+        ['0x2FD8', 10,'Enchanted Apple'], //apple
+        //['0x1F13', 1, 'Gem of Salvation'],
+        ]
+    for(var i=0;i<consumables.length;i++)
+        {
+        var consumable = consumables[i][0];
+        var restockAmount = consumables[i][1];
+        if(Orion.Count(consumable) < restockAmount)
+            {
+            Orion.Wait(200);
+            if(Orion.Count(consumable) < restockAmount)
+                {
+                Orion.Print('Restock needed: ' + consumables[i][2]);
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
+function isPlayerInRectangle(x1, y1, x2, y2)
+    {
+    //x1,y1 is the northwest corner of the rectangle
+    //x2,y2 is the southeast corner
+    var x3 = Player.X();
+    var y3 = Player.Y();
+    return x3 >= x1 && x3 <= x2 && y3 >= y1 && y3 <= y2;
+    }
+
+function injuredCheck(range, threshold, healDead)
+    {
+    var flags = healDead ? 'mobile' : 'live';
+    var injureList = Orion.FindTypeEx(any, any, ground, flags, range, 'green|blue').filter(function(part)
+        {
+        Orion.GetStatus(part.Serial());
+        return part.Hits('%') < threshold || part.Poisoned();
+        }).sort(function(a,b)
+            {
+            return a.Hits() - b.Hits();
+            });
+    return injureList[0];
+    }
+
+function CheckHits()
+    {
+    Orion.WaitForAddObject('myTarget');
+    var a = Orion.FindObject('myTarget');
+    Orion.Print('Hits: ' + a.Hits('%'))
+    }
+
+function UWAvoidBot(distance)
+    {
+    var distanceActual = +distance || 5;
+    while(!Player.Dead())
+        {	
+        Orion.Wait(250)
+        var lord = Orion.FindType('0x02C0', any, ground,'live|ignoreself', 24, 'red');
+        if(!lord.length)
+            continue;
+        var lordDistance = Orion.GetDistance(lord[0]);
+        if(lordDistance < distanceActual - 2 || lordDistance > 8)
+            WalkToRadiusBorder(lord[0], distanceActual);
+        Jiggle('Move',3);
+        }
+    }
+
+function isTargetHour(targetHour)
+	{
+	var now = new Date();
+	var UTCHour = now.getUTCHours();
+	return UTCHour == targetHour;
+	}
+
+function MoveLoot(destinationContainerSerial)
+    {
+    if(destinationContainerSerial == undefined)
+        {
+        Orion.CharPrint(self,1159,'Target Destination Container');
+        Orion.WaitForAddObject('myTarget');
+        destinationContainerSerial = Orion.GetSerial('myTarget');
+        }
+    var containerObj = Orion.FindObject(destinationContainerSerial);
+    var loot = Orion.FindType(any).filter(function(item)
+        {
+        return AliKeep(item);
+        })[0];
+    while(loot && !Orion.Contains(containerObj.Properties(),'Contents: 125'))
+        {
+        Orion.CharPrint(self,1159,'Moving loot');
+        Orion.MoveItem(loot,0,destinationContainerSerial);
+        Orion.Wait(1100);
+        loot = Orion.FindType(any).filter(function(item)
+            {
+            return AliKeep(item);
+            })[0];
+        }
+    if(!loot)
+        return true;
+    }
+
+function ParseWinch(_)
+    {
+    var winch = Orion.FindTypeEx('0x280E',any,ground,'item',24)[0];
+    if(!winch)
+        return false;
+    var winchProps = winch.Properties();
+    var statusArr = winchProps.match(/>(\w+)</g);
+    var statusMap = statusArr.map(function(ele)
+        {
+        return ele == '>READY<';
+        });
+    Orion.Print(statusMap);
+    Debug2('Parsing winch: ' + statusMap);
+    return statusMap
+    }
+
+function CloseAllGumps(_)
+    {
+    var endTime = Orion.Now() + 3000;
+    var gump = Orion.GetGump(any);
+    while(gump && Orion.Now() < endTime)
+        {
+        Orion.Print(gump.ID());
+        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Wait(100);
+        gump = Orion.GetGump(any);
+        }
+    }
+
+
+
+function ListLoot(findList)  //v2
+    {
+    var corpse = Orion.FindTypeEx('0x2006', any, ground, 2).filter(function(item)
+        {
+        return Orion.Contains(item.Properties(), 'An Evil One');
+        })[0];
+    if(!corpse)
+        {
+        Debug2('No corpse found');
+        return Orion.CharPrint(self,1159,'No corpse found');
+        }
+    var corpseSerial = corpse.Serial();
+    var instanceSerials = Orion.FindType(any,any,corpseSerial);
+    do
+        {
+        Orion.UseObject(corpseSerial);
+        Orion.Wait(1300);
+        instanceSerials = Orion.FindType(any,any,corpseSerial);
+        } while(instanceSerials.length == 0)
+    if(instanceSerials.length)
+        {
+        var test = Orion.FindObject(instanceSerials[0]);
+        if(test && test.Graphic() !== '0x2006')
+            {
+            Orion.CharPrint(self,1159,'Corpse is public');
+            var corpseInstanceSerial = corpseSerial;
+            }
+        else
+            {
+            var corpseInstanceSerial = instanceSerials[instanceSerials.length - 1];
+            }
+        }
+    else
+        return Orion.CharPrint(self,1159,'Corpse is empty')
+    var lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
+    while(lootList)
+        {
+        while(corpse.Distance() > 2)
+            {
+            Orion.WalkTo(corpse.X(),corpse.Y())
+            Orion.Wait(250);
+            }
+        var itemObj = Orion.FindObject(lootList);
+        Orion.Print('Looting: ' + itemObj.Name());
+        Orion.MoveItem(lootList);
+        Orion.Wait(1200);
+        lootList = Orion.FindList(findList, corpseInstanceSerial)[0];
+        }
+    }
+function VerifyOpenContainer(containerSerial,delay)
+    {
+    var startTime = Orion.Now();
+    var endTime = startTime + (delay || 5000);
+    while(!Orion.GumpExists('container',containerSerial))
+        {
+        if(Orion.Now() > endTime)
+            {
+            Debug2("Couldn't open container!");
+            return false;
+            }
+        Orion.UseObject(containerSerial);
+        Orion.Wait(1000);
+        }
+    Debug2("Opened container");
+    return true;
+    }
+
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+    {
+    //to be able to rotate through a runebook, ensure rotateToggle is set to true and
+    //create global scope variable runeIndex to increment through the book starting from '1'
+    //global variable numRunes declares total runes to increment through
+    if(backupBook == undefined)
+        var backupBook = bookName;
+    if(backupRune == undefined)
+        var backupRune = runeName;
+    if(rotateToggle == undefined)
+        var rotateToggle = false;
+    var x = Player.X(); //noting player start position to check later to see if recall was successful
+    var y = Player.Y();
+    var runeBook = Orion.FindTypeEx('0x22C5').filter(function(part)
+        {
+        return part.Properties().match(/.+$/) == bookName; //this is using Regex to find the last line of the item properties i.e., the runebook name
+        });
+    if(!runeBook[0])
+        {
+        Debug2("Runebook named '" + bookName + "' not found!")
+        Orion.Print("Runebook named '" + bookName + "' not found!");
+        return false;
+        }
+    if(Orion.SkillValue('Magery', 'base') >= 600)
+        var startInd = 50; //recall index
+    else
+        var startInd = 75; //sacred journey index
+    Debug2("Recalling to: " + runeName + ' in Book: ' + bookName);
+    Orion.CharPrint(self, 1159, "Recalling to: " + runeName + ' in Book: ' + bookName);
+    var runebookSerial = runeBook[0].Serial();
+    Orion.Wait(1300);
+    Orion.UseObject(runebookSerial);
+    var gump = WaitForSpecificGump(2000, 'generic', runebookSerial, '0x00000059');
+    if(gump)
+        {
+        var runeInd = gump.TextList().indexOf(runeName) - 2;
+        if(runeInd < 0)
+            {
+            Debug2("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
+            Orion.Print("Can't find rune named '" + runeName + "' in book named '" + bookName + "'!");
+            }
+        if(gump !== null)
+            {
+            gump.Select(Orion.CreateGumpHook(startInd + runeInd));
+            Orion.Wait(200);
+            }
+        Orion.CloseGump('generic', gump.Serial());
+        }
+    var startJournal = Orion.Now();
+    var endWait = startJournal + 5000;
+    while(x == Player.X() && y == Player.Y() && Orion.Now() < endWait)
+        {
+        if(Orion.InJournal('Something is blocking the location.', 'sys', 0, any, startJournal))
+            {
+            Orion.Wait(2000);
+            if(rotateToggle && backupBook == 'skipDoubleBlocked')
+                {
+                //BotPush('Double Blocked at ' + eggIndex);
+                var runeIndexNum = +runeIndex + 1 
+                if(runeIndexNum <= numRunes)
+                    runeIndex = String(runeIndexNum); 
+                else
+                    runeIndex = '1';
+                return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
+                }
+            var backup = Orion.FindTypeEx('0x9C16').filter(function(part)
+                {
+                return part.Properties().match(/.+$/) == backupBook;
+                })[0];
+            if(rotateToggle && backup)
+                return RecallByGump(backupBook, backupRune, 'skipDoubleBlocked', 'skipDoubleBlocked',rotateToggle);
+            else if(backup)
+                return RecallByGump(backupBook, backupRune, bookName, runeName);
+            else
+                Orion.Print("No backup runebook named '" + backupBook + "' found!");
+            }
+        else if(Orion.InJournal('You cannot teleport into that area.', 'sys', 0, any, startJournal))
+            {
+            Orion.Wait(2000);
+            if(rotateToggle)
+                {
+                var runeIndexNum = +runeIndex + 1 
+                if(runeIndexNum <= numRunes)
+                    runeIndex = String(runeIndexNum); 
+                else
+                    runeIndex = '1';
+                }
+            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
+            }
+        Orion.Wait(500);
+        }
+    Orion.Wait(1000);
+    Orion.Resend();
+    Orion.Wait(200);
+    if(x == Player.X() && y == Player.Y())
+        {
+        Debug2('Retrying recall');
+        return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
+        }
+    }
+
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function PublicDiscordPush(message)
+	{
+	var bot = Orion.RegRead('publicDiscordConfig') || SetPublicDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + discordHook + '/' + discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+function SetPublicDiscordRegistryEntry()
+    {
+    var publicDiscordConfig = "https://discordapp.com/api/webhooks/" + publicDiscordHook + '/' + publicDiscordKey;
+    var registryName = 'publicDiscordConfig';
+    Orion.RegWrite(registryName, publicDiscordConfig);
+    return publicDiscordConfig;
+    }
+
+function WalkToRadiusBorder(targetSerial, distance) 
+    {
+    var target = Orion.FindObject(targetSerial)
+    if(target) 
+        {
+        var x = target.X();
+        var y = target.Y();
+        var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, x + distance, y + distance)
+            .filter(function(tile) 
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                return (x == (tileX - distance))
+                || (x == (tileX + distance))
+                || (y == (tileY - distance))
+                || (y == (tileY + distance));
+                }).sort(function (a,b) 
+                    {
+                    return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
+                    });
+        tiles.forEach(function(tile,ind)
+            {
+            Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            })
+        for(var i=0;i<tiles.length;i++)
+            {             
+            var closest = tiles[i]; 
+            Orion.AddFakeMapObject(55555, '0x051A', 32, closest.X(), closest.Y(), closest.Z());
+            if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
+                break;
+            }
+        }
+    }
+
+function DrawSquare(minX,minY,maxX,maxY)
+    {
+    Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
+        .forEach(function (tile,ind) 
+            {
+            Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            });
+    }
+
+function DrawBorder(minX,minY,maxX,maxY)
+    {
+    Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
+        .forEach(function (tile,ind) 
+            {
+            Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+            });
+    }
+
+function AvoidRectangle(x1,y1,x2,y2)
+    {
+    var tiles = Orion.GetTilesInRect('land', x1, y1, x2, y2).filter(function(tile) 
+        {
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        return (x1 == tileX)
+            || (x2 == tileX)
+            || (y1 == tileY)
+            || (y2 == tileY);
+        });
+    for(var i=0,len=tiles.length;i<len;i++)
+        {
+        var tile = tiles[i];
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        var tileZ = tile.Z();
+        Orion.SetBadLocation(tileX,tileY);
+        Orion.AddFakeMapObject(i + 30000, '0x051A', 32, tileX, tileY, tileZ);
+        }
+    }
+
+function AvoidDropdowns(_)
+    {
+    AvoidRectangle(6299,1705,6302,1710);
+    AvoidRectangle(6305,1705,6308,1710);
+    AvoidRectangle(6299,1713,6302,1718);
+    AvoidRectangle(6305,1713,6308,1718);
+    AvoidRectangle(6305,1713,6308,1718);
+    Orion.SetBadLocation(6310,1705);
+    Orion.AddFakeMapObject(100000, '0x051A', 32, 6310, 1705, 0);
+    Orion.SetBadLocation(6310,1704);
+    Orion.AddFakeMapObject(100001, '0x051A', 32, 6310, 1704, 0);
+    Orion.SetBadLocation(6310,1703);
+    Orion.AddFakeMapObject(100002, '0x051A', 32, 6310, 1703, 0);
+    }
+
+function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
+    {
+    if(z === undefined) z = 0;
+    if(distanceXY === undefined) distanceXY = 0;
+    if(distanceZ === undefined) distanceZ = 255;
+    if(chunkSize === undefined) chunkSize = 5;
+    if(run === undefined) run = 1;
+    if(openDoor === undefined) openDoor = 1;
+    if(maxWalkingTime === undefined) maxWalkingTime = 300000;
+    if(pathMarkers === undefined) pathMarkers = false;
+
+    if(typeof startCallBackFn == 'function')
+        {
+        startCallBackFn();
+        }
+    var playerX = Player.X();
+    var playerY = Player.Y();
+    var zeroMovement = playerX == x && playerY == y;
+    var pathTiles = Orion.GetPathArray(x, y, z, distanceXY, distanceZ, run, openDoor);
+    if(pathMarkers)
+        {
+        Orion.Print('zeroMovement: ' + zeroMovement)
+        Orion.ClearFakeMapObjects();
+        }
+    if(pathTiles.length === 0 && !zeroMovement)
+        return false;
+    if(!zeroMovement)
+        {
+        var shortStop = pathTiles[pathTiles.length - 1];
+        var shortX = shortStop.X();
+        var shortY = shortStop.Y();
+        if(pathMarkers)
+            {
+            pathTiles.forEach(function(tile,i)
+                {
+                Orion.AddFakeMapObject(i, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
+                })
+            Orion.Print('Tiles: ' + pathTiles.length + '\nChunks: ' + Math.floor(pathTiles.length / chunkSize));
+            }
+        if(pathTiles.length >= chunkSize)
+            var chunk = pathTiles[chunkSize - 1];
+        else
+            var chunk = shortStop;
+        var chunkX = chunk.X(), chunkY = chunk.Y(), chunkZ = chunk.Z();
+        if(pathMarkers)
+            {
+            Orion.AddFakeMapObject(10000, '0x051A', 32, x,y,z);
+            Orion.AddFakeMapObject(10001, '0x051A', 32, chunkX,chunkY,chunkZ);
+            }
+        Orion.WalkTo(chunkX,chunkY,chunkZ,0,distanceZ,run,openDoor,maxWalkingTime);
+        Orion.Wait(1);
+        }
+
+    if(typeof endCallBackFn == 'function')
+        {
+        if(endCallBackFn())
+            return 'Hydra';
+        }
+
+    if(!zeroMovement && Orion.GetDistance(shortX,shortY) > 0)
+        return AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn);
+    return true;
+    }
+
+function HydraCheck(_)
+    {
+    Orion.ClearFakeMapObjects();
+    Orion.ClearBadLocations();
+    var hydras = Orion.FindType('0x0109',any,ground,'live',15);
+    if(hydras.length)
+        {
+        Orion.CharPrint(self,1159,'Hydra found!');
+        return true;
+        }
+    }
+
+function Debug(msg)
+    {
+    if(!debug)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + ': ' + msg);
+    }
+
+function Debug2(msg)
+    {
+    if(!debug2)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    TextWindow.Print(Orion.Time() + '  ' + Player.Name() +': ' + msg);
+    }
+
+function HydraLeash(_)
+    {
+    var hydraDistance = 24;
+    Orion.ClearFakeMapObjects();
+    Orion.ClearBadLocations();
+    AvoidDropdowns();
+    var hydraGraphic = '0x0109';
+    if(!Shared.GetVar('leashing',false))
+        {
+        var hydras = Orion.FindTypeEx(hydraGraphic,any,ground,'live',hydraDistance).sort(function(a,b)
+            {
+            return a.Y() - b.Y();
+            });
+        var hydra = hydras[0];
+        Debug('Attempt leash')
+        switch(hydras.length)
+            {
+            case 0:
+                Debug('No hydras')
+                break;
+            case 1:
+                Debug('1 hydra')
+            case 2:
+                Debug('Two hydras found: Walk to northern hydra')
+                Orion.WalkTo(hydra.X(),hydra.Y(),0,5)
+                //AliWalkTo(hydra.X(),hydra.Y(),0,5);
+                var startDist = hydra.Distance();
+                var currDist = startDist;
+                var endTime = Orion.Now() + 4000;
+                Debug('Attack hydra')
+                Orion.Attack(hydra.Serial())
+                while(hydra.Distance() >= startDist && Orion.Now() < endTime)
+                    {
+                    Debug('start: ' + startDist + ', curr: ' + currDist)
+                    Orion.Wait(100);
+                    currDist = hydra.Distance();
+                    }
+                if(currDist != startDist)
+                    {
+                    Debug('Hydra leashed')
+                    Shared.AddVar('leashing',hydra.Serial());
+                    }
+                else
+                    {
+                    var tempX = Player.X();
+                    var tempY = Player.Y();
+                    Orion.Cast('Magic Arrow');
+                    Orion.WaitForTarget(500);
+                    Orion.WalkTo(hydra.X(),hydra.Y(),0,0);
+                    Orion.TargetObject(hydra.Serial());
+                    Orion.WalkTo(tempX,tempY,0,0);
+                    }
+                break
+            default:
+                
+                break;
+            }
+        }
+    var leash = Shared.GetVar('leashing',false)
+    Debug('leash: ' + leash)
+    if(!leash)
+        return HydraLeash()
+    while(leash && Orion.GetDistance(leash) > 8 && Orion.FindType(hydraGraphic,any,ground,'live',3).length == 0)
+        {
+        if(Player.Hits('%') < 90)
+            {
+            Orion.CancelTarget();
+            Orion.Cast('Greater Heal')
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(self);
+            }
+        if(!Orion.HaveTarget() && !Player.Frozen())
+            {
+            Orion.Wait(200);
+            Orion.Cast('Invisibility');
+            }
+        Debug('Distance to hydra: ' + Orion.GetDistance(leash))
+        Orion.Wait(200)
+        }
+    Orion.ClearBadLocations();    
+    }
+
+function HydraAvoid(_)
+    {
+    Orion.ClearBadLocations();
+    AvoidDropdowns();
+    var ind = 20000;
+    var mobGraphic = '0x0109';
+    var avoidRadius = 1;
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',23);
+    mobs.forEach(function(mob)
+        {
+        var x = mob.X();
+        var y = mob.Y();
+        if(Orion.GetDistance(x,y) > avoidRadius)
+            {
+            var avoidTiles = Orion.GetTilesInRect('land',x - avoidRadius, y - avoidRadius, x + avoidRadius, y + avoidRadius)
+            avoidTiles.forEach(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                Orion.SetBadLocation(tileX,tileY)
+                Orion.AddFakeMapObject(ind++, '0x051A', 32, tileX, tileY, tile.Z());
+                });
+            }
+        });
+    }
+
+function SeaweedAvoid(_)
+    {
+    Orion.ClearBadLocations();
+    var ind = 20000;
+    var mobGraphic = '0x0008';
+    var avoidRadius = 3;
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',23);
+    mobs.forEach(function(mob)
+        {
+        var x = mob.X();
+        var y = mob.Y();
+        if(Orion.GetDistance(x,y) > avoidRadius)
+            {
+            var avoidTiles = Orion.GetTilesInRect('land',x - avoidRadius, y - avoidRadius, x + avoidRadius, y + avoidRadius)
+            avoidTiles.forEach(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                Orion.SetBadLocation(tileX,tileY)
+                Orion.AddFakeMapObject(ind++, '0x051A', 32, tileX, tileY, tile.Z());
+                });
+            }
+        });
+    }
+
+function LichAttackWalk(_)
+    {
+    if(Orion.SkillValue('Swordsmanship') < 900)
+        return;
+    Orion.ClearBadLocations();
+    var mobGraphic = '0x0018';
+    var mobs = Orion.FindTypeEx(mobGraphic,any,ground,'live',8).filter(function(mob)
+        {
+        return mob.X() < 6446;
+        });
+    if(mobs.length)
+        {
+        var mob = mobs[0];
+        while(!Player.Dead() && mob.Exists())
+            {
+            if(mob.Distance() > 1)
+                Orion.WalkTo(mob.X(),mob.Y());
+            Orion.Attack(mob.Serial())
+            Orion.Wait(150);
+            }
+        }
+    }
+
+function Jiggle(type,chance)
+    {
+    if(type === undefined) type = 'Move';
+    if(type === 'random')
+        {
+        var randChoices = ['Move','Turn','Wait'];
+        var type = randChoices[Orion.Random(0,randChoices.length)];
+        }
+    if(chance)
+        {
+        var rand = Orion.Random(0,1000);
+        if(rand > chance)
+            return;
+        }
+    switch(type)
+        {
+        case 'Move':
+            Debug2('Jiggle Move');
+            var playerX = Player.X();
+            var playerY = Player.Y();
+            var tiles = Orion.GetTilesInRect('land',playerX - 1,playerY - 1,playerX + 1,playerY + 1);
+            var tile = tiles[Orion.Random(0,tiles.length)];
+            Orion.Wait(Orion.Random(100,400));
+            Orion.WalkTo(tile.X(),tile.Y(),0,0);
+            Orion.Wait(100);
+            break;
+        case 'Turn':
+            Debug2('Jiggle Turn');
+            Orion.Wait(Orion.Random(100,400));
+            Orion.Turn(Orion.Random(0,8))
+            Orion.Wait(100);
+            break;
+        case 'Wait':
+            Debug2('Jiggle Wait');
+            Orion.Wait(Orion.Random(100,2000))
+            break;
+        default:
+            break;
+        }
+    }
+
+//--#Coms
+function ____________COMS(_){}
+
+function AliComLeader()
+    {
+    Shared.AddVar('myRole','leader');
+    Orion.RemoveAllUdpServers();
+    var port = leaderPort;
+    var create = Orion.CreateUdpServer('Coms', port);
+    if(create != 0)
+        return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
+    Orion.Print('Port: ' + port);
+    while(true)
+        {
+        var recv = Orion.UdpRecv('Coms');
+        if(recv)
+            {
+            Debug('Receive //' + recv);
+            var recvSplit = Orion.Split(recv,':'); 
+            switch(recvSplit[0])
+                {
+                case 'Check': //"Check:botSerial!botName!botRole:port"
+                    var botString = recvSplit[1];
+                    var botPort = +recvSplit[2];
+                    var botSplit = Orion.Split(botString,'!'); //playerSerial + '!' + Player.Name() + '!' + roleArrName
+                        var botSerial = botSplit[0];
+                        var botName = botSplit[1];
+                        var botRole = botSplit[2];
+                    var skip = false;
+                    var roleArr = Shared.GetArray(botRole,[]); //[port,serial,name,roleArrName]
+                    for(var i=0;i<roleArr.length;i++) // check for duplicates of each bot in the array
+                        {
+                        var bot = roleArr[i];
+                        if(botSerial == bot[1] && botPort == bot[0]) 
+                            {//if botSerial and botPort match a bot already in the array, just skip
+                            skip = true;
+                            break;
+                            }
+                        else if(botPort == bot[0])
+                            {//if botPort matches but botSerial doesn't, this port needs to be overwritten with the correct bot
+                            roleArr[i] = [botPort,botSerial,botName,botRole];
+                            Shared.AddArray(botRole,roleArr);
+                            skip = true;
+                            break;
+                            }
+                        else if(botSerial == bot[1])
+                            {//if botSerial matches but botPort doesn't, this port needs to be overwritten with the correct bot
+                            roleArr[i] = [botPort,botSerial,botName,botRole];
+                            Shared.AddArray(botRole,roleArr);
+                            skip = true;
+                            break;
+                            }
+                        }
+                    if(!skip)
+                        { //if the bot isn't in the array, add it.
+                        roleArr.push([botPort,botSerial,botName,botRole]);
+                        Shared.AddArray(botRole,roleArr);
+                        }
+                    var outStr = 'Heard:' + Player.Name() + ':' + Player.Serial();
+                    Orion.UdpSend(+botPort,outStr); //send signal back to bot so they know they're connected
+                    Debug('Send  //' + outStr);
+                    break;
+                 case 'AliGumpRenderer':
+                    Orion.Exec('AliGumpRenderer',true);
+                    break;
+                case 'AnswerCall':
+                    Shared.AddVar('AwaitAnswer',recvSplit[1]);
+                    break;
+                case 'HaveKeys':
+                    Shared.AddVar('HaveKeys',true);
+                    break;
+                case 'HealTarget':
+                    var targetSerial = recvSplit[1];
+                    Orion.Exec('HealTarget',true,[targetSerial]);
+                    break;
+                case 'CureTarget':
+                    var targetSerial = recvSplit[1];
+                    Orion.Exec('CureTarget',true,[targetSerial]);
+                    break;
+                case 'KeyCheck':
+                    var barrelSampName = recvSplit[1];
+                    Shared.AddVar('barrelSampName',barrelSampName);
+                    break;
+                case undefined:
+                    break;
+                default:
+                    Orion.Print('Error: Unrecognized Command: ' + recvSplit[0]);
+                    break;
+                }
+            }
+        Orion.Wait(100);
+        }
+    }
+
+function AliComFollower()
+    {
+	var role = Shared.GetVar('myRole','misc');
+    var cmdsObj = 
+        {
+        'Follow': true, //:leadHealerSerial:distance
+        'TerminateAll': true,
+        'Target': true, //:targetSerial
+        'AliGumpRenderer': true,
+        'SetSync': true,
+        'ResumeSmartStart': true,
+        'StartSmartStart': true,
+        'SetBarrelSamp':true,
+        'AwaitPing':true,
+        'CureTarget':true,
+        'HealTarget':true,
+        'KeyCheck':true,
+        'UltraTerminate':true,
+        }
+    Orion.RemoveAllUdpServers();
+    var port = followerPort;
+    var lastPort = followerPort + 100;
+    var create = 1;
+    var endTime = Orion.Now() + 5000;
+    while(create != 0 && Orion.Now() < endTime && port < lastPort) 
+        {
+        create = Orion.CreateUdpServer('Coms', ++port);
+        Orion.Wait(10);
+        }
+    if(create != 0)
+        {
+        Debug2('Server Creation Failed: ' + create)
+        return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
+        }
+    Debug2('Port: ' + port)
+    Orion.Print('Port: ' + port);
+    var playerSerial = Player.Serial();
+    var playerString = playerSerial + '!' + Player.Name() + '!' + role;
+    Orion.CharPrint(self,1159,'Sending signal to leader');
+    var outStr = 'Check:' + playerString + ':' + port;
+    Debug2('Sending signal to leader: ' + JSON.stringify(outStr));
+    Orion.UdpSend(leaderPort,outStr); //[cmd,[playerSerial,playerName,role],port]
+    Orion.Wait(200);
+    var pulseTime = Orion.Now() + 2000;
+    while(true)
+        {
+        recv = Orion.UdpRecv('Coms');
+        if(recv)
+            {
+            Debug2('CommandString: ' + recv);
+            var split = Orion.Split(recv,':');
+            if(split[0] == 'Heard')
+                break;
+            }
+        Orion.Wait(100);
+        if(Orion.Now() > pulseTime)
+            {
+            Debug2('Retrying connection to leader: ' + JSON.stringify(outStr));
+            Orion.CharPrint(self,1159,'Retrying connection to leader');
+            Orion.UdpSend(leaderPort,outStr);
+            pulseTime = Orion.Now() + 5000;
+            }
+        }
+    while(Orion.UdpRecv('Coms'))
+        Orion.Wait(10);
+    Shared.AddVar('leaderName',split[1]);
+    Orion.CharPrint(self,1159,'Connected to leader: ' + split[1]);
+    while(true)
+        {
+        Orion.Wait(100);
+        var recv = Orion.UdpRecv('Coms');
+        if(recv)
+            {
+            Orion.Print('CommandString: ' + recv) //'cmd:arg1:arg2:arg3:etc'
+            Debug2('CommandString: ' + recv);
+            var recvSplit = Orion.Split(recv,':');
+            if(!recvSplit.length)
+                continue;
+            Orion.Print('Command: ' + recvSplit[0]);
+            var functionString = recvSplit.shift();
+            var callFunction = cmdsObj[functionString];
+            if(callFunction)
+                Orion.Exec(functionString,true,recvSplit);
+            else
+                Debug2('Command unrecognized: ' + functionString);
+            }
+        }
+    }
+
+
+function ClearUdp(_)
+    {
+    Orion.RemoveAllUdpServers();
+    }
+
+//--# Bot Commands
+function AwaitPing(_)
+    {
+    if(Shared.GetVar('Desync',false))
+        {
+        Orion.CharPrint(self,1159,'Answering Call')
+        Orion.UdpSend(leaderPort,'AnswerCall:' + Player.Serial());
+        }
+    }
+
+function SetSync(_)
+    {
+    Shared.AddVar('Desync',false);
+    Orion.Print('Desync: false');
+    }
+
+function StartSmartStart(_)
+    {
+    Orion.Exec('SmartStart',true);
+    }
+
+function ResumeSmartStart(_)
+    {
+    Orion.ResumeScript('SmartStart');
+    }
+
+function SetBarrelSamp(_)
+    {
+    Shared.AddVar('barrelSamp',true);
+    Orion.ResumeScript('SmartStart');
+    }
+
+function TerminateAll(additionalScripts)
+    {
+    var flag = 'TerminateAll|GMScan|AliGumpCallback|AliComFollower|AliComLeader|SmartStart|AutoInsure|AutoConfidence|HydraRecover';
+    if(additionalScripts !== undefined)
+        flag += '|' + additionalScripts;
+    Orion.PauseScript('all',flag);
+    Orion.Wait(250);
+    Orion.Terminate('all',flag);
+    }
+
+function HealTarget(serial)
+    {
+    var obj = Orion.FindObject(serial);
+    if(obj)
+        {
+        Orion.Print('Healing: ' + obj.Name());
+        if(obj.Distance() > 9)
+            {
+            Orion.PauseScript('UWAvoidBot');
+            WalkToRadiusBorder(serial, 6);
+            Orion.TargetObject(serial);
+            Orion.ResumeScript('UWAvoidBot');
+            }
+        else
+            Orion.TargetObject(serial);
+        }
+    }
+
+function CureTarget(serial)
+    {
+    var obj = Orion.FindObject(serial);
+    if(obj)
+        {
+        Orion.Print('Curing: ' + obj.Name());
+        Orion.CancelTarget();
+        Orion.Cast('Cure');
+        if(Orion.WaitForTarget(2000))
+            {
+            if(!obj.Poisoned())
+                {
+                var poisonCheck = Orion.FindTypeEx(any, any, ground, 'ignoreself|live', 10, 'green|blue').filter(function(part)
+                    {
+                    return part.Poisoned();
+                    })[0];
+                if(poisonCheck)
+                    Orion.TargetObject(poisonCheck.Serial());
+                else
+                    Orion.CancelTarget();
+                return;
+                }
+            if(obj.Distance() > 10)
+                {
+                Orion.PauseScript('UWAvoidBot');
+                WalkToRadiusBorder(serial, 6);
+                Orion.TargetObject(serial);
+                Orion.ResumeScript('UWAvoidBot');
+                }
+            else
+                Orion.TargetObject(serial);
+            }
+        }
+    }
+
+//--# Leader Commands
+function MassAllMessage(msg)
+    {
+    Debug('MassAllMessage //' + msg);
+    var sampArr = Shared.GetArray('dexxer',[]);
+    var healerArr = Shared.GetArray('healer',[]);
+    var miscArr = Shared.GetArray('misc',[]);
+    var fullArr = sampArr.concat(healerArr.concat(miscArr))
+    if(fullArr.length == 0)
+        return Orion.CharPrint(self,1159,'No followers to command');
+    for(var i = 0;i<fullArr.length;i++)
+        Orion.UdpSend(fullArr[i][0],msg);
+    }
+
+function MassRoleMessage(role,msg)
+    {
+    Debug('MassRoleMessage //' + role + ': ' + msg);
+    var roleArr = Shared.GetArray(role,[]);  //[botPort,botSerial,botName]
+    if(roleArr.length == 0)
+        return Orion.CharPrint(self,1159,'No ' + role + ' followers to command');
+    for(var i = 0;i<roleArr.length;i++)
+        Orion.UdpSend(roleArr[i][0],msg);
+    }
+
+//--# Gump
+function ____________GUMP(_){}
+
+//Asset Types:
+//'button': A custom graphic button. Args: 'functionName', widthAdjust, xAdj, yAdj, 'graphic|graphicSelected|graphicPressed'
+//'toggle': A gem toggle button. Args: 'functionName', 'displayName', ('altOnGraphic|altOnGraphicSelected|altOnGraphicPressed','altOffGraphic|altOffGraphicSelected|altOffGraphicPressed',xAdj,yAdj)
+//'textInput': A text input. Args: 'storedVarName'
+//'text': Text. Args: 'textString', textColor, xAdj, yAdj
+//'horizontalLine': A horizontal line. Args: width,xAdj,yAdj,color,lineWidth
+//'verticalLine': A vertical line. Args: height,xAdj,yAdj,color,lineWidth
+//'comboBox': A dropdown box. Args: storedVarName, option1, option2, option3... etc
+//'xSpacer': A blank asset spacer. Args: width ,['xSpacer',0000],
+//'ySpacer': A blank row spacer. Args: height ,['ySpacer',0000],
+//'tooltip': Add a tooltip to the previous asset. Args: 'text'
+var gumpAssets = 
+    [
+        [ ['text','Leader: ' + Shared.GetVar('leaderName','Unknown'),554,1,1], ['xSpacer',40],['text','BarrelSamp: ' + Shared.GetVar('barrelSampName','Unknown'),554,1,1], ['xSpacer',100] ],
+        [ ['toggle','SmartStart','Start'] ],
+        [ ['text','Utilities',554,1,17] ],
+        [ ['toggle','GoFromHomeToLadderPosition','GoToLadder'],['toggle','GetKeys','Get Keys'],['toggle','CharacterMaintenance','CharMaintenance'] ],
+        [ ['toggle','MoveLoot','MoveLoot'], ['toggle','LootUW','Loot Boss'],['toggle','FindOwnCorpse','Get Own Corpse'],  ],
+        [ ['toggle','StayHidden','StayHidden'],['toggle','StayLoggedIn','StayLoggedIn'],['toggle','PassSync','PassSync'], ],
+        [ ['text','Training',554,1,17] ],
+        [ ['toggle','TrainMusic','TrainMusic'],['toggle','TrainPeacemaking','TrainPeacemaking'], ],
+
+        [ ['ySpacer',20] ],
+    ];
+
+function AliGumpRenderer() 
+    {
+    var startTime = Orion.Now();
+    var gump = Orion.CreateCustomGump(10420); 
+    var title = 'AliUW';
+    var rowAdj = 40;
+    var characterAdj = 6;
+    var buttonTextHorAdj = 32;
+    var buttonTextVerAdj = 3;
+    var textColor = 1159;
+    var rowStart = 35;
+    var columnStart = 25;
+
+    var gumpButtons = gumpAssets;
+    if(!gumpButtons[0])
+        {
+        Shared.AddArray('gumpValues',gumpAssets)
+        gumpButtons = gumpAssets;
+        }
+    var heightAdjust = 0;
+    var width = Math.max.apply(Math, gumpButtons.map(function (rows)
+        {
+        var length = rows.reduce(function(sum,ele)
+            {
+            var assetType = ele[0];
+            var widthAdjust = 0
+            switch(assetType)
+                {
+                case 'button':
+                    widthAdjust = ele[2];
+                    break;
+                case 'toggle':
+                    widthAdjust = (ele[2].length * characterAdj) + buttonTextHorAdj + 20 + (ele[5] || 0);
+                    break;
+                case 'comboBox':
+                    widthAdjust = 142;
+                    heightAdjust += 3;
+                    break;
+                case 'textInput':
+                    widthAdjust = 135;
+                    break;
+                case 'text':
+                    var string = ele[1];
+                    var xAdj = ele[3];
+                    widthAdjust = (string.length * characterAdj) + xAdj// + 20;
+                    break;
+                case 'horizontalLine':
+                    widthAdjust = ele[1] + 10;
+                    break;
+                case 'verticalLine':
+                    widthAdjust = ele[5];
+                    heightAdjust += ele[1];
+                    break;
+                case 'xSpacer':
+                    widthAdjust = ele[1];
+                    break;
+                case 'ySpacer':
+                    heightAdjust += ele[1];
+                    break;
+                default:
+                    break;
+                }
+            return sum + widthAdjust;
+            },0);
+        return length + 25;
+        }));
+    var height = (gumpButtons.length * rowAdj) + rowStart + heightAdjust;
+    gump.Clear();
+    gump.SetCallback('AliGumpCallback');
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
+    gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
+    gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
+    gump.AddHtmlGump(0,0,9,width,height,'a3c',0,0) //these next 3 lines are a workaround for positioning html text
+    gump.Select('htmlgump');
+    gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
+    gump.Select('gump');
+    
+    //Custom Assets
+    //gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
+    //gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
+    
+    //Modular Assets
+    var rowPos = rowStart;
+    var colPos = columnStart;
+    var i = 1;
+    for(var r = 0;r<gumpButtons.length;r++)
+        {
+        var row = gumpButtons[r];
+        for(var c = 0;c<row.length;c++)
+            {
+            var asset = row[c];
+            var assetType = asset[0];
+            switch(assetType)
+                {
+                case 'button':
+                    var gumpOption = asset[1];
+                    var widthAdjust = asset[2];
+                    var xAdj = asset[3] || 0;
+                    var yAdj = asset[4] || 0;
+                    var buttonGraphic = asset[5] != undefined ? Orion.Split(asset[5],'|') : ['0x25FB','0x25FC','0x25FC']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+                    gump.AddButton(i, colPos + xAdj, rowPos + yAdj, buttonGraphic[0], buttonGraphic[1], buttonGraphic[2], '0x0000');
+                    colPos += widthAdjust;
+                    break;
+                case 'toggle':
+                    var gumpOption = asset[1];
+                    var gumpTitle = asset[2];
+                    var buttonOnGraphic = asset[3] != undefined ? Orion.Split(asset[3],'|') : ['0x25FB','0x25FC','0x25FC']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+                    var buttonOffGraphic = asset[4] != undefined ? Orion.Split(asset[4],'|') : ['0x25F8','0x25F9','0x25F9']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+                    var xAdj = asset[5] || 0;
+                    var yAdj = asset[6] || 0;
+                    var stateGraphic //graphic,selected,pressed
+                    Orion.ScriptRunning(gumpOption) ? stateGraphic = buttonOnGraphic : stateGraphic = buttonOffGraphic;
+                    gump.AddText(colPos + buttonTextHorAdj, rowPos + buttonTextVerAdj, textColor, gumpTitle);
+                    gump.AddButton(i, colPos + xAdj, rowPos + yAdj, stateGraphic[0], stateGraphic[1], stateGraphic[2], '0x0000');
+                    colPos += (gumpTitle.length * characterAdj) + buttonTextHorAdj + 20;
+                    break;
+                case 'comboBox': //['comboBox', 'Single Target', 'Primary', 'Secondary']
+                    var gumpOption = asset[1];
+                    var dropLength = Math.ceil((asset.length - 2));
+                    var value = Shared.GetVar(gumpOption,undefined);
+                    gump.AddComboBox(i + 300, colPos, rowPos, '0x0BB8', 0, '0x0BB8', 125, -3,dropLength);
+                    for(var j=2;j<asset.length;j++)
+                        {
+                        gump.AddComboBoxText(asset[j],0,value == asset[j] ? 1 : 0,115,'center');
+                        }
+                    gump.AddText(colPos,rowPos - 18,554,gumpOption);
+                    gump.AddColoredPolygone(colPos, rowPos, 124, 19, '#FF666600', 1, 2, 0, 0, 0);
+                    gump.AddButton(i, colPos - 9, rowPos + 1, '0x16CD', '0x16CE', '0x16CE', '0x0000');
+                    colPos += 140;
+                    break;
+                case 'textInput':
+                    var gumpOption = asset[1];
+                    gump.AddResizepic(colPos, rowPos , '0x0BB8', 100, 19);
+                    gump.AddTextEntry(i + 200, colPos + 5, rowPos - 1, 1159, Shared.GetVar(gumpOption,''), 100, 20);
+                    gump.AddText(colPos,rowPos - 18,554,gumpOption);
+                    gump.AddColoredPolygone(colPos, rowPos, 99, 19, '#FF666600', 1, 2, 0, 0, 0);
+                    gump.AddButton(i, colPos + 87, rowPos + 1, '0x16CF', '0x16D0', '0x16D0', '0x0000');
+                    gump.AddTooltip('Update');
+                    colPos += 135;
+                    break;
+                case 'text':
+                    var string = asset[1];
+                    var color = asset[2];
+                    var xAdj = asset[3];
+                    var yAdj = asset[4];
+                    gump.AddText(colPos + xAdj, rowPos + yAdj,color,string);
+                    colPos += (string.length * characterAdj) + xAdj;
+                    break;
+                case 'horizontalLine':
+                    var width = asset[1];
+                    var xAdj = asset[2];
+                    var yAdj = asset[3];
+                    var color = asset[4];
+                    var lineWidth = asset[5];
+                    gump.AddLine(colPos + xAdj,rowPos + yAdj, colPos + xAdj + width,rowPos + yAdj, color, lineWidth);
+                    colPos += width + 10;
+                    break;
+                case 'verticalLine':
+                    var height = asset[1];
+                    var xAdj = asset[2];
+                    var yAdj = asset[3];
+                    var color = asset[4];
+                    var lineWidth = asset[5];
+                    gump.AddLine(colPos + xAdj,rowPos + yAdj, colPos + xAdj,rowPos + yAdj + height, color, lineWidth);
+                    colPos += 10;
+                    break;
+                case 'xSpacer':
+                    var xAdjust = asset[1];
+                    colPos += xAdjust;
+                    break;
+                case 'ySpacer':
+                    var yAdjust = asset[1];
+                    rowPos += yAdjust;
+                    break;
+                case 'tooltip':
+                    var text = asset[1];
+                    gump.AddTooltip(text);
+                    break;
+                default:
+                    break;
+                }
+            i += 1;
+            }
+        colPos = columnStart;
+        rowPos += rowAdj;
+        }
+    //Custom Assets: Use spacers in asset array to adjust gump size as necessary
+    
+    gump.Update();
+    Orion.Print('interval: ' + (Orion.Now() - startTime))
+    }
+
+function AliGumpCallback(_) 
+    {
+    var code = CustomGumpResponse.ReturnCode();
+    Orion.Print('Code: ' + code)
+    if(code == 0)
+        return;
+    else if(code == 100)
+        {
+        //Orion.Print(true);
+        }
+    else if(code == 101)
+        {
+        Orion.Terminate('all','AliGumpCallback');
+        Orion.Wait(50);
+        return AliGumpRenderer();
+        }
+    var i = 1;
+    var gumpButtons = gumpAssets;
+    for(var r = 0;r<gumpButtons.length;r++)
+        {
+        var row = gumpButtons[r];
+        for(var c = 0;c<row.length;c++)
+            {
+            var asset = row[c];
+            if(code == i)
+                {
+                var assetType = asset[0];
+                switch(assetType)
+                    {
+                    case 'toggle':
+                        var gumpOption = asset[1]; //Function name to toggle
+                        Orion.ToggleScript(gumpOption);
+                        break;
+                    case 'button':
+                        var gumpOption = asset[1]; //Function name to exec
+                        Orion.Exec(gumpOption,true);
+                        break;
+                    case 'textInput':
+                        var text = CustomGumpResponse.Text(code + 200);
+                        var gumpOption = asset[1]; //Shared Variable Name
+                        Shared.AddVar(gumpOption,text);
+                        Orion.Print(text);
+                        break;
+                    case 'comboBox':
+                        var gumpOption = asset[1];
+                        var value = CustomGumpResponse.ComboBox(i+300)
+                        if(value > -1)
+                            var parsedValue = asset[2 + value];
+                        else
+                            var parsedValue = undefined;
+                        Shared.AddVar(gumpOption,parsedValue);
+                        Orion.Print(gumpOption + ' value: ' + parsedValue);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            i++;
+            }
+        }
+    Orion.Wait(50);
+    Orion.Exec('AliGumpRenderer',true);
+    }
+
+function TrainMagery() 
+	{
+	var skillCap = 1150; //set to your target skill level. 1000 = 100.0
+	Orion.Exec('SkillGump', false, ['Magery']);
+	var skillLevel = Orion.SkillValue('Magery', 'base');
+	var skillLevelreal = Orion.SkillValue('Magery');
+	var iteminpack = Orion.FindType(any);
+	if(iteminpack[0])
+		var trainingTarget = iteminpack[0];
+	else
+		return Orion.CharPrint(self,1159,'No item in backpack to target!');
+    while (skillLevelreal < skillCap) 
+      	{
+      	skillLevel = Orion.SkillValue('Magery', 'base');
+      	skillLevelreal = Orion.SkillValue('Magery');
+        if(Player.Mana() < 20) 
+        	{
+            while (Player.Mana() < Player.MaxMana()) 
+				{
+				Orion.Wait(1500);
+				if(!Orion.BuffExists('Meditation')) 
+					Orion.UseSkill('Meditation');
+				}
+            }
+        else if(skillLevel < 300) 
+        	{
+        	Orion.Cast('Cure');
+        	Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+        	}
+        else if(skillLevel <= 450)
+        	{
+            Orion.Cast('Fireball');
+            Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+        	}
+       	else if(skillLevel <= 550) 
+       		{
+       		Orion.Cast('Lightning');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 650) 
+       		{
+       		Orion.Cast('Paralyze');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 800) 
+       		{
+       		Orion.Cast('Reveal');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(self);
+       		}
+       	else if(skillLevel <= 900) 
+       		{
+       		Orion.Cast('Flame Strike');
+       		Orion.WaitForTarget(5000);
+            Orion.TargetObject(trainingTarget);
+       		}
+       	else if(skillLevel <= 1200) 
+       		{
+       		Orion.Cast('Earthquake');
+       		Orion.Wait(1000);
+       		}  
+       	Orion.Wait(500);  	
+        }
+  	TextWindow.Open();
+	TextWindow.Print(Orion.Time("hh:mm:ss") + ' ' + Player.Name() + ": Magery Finished");
+	}
+
+function TrainMusic()
+	{
+    var instruments = '0x0EB3|0x0E9C|0x0E9D';
+	Orion.Exec('SkillGump', false, ['Musicianship'])
+	while(!Player.Dead() && Orion.SkillValue('Musicianship') < 1000)
+		{
+		var instrument = Orion.FindType(instruments)
+		if(instrument[0])
+			Orion.UseObject(instrument[0])
+		else
+			Orion.Print('No instruments found');
+		Orion.Wait(1100);
+		}
+	TextWindow.Open()
+	TextWindow.Print('skill done');
+	//Orion.LogOut();
+	}
+
+function TrainPeacemaking()
+	{
+    var instruments = '0x0EB3|0x0E9C|0x0E9D';
+	Orion.Exec('SkillGump', false, ['Peacemaking'])
+	while(!Player.Dead())
+		{
+		Orion.Wait(2000);
+		if(Orion.HaveTarget())
+	    	Orion.CancelTarget();		
+		if (!Orion.BuffExists('Meditation') && Player.Mana() > 50)
+			{
+			Orion.UseSkill('Peacemaking');
+			Orion.Wait(200);
+			Orion.WaitForTarget(1000);
+			if(Orion.InJournal('instrument shall you', ' ', 0, any, Orion.Now() - 3000, Orion.Now() + 3000))
+				{
+				var a = Orion.FindType(instruments);
+				Orion.TargetObject(a[0]);
+				Orion.WaitForTarget(1000);
+				Orion.TargetObject(self);
+				}
+			else
+				Orion.TargetObject(self);
+			}	
+		Orion.Wait(8000);
+		}
+	}

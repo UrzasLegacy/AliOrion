@@ -803,6 +803,7 @@ function AddToDropQueue()
         }
     }
 
+
 function DropFromQueue(_)
     {
     var endStamp = Orion.Now() + 5000;
@@ -849,6 +850,69 @@ function DropFromQueue(_)
         Orion.Wait(1);
         }
     }
+
+function SetGrabQueueToContainer()
+    {
+    Orion.CharPrint(self,1159,'Target toContainer for grabQueue')
+    var toContainer = Orion.WaitForAddObject('myTarget');
+    var toContainerSerial = Orion.GetSerial('myTarget')
+    Shared.AddVar('queueToContainer',toContainerSerial)
+    }
+
+function AddToGrabQueue()
+    {
+    while(true)
+        {
+        var check = Orion.WaitForAddObject('myTarget');
+        if(check != 1)
+            break;
+        Orion.Exec('GrabFromQueue',true);
+        var serial = Orion.GetSerial('myTarget');
+        var tempArr = Shared.GetArray('grabQueue', []);
+        //Orion.Print(tempArr);
+        var ind = tempArr.indexOf(serial);
+        if(ind == -1)
+            {
+            tempArr.push(serial);
+            Orion.TestItemColor(serial, '1159');
+            }
+        else
+            {
+            tempArr.splice(ind,1);
+            Orion.TestItemColor(serial, '0');
+            }
+        Shared.AddArray('grabQueue',tempArr);
+        Orion.Wait(20);
+        }
+    }
+
+
+function GrabFromQueue(_)
+    {
+    var endStamp = Orion.Now() + 5000;
+    while(true)
+        {
+        var toContainer = Shared.GetVar('queueToContainer')
+        var tempArr = Shared.GetArray('grabQueue');
+        if(tempArr.length)
+            {
+            var itemSerial = tempArr.shift();
+            var itemObj = Orion.FindObject(itemSerial)
+            Shared.AddArray('grabQueue',tempArr);
+            while(itemObj.Container() != toContainer)
+                {
+                Orion.MoveItem(itemSerial, 0, toContainer); 
+                Orion.Wait(250);  
+                }
+            endStamp = Orion.Now() + 5000;
+            }
+        if(Orion.Now() > endStamp)
+            break;
+        Orion.Wait(1);
+        }
+    }
+
+
 
 function MoveAll()
 	{
@@ -1363,6 +1427,7 @@ function TeleportChargeCounter()
 
 function VendorRepricer()
     {
+    TextWindow.Clear()
     var adjAmount = .8; //multiply current price by this to get adjusted price
     Orion.CancelWaitPrompt();
     if(Orion.PromptExists())
@@ -1380,16 +1445,19 @@ function VendorRepricer()
         Orion.UseObject(vendorContainer)
         Orion.Wait(1300);
         }
-    var items = Orion.FindTypeEx(any,any, vendorContainer);
-    for(var i=0;i<items.length;i++)
+    var items = Orion.FindTypeEx(any,any, vendorContainer).sort(function(a,b)
+        {
+        return a.GridIndex() - b.GridIndex();
+        });
+    for(var i=0,len=items.length;i<len;i++)
         {
         var item = items[i];
         var priceString = (item.Properties().match(/Price: ([\d,]+)/) || [])[1];
         if(!priceString)
             {
-            Orion.CharPrint(self,1159,'priceString failed, retrying...')
-            i--;
-            continue;
+            TextWindow.Print('Couldn\'t find price, pausing...' + item.Properties() + '\n\n')
+            TextWindow.Open()
+			Orion.PauseScript()
             }
         var itemSerial = item.Serial();
         var itemContainer = item.Container()
@@ -1397,10 +1465,14 @@ function VendorRepricer()
         var itemY = item.Y();
         var itemIndex = item.GridIndex();
         var priceNumber = +priceString.replace(/,/g, '');
-        var adjPrice = Math.floor(priceNumber * adjAmount);
-        Orion.Print(item.Name());
-        Orion.Print(priceNumber + ' -> ' + adjPrice);
-        var endTime = Orion.Now() + 2000;
+        var adjString = String(priceNumber * adjAmount)
+        var stringLength = adjString.length - 2
+        var customRound = adjString.slice(0,2)
+        for(var ii=0;ii<stringLength;ii++)
+        	customRound += "0"
+        var adjPrice = +customRound
+        Orion.Print(item.Name() + '\n' + priceNumber + ' -> ' + adjPrice);
+        var endTime = Orion.Now() + 7500;
         var timeout = false;
         while(item.Container() == itemContainer && !timeout)
             {
@@ -1421,13 +1493,31 @@ function VendorRepricer()
         while(itemContainer == item.Container() && !timeout)
             {
             Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, itemIndex);
-            Orion.Wait(1300);	
+            Orion.Wait(1300);
             timeout = Orion.Now() > endTime;
             }
         Orion.CancelWaitPrompt();
         if(Orion.PromptExists())
             Orion.SendPrompt(' ');
-        Orion.Wait(700);
+        for(var ii = 0; ii < 2; ii++)
+            {
+            Orion.CharPrint(self,1159, "Checking price...")
+            var itemCheck = Orion.FindObject(itemSerial);
+            if(Orion.Contains(itemCheck.Properties().replace(/,/g,""), 'Price: ' + adjPrice))
+               break; 
+            else
+                {
+                Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, itemIndex);
+                Orion.Wait(1300);
+                }
+            if(ii == 1)
+                {
+                TextWindow.Print("Problem with pricing, storing item in backpack: " + item.Name() + '\n' + priceNumber + ' -> ' + adjPrice + '\n\n')
+                TextWindow.Open()
+                Orion.MoveItem(itemSerial, 0, backpack, itemX, itemY, -1, itemIndex);
+                }
+            Orion.Wait(1300);
+            }
         }
     }
 
