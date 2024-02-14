@@ -98,21 +98,33 @@ function MoveLootCall(keep)
     Orion.WaitForAddObject('myTarget');
     var fromContainer = Orion.GetSerial('myTarget');
     VerifyOpenContainer(fromContainer);
-    Orion.CharPrint(self,1159,'Target TO container')
-    Orion.WaitForAddObject('myTarget');
-    var toContainer = Orion.GetSerial('myTarget');
-    VerifyOpenContainer(toContainer);
     var totalItems = 0;
+    var items = Orion.FindTypeEx(any,any,fromContainer).forEach(function(item)
+        {
+        Orion.TestItemColor(item.Serial(), item.Color())
+        })
     var items = Orion.FindType(any,any,fromContainer).filter(function(item)
         {
         totalItems++;
         if(keep == 'all')
             return true;
         if(keep)
-            return AliKeep(item);
-        return !AliKeep(item);
+            {
+            var check = AliKeep(item)
+            if(check)
+                Orion.TestItemColor(item, 1152)
+            return check;
+            }
+        var check = !AliKeep(item)
+        if(check)
+            Orion.TestItemColor(item, 1152)
+        return check;
         });
     Orion.Print('Total Matching: ' + items.length + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (items.length / totalItems).toFixed(2))
+    Orion.CharPrint(self,1159,'Target TO container')
+    Orion.WaitForAddObject('myTarget');
+    var toContainer = Orion.GetSerial('myTarget');
+    VerifyOpenContainer(toContainer);
     while(items.length)
         {
         for(var i=0;i<items.length;i++)
@@ -125,8 +137,16 @@ function MoveLootCall(keep)
             if(keep == 'all')
                 return true;
             if(keep)
-                return AliKeep(item);
-            return !AliKeep(item);
+                {
+                var check = AliKeep(item)
+                if(check)
+                    Orion.TestItemColor(item, 1152)
+                return check;
+                }
+            var check = !AliKeep(item)
+            if(check)
+                Orion.TestItemColor(item, 1152)
+            return check;
             });
         } 
     }
@@ -1492,7 +1512,7 @@ function AliKeep(itemSerial)
     if(!isJewelry && !is2hWeapon && !is1hWeapon && !isArmor)
         {
         //Handle shields, only luck
-        if(Orion.Contains('0x1B72|0x1BC3|0x1BC4|0x1B7B|0x1B73|0x1B74|0x1B77|0x1B78|0x1B75|0x1B76|0x1BC5|0x1B79|0x1B7A', itemGraphic) && props.indexOf("Luck 150") > -1)
+        if(Orion.Contains('0x1B72|0x1BC3|0x1BC4|0x1B7B|0x1B73|0x1B74|0x1B77|0x1B78|0x1B75|0x1B76|0x1BC5|0x1B79|0x1B7A', itemGraphic) && props.indexOf("Luck 150") > -1 && props.indexOf("Antique") == -1)
             return 'Luck Shield';
         DebugLoot('Trash: !isJewelry && !is2hWeapon && !is1hWeapon && !isArmor && not luck shield:\n' + props)
         return false;
@@ -1670,7 +1690,7 @@ function KeepWeapon(propertiesObj,props)
         DebugLoot('Trash: Splinter weapon failed all previous checks');
         return false;		
         }
-    if(isAIWep)
+    if(isAIWep && isClean)
         {
         var isHitFatigue = wepObj['HitFatigue'] >= (isClean ? 20 : 50);
         var isHitManaDrain = wepObj['HitManaDrain'] >= (isClean ? 20 : 50);
@@ -1824,6 +1844,8 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         DebugLoot('Trash: Fortified Armor of Defense');
         return false;
         }
+
+    
     var lmcArr = 
         { //graphic: intrinsicLMCBonus
         '0x153F':'0','0x140D':'1','0x140C':'1','0x1545':'0','0x1454':'3','0x144F':'3','0x144E':'3','0x1453':'3','0x1450':'3','0x1455':'3',
@@ -1843,9 +1865,32 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x2B67':'0','0x2B6A':'0','0x2B69':'0','0x2B6B':'0','0x4049':'0','0x404A':'0','0x404C':'0','0x4047':'0','0x4066':'0','0x0284':'1',
         '0x4056':'1','0x030A':'1','0x404E':'0','0x4050':'1','0x405C':'1','0x405D':'1','0x405E':'1','0x4058':'1','0x4057':'1','0x405A':'1',
         '0x4D0A':'1','0x4062':'0','0x404B':'0','0x4210':'0','0x4052':'1','0x4053':'1','0x4066':'0','0x4048':'0','0x4064':'0','0x404D':'0',
-        '0x2FB8':'0',
+        '0x2FB8':'0','0x1715':'0','0x1716':'0','0x1719':'0',
         }
-        
+      
+    var hatArr =
+        {
+        '0x1451':true,'0x1456':true,'0x1F0B':true,'0x1F0C':true,'0x140A':true,'0x140B':true,'0x13BB':true,'0x13C0':true,'0x140C':true,
+        '0x140D':true,'0x1408':true,'0x1409':true,'0x1412':true,'0x1419':true,'0x140E':true,'0x140F':true,'0x2B71':true,'0x2B72':true,
+        }
+    
+    var tunicsArr =
+        {
+        '0x1454':true,'0x144F':true,'0x1C02':true,'0x1C03':true,'0x13E2':true,'0x13DB':true,'0x1C0C':true,'0x1C0D':true,'0x13ED':true,
+        '0x13EC':true,'0x13BF':true,'0x13C4':true,'0x1C04':true,'0x1C05':true,'0x1415':true,'0x1416':true,
+        }
+    
+    var glovesArr =
+        {
+        '0x1455':true,'0x1450':true,'0x13D5':true,'0x13DD':true,'0x13EB':true,'0x13F2':true,'0x1414':true,'0x1418':true,
+        }
+    
+    var armsArr =
+        {
+        '0x1410':true,'0x1417':true,'0x1453':true,'0x144E':true,'0x13EE':true,'0x13EF':true,'0x13D4':true,'0x13DC':true,
+        }
+
+
     //var isClean = props.indexOf('Brittle') === -1 && props.indexOf('Imbued') === -1;
     var hpi = propertiesObj['HitPointIncrease'] || 0;
     var stam = propertiesObj['StaminaIncrease'] || 0;
@@ -1871,6 +1916,11 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     //var ep = propertiesObj['EnhancePotions'] || 0;
     var luck = propertiesObj['Luck'] || 0;
     //var nightsight = propertiesObj['NightSight'] || 0;
+    var isHat = hatArr[itemGraphic]
+    var isGloves = glovesArr[itemGraphic]
+    var isArms = armsArr[itemGraphic]
+    var isTunic = tunicsArr[itemGraphic]
+
 
     var goodEater = damageEater || poisonEater || fireEater || coldEater || energyEater || kineticEater;
     var totalStats = hpi + stam + mana + str + dex + int;
@@ -1887,6 +1937,21 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         var intrinsicLMC = intrinsicLMCArr[0];
         
     DebugLoot('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
+    if(isHat)
+        {
+        DebugLoot('Trash: Hat');
+        return false;
+        }
+    if(intrinsicLMC === '0')
+        {
+        DebugLoot('Trash: LMC 0 Armor');
+        return false;
+        }
+    if(stam < 7 && intrinsicLMC === '1')
+        {
+        DebugLoot('Trash: LMC 1 non-stam Armor');
+        return false; 
+        }
 
     if(hpi >= 3)
         { //treat as Vitality
@@ -1896,31 +1961,48 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 DebugLoot('hpi intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
-                var lrcThreshold = 10;
-                var lmcThreshold = lrc >= 20 ? 0 : 4;
-                var mrThreshold = 2;
-                var hprThreshold = 0;
-                var statThreshold = goodEater ? 3 : 5;
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                if(isTunic || isArms || isGloves)
+                    {
+                    var lrcThreshold = 20;
+                    var lmcThreshold = 8;
+                    var mrThreshold = 3;
+                    var hprThreshold = 3;
+                    var statThreshold = goodEater ? 5 : 7;
+                    }
+                else
+                    {
+                    var lrcThreshold = 10;
+                    var lmcThreshold = lrc >= 20 ? 0 : 4;
+                    var mrThreshold = 3;
+                    var hprThreshold = 3;
+                    var statThreshold = goodEater ? 3 : 5;
+                    if(lrc >= lrcThreshold)
+                        statThreshold -= 5;
+                    }
                 break;
             case '1':
-                var lrcThreshold = 15;
-                var lmcThreshold = 6;
-                var mrThreshold = 3;
-                var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
-                var statThreshold = goodEater ? 5 : 10;
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                //deprecated by preliminary intrinsic lmc check
+                // DebugLoot('Trash: LMC 1 HPI Armor');
+                // return false;
+                // var lrcThreshold = 15;
+                // var lmcThreshold = 6;
+                // var mrThreshold = 3;
+                // var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
+                // var statThreshold = goodEater ? 5 : 10;
+                // if(lrc >= lrcThreshold)
+                //     statThreshold -= 5;
                 break;
             case '0':
-                var lrcThreshold = 20;
-                var lmcThreshold = 6;
-                var mrThreshold = 3;
-                var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
-                var statThreshold = goodEater ? 5 : 10;
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                //deprecated by preliminary intrinsic lmc check
+                // DebugLoot('Trash: LMC 0 HPI Armor');
+                // return false;
+                // var lrcThreshold = 20;
+                // var lmcThreshold = 6;
+                // var mrThreshold = 3;
+                // var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
+                // var statThreshold = goodEater ? 5 : 10;
+                // if(lrc >= lrcThreshold)
+                //     statThreshold -= 5;
                 break;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && mr >= mrThreshold && hpr >= hprThreshold && totalStats >= statThreshold)
@@ -1938,7 +2020,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '3':
                 var lrcThreshold = 15;
                 var lmcThreshold = 5;
-                var statThreshold = mr >= 2 ? 20 : 25;   
+                var statThreshold = mr >= 3 ? 20 : 25;   
                 if(lrc >= lrcThreshold)
                     statThreshold -= 5;     
                 break
@@ -1953,17 +2035,24 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     statThreshold -= 5;
                 break
             case '0':
-                if(!hpi)
-                    {
-                    DebugLoot('Trash: Leather Stam Armor');
-                    return false;
-                    }
-                var lrcThreshold = 15;
-                var lmcThreshold = 5;
-                var statThreshold = mr >= 2 ? 20 : 25;
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                // //deprecated by preliminary intrinsic lmc check
+                // if(!hpi)
+                //     {
+                //     DebugLoot('Trash: LMC 0 Stam Armor');
+                //     return false;
+                //     }
+                // var lrcThreshold = 15;
+                // var lmcThreshold = 5;
+                // var statThreshold = mr >= 2 ? 20 : 25;
+                // if(lrc >= lrcThreshold)
+                //     statThreshold -= 5;
                 break;
+            }
+        if(isTunic || isArms || isGloves)
+            {
+            var lrcThreshold = 20;
+            var lmcThreshold = 8;
+            var statThreshold = 28;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalStats >= statThreshold)
             {
@@ -1979,15 +2068,13 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             }
         }
 
-    if(isArtifact)
+    if(isArtifact && goodEater)
         { //everything else
         var resistsObj = parseArmorResists(props);
         var totalRes = resistsObj['TotalResists'];
         var resThreshold = 40//isClean ? 25 : 50;
         if(luck == 150 && totalRes >= resThreshold) //keep 150 luck
-            {
             return 'Luck Armor';
-            }
         if((hci == 5 || dci == 5) && mr && lmc && (hpi || hpr || lrc || totalRes > 80)) //keep 5 dci/hci artifact armor
             return 'HCI or DCI Armor';
         switch(intrinsicLMC)
@@ -1996,33 +2083,49 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 DebugLoot('General intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('32','Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
-                var lrcThreshold = 10;
-                var lmcThreshold = lrc >= 20 ? 0 : 3;
-                var totalRegensThreshold = 6;
-                var statThreshold = goodEater ? 4 : 6;
-                if(lrc >= 20)
-                    statThreshold -= 2;
+                if(isTunic || isArms || isGloves)
+                    {
+                    var lrcThreshold = 20;
+                    var lmcThreshold = 8;
+                    var totalRegensThreshold = 6
+                    var statThreshold = goodEater ? 6 : 8;
+                    }
+                else
+                    {
+                    var lrcThreshold = 10;
+                    var lmcThreshold = lrc >= 20 ? 0 : 3;
+                    var totalRegensThreshold = 6;
+                    var statThreshold = goodEater ? 4 : 6;
+                    if(lrc >= 20)
+                        statThreshold -= 2;
+                    }
                 break;
             case '1':
-                var lrcThreshold = 15;
-                var lmcThreshold = 8;
-                var totalRegensThreshold = 6;
-                var statThreshold = goodEater ? 7 : 11;  
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                //deprecated by preliminary intrinsic lmc check
+                // DebugLoot('Trash: LMC 1 Misc Armor');
+                // return false;
+                // var lrcThreshold = 15;
+                // var lmcThreshold = 8;
+                // var totalRegensThreshold = 6;
+                // var statThreshold = goodEater ? 7 : 11;  
+                // if(lrc >= lrcThreshold)
+                //     statThreshold -= 5;
                 break;
             case '0':
-                var lrcThreshold = 20;
-                var lmcThreshold = 8;
-                var totalRegensThreshold = 6;
-                var statThreshold = goodEater ? 8 : 13;
-                if(lrc >= lrcThreshold)
-                    statThreshold -= 5;
+                //deprecated by preliminary intrinsic lmc check
+                // DebugLoot('Trash: LMC 0 Misc Armor');
+                // return false;
+                // var lrcThreshold = 20;
+                // var lmcThreshold = 8;
+                // var totalRegensThreshold = 6;
+                // var statThreshold = goodEater ? 8 : 13;
+                // if(lrc >= lrcThreshold)
+                //     statThreshold -= 5;
                 break;
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LRC Misc Armor';
-        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
+        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold && !isGloves && !isArms && !isTunic)
             return 'LMC Misc Armor';
         if(lrc >= 20 && mr >= 4 && hpr >= 3 && goodEater && totalStats >= 12)
             return '20+ LRC no LMC Armor'

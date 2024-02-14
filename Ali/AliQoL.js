@@ -893,18 +893,22 @@ function GrabFromQueue(_)
     while(true)
         {
         var toContainer = Shared.GetVar('queueToContainer')
-        var tempArr = Shared.GetArray('grabQueue');
+        var tempArr = Shared.GetArray('grabQueue',[]);
         if(tempArr.length)
             {
             var itemSerial = tempArr.shift();
             var itemObj = Orion.FindObject(itemSerial)
-            Shared.AddArray('grabQueue',tempArr);
-            while(itemObj.Container() != toContainer)
+            if(itemObj)
                 {
-                Orion.MoveItem(itemSerial, 0, toContainer); 
-                Orion.Wait(250);  
+                var fromContainer = itemObj.Container()
+                while(itemObj.Container() == fromContainer)
+                    {
+                    Orion.MoveItem(itemSerial, 0, toContainer); 
+                    Orion.Wait(250);  
+                    }
+                endStamp = Orion.Now() + 5000;
                 }
-            endStamp = Orion.Now() + 5000;
+            Shared.AddArray('grabQueue',tempArr);
             }
         if(Orion.Now() > endStamp)
             break;
