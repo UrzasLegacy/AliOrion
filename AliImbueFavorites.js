@@ -56,6 +56,8 @@ function initImbueFavorites(_)
                             ['Hit Harm', '50%', [Button.IncrementMax]],
                             ['Hit Stamina Leech', '50%', [Button.IncrementMax]],
                             ['Hit Mana Leech', '68%', [Button.IncrementMax]],
+                            ['Hit Life Leech', '68%', [Button.IncrementMax]],
+                            ['Hit Lower Defense', '50%', [Button.IncrementMax]],
                         ],
         }
     return imbueFavorites;
@@ -70,10 +72,10 @@ var imbueGumpButtons = //xsize ysize CallBackID Text FunctionName FunctionArgs
         [ [100,30, gumpSerialIndex++, 'PoisResist-2', 'ImbueItemsByFavorite', ['PoisResist-2']], [100,30, gumpSerialIndex++, 'EnerResist-2', 'ImbueItemsByFavorite', ['EnerResist-2']] ],
         [],
         [[100,30, gumpSerialIndex++, 'HouserJewels', 'ImbueItemsByFavorite', ['HouserJewels']]],
-        [[100,30, gumpSerialIndex++, 'HouserJewels', 'ImbueItemsByFavorite', ['Daisho UW']]],
+        [[100,30, gumpSerialIndex++, 'Daisho UW', 'ImbueItemsByFavorite', ['Daisho UW']]],
     ]
 
 function ItemImbueFavoriteExample()
     {
-    ImbueItemsByFavorite('Oni Katana');
+    ImbueItemsByFavorite('Daisho UW');
     }

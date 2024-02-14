@@ -160,7 +160,6 @@ function SmartStart()
         {
         case 'leader':
         	Orion.Exec('AliComLeader',true);
-            //WarmodePause(text);
             MassAllMessage('StartSmartStart');
             Shared.AddVar('HaveKeys',false);
             if(!BossCheck())

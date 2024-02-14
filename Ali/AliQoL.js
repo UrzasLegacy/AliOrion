@@ -799,7 +799,7 @@ function AddToDropQueue()
             Orion.TestItemColor(serial, '0');
             }
         Shared.AddArray('dropQueue',tempArr);
-        Orion.Wait(1);
+        Orion.Wait(20);
         }
     }
 
@@ -854,8 +854,8 @@ function DropFromQueue(_)
 function SetGrabQueueToContainer()
     {
     Orion.CharPrint(self,1159,'Target toContainer for grabQueue')
-    var toContainer = Orion.WaitForAddObject('myTarget');
     var toContainerSerial = Orion.GetSerial('myTarget')
+	Shared.AddArray('grabQueue',[]);
     Shared.AddVar('queueToContainer',toContainerSerial)
     }
 
@@ -869,7 +869,6 @@ function AddToGrabQueue()
         Orion.Exec('GrabFromQueue',true);
         var serial = Orion.GetSerial('myTarget');
         var tempArr = Shared.GetArray('grabQueue', []);
-        //Orion.Print(tempArr);
         var ind = tempArr.indexOf(serial);
         if(ind == -1)
             {
@@ -882,7 +881,7 @@ function AddToGrabQueue()
             Orion.TestItemColor(serial, '0');
             }
         Shared.AddArray('grabQueue',tempArr);
-        Orion.Wait(20);
+        Orion.Wait(1);
         }
     }
 
@@ -897,6 +896,7 @@ function GrabFromQueue(_)
         if(tempArr.length)
             {
             var itemSerial = tempArr.shift();
+            Shared.AddArray('grabQueue',tempArr);	
             var itemObj = Orion.FindObject(itemSerial)
             if(itemObj)
                 {
@@ -904,15 +904,15 @@ function GrabFromQueue(_)
                 while(itemObj.Container() == fromContainer)
                     {
                     Orion.MoveItem(itemSerial, 0, toContainer); 
-                    Orion.Wait(250);  
+                    Orion.Wait(1300);  
                     }
                 endStamp = Orion.Now() + 5000;
                 }
-            Shared.AddArray('grabQueue',tempArr);
+
             }
         if(Orion.Now() > endStamp)
             break;
-        Orion.Wait(1);
+        Orion.Wait(20);
         }
     }
 
@@ -1418,15 +1418,18 @@ function TeleportChargeCounter()
         }
     var rings = Orion.FindTypeEx(any,any,container).filter(function(ring)
         {
-        return Orion.Contains(ring.Properties(), 'Ring') && Orion.Contains(ring.Properties(), 'Teleport Charges:')
+        var flag = Orion.Contains(ring.Properties(), 'Ring') && Orion.Contains(ring.Properties(), 'Teleport Charges:')
+        if(!flag)
+        	Orion.Print(ring.Properties())
+        return 
         });
     var charges = rings.reduce(function(sum, current)
         {
         var currentCharges = +((current.Properties().match(/Teleport Charges: (\d+)/) || [])[1] || 0);
         return sum + currentCharges;
         }, 0);
-    Orion.Print('Total charges: ' + charges);
-    Orion.Print('Average charges per ring: ' + (charges/rings.length));
+    Orion.Print("Total rings: " + rings.length + '\nTotal charges: ' + charges + '\nAverage charges per ring: ' + (charges/rings.length));
+
     }
 
 function VendorRepricer()
