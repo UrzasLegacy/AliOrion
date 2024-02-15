@@ -2,7 +2,7 @@
 //Shared.AddVar('lootItems',lootItems) //include this in your main file after your list of items
 var keepTrainingArmor = true;
 
-function Gump()
+function LooterGump()
     {
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
@@ -41,7 +41,7 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [],
         [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
         [],
-        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "StringSearch", 'StringSearch'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
+        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "StringSearchGump", 'StringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
     ]
    
 
@@ -1893,6 +1893,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
 
 
     //var isClean = props.indexOf('Brittle') === -1 && props.indexOf('Imbued') === -1;
+    var totalMods = Object.keys(propertiesObj).length
     var hpi = propertiesObj['HitPointIncrease'] || 0;
     var stam = propertiesObj['StaminaIncrease'] || 0;
     var mana = propertiesObj['ManaIncrease'] || 0;
@@ -2068,12 +2069,15 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return 'LMC Stamina Armor';
             }
         }
+    var resThreshold = 40//isClean ? 25 : 50;
+    var totalRes = resistsObj['TotalResists'];
+    var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
+    if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
+        return 'Training Armor';
 
-    if(isArtifact && goodEater)
+    if(isArtifact && goodEater && totalMods > 6)
         { //everything else
         var resistsObj = parseArmorResists(props);
-        var totalRes = resistsObj['TotalResists'];
-        var resThreshold = 40//isClean ? 25 : 50;
         if(luck == 150 && totalRes >= resThreshold) //keep 150 luck
             return 'Luck Armor';
         if((hci == 5 || dci == 5) && mr && lmc && (hpi || hpr || lrc || totalRes > 80)) //keep 5 dci/hci artifact armor
@@ -2130,9 +2134,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return 'LMC Misc Armor';
         if(lrc >= 20 && mr >= 4 && hpr >= 3 && goodEater && totalStats >= 12)
             return '20+ LRC no LMC Armor'
-        var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
-        if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
-            return 'Training Armor';
+
         }
     DebugLoot('Trash: Armor failed all previous checks');
     return false;
@@ -3213,7 +3215,7 @@ function SuitReaderCall(playerOrContainerSerial)
     return propertiesList;
     }
 
-function StringSearch() 
+function StringSearchGump() 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliStringSavedSearches.json';
     var tmpFile = Orion.NewFile();
@@ -3467,7 +3469,7 @@ function StringSearchCallback(_)
         tmpFile.Close();
         }
     Orion.Wait(50);
-    StringSearch();
+    StringSearchGump();
 	}
 
 function SearchByStrings(searchStringsList,excludeIncludesList)

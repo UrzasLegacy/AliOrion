@@ -1,22 +1,4 @@
-var search1 = [
-    ['Hit Harm',50],
-    ['Splintering Weapon',20],
-    ['Spell Channeling'],
-    ['Not Antique'],
-    ['Not Brittle'],
-    ['Name','Bokuto'],
-]
-
-var search2 = [
-    ['Defense Chance Increase',15],
-    ['Faster Cast Recovery',3],
-    ['Magery',15],
-]
-
-var mainSearch = search2;
-
-
-function VSSearcher() 
+function AliVSGump() 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliVSSavedSearches.json';
     var tmpFile = Orion.NewFile();
@@ -35,7 +17,7 @@ function VSSearcher()
     var width = 285;
 
     gump.Clear();
-    gump.SetCallback('VSSearchCallback');
+    gump.SetCallback('AliVSCallback');
     gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
@@ -110,16 +92,16 @@ function VSSearcher()
     gump.AddText(xPos + 11,yPos + 20,554,'Delete');
     gump.AddTooltip('Delete currently selected saved search');
     gump.AddButton(996, xPos, yPos + 45, '40028', '40028', '40018', '0x0000');
-    gump.AddTooltip('Move items that meet the criteria above');
-    gump.AddText(xPos + 11,yPos + 45,554,'Move');
-    gump.AddTooltip('Move items that meet the criteria above');
+    gump.AddTooltip('Use with auction search open to fetch prices instantly');
+    gump.AddText(xPos + 13,yPos + 45,554,'Peek');
+    gump.AddTooltip('Use with auction search open to fetch prices instantly');
 
     gump.Update();
     
     //Orion.Print('interval: ' + (Orion.Now() - startTime))
 	}
 
-function VSSearchCallback(_) 
+function AliVSCallback(_) 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliVSSavedSearches.json';
     var code = CustomGumpResponse.ReturnCode();
@@ -256,16 +238,17 @@ function VSSearchCallback(_)
         tmpFile.Write(JSON.stringify(outArr));
         tmpFile.Close();
         }
+    else if(code == 996) //Delete Saved Search
+        {
+        PeekPrices();
+        }
     //Orion.Print(gumpButtons);
     //Shared.AddArray('gumpValues',gumpButtons);
     Orion.Wait(50);
-    VSSearcher();
+    AliVSGump();
 	}
 
-
-
-
-function FetchPrices()
+function PeekPrices()
     {
     var gump = Orion.GetGump('any','0x000F3EC9');
     if(!gump) return;

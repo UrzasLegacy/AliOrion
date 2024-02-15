@@ -917,7 +917,6 @@ function GrabFromQueue(_)
     }
 
 
-
 function MoveAll()
 	{
     Orion.CharPrint(self,1159,"Select 'From' container");
@@ -960,19 +959,25 @@ function LandGridToggle()
 
 function AutoPriceSimple()
 	{
+    // Simple loop that automatically inputs the textInput string to any prompts that occur while the loop is running
+    // For pricing things on vendors or renaming runes, etc
+    var textInput = "30000"
 	while(true)
 		{
 		if(Orion.WaitForPrompt(1000))
-			Orion.SendPrompt('30000');
+			Orion.SendPrompt(textInput);
 		}
 	}
     
 function HighlightUnlocked()
-	{ //Highlights all items nearby that don't have 'Locked Down' in their tooltip
-	Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+	{ 
+    //Highlights all items nearby that don't have 'Locked Down' in their tooltip
+	var items = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
 		{
 		return !Orion.Contains(item.Properties(),'Locked Down');
-		}).forEach(function(item)
+		})
+    Orion.CharPrint(self,1159,items.length + " unlocked items found!")
+    items.forEach(function(item)
 			{
 			Orion.TestItemColor(item.Serial(),1152)
 			});
@@ -980,8 +985,11 @@ function HighlightUnlocked()
 
 function NeedleInAHayStack()
     { //v1
+    // This function finds all containers on the same floor as the player and systematically searches through
+    // all of them to find any object with the textSearch string in its tooltip. 
+    // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
     var textSearch = 'Retouch';
-    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) //get all containers on the ground within 24 tiles
+    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) 
         {
         var itemZ = item.Z();
         var itemProps = item.Properties();
@@ -1027,18 +1035,14 @@ function NeedleInAHayStack()
 
 function LogOut()
     {
-    //This function will log you out and disable autoreconnect.
+    //This function will log you out and disable autoreconnect if it's on
     Orion.OAOptionSet('AutoReconnect', 0);
     Orion.LogOut();
     }
 
-function AliAtlasTest()
-	{ //[x,y,'facet']
-	AliAtlas([3688,2079,'Trammel'])
-	}
-
 function StayLoggedIn()
 	{
+    // Simple loop that keeps you logged in
 	while(!Player.Dead())
 		{
 		Orion.UseObject('backpack');
@@ -1046,7 +1050,56 @@ function StayLoggedIn()
 		}
 	}
 
+    
+function StayHidden()
+    {
+    // Simple loop that keeps you hidden with the hiding skill
+    while(!Player.Dead())
+        {
+        while(!Orion.BuffExists('Hiding'))
+            {
+            Orion.UseSkill('Hiding');
+            Orion.Wait(500);
+            }
+        Orion.Wait(500);
+        }
+    }
+
 function HideTilHidden()
+	{
+    // More robust loop that keeps you hidden using hiding skill, attacks nearby mobs while visible until you can hide,
+    // automatically turns off when you move, and sends discord message if you are revealed without moving
+	var startTile;
+    while(!Player.Dead() && !Orion.BuffExists('hiding'))
+		{
+		startTile = '' + Player.X() + Player.Y();
+		Orion.UseSkill('Hiding');
+		Orion.Wait(1000);
+		var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 1, 'gray|red|criminal|orange');
+		if(!Orion.BuffExists('hiding') && enemies.length)
+			Orion.Attack(enemies[0]);
+		}
+	Orion.SetTimer('StayLoggedIn');
+	while(Orion.BuffExists('hiding'))
+		{
+		if(Orion.Timer('StayLoggedIn') > 60000)
+			{
+			Orion.UseObject(backpack);
+			Orion.SetTimer('StayLoggedIn');
+			}
+		Orion.Wait(500)
+		}
+	Orion.Wait(1000);
+	if((''+ Player.X() + Player.Y()) == startTile)
+		{
+		DiscordPush(Player.Name() + ' Revealed!')
+		return HideTilHidden();
+		}
+	}
+
+
+
+    function HideTilHidden()
 	{
 	Orion.Terminate('AlwaysAttackAdjacent');
 	while(!Player.Dead() && !Orion.BuffExists('hiding'))
@@ -1080,21 +1133,10 @@ function HideTilHidden()
 		}
 	}
 
-function StayHidden()
-    {
-    while(!Player.Dead())
-        {
-        while(!Orion.BuffExists('Hiding'))
-            {
-            Orion.UseSkill('Hiding');
-            Orion.Wait(500);
-            }
-        Orion.Wait(500);
-        }
-    }
 
 function AttackNearest()
     {
+    // Attacks nearest hostile mob
     var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0]; 
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
@@ -1102,6 +1144,7 @@ function AttackNearest()
 
 function GatherMobs()
     {
+    // Quickly attacks all nearby mobs to aggro them. Similar to paperdoll trick, but no stutter step.
     Orion.FindType(any, any, ground, 'live|inlos|ignorefriends|ignoreself|nothuman', 20, 'gray|criminal|red')
         .forEach(function(mob)
             {
@@ -1115,7 +1158,8 @@ function GatherMobs()
     }
 
 function FindOwnCorpse()
-    {//Runs to and loots your corpse. Might need to spam the hotkey
+    {
+    //Runs to and loots your corpse. Might need to spam the hotkey
     if(Orion.Contains(Player.Name(), 'Lady|Lord'))
         var _pName = Player.Name().slice(5, Player.Name().length);
     else
@@ -1130,6 +1174,7 @@ function FindOwnCorpse()
 
 function ActivateChampSpawn()
 	{
+    // Activates any champ spawn within 20 tiles
 	var altar = Orion.FindType('0x1F18',any,ground,'',20)[0];
 	if(!altar)
 		return Orion.CharPrint(self,1159,'No altar found!');
@@ -1140,6 +1185,7 @@ function ActivateChampSpawn()
 
 function BuyHorse()
     {
+    // Buys a horse from a nearby animal trainer
     var vendors = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(vendor)
         {
         return Orion.Contains(vendor.Properties(), 'the animal trainer') && !Orion.Contains(vendor.Properties(), 'guild');
@@ -1180,6 +1226,9 @@ function RecallBandieBuy()
     
 function BandieBuy()
 	{
+    // Buys bolts from a weaver npc (and scissors if you don't have any) and cuts them into bandages
+    var amountOfClothBolts = 4
+    //var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
 	do {
 		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(vendor)
 			{
@@ -1192,11 +1241,10 @@ function BandieBuy()
         {
 		Orion.WalkTo(vendors.X(),vendors.Y());
         var shoplist = Orion.GetShopList('Cloth');
-        var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
         if(!Orion.FindType('0x0F9E')[0])
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount), new ShopListItem('0x0F9E', '0x0000', '', 1)];
+            var items = [new ShopListItem('0x0F9B', '0x0000', '', amountOfClothBolts), new ShopListItem('0x0F9E', '0x0000', '', 1)];
         else
-            var items = [new ShopListItem('0x0F9B', '0x0000', '', amount)];
+            var items = [new ShopListItem('0x0F9B', '0x0000', '', amountOfClothBolts)];
         shoplist.SetItems(items);
         Orion.UpdateShopList(shoplist);
         Orion.BuyHook('Cloth');
@@ -1240,6 +1288,8 @@ function BandieBuy()
 
 function TotTurnIns()
 	{
+    // Open turn in gump and start this function to very quickly turn in every drop in your backpack. Be careful!
+    // Works with the standard turn in gump that is used for most Treasures of Tokuno style events (Wildfire, Archlich, etc)
 	while(true)
 		{
 		if (Orion.WaitForGump(1000))
@@ -1258,6 +1308,7 @@ function TotTurnIns()
 
 function Tithe()
     {
+    // Tithes to 100k if there is an ankh nearby
     CloseAllGumps();
     var endTime = Orion.Now() + 10000;
     while(Player.TithingPoints() < 100000)
@@ -1408,6 +1459,7 @@ function MoveCommodityDeeds()
 
 function TeleportChargeCounter()
     {
+    // Count total teleport charges in a given container
     Orion.CharPrint(self,1159,'Target container full of rings');
     Orion.WaitForAddObject('myTarget');
     var container = Orion.GetSerial('myTarget');
@@ -1434,6 +1486,7 @@ function TeleportChargeCounter()
 
 function VendorRepricer()
     {
+    // Target your vendor or container on vendor to automatically reprice everything inside by the adjAmount set below. Doesn't open subcontainers
     TextWindow.Clear()
     var adjAmount = .8; //multiply current price by this to get adjusted price
     Orion.CancelWaitPrompt();
@@ -1530,6 +1583,7 @@ function VendorRepricer()
 
 function WaitForAuctionItem()
 	{
+    // Monitors player auction and sends discord message when an item with the given searchString appears on screen
 	var searchString = 'lava'
 	var startTime = Orion.Now();
 	while(true)
@@ -1550,6 +1604,7 @@ function WaitForAuctionItem()
 
 function SecureAndCoOwn(itemSerial)
     {
+    // Secure item in house and change access to Co-Owner in one hotkey
     if(itemSerial === undefined)
         {
         Orion.WaitForAddObject('myTarget');
