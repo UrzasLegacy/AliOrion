@@ -2,6 +2,111 @@ var fileName = '/AliCatalogueJSON' + '.json'
 var searchDistance = 10
 var debug = false;
 
+function StartJewelryCatalogue()
+    {
+    // Aggregate items somehow
+    var payload = FormatItemsForGoogleSheets(items)
+    UDPtoPython(payload)
+    }
+
+function UDPtoPython(payload)
+    {
+    // Send outData array of rows to python to upload to Sheets
+    
+    }
+
+function FormatItemsForGoogleSheets(items)
+    {
+    var outData = []
+    for(var i=0,length=items.length;i<length;i++)
+        {
+        var item = items[i]
+        var itemProps = item.Properties()
+        var itemGraphic = item.Graphic()
+
+        var itemType = "Unknown"
+        if(Orion.Contains('0x1086|0x108A', itemGraphic))
+            itemType = "Ring"
+        else if(Orion.Contains('0x1F06|0x1F09', itemGraphic))
+            itemType = "Bracelet"
+
+        var parse = parseJewelryPropertiesForGoogleSheets(itemProps)
+
+        var SkillGroup1 = ""
+        var SkillGroup2 = ""
+        var SkillGroup3 = ""
+        var SkillGroup4 = ""
+        var SkillGroup5 = ""
+        for(prop in Object.keys(parse))
+            {
+            if(Orion.Contains("Swordsmanship|Fencing|MaceFighting|Magery|Musicianship", prop))
+                {
+                SkillGroup1 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Wrestling|Tactics|AnimalTaming|Provocation|SpiritSpeak", prop))
+                {
+                SkillGroup2 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Stealth|Parrying|Meditation|AnimalLore|Discordance|Focus", prop))
+                {
+                SkillGroup3 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Stealing|Anatomy|EvaluateIntelligence|Veterinary|Necromancy|Bushido|Mysticism", prop))
+                {
+                SkillGroup4 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Healing|ResistingSpells|Peacemaking|Archery|Chivalry|Ninjitsu|Throwing", prop))
+                {
+                SkillGroup5 = prop + " " + parse[prop]
+                }
+            }
+
+        var rowData = [
+            itemType, 
+            SkillGroup1, SkillGroup2, SkillGroup3, SkillGroup4, SkillGroup5,
+            parse.StrengthBonus,parse.DexterityBonus,parse.IntelligenceBonus,parse.ManaIncrease,parse.StaminaIncrease,
+            parse.ManaRegeneration,parse.EnhancePotions,parse.HitChanceIncrease,parse.DefenseChanceIncrease,
+            parse.FasterCastRecovery,parse.FasterCasting,parse.LowerManaCost,parse.SpellDamageIncrease,
+            parse.LowerReagentCost,parse.SwingSpeedIncrease,parse.DamageIncrease
+            ]
+        outData.push(row_data)
+        }
+    return outData
+    }
+
+function parseJewelryPropertiesForGoogleSheets(jewelryProperties)
+    {
+    var targetMods = 
+        {
+        //good mods
+        Magery:true,MaceFighting:true,Fencing:true,Swordsmanship:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Tactics:true,
+        Focus:true,Parrying:true,Stealth:true,Anatomy:true,Bushido:true,EvaluateIntelligence:true,Mysticism:true,Wrestling:true,
+        Necromancy:true,Archery:true,Chivalry:true,Healing:true,Ninjitsu:true,Throwing:true,ResistingSpells:true,ManaIncrease:true,
+        StaminaIncrease:true,StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,ManaRegeneration:true,EnhancePotions:true,
+        HitChanceIncrease:true,DefenseChanceIncrease:true,SwingSpeedIncrease:true,DamageIncrease:true,SpellDamageIncrease:true,
+        FasterCastRecovery:true,FasterCasting:true,LowerManaCost:true,LowerReagentCost:true,Musicianship:true,Discordance:true,
+        //bad mods
+        NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,
+        Provocation:true,Meditation:true,Veterinary:true,Stealing:true,Peacemaking:true
+        }
+    var lines = jewelryProperties.split("\n");
+    var modsObj = {};
+    lines.forEach(function(line)
+        {
+        var modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)?/);
+        if(modMatch)
+            {
+            var modName = modMatch[1].replace(/\s/g, '');
+            if(targetMods[modName])
+                {
+                var modValue = parseInt(modMatch[2]) || 1;
+                modsObj[modName] = modValue;
+                }
+            }
+        });
+    return modsObj; //[{goodMods},totalModsInt]
+    }
+
 function CatalogueSafes()
     {
     var amOwnerFlag = true; //set to true if you own the auction safes you are cataloguing, false if they are someone else's
