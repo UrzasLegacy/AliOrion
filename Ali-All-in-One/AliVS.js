@@ -33,8 +33,6 @@ function AliVSGump()
     var heightAdjust = 25;
     var shared;
     
-
-        
     gump.AddText(xPos,yPos,554,'Item Name:');
     yPos += heightAdjust;
     gump.AddResizepic(xPos, yPos , '0x0BB8', 240, 19);
@@ -279,12 +277,30 @@ function PeekPrices()
     displayGump.Update();
     }
 
+function VSTarget()
+	{
+	Orion.WaitForAddObject('myTarget');
+	var obj = Orion.FindObject('myTarget');
+	var itemName = obj.Name();
+	var split = itemName.split(' ');
+	split.sort(function(a,b)
+		{
+		return b.length - a.length;
+		})
+	var searchString = split[0]
+	if(split[1])
+		searchString += " " + split[1]
+	if(split[2])
+		searchString += " " + split[2]
+	VSsearch(searchString);
+	}
+
 //1060643 malas
 //1012001 felucca
 //1012000 trammel
 //1063258 tokuno islands
 //1112178 ter mur
-function InputSearch()
+function InputSearch(_)
     {
     for(var i=0;i<mainSearch.length;i++)
         {
@@ -307,17 +323,6 @@ function SearchByMods(mods)
         var search = mods[i]
         if(search[0])
             VSButtonPress(search[0],search[1])
-        }
-    }
-
-function VSSearchTargetJewel()
-    {
-    Orion.WaitForAddObject('myTarget');
-    var obj = Orion.FindObject('myTarget');
-    var parse = parseJewelryProperties(obj.Properties())
-    for(mod in parse)
-        {
-        VSButtonPress(mod,parse[mod])
         }
     }
 
@@ -651,7 +656,7 @@ var vsSelections = {
     "StrengthBonus":["189","69"],
     "DexterityBonus":["190","70"],
     "IntelligenceBonus":["191","71"],
-    "HitPointsIncrease":["192","72"],
+    "HitPointIncrease":["192","72"],
     "StaminaIncrease":["193","73"],
     "ManaIncrease":["194","74"],
     "HitPointRegeneration":["195","75"],

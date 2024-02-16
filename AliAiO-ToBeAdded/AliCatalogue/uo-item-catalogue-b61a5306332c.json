@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "uo-item-catalogue",
+  "private_key_id": "b61a5306332c0dede4dbc02ba57697afa09eea8f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDUI20whOQVcBEO\n5hZ5AZyZLiKtDfoGYljfdWV/mVKMLvXgISvQicbb1rFMeql2cFRj7/3h82TaQmF2\n3iK71nU8zrns4Z4vvUVdYAdD9fNuI5085WMP7fSNw5KkOjLbsUhrBmBvu4jYlsN2\ng+PTBf+WMRyeJ/zw24t0V9mr9qPe8Ntmkox7W1XXmFP5N/mQNG/nGSWO9kuri/Ot\nSyigeTWst3NKuW6WYgIR5lyrB1GPBmIUvOgB/F5CutQixS5D6iGwxy0rWoOS9lvC\nNgDudY0q1RMytyynPVCST1Hb1dh7CHXRDoIwalnYPS93MKZlFcKxsVNqI6g8tV5x\nwARCkwo7AgMBAAECggEABTcK79OC54BpRiRjrtbaZ2BqEgOf2JKIKWCLJB9ifZ3v\nHz+0tYj/JMr62DmQ7lK/NSbvTVb8udB1V+tvD1urmlj7Dh05YWZ12ZOxdtS8ufTr\nLSLDrcUSRLGA0RCGZos0D6ZI+zlkTFRfrfHhFgBCpiN2VvCYHo2vHtpea54bejDT\nI/fUp4FBmbgYQVNbbcO92sBAXNPwcvD3+GjV09QMTY8PlOfaks3YWX348W5zOi6/\ncVJanv/rjxMF7hRtEvmXeGbYO1WbIooPlm8vB6+ly1MGDSWsCOlPr4xufqi3a4bT\n+LTwJyI8f22561WoHRsKjupymVYwlKdxZC/bgmllhQKBgQDzZGpB/6/VnSKWr0SP\npxc383pzhcR8wkP+Swn3IRnsyjmCNnWaBXvFbDBsVa35p9aPSQdsYQ4s1CM7iB03\nCpyf6uRygZAZzRV+JbI9/9+mqkgnlpKe9+173CxcuKHLoKD8gjRGMcEPxx4tik32\nbny6R1sRhVn5PVS8sO02YkwOrwKBgQDfII8gPhBJ79u1RvYrff1zrrR+ehdOy5B+\nU0UMdtvzaZ/P8Dy7HgeAZTXs3mpJ1d701iIVKbP2tE2tHgon6PARYr898qOlo24W\n8UJliWcwB08ImPYMBuegVEzucwwvpRYeWXce010Hgp4ufIhk382aGX0nN596RLNk\n+Fm1eWwANQKBgA3xEI0bQk0wJQ0QmRLJdXEFB1yaqviigBaO4dFAGiYQJ18oE3Bx\nI/fZDKUH+2Ezlfy7KCuzG4bB2ArO7y159CLM560PctunfbWuHxmiEIOReXSbEWb9\nuKLBp+DfypTJbK9KHghvTSnENBxTsceN6KMa90J3qwG126a7U7srwkONAoGACDf8\nzaU7mF2bbCv2+VcktNQkldwNa7uX0O9kRbdDFs43MsOYmRPcFuCjgdwXcizMj5wr\nmTf2BwpRKiVHHn04Covmm3OKj5lbfsDYP0E2adB7Gsf3mC3Q7ljslIPsWPztuaR1\n/M6wSIyJIxE3PO/5dMmnkIA+AZTyPq/fLg4Q6lkCgYAFpRNixuETWGl2S9hXe5L6\nXgyo4vi2V1z7QxwnGK51c+bl7qqH44Ovy7sBniGZRbdldEwpH4RaxxPDKx0W2SIV\nXHaX5fEbJ41lx24zie/fLFqBfuE+I2a5hV3xqaxK4TAepjUhd6uvvoe530hq4dAn\njkIob2cEcuX20Nst8l3cfA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "circlesnek@uo-item-catalogue.iam.gserviceaccount.com",
+  "client_id": "109919415304282874268",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/circlesnek%40uo-item-catalogue.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -859,6 +859,7 @@ function DropFromQueue(_)
 function SetGrabQueueToContainer()
     {
     Orion.CharPrint(self,1159,'Target toContainer for grabQueue')
+    Orion.WaitForAddObject('myTarget')
     var toContainerSerial = Orion.GetSerial('myTarget')
 	Shared.AddArray('grabQueue',[]);
     Shared.AddVar('queueToContainer',toContainerSerial)

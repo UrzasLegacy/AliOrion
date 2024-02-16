@@ -1946,12 +1946,12 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         }
     if(intrinsicLMC === '0')
         {
-        DebugLoot('Trash: LMC 0 Armor');
+        DebugLoot('Trash: Intrinsic LMC 0 Armor');
         return false;
         }
     if(stam < 7 && intrinsicLMC === '1')
         {
-        DebugLoot('Trash: LMC 1 non-stam Armor');
+        DebugLoot('Trash: Intrinsic LMC 1 non-stam Armor');
         return false; 
         }
 

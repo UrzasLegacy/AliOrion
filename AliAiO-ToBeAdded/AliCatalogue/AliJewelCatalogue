@@ -1,0 +1,241 @@
+var inventoryFileName = "Spreadsheet Inventory"
+function StartJewelryCatalogue()
+    {
+    // Aggregate items somehow
+    var payload = FormatJewelryForGoogleSheets(items)
+    UDPtoPython(payload)
+    }
+
+function AggregateNearbyJewelry()
+    {
+    Orion.WaitForAddObject('myTarget')
+    var item = Orion.FindObject('myTarget')
+    TextWindow.Open()
+    TextWindow.Print(JSON.stringify(FormatJewelryForGoogleSheets([item])))
+    }
+
+function FormatJewelryForGoogleSheets(items)
+    {
+    var outData = []
+    for(var i=0,length=items.length;i<length;i++)
+        {
+        var item = items[i]
+        var itemProps = item.Properties()
+        var itemGraphic = item.Graphic()
+
+        var itemType
+        if(Orion.Contains('0x1086|0x108A', itemGraphic))
+            itemType = "Ring"
+        else if(Orion.Contains('0x1F06|0x1F09', itemGraphic))
+            itemType = "Bracelet"
+        if(!itemType)
+            continue
+
+        var parse = parseJewelryPropertiesForGoogleSheets(itemProps)
+
+        var skillGroup1 = ""
+        var skillGroup2 = ""
+        var skillGroup3 = ""
+        var skillGroup4 = ""
+        var skillGroup5 = ""
+        
+        var keys = Object.keys(parse)
+        for(var i=0,length=keys.length; i<length;i++)
+            {           
+           	var prop = keys[i]
+            if(Orion.Contains("Swordsmanship|Fencing|MaceFighting|Magery|Musicianship", prop))
+                {
+                skillGroup1 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Wrestling|Tactics|AnimalTaming|Provocation|SpiritSpeak", prop))
+                {
+                skillGroup2 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Stealth|Parrying|Meditation|AnimalLore|Discordance|Focus", prop))
+                {
+                skillGroup3 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Stealing|Anatomy|EvaluateIntelligence|Veterinary|Necromancy|Bushido|Mysticism", prop))
+                {
+                skillGroup4 = prop + " " + parse[prop]
+                }
+            else if(Orion.Contains("Healing|ResistingSpells|Peacemaking|Archery|Chivalry|Ninjitsu|Throwing", prop))
+                {
+                skillGroup5 = prop + " " + parse[prop]
+                }
+            }
+
+        var rowData = [
+            itemType, 
+            skillGroup1, skillGroup2, skillGroup3, skillGroup4, skillGroup5,
+            parse.StrengthBonus,parse.DexterityBonus,parse.IntelligenceBonus,parse.ManaIncrease,parse.StaminaIncrease,
+            parse.ManaRegeneration,parse.EnhancePotions,parse.HitChanceIncrease,parse.DefenseChanceIncrease,
+            parse.FasterCastRecovery,parse.FasterCasting,parse.LowerManaCost,parse.SpellDamageIncrease,
+            parse.LowerReagentCost,parse.SwingSpeedIncrease,parse.DamageIncrease
+            ]
+        
+        var sanitizeRowData = []
+        rowData.forEach(function(row){sanitizeRowData.push(row || "")})
+        outData.push(sanitizeRowData)
+        }
+    return outData
+    }
+
+function parseJewelryPropertiesForGoogleSheets(jewelryProperties)
+    {
+    var targetMods = 
+        {
+        //good mods
+        Magery:true,MaceFighting:true,Fencing:true,Swordsmanship:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Tactics:true,
+        Focus:true,Parrying:true,Stealth:true,Anatomy:true,Bushido:true,EvaluateIntelligence:true,Mysticism:true,Wrestling:true,
+        Necromancy:true,Archery:true,Chivalry:true,Healing:true,Ninjitsu:true,Throwing:true,ResistingSpells:true,ManaIncrease:true,
+        StaminaIncrease:true,StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,ManaRegeneration:true,EnhancePotions:true,
+        HitChanceIncrease:true,DefenseChanceIncrease:true,SwingSpeedIncrease:true,DamageIncrease:true,SpellDamageIncrease:true,
+        FasterCastRecovery:true,FasterCasting:true,LowerManaCost:true,LowerReagentCost:true,Musicianship:true,Discordance:true,
+        //bad mods
+        NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,
+        Provocation:true,Meditation:true,Veterinary:true,Stealing:true,Peacemaking:true
+        }
+    var lines = jewelryProperties.split("\n");
+    var modsObj = {};
+    lines.forEach(function(line)
+        {
+        var modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)?/);
+        if(modMatch)
+            {
+            var modName = modMatch[1].replace(/\s/g, '');
+            if(targetMods[modName])
+                {
+                var modValue = parseInt(modMatch[2]) || 1;
+                modsObj[modName] = modValue;
+                }
+            }
+        });
+    return modsObj; //[{goodMods},totalModsInt]
+    }
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+function NeedleInAHayStack()
+    { //v1
+    // This function finds all containers on the same floor as the player and systematically searches through
+    // all of them to find any object with the textSearch string in its tooltip. 
+    // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
+    var textSearch = 'Retouch';
+    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) 
+        {
+        var itemZ = item.Z();
+        var itemProps = item.Properties();
+        var playerZ = Player.Z();
+        var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
+        return zCheck && containerCheck && !emptyCheck;
+        }).sort(function(a,b) //sort by nearest
+            {
+            return a.Distance() - b.Distance();
+            });
+    for(var i=0;i<containers.length;i++) //loop through em
+        {
+        var containerObj = containers[i];
+        var containerSerial = containerObj.Serial();
+        var containerX = containerObj.X();
+        var containerY = containerObj.Y();
+        var containerZ = containerObj.Z();
+        VerifyWalkTo(containerX,containerY,containerZ,1);
+        var subContainers = GetAllSubContainers(containerSerial,true);
+        for(var j=0;j<subContainers.length;j++)
+            {
+            var subContainerSerial = subContainers[j];
+            var searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),textSearch)
+                });
+            while(searchItem[0])
+                {
+                Orion.CharPrint(containerSerial,1159,textSearch + ' Found!')
+				Orion.TestItemColor(containerSerial, 1152);
+                Orion.MoveItem(searchItem[0].Serial());
+                Orion.Wait(1300);
+                searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
+                    {
+                    return Orion.Contains(item.Properties(),textSearch)
+                    });
+                }
+            }
+        }
+    }
+
+var subContainersArr = [];
+function GetAllSubContainers(containerSerial,ignoreEmpties)
+    {
+    if(!VerifyOpenContainer(containerSerial))
+        return;
+    subContainersArr.push(containerSerial);
+    var subContainers = Orion.FindTypeEx(any,any,containerSerial).filter(function(item)
+        {
+        var itemProps = item.Properties();
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        if(ignoreEmpties)
+            return containerCheck && !Orion.Contains(itemProps,'Contents: 0/');;
+        return containerCheck;
+        });
+    for(var i=0;i<subContainers.length;i++)
+        {
+        var subContainer = subContainers[i];
+        GetAllSubContainers(subContainer.Serial(),ignoreEmpties);
+        }
+    Orion.CloseGump('container',containerSerial);
+    return subContainersArr;
+    }
+    
+function VerifyOpenContainer(containerSerial,delay)
+    {
+    var startTime = Orion.Now();
+    var endTime = startTime + (delay || 5000);
+    while(!Orion.GumpExists('container',containerSerial))
+        {
+        if(Orion.Now() > endTime)
+            return false;
+        Orion.UseObject(containerSerial);
+        Orion.Wait(1000);
+        }
+    return true;
+    }
+
+function AliReadAndOverwriteFile(inputString,fileNameString)
+    { //"[1,2,3]","ReadAndOverwriteTest.txt"
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    var fileRead = tmpFile.ReadAll();
+    if(!fileRead)
+        fileRead = "[]";
+    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
+    var fileArr = JSON.parse(fileRead) || [];
+    var inputArr = JSON.parse(inputString) || [];
+    var outputArr = [];
+    for(var i=0;i<inputArr.length;i++)
+        {
+        var inputEle = +inputArr[i];
+        var fileEle = +fileArr[i];
+        var sum = inputEle + fileEle
+        Orion.Print(inputEle + '+' + fileEle + '=' + sum)
+        outputArr[i] = sum;
+        }
+    var outputStr = JSON.stringify(outputArr)
+    tmpFile.Remove();
+    tmpFile.Open(tmpFilePath)
+    tmpFile.Write(outputStr);
+    tmpFile.Close();
+    }
