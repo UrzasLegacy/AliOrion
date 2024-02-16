@@ -1,3 +1,12 @@
+//--# AliAutomation
+/*
+These scripts are meant to automate actions over a long period of time. There is some overlap in "automation" between
+AliAutomation and AliQoL. The difference is that functions in AliQoL are meant to act as utility helpers for 
+annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style functions that either
+run in the background all the time as you do other things, or are useful for accomplishing something while afk.
+*/
+
+
 function GMScan()
 	{
 	var useDiscordPush = true//profile.useDiscordPush;
@@ -99,7 +108,6 @@ function JournalScan()
 	}
 
 
-//--# AliAutomation
 function BandieBot()
 	{
 	var useBandieOthers = profile.useBandieOthers;
@@ -387,13 +395,6 @@ function AlwaysAttackAdjacent()
 		}
 	}
 
-function AttackNearest()
-    {
-	Orion.ResetSearchArea();
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 24, 'gray|criminal|red')[0]; 
-    Orion.TargetSystemSerial(target);
-    Orion.Attack(target);
-    }
 
 function AutoGatherMobs()
     {
@@ -508,8 +509,6 @@ function AutoUnInsureInContainer()
     if(Orion.WaitForTarget(2000))
         Orion.CancelTarget();
 	}
-
-
 
 function BagOfSendingGold() 
 	{
@@ -758,142 +757,7 @@ function AutoTracker()
         }
     }
 
-/*
-Combine All Refinements
-Written by Ali
-January 16, 2023
 
-Call Variants:
-    CombineAllRefinements();
-Arguments:
-    N/A
-Result:
-    Does not return a value
-*/
-
-function CombineAllRefinements()
-    {
-    var amalgamator = Orion.FindType('0x9966','0x0480')[0];
-    if(!amalgamator)
-        return Orion.CharPrint(self,1159,'No empty amalgamator in backpack! Halting...');
-    var upgradeAmount = {'Defense': 2,'Protection': 3,'Hardening': 4,'Fortification': 5}
-    var refinements = [['0x4CD9', 'Scour'],['0x142B', 'Cure'],['0x2D61', 'Varnish'],['0x142A', 'Wash'],['0x4CDA', 'Gloss'],['0x4CD8', 'Polish']]
-    var armors = ['Platemail','Chainmail','Ringmail','Dragon','Platemail Samurai','Gargish Platemail','Gargish Stone','Woodland','Bone','Hide','Studded Leather','Studded Samurai']
-    var levels = ['Defense','Protection','Hardening','Fortification']
-    Orion.CharPrint(self,1159,'Target container full of refinements');
-    Orion.WaitForAddObject('myTarget');
-    var container = Orion.GetSerial('myTarget');
-    while(!Orion.GumpExists('container',container))
-        {
-        Orion.UseObject(container);
-        Orion.Wait(1300);
-        }
-    for(var r=0;r<refinements.length;r++) 
-        {
-        var refinement = refinements[r];
-        for(var a=0;a<armors.length;a++)
-            {
-            var armor = armors[a];
-            for(var l=0;l<levels.length;l++) 
-                {
-                var level = levels[l];
-                var amount = upgradeAmount[level];
-                var items = Orion.FindType(refinement[0],any,container).filter(function(item)
-                    {
-                    var parse = ParseRefinement(item);
-                    return parse['level'] == level && parse['armor'] == armor;
-                    });
-                while(items.length >= amount)
-                    {
-                    Orion.CharPrint(self,1159, 'Combining ' + amount + ' ' + refinement[1] + ' of ' + level + ': ' + armor)
-                    if(!Combine(items,amount))
-                        return Orion.CharPrint(self,1159,'Empty amalgamator missing! Halting...');
-                    var resultItem = Orion.FindType(refinement)[0];
-                    while(resultItem)
-                        {
-                        Orion.MoveItem(resultItem,0,container)
-                        Orion.Wait(1300);
-                        resultItem = Orion.FindType(refinement)[0];
-                        }
-                    items = Orion.FindType(refinement[0],any,container).filter(function(item)
-                        {
-                        var parse = ParseRefinement(item);
-                        return parse['level'] == level && parse['armor'] == armor;
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-function FillRepairBench()
-    {
-    Orion.CharPrint(self, 1159, 'Select supply container. It should contain blank scrolls');
-    Orion.WaitForAddObject('myTarget');
-    var supplyContainer = Orion.GetSerial('myTarget');
-    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
-    if(!bench || Orion.GetDistance(bench) > 2)
-        return Orion.CharPrint(self, 1159, 'No repair bench close enough! Halting...');
-    if(!supplyContainer || Orion.GetDistance(supplyContainer) > 2)
-        return Orion.CharPrint(self, 1159, 'Supply container missing or too far away! Halting...');
-    Fill('Tinker', 'Tinkering', 100, '0x1EB9|0x1EBC|0x1EB8', supplyContainer, bench, 1);
-    Fill('Blacksmith', 'Blacksmithy', 180, '0x0FBC|0x13E3|0x0FB5', supplyContainer, bench, 3);
-    Fill('Carpenter', 'Carpentry', 100, '0x10E4|0x102E|0x1030|0x1032|0x102C|0x102A|0x1034|0x1029|0x10E6|0x10E7|0x10E5', supplyContainer, bench, 5);
-    Fill('Tailor', 'Tailoring', 120, '0x0F9D', supplyContainer, bench, 7);
-    //Fill('Mason', 'Carpentry', 100, '0x12B3', supplyContainer, bench, 9); //works, but no check for Masonry Specialization in place
-    //Fill('Alchemist', 'Alchemy', 100, '0x0E8A', supplyContainer, bench, 11); //untested, also no check for Glassblowing Specialization in place
-    Fill('Fletcher', 'Bowcraft/Fletching', 100, '0x1022', supplyContainer, bench, 13);
-    }
-
-function ToTTurnIns()
-	{ //BE VERY CAREFUL! WILL TURN IN EVERY DROP IN YOUR BACKPACK AND SUBCONTAINERS. Open turn in gump and start script
-	while(true)
-		{
-        if(Orion.WaitForGump(2000))
-			{
-			var gump = Orion.GetGump('last');
-			if((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00002336'))
-				{
-                gump.Select(Orion.CreateGumpHook(100));
-				Orion.Wait(100);
-				}
-			}
-		else
-			break;
-		}
-	}
-
-function MoveZeroPropItems()
-    {
-    if(Player.WarMode())
-        {
-        Orion.CharPrint(self, 1159, 'Target Source Container');
-        Orion.WaitForAddObject('sourceBag')
-        Orion.OpenContainer('sourceBag');
-        Orion.Wait(800);
-        }
-    else
-        Orion.AddObject('sourceBag', backpack);
-    var items = Orion.FindTypeEx(any, any, 'sourceBag').filter(function(item)
-        {
-        return item.Properties().match(/Archlich\n(<b>Insured<\/b>\n)*Weight: \d+ Stones*\nShard Bound\n(Physical Resist \d+%\n)*Fire Resist \d+%\nCold Resist \d+%\nPoison Resist \d+%\nEnergy Resist \d+%\n(Mage Armor\n)*Strength Requirement \d+\nDurability/)
-        });
-    Orion.CharPrint(self, 1159, items.length);
-    if(!items.length)
-        return;
-    Orion.CharPrint(self, 1159, 'Target Destination Bag');
-    Orion.WaitForAddObject('destBag');
-    while(items[0])
-        {
-        Orion.MoveItem(items[0].Serial(), 0, 'destBag')
-        Orion.Wait(1100);
-        items = Orion.FindTypeEx(any, any, 'sourceBag').filter(function(item)
-            {
-            return item.Properties().match(/Archlich\n(<b>Insured<\/b>\n)*Weight: \d+ Stones*\nShard Bound\n(Physical Resist \d+%\n)*Fire Resist \d+%\nCold Resist \d+%\nPoison Resist \d+%\nEnergy Resist \d+%\n(Mage Armor\n)*Strength Requirement \d+\nDurability/)
-            });
-        Orion.CharPrint(self, 1159, items.length);
-        }
-    }
 
 function MaintainLunaRune()
 	{

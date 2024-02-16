@@ -2,7 +2,7 @@
 //Shared.AddVar('lootItems',lootItems) //include this in your main file after your list of items
 var keepTrainingArmor = true;
 
-function LooterGump()
+function AliLootGump()
     {
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
@@ -1924,7 +1924,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     var isTunic = tunicsArr[itemGraphic]
 
 
-    var goodEater = damageEater || poisonEater || fireEater || coldEater || energyEater || kineticEater;
+    var anyEater = damageEater || poisonEater || fireEater || coldEater || energyEater || kineticEater;
     var totalStats = hpi + stam + mana + str + dex + int;
     var totalRegens = hpr + mr;
     var isArtifact = props.indexOf('Artifact') > -1;
@@ -1938,7 +1938,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     else
         var intrinsicLMC = intrinsicLMCArr[0];
         
-    DebugLoot('\ngoodEater: ' + goodEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
+    DebugLoot('\nanyEater: ' + anyEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
     if(isHat)
         {
         DebugLoot('Trash: Hat');
@@ -1969,15 +1969,15 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     var lmcThreshold = 8;
                     var mrThreshold = 3;
                     var hprThreshold = 3;
-                    var statThreshold = goodEater ? 5 : 7;
+                    var statThreshold = anyEater ? 5 : 7;
                     }
                 else
                     {
                     var lrcThreshold = 10;
-                    var lmcThreshold = lrc >= 20 ? 0 : 4;
+                    var lmcThreshold = lrc >= 20 ? 0 : 6;
                     var mrThreshold = 3;
-                    var hprThreshold = 3;
-                    var statThreshold = goodEater ? 3 : 5;
+                    var hprThreshold = mr == 4 ? 0 : 1;
+                    var statThreshold = anyEater ? 3 : 5;
                     if(lrc >= lrcThreshold)
                         statThreshold -= 5;
                     }
@@ -1990,7 +1990,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 // var lmcThreshold = 6;
                 // var mrThreshold = 3;
                 // var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
-                // var statThreshold = goodEater ? 5 : 10;
+                // var statThreshold = anyEater ? 5 : 10;
                 // if(lrc >= lrcThreshold)
                 //     statThreshold -= 5;
                 break;
@@ -2002,7 +2002,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 // var lmcThreshold = 6;
                 // var mrThreshold = 3;
                 // var hprThreshold = lrc >= lrcThreshold ? 0 : 2;
-                // var statThreshold = goodEater ? 5 : 10;
+                // var statThreshold = anyEater ? 5 : 10;
                 // if(lrc >= lrcThreshold)
                 //     statThreshold -= 5;
                 break;
@@ -2075,7 +2075,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
         return 'Training Armor';
 
-    if(isArtifact && goodEater && totalMods > 6)
+    if(isArtifact && anyEater && totalMods > 6)
         { //everything else
         var resistsObj = parseArmorResists(props);
         if(luck == 150 && totalRes >= resThreshold) //keep 150 luck
@@ -2093,14 +2093,14 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     var lrcThreshold = 20;
                     var lmcThreshold = 8;
                     var totalRegensThreshold = 6
-                    var statThreshold = goodEater ? 6 : 8;
+                    var statThreshold = anyEater ? 6 : 8;
                     }
                 else
                     {
                     var lrcThreshold = 10;
                     var lmcThreshold = lrc >= 20 ? 0 : 3;
                     var totalRegensThreshold = 6;
-                    var statThreshold = goodEater ? 4 : 6;
+                    var statThreshold = anyEater ? 4 : 6;
                     if(lrc >= 20)
                         statThreshold -= 2;
                     }
@@ -2112,7 +2112,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 // var lrcThreshold = 15;
                 // var lmcThreshold = 8;
                 // var totalRegensThreshold = 6;
-                // var statThreshold = goodEater ? 7 : 11;  
+                // var statThreshold = anyEater ? 7 : 11;  
                 // if(lrc >= lrcThreshold)
                 //     statThreshold -= 5;
                 break;
@@ -2123,7 +2123,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 // var lrcThreshold = 20;
                 // var lmcThreshold = 8;
                 // var totalRegensThreshold = 6;
-                // var statThreshold = goodEater ? 8 : 13;
+                // var statThreshold = anyEater ? 8 : 13;
                 // if(lrc >= lrcThreshold)
                 //     statThreshold -= 5;
                 break;
@@ -2132,7 +2132,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             return 'LRC Misc Armor';
         if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold && !isGloves && !isArms && !isTunic)
             return 'LMC Misc Armor';
-        if(lrc >= 20 && mr >= 4 && hpr >= 3 && goodEater && totalStats >= 12)
+        if(lrc >= 20 && mr >= 4 && hpr >= 3 && anyEater && totalStats >= 12)
             return '20+ LRC no LMC Armor'
 
         }
