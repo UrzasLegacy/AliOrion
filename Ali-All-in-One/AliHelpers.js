@@ -201,6 +201,32 @@ function ShallowCopy(arr)
     return JSON.parse(json);
     }
 
+
+function AliReadFile(fileNameString)
+    { //will create new file if one doesn't exist
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    var fileRead = tmpFile.ReadAll();
+    if(!fileRead)
+        fileRead = "";
+    var fileParse = JSON.parse(fileRead) || "";
+    tmpFile.Close();
+    return fileParse
+    }
+
+function AliOverwriteFile(inputString,fileNameString)
+    { //will create new file if one doesn't exist
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
+    Orion.Print("Recording " + inputString + " To File: " + tmpFilePath);
+    tmpFile.Write(inputString);
+    tmpFile.Close();
+    }
+
 function AliAppendFile(inputString,fileNameString)
     { //'test1','AppendTest.txt'
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
@@ -240,22 +266,6 @@ function AliReadAndOverwriteFile(inputString,fileNameString)
     tmpFile.Close();
     }
 
-function AliOverwriteFile(inputString,fileNameString)
-    { //"[1,2,3]","OverwriteTest.txt"
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
-    var tmpFile = Orion.NewFile();
-    if(tmpFile.Open(tmpFilePath))
-        {
-        var fileRead = tmpFile.ReadAll();
-        if(!fileRead)
-            fileRead = '';
-        }
-    else
-        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
-    Orion.Print("Recording " + inputString + ' To File: ' + tmpFilePath);
-    tmpFile.Write(inputString);
-    tmpFile.Close();
-    }
 
 function CloseAllGumps()
     {

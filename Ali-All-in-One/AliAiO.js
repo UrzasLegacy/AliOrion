@@ -9,6 +9,8 @@
 //Available Gumps
 //AliVSGump
 //AliLootGump
+//AliStringSearchGump
+
 
 //AliBODGump TODO
 //AliImbueGump TODO

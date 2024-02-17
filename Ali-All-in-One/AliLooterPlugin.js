@@ -41,7 +41,7 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [],
         [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
         [],
-        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "StringSearchGump", 'StringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
+        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "AliStringSearchGump", 'AliStringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
     ]
    
 
@@ -621,134 +621,7 @@ function PutAwayLoot()
         }    
     }
 
-function DropDraggedToContainer() //v2
-	{//Reduce mouse movements when transferring items.
-    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
-    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
-    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
-	var dropContainer = Orion.FindObject('dropContainer');
-	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');
-	else
-		{
-		var lastSerial = Orion.GetSerial('dropContainer');
-		if(Orion.WaitForAddObject('dropContainer') != 1)
-			Orion.AddObject('dropContainer', lastSerial);
-		}
-	}
-function DropDraggedToContainer2() //v2
-	{//Reduce mouse movements when transferring items.
-    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
-    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
-    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
-	var dropContainer = Orion.FindObject('dropContainer2');
-	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer2');
-	else
-		{
-		var lastSerial = Orion.GetSerial('dropContainer2');
-		if(Orion.WaitForAddObject('dropContainer2') != 1)
-			Orion.AddObject('dropContainer2', lastSerial);
-		}
-	}
 
-function DropDraggedHere() //v3
-    {
-    if(!Orion.Dragging())
-        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
-    var range = 2;
-    var endTimeMain = Orion.Now() + 6000;
-    var hash = {};
-    while(Orion.Dragging() && Orion.Now() < endTimeMain)
-        {
-        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
-        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
-            .filter(function(tile)
-                {
-                var tileX = tile.X();
-                var tileY = tile.Y();
-                var tileZ = tile.Z();
-                if(tileZ != Player.Z())
-                    return false;
-                var tileHash = "" + tileX + tileY + tileZ;
-                if(hash[tileHash])
-                    return false;
-                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
-                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
-                return mobCheck && itemCheck;
-                });
-        if(!firstPassTiles.length)
-            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
-        var validTiles = [];
-        for(var i=0;i<firstPassTiles.length;i++)
-            {
-            var tile = firstPassTiles[i];
-            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
-            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
-                {
-                validTiles.push(tile);
-                if(validTiles.length >= 4)
-                    break;
-                }
-            }
-        var endTimeSub = Orion.Now() + 2000;
-        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
-            {
-            var validTile = validTiles.shift();
-            var validTileX = validTile.X();
-            var validTileY = validTile.Y();
-            var validTileZ = validTile.Z();
-            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
-            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
-            Orion.Wait(500);
-            }
-        if(validTile && Orion.Dragging())
-            hash['' + validTileX + validTileY + validTileZ] = true;
-        }
-    if(!validTiles.length)
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
-    }
-
-function SecureAndCoOwn(itemSerial)
-    {
-    if(itemSerial === undefined)
-        {
-        Orion.WaitForAddObject('myTarget');
-        var itemSerial = Orion.GetSerial('myTarget');
-        }
-    var startTime = Orion.Now();
-    var target = Orion.FindObject(itemSerial);
-    var targetSerial = target.Serial();
-    while(true)
-        {
-        Orion.Say('i wish to secure this');
-        if(Orion.WaitForTarget(3000))
-            {
-            Orion.TargetObject(targetSerial);
-            var endTime = Orion.Now() + 4000;
-            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
-            if(check)
-                {
-                startTime = Orion.Now();
-                var gump = Orion.GetGump(any, '0x00000295');
-                while(!gump)
-                    {
-                    Orion.WaitContextMenuID(targetSerial, 600);
-                    Orion.RequestContextMenu(targetSerial);
-                    Orion.Wait(500);
-                    gump = Orion.GetGump(any, '0x00000295');
-                    }
-                gump.Select(Orion.CreateGumpHook(2));
-                endTime = Orion.Now() + 4000;
-                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
-                if(check)
-                    break;
-                }
-            }
-        Orion.Wait(100);
-        }
-    Orion.CharPrint(self,1159,'Secured and Access Set')
-    }
 
 function JewelryModSearch() 
 	{
@@ -1276,33 +1149,15 @@ function CalculateScoreCall(templateName)
     Orion.Print(outMsg)
     }
 
-function CalculateScore()
+function CalculateHighScore(itemProperties)
     {
-    var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +20\nEvaluateIntelligence +20\nFocus +20\nWrestling +20\nResisting Spells +20\nAntique\nFaster Cast Recovery 4\nEnhance Potions 35%\nMana Regeneration 4\nDurability 255 / 255\nMajor Artifact";
-    var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +15\nEvaluateIntelligence +15\nFocus +15\nWrestling +15\nResisting Spells +15\nAntique\nFaster Cast Recovery 3\nEnhance Potions 25%\nMana Regeneration 3\nDurability 255 / 255\nMajor Artifact";
-    var template = 'MysticWrestle' || undefined;
-    if(!exampleString)
-        {
-        Orion.WaitForAddObject('myTarget');
-        var exampleString = Orion.FindObject('myTarget').Properties();
-        }
-  //var exampleString = "Bracelet\nWeight: 1 Stone\nMagery +100\nMana Regeneration 4\nFaster Cast Recovery 4\nEnhance Potions 35%\nDurability 255 / 255\nMajor Artifact";
-    //DebugLoot(exampleString + '\n')
-    //var exampleString = "Ring\nWeight: 1 Stone\nNinjitsu +20\nNecromancy +15\nSpirit Speak +15\nAntique\nDexterity Bonus 8\nNight Sight\nHit Chance Increase 15%\nFaster Cast Recovery 3\nLower Reagent Cost 20%\nDurability 255 / 255\nMajor Artifact"
-
-    //var exampleString = "Resisting Spells +15\nEvaluate Intelligence +15\nMagery +20\nStrength Bonus 8\nDexterity Bonus 8\nEnhance Potions 25%\nDefense Chance Increase 15%\nDamage Increase 25%\n"
-
-    var parse = parseJewelryProperties(exampleString);
-    var values = calculateTemplateValues(parse,template);
-    //TextWindow.Open();
-    //TextWindow.Clear();
-    var outMsg = '';
+    var parse = parseJewelryProperties(itemProperties);
+    var values = calculateTemplateValues(parse); 
     values.forEach(function(value)
         {
         outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
         });
-    //TextWindow.Print(outMsg)
-    Orion.Print(outMsg)
+    return values[0] // [templateName,totalScore,totalSkills]
     }
 
 function MultiColorScore()
@@ -1781,7 +1636,7 @@ function KeepJewelry(propertiesObj,props)
             {
             if(score >= 75)
                 return '0skill,0overcaps,missing either EP,DCI or MR, but score >= 75'
-            DebugLoot('Trash: Zero skills, zero overcaps, and missing either EP, DCI or MR');
+            DebugLoot('Trash: Zero skills, zero overcaps, missing either EP, DCI or MR and score < 75');
             return false;
             }
         else if(overcapInt >= 3)
@@ -2246,7 +2101,7 @@ function parseArmorProperties(armorProperties)
     return propertiesObj;
     }
 
-function TestResits()
+function TestResists()
     {
     Orion.WaitForAddObject('myTarget');
     var ob = Orion.FindObject('myTarget');
@@ -2280,7 +2135,6 @@ function parseArmorResists(armorProperties)
     propertiesObj['TotalResists'] = totalResists;
     return propertiesObj;
     }
-
 
 function testEvalItem(parseFn,keepFn)
     {
@@ -2328,45 +2182,6 @@ function testSortItem(parseFn,keepFn)
             return keepFn(parse,item.Properties(),item.Graphic())
             });
         }
-    }
-
-function VerifyOpenContainer(containerSerial,delay)
-    {
-    var startTime = Orion.Now();
-    var endTime = startTime + (delay || 5000);
-    while(!Orion.GumpExists('container',containerSerial))
-        {
-        if(Orion.Now() > endTime)
-            return false;
-        Orion.UseObject(containerSerial);
-        Orion.Wait(1000);
-        }
-    return true;
-    }
-
-function DebugLoot(msg)
-    {
-    var debug = false;
-    if(!debug)
-        return;
-    if(!TextWindow.IsOpened())
-        TextWindow.Open();
-    Orion.Print(msg);
-    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-    }
-
-function DiscordPush(message)
-	{
-	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
-	Orion.HttpPost(bot, "content=" + message);
-	}
-
-function SetDiscordRegistryEntry()
-    {
-    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
-    var registryName = 'discordConfig';
-    Orion.RegWrite(registryName, discordConfig);
-    return discordConfig;
     }
 
 function MoveTrashContainer(serial)
@@ -2675,8 +2490,6 @@ function HighlightJewelryScore(templateString,score,skillInt)
     Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
     }
 
-
-
 function calculateTemplateValues(mods,templateName)
     {
     var templates = 
@@ -2952,7 +2765,7 @@ function calculateTemplateValues(mods,templateName)
                     temp = 0;
                     }
                 totalValue += modValue;
-                tempArr.push(totalValue);
+                tempArr.push(totalValue); //[modName, mods[mod], template[mod], modValue];
                 outArr.push(tempArr);
                 }
             }
@@ -3012,210 +2825,8 @@ function Gump_DisplayInfo(templateName, outArr, totalValue, templateMultiplier)
     gump.Update()
     }
 
-function SuitReader()
-    {
-    Orion.CharPrint(self, 1159, 'Select player or container to evaluate:');
-    Orion.WaitForAddObject('myTarget');
-    var propertiesList = SuitReaderCall('myTarget');
-    if(!propertiesList)
-        return;
-    var y = 15;
-    var yOffset = 15;
-    var x1 = 15;
-    var x2 = 145;
-    var x3 = 100;
-    var x4 = 185;
-    var xOffset = 95;
-    var xOffset2 = 45;
-    var gump = Orion.CreateCustomGump(12001);
-    gump.Clear();
-    gump.AddResizepic(0, 0, 0xBB8, 275, 21*yOffset+20);
-    gump.AddText(x1, y, "0", 'Physical Resist:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[0][1]);
-    gump.AddText(x2, y, "0", 'Kinetic Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[6][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Fire Resist:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[1][1]);
-    gump.AddText(x2, y, "0", 'Fire Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[7][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Cold Resist:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[2][1]);
-    gump.AddText(x2, y, "0", 'Cold Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[8][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Poison Resist:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[3][1]);
-    gump.AddText(x2, y, "0", 'Poison Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[9][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Energy Resist:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[4][1]);
-    gump.AddText(x2, y, "0", 'Energy Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[10][1]);
-    y+=yOffset;
-    gump.AddText(x2, y, "0", 'Damage Eater:');
-    gump.AddText(x2+xOffset, y, "0", propertiesList[5][1]);
-    y+=yOffset*2;
-    gump.AddText(x1, y, "0", 'Enhanced Pots:');
-    gump.AddText(x1+xOffset, y, "0", propertiesList[11][1]);
-    y+=yOffset*2;
-    gump.AddText(x1, y, "0", 'DI:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[12][1]);
-    gump.AddText(x3, y, "0", 'SSI:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[13][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'DCI:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[14][1]);
-    gump.AddText(x3, y, "0", 'HCI:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[15][1]);
-    y+=yOffset*2;
-    gump.AddText(x1, y, "0", 'Str+:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[16][1]);
-    gump.AddText(x3, y, "0", 'HP+:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[19][1]);
-    gump.AddText(x4, y, "0", 'HPR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[22][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Dex+:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[17][1]);
-    gump.AddText(x3, y, "0", 'Stam+:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[20][1]);
-    gump.AddText(x4, y, "0", 'SR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]); 
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'Int+:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]); 
-    gump.AddText(x3, y, "0", 'Mana+:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]); 
-    gump.AddText(x4, y, "0", 'MR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]); 
-    y+=yOffset*2;
-    gump.AddText(x1, y, "0", 'CF:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[25][1]);
-    gump.AddText(x3, y, "0", 'FCR:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[26][1]);
-    gump.AddText(x4, y, "0", 'FC:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[27][1]);
-    y+=yOffset;
-    gump.AddText(x1, y, "0", 'LMC:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[28][1]);
-    gump.AddText(x3, y, "0", 'LRC:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[29][1]);
-    gump.AddText(x4, y, "0", 'SDI:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[30][1]);
-    y+=yOffset*2;
-    gump.AddText(x1, y, "0", 'Luck:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[31][1]);
-    gump.AddText(x3, y, "0", 'RPD:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[32][1]);
-    gump.Update();
-    }
 
-function SuitReaderCall(playerOrContainerSerial)
-	{
-    var propertiesList = 
-    [
-        ['Physical Resist', 0], //0
-        ['Fire Resist', 0],
-        ['Cold Resist', 0],
-        ['Poison Resist', 0],
-        ['Energy Resist', 0],
-        ['Damage Eater', 0], //5
-        ['Kinetic Eater', 0],
-        ['Fire Eater', 0],
-        ['Cold Eater', 0],
-        ['Poison Eater', 0],
-        ['Energy Eater', 0], //10
-        ['Enhance Potions', 0],
-        ['Damage Increase', 0],
-        ['Swing Speed Increase', 0],
-        ['Defense Chance Increase', 0],
-        ['Hit Chance Increase', 0], //15
-        ['Strength Bonus', 0],
-        ['Dexterity Bonus', 0],
-        ['Intelligence Bonus', 0],
-        ['Hit Point Increase', 0],
-        ['Stamina Increase', 0], //20
-        ['Mana Increase', 0],
-        ['Hit Point Regeneration', 0],
-        ['Stamina Regeneration', 0],
-        ['Mana Regeneration', 0],
-        ['Casting Focus', 0], //25
-        ['Faster Cast Recovery', 0],
-        ['Faster Casting', 0],
-        ['Lower Mana Cost', 0],
-        ['Lower Reagent Cost', 0],
-        ['Spell Damage Increase', 0], //30
-        ['Luck', 0],
-        ['Reflect Physical Damage', 0]
-    ]
-    var selected = Orion.FindObject(playerOrContainerSerial);
-    if(selected && selected.Mobile())
-        {
-        Orion.WaitContextMenuID(selected.Serial(), 520);
-        Orion.RequestContextMenu(selected.Serial());
-        var startTime = Orion.Now();
-        while(Orion.Now() < startTime + 2000 && !Orion.GumpExists('paperdoll', selected.Serial()))
-            Orion.Wait(100);
-        if(!Orion.GumpExists('paperdoll', selected.Serial()))
-            return Orion.CharPrint(self, 1159, "Target paperdoll didn't open");
-        Orion.Wait(100);
-        for(var i=1;i<25;i++)
-            {
-            var item = Orion.ObjAtLayer(i, selected.Serial());
-            if(!item)
-                continue;
-            var itemProps = item.Properties().split(/\r?\n/);
-            itemProps.forEach(function(prop)
-                {
-                if(!Orion.Contains(prop, '(total)'))
-                    {
-                    propertiesList.forEach(function(propPair)
-                        {
-                        var regex = "^" + propPair[0] + "\\s+(-?\\d+)?";
-                        var outcome = prop.match(regex);
-                        if(outcome)
-                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
-                        });
-                    }
-                });
-            }
-        }
-    else if(selected)
-        {
-        if(!Orion.OpenContainer(selected.Serial()))
-            return Orion.CharPrint(self, 1159, "Target container didn't open");
-        Orion.Wait(100);
-        var items = Orion.FindTypeEx(any,any,selected.Serial());
-        for(var i=0;i<items.length;i++)
-            {
-            var item = items[i];
-            if(!item)
-                continue;
-            var itemProps = item.Properties().split(/\r?\n/);
-            itemProps.forEach(function(prop)
-                {
-                if(!Orion.Contains(prop, '(total)'))
-                    {
-                    propertiesList.forEach(function(propPair)
-                        {
-                        var regex = "^" + propPair[0] + "\\s?(-?\\d+)?";
-                        var outcome = prop.match(regex);
-                        if(outcome)
-                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
-                        });
-                    }
-                });
-            }
-        }
-    else
-        return Orion.CharPrint(self, 1159, 'Target invalid');
-    return propertiesList;
-    }
-
-function StringSearchGump() 
+function AliStringSearchGump() 
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliStringSavedSearches.json';
     var tmpFile = Orion.NewFile();
@@ -3469,7 +3080,7 @@ function StringSearchCallback(_)
         tmpFile.Close();
         }
     Orion.Wait(50);
-    StringSearchGump();
+    AliStringSearchGump();
 	}
 
 function SearchByStrings(searchStringsList,excludeIncludesList)
@@ -3703,4 +3314,364 @@ function GetContainers()
             {
             
             }
+    }
+
+
+//-#Overlapping functions
+function DropDraggedToContainer() //v2
+	{//Reduce mouse movements when transferring items.
+    //If you press the hotkey while not dragging an item, it will bring up a target cursor for you to set your drop container.
+    //If you press the hotkey while dragging an item, it will drop the item into your designated drop container.
+    //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
+	var dropContainer = Orion.FindObject('dropContainer');
+	if(dropContainer && Orion.Dragging())
+		Orion.DropDraggedItem('dropContainer');
+	else
+		{
+		var lastSerial = Orion.GetSerial('dropContainer');
+		if(Orion.WaitForAddObject('dropContainer') != 1)
+			Orion.AddObject('dropContainer', lastSerial);
+		}
+	}
+
+function DropDraggedHere() //v3
+    {
+    if(!Orion.Dragging())
+        return Orion.CharPrint(self,1159,'Drag an item onto your cursor first');
+    var range = 2;
+    var endTimeMain = Orion.Now() + 6000;
+    var hash = {};
+    while(Orion.Dragging() && Orion.Now() < endTimeMain)
+        {
+        //Orion.ResetSearchArea(); //uncomment this IF it won't mess with your other search areas
+        var firstPassTiles = Orion.GetTilesInRect('land',Player.X()-range,Player.Y()-range,Player.X()+range,Player.Y()+range)
+            .filter(function(tile)
+                {
+                var tileX = tile.X();
+                var tileY = tile.Y();
+                var tileZ = tile.Z();
+                if(tileZ != Player.Z())
+                    return false;
+                var tileHash = "" + tileX + tileY + tileZ;
+                if(hash[tileHash])
+                    return false;
+                var mobCheck = Orion.FindType(any,any,ground,'live','xyz: ' + tileX + ',' + tileY).length == 0;
+                var itemCheck = Orion.FindType(any,any,ground,'item','xyz: ' + tileX + ',' + tileY).length <= 5;
+                return mobCheck && itemCheck;
+                });
+        if(!firstPassTiles.length)
+            Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+        var validTiles = [];
+        for(var i=0;i<firstPassTiles.length;i++)
+            {
+            var tile = firstPassTiles[i];
+            //if(Orion.GetPathArray(tile.X(),tile.Y(),Player.Z(),0,1,1,0)[0])
+            if(Orion.CanWalk('1', tile.X(), tile.Y(), tile.Z()))
+                {
+                validTiles.push(tile);
+                if(validTiles.length >= 4)
+                    break;
+                }
+            }
+        var endTimeSub = Orion.Now() + 2000;
+        while(validTiles.length && Orion.Dragging() && Orion.Now() < endTimeSub)
+            {
+            var validTile = validTiles.shift();
+            var validTileX = validTile.X();
+            var validTileY = validTile.Y();
+            var validTileZ = validTile.Z();
+            Orion.AddFakeMapObject(0, '0x051A', 1152, validTileX, validTileY, validTileZ);
+            Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
+            Orion.Wait(500);
+            }
+        if(validTile && Orion.Dragging())
+            hash['' + validTileX + validTileY + validTileZ] = true;
+        }
+    if(!validTiles.length)
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
+    }
+
+function SecureAndCoOwn(itemSerial)
+    {
+    if(itemSerial === undefined)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var itemSerial = Orion.GetSerial('myTarget');
+        }
+    var startTime = Orion.Now();
+    var target = Orion.FindObject(itemSerial);
+    var targetSerial = target.Serial();
+    while(true)
+        {
+        Orion.Say('i wish to secure this');
+        if(Orion.WaitForTarget(3000))
+            {
+            Orion.TargetObject(targetSerial);
+            var endTime = Orion.Now() + 4000;
+            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
+            if(check)
+                {
+                startTime = Orion.Now();
+                var gump = Orion.GetGump(any, '0x00000295');
+                while(!gump)
+                    {
+                    Orion.WaitContextMenuID(targetSerial, 600);
+                    Orion.RequestContextMenu(targetSerial);
+                    Orion.Wait(500);
+                    gump = Orion.GetGump(any, '0x00000295');
+                    }
+                gump.Select(Orion.CreateGumpHook(2));
+                endTime = Orion.Now() + 4000;
+                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
+                if(check)
+                    break;
+                }
+            }
+        Orion.Wait(100);
+        }
+    Orion.CharPrint(self,1159,'Secured and Access Set')
+    }
+
+
+function SuitReader()
+    {
+    Orion.CharPrint(self, 1159, 'Select player or container to evaluate:');
+    Orion.WaitForAddObject('myTarget');
+    var propertiesList = SuitReaderCall('myTarget');
+    if(!propertiesList)
+        return;
+    var y = 15;
+    var yOffset = 15;
+    var x1 = 15;
+    var x2 = 145;
+    var x3 = 100;
+    var x4 = 185;
+    var xOffset = 95;
+    var xOffset2 = 45;
+    var gump = Orion.CreateCustomGump(12001);
+    gump.Clear();
+    gump.AddResizepic(0, 0, 0xBB8, 275, 21*yOffset+20);
+    gump.AddText(x1, y, "0", 'Physical Resist:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[0][1]);
+    gump.AddText(x2, y, "0", 'Kinetic Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[6][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Fire Resist:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[1][1]);
+    gump.AddText(x2, y, "0", 'Fire Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[7][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Cold Resist:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[2][1]);
+    gump.AddText(x2, y, "0", 'Cold Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[8][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Poison Resist:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[3][1]);
+    gump.AddText(x2, y, "0", 'Poison Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[9][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Energy Resist:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[4][1]);
+    gump.AddText(x2, y, "0", 'Energy Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[10][1]);
+    y+=yOffset;
+    gump.AddText(x2, y, "0", 'Damage Eater:');
+    gump.AddText(x2+xOffset, y, "0", propertiesList[5][1]);
+    y+=yOffset*2;
+    gump.AddText(x1, y, "0", 'Enhanced Pots:');
+    gump.AddText(x1+xOffset, y, "0", propertiesList[11][1]);
+    y+=yOffset*2;
+    gump.AddText(x1, y, "0", 'DI:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[12][1]);
+    gump.AddText(x3, y, "0", 'SSI:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[13][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'DCI:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[14][1]);
+    gump.AddText(x3, y, "0", 'HCI:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[15][1]);
+    y+=yOffset*2;
+    gump.AddText(x1, y, "0", 'Str+:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[16][1]);
+    gump.AddText(x3, y, "0", 'HP+:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[19][1]);
+    gump.AddText(x4, y, "0", 'HPR:');
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[22][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Dex+:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[17][1]);
+    gump.AddText(x3, y, "0", 'Stam+:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[20][1]);
+    gump.AddText(x4, y, "0", 'SR:');
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]); 
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'Int+:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]); 
+    gump.AddText(x3, y, "0", 'Mana+:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]); 
+    gump.AddText(x4, y, "0", 'MR:');
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]); 
+    y+=yOffset*2;
+    gump.AddText(x1, y, "0", 'CF:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[25][1]);
+    gump.AddText(x3, y, "0", 'FCR:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[26][1]);
+    gump.AddText(x4, y, "0", 'FC:');
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[27][1]);
+    y+=yOffset;
+    gump.AddText(x1, y, "0", 'LMC:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[28][1]);
+    gump.AddText(x3, y, "0", 'LRC:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[29][1]);
+    gump.AddText(x4, y, "0", 'SDI:');
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[30][1]);
+    y+=yOffset*2;
+    gump.AddText(x1, y, "0", 'Luck:');
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[31][1]);
+    gump.AddText(x3, y, "0", 'RPD:');
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[32][1]);
+    gump.Update();
+    }
+
+function SuitReaderCall(playerOrContainerSerial)
+	{
+    var propertiesList = 
+    [
+        ['Physical Resist', 0], //0
+        ['Fire Resist', 0],
+        ['Cold Resist', 0],
+        ['Poison Resist', 0],
+        ['Energy Resist', 0],
+        ['Damage Eater', 0], //5
+        ['Kinetic Eater', 0],
+        ['Fire Eater', 0],
+        ['Cold Eater', 0],
+        ['Poison Eater', 0],
+        ['Energy Eater', 0], //10
+        ['Enhance Potions', 0],
+        ['Damage Increase', 0],
+        ['Swing Speed Increase', 0],
+        ['Defense Chance Increase', 0],
+        ['Hit Chance Increase', 0], //15
+        ['Strength Bonus', 0],
+        ['Dexterity Bonus', 0],
+        ['Intelligence Bonus', 0],
+        ['Hit Point Increase', 0],
+        ['Stamina Increase', 0], //20
+        ['Mana Increase', 0],
+        ['Hit Point Regeneration', 0],
+        ['Stamina Regeneration', 0],
+        ['Mana Regeneration', 0],
+        ['Casting Focus', 0], //25
+        ['Faster Cast Recovery', 0],
+        ['Faster Casting', 0],
+        ['Lower Mana Cost', 0],
+        ['Lower Reagent Cost', 0],
+        ['Spell Damage Increase', 0], //30
+        ['Luck', 0],
+        ['Reflect Physical Damage', 0]
+    ]
+    var selected = Orion.FindObject(playerOrContainerSerial);
+    if(selected && selected.Mobile())
+        {
+        Orion.WaitContextMenuID(selected.Serial(), 520);
+        Orion.RequestContextMenu(selected.Serial());
+        var startTime = Orion.Now();
+        while(Orion.Now() < startTime + 2000 && !Orion.GumpExists('paperdoll', selected.Serial()))
+            Orion.Wait(100);
+        if(!Orion.GumpExists('paperdoll', selected.Serial()))
+            return Orion.CharPrint(self, 1159, "Target paperdoll didn't open");
+        Orion.Wait(100);
+        for(var i=1;i<25;i++)
+            {
+            var item = Orion.ObjAtLayer(i, selected.Serial());
+            if(!item)
+                continue;
+            var itemProps = item.Properties().split(/\r?\n/);
+            itemProps.forEach(function(prop)
+                {
+                if(!Orion.Contains(prop, '(total)'))
+                    {
+                    propertiesList.forEach(function(propPair)
+                        {
+                        var regex = "^" + propPair[0] + "\\s+(-?\\d+)?";
+                        var outcome = prop.match(regex);
+                        if(outcome)
+                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
+                        });
+                    }
+                });
+            }
+        }
+    else if(selected)
+        {
+        if(!Orion.OpenContainer(selected.Serial()))
+            return Orion.CharPrint(self, 1159, "Target container didn't open");
+        Orion.Wait(100);
+        var items = Orion.FindTypeEx(any,any,selected.Serial());
+        for(var i=0;i<items.length;i++)
+            {
+            var item = items[i];
+            if(!item)
+                continue;
+            var itemProps = item.Properties().split(/\r?\n/);
+            itemProps.forEach(function(prop)
+                {
+                if(!Orion.Contains(prop, '(total)'))
+                    {
+                    propertiesList.forEach(function(propPair)
+                        {
+                        var regex = "^" + propPair[0] + "\\s?(-?\\d+)?";
+                        var outcome = prop.match(regex);
+                        if(outcome)
+                            propertiesList[propertiesList.indexOf(propPair)][1] += parseInt(outcome[1]);
+                        });
+                    }
+                });
+            }
+        }
+    else
+        return Orion.CharPrint(self, 1159, 'Target invalid');
+    return propertiesList;
+    }
+
+function DebugLoot(msg)
+    {
+    var debug = false;
+    if(!debug)
+        return;
+    if(!TextWindow.IsOpened())
+        TextWindow.Open();
+    Orion.Print(msg);
+    TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
+    }
+
+function DiscordPush(message)
+	{
+	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
+    var registryName = 'discordConfig';
+    Orion.RegWrite(registryName, discordConfig);
+    return discordConfig;
+    }
+
+
+function VerifyOpenContainer(containerSerial,delay)
+    {
+    var startTime = Orion.Now();
+    var endTime = startTime + (delay || 5000);
+    while(!Orion.GumpExists('container',containerSerial))
+        {
+        if(Orion.Now() > endTime)
+            return false;
+        Orion.UseObject(containerSerial);
+        Orion.Wait(1000);
+        }
+    return true;
     }

@@ -1,87 +1,117 @@
-var inventoryFileName = "Spreadsheet Inventory"
+var inventoryFileName = "AliSpreadsheetInventory.JSON"
+
 function StartJewelryCatalogue()
     {
-    // Aggregate items somehow
-    var payload = FormatJewelryForGoogleSheets(items)
-    UDPtoPython(payload)
+    var items = AggregateNearbyJewelry()
+    var currentInventory = GetInventoryFromFile()
+
+    var newItems = items.filter(function(itemArray)
+        {
+        var item = itemArray[0]
+        return !currentInventory[item.Serial()]
+        })
+    newItems.forEach(function(item)
+        {
+        var item = itemArray[0]
+        var parentContainer = itemArray[1]
+        var currentCoords = itemArray[2]
+        currentInventory[item.Serial()] = [parseModsObjForDatabase(item), parentContainer, currentCoords]
+        })
+
+    OverwriteInventoryFile(currentInventory)
     }
+
 
 function AggregateNearbyJewelry()
     {
-    Orion.WaitForAddObject('myTarget')
-    var item = Orion.FindObject('myTarget')
-    TextWindow.Open()
-    TextWindow.Print(JSON.stringify(FormatJewelryForGoogleSheets([item])))
+    var parentContainer
+    var currentCoords
+    var items = Orion.FindTypeEx("0x1F06|0x1F09|0x1086|0x108A",any,parentContainer).map(function(item)
+        {
+        return [item,parentContainer,currentCoords]
+        });
+    return items
     }
 
-function FormatJewelryForGoogleSheets(items)
+
+function parseModsObjForDatabase(jewelryObj)
     {
-    var outData = []
-    for(var i=0,length=items.length;i<length;i++)
+    var jewelryProperties = jewelryObj.Properties()
+    var jewelryGraphic = jewelryObj.Graphic()
+    var itemType
+    if(Orion.Contains('0x1086|0x108A', jewelryGraphic))
+        itemType = "Bracelet"
+    else if(Orion.Contains('0x1F06|0x1F09', jewelryGraphic))
+        itemType = "Ring"
+    if(!itemType)
+        return {}
+
+    var targetMods = 
         {
-        var item = items[i]
-        var itemProps = item.Properties()
-        var itemGraphic = item.Graphic()
-
-        var itemType
-        if(Orion.Contains('0x1086|0x108A', itemGraphic))
-            itemType = "Ring"
-        else if(Orion.Contains('0x1F06|0x1F09', itemGraphic))
-            itemType = "Bracelet"
-        if(!itemType)
-            continue
-
-        var parse = parseJewelryPropertiesForGoogleSheets(itemProps)
-
-        var skillGroup1 = ""
-        var skillGroup2 = ""
-        var skillGroup3 = ""
-        var skillGroup4 = ""
-        var skillGroup5 = ""
-        
-        var keys = Object.keys(parse)
-        for(var i=0,length=keys.length; i<length;i++)
-            {           
-           	var prop = keys[i]
-            if(Orion.Contains("Swordsmanship|Fencing|MaceFighting|Magery|Musicianship", prop))
+        //good mods
+        Magery:true,MaceFighting:true,Fencing:true,Swordsmanship:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Tactics:true,
+        Focus:true,Parrying:true,Stealth:true,Anatomy:true,Bushido:true,EvaluateIntelligence:true,Mysticism:true,Wrestling:true,
+        Necromancy:true,Archery:true,Chivalry:true,Healing:true,Ninjitsu:true,Throwing:true,ResistingSpells:true,ManaIncrease:true,
+        StaminaIncrease:true,StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,ManaRegeneration:true,EnhancePotions:true,
+        HitChanceIncrease:true,DefenseChanceIncrease:true,SwingSpeedIncrease:true,DamageIncrease:true,SpellDamageIncrease:true,
+        FasterCastRecovery:true,FasterCasting:true,LowerManaCost:true,LowerReagentCost:true,Musicianship:true,Discordance:true,
+        //bad mods
+        NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,
+        Provocation:true,Meditation:true,Veterinary:true,Stealing:true,Peacemaking:true
+        }
+    var skillMods = 
+        {
+        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
+        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
+        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Healing:true, Archery:true,Meditation:true,Musicianship:true,Discordance:true,
+        }
+    var modCount = 0
+    var skillCount = 0
+    var lines = jewelryProperties.split("\n");
+    var modsObj = {"itemType": itemType};
+    lines.forEach(function(line)
+        {
+        var modMatch = line.match(/([a-zA-Z\s]+):?\s*\+?\s*([0-9]+)?/);
+        if(modMatch)
+            {
+            var modName = modMatch[1].replace(/\s/g, '');
+            if(targetMods[modName])
                 {
-                skillGroup1 = prop + " " + parse[prop]
-                }
-            else if(Orion.Contains("Wrestling|Tactics|AnimalTaming|Provocation|SpiritSpeak", prop))
-                {
-                skillGroup2 = prop + " " + parse[prop]
-                }
-            else if(Orion.Contains("Stealth|Parrying|Meditation|AnimalLore|Discordance|Focus", prop))
-                {
-                skillGroup3 = prop + " " + parse[prop]
-                }
-            else if(Orion.Contains("Stealing|Anatomy|EvaluateIntelligence|Veterinary|Necromancy|Bushido|Mysticism", prop))
-                {
-                skillGroup4 = prop + " " + parse[prop]
-                }
-            else if(Orion.Contains("Healing|ResistingSpells|Peacemaking|Archery|Chivalry|Ninjitsu|Throwing", prop))
-                {
-                skillGroup5 = prop + " " + parse[prop]
+                modCount++
+                var modValue = parseInt(modMatch[2]) || 1;
+                modsObj[modName] = modValue;
+                if(skillMods[modName])
+                    skillCount++
                 }
             }
-
-        var rowData = [
-            itemType, 
-            skillGroup1, skillGroup2, skillGroup3, skillGroup4, skillGroup5,
-            parse.StrengthBonus,parse.DexterityBonus,parse.IntelligenceBonus,parse.ManaIncrease,parse.StaminaIncrease,
-            parse.ManaRegeneration,parse.EnhancePotions,parse.HitChanceIncrease,parse.DefenseChanceIncrease,
-            parse.FasterCastRecovery,parse.FasterCasting,parse.LowerManaCost,parse.SpellDamageIncrease,
-            parse.LowerReagentCost,parse.SwingSpeedIncrease,parse.DamageIncrease
-            ]
-        
-        var sanitizeRowData = []
-        rowData.forEach(function(row){sanitizeRowData.push(row || "")})
-        outData.push(sanitizeRowData)
-        }
-    return outData
+        });
+    var isClean = jewelryProperties.indexOf('Antique') === -1 && jewelryProperties.indexOf('Imbued') === -1;
+    var highScoreData = CalculateHighScore(jewelryProperties)
+    modsObj["ModCount"] = modCount
+    modsObj["SkillCount"] = skillCount
+    modsObj["IsClean"] = isClean
+    modsObj["HighScore"] = highScoreData[1]
+    modsObj["HighTemplate"] = highScoreData[0]
+    return modsObj; //[{goodMods},totalModsInt]
     }
 
-function parseJewelryPropertiesForGoogleSheets(jewelryProperties)
+
+
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------
+
+function CalculateHighScore(itemProperties)
+    {
+    var parse = parseJewelryProperties(itemProperties);
+    var values = calculateTemplateValues(parse); 
+    return values[0] // [templateName,totalScore,totalSkills]
+    }
+
+function parseJewelryProperties(jewelryProperties)
     {
     var targetMods = 
         {
@@ -114,16 +144,290 @@ function parseJewelryPropertiesForGoogleSheets(jewelryProperties)
     return modsObj; //[{goodMods},totalModsInt]
     }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------------------------------------------
-
-
-
-
+function calculateTemplateValues(mods,templateName)
+    {
+    var templates = 
+        {
+        //Caster
+        MysticWrestle: {
+            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .67,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':7,'LowerManaCost':1,'SpellDamageIncrease':.4,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.4
+            },
+        NecroWrestle: {
+            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Wrestling': .83,'Parrying': .67,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':7,'LowerManaCost':1,'SpellDamageIncrease':.4,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.4
+            },
+        MysticBalakai: {
+            'Mysticism': .83,'Focus': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':11,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.4
+            },
+        NecroBalakai: {
+            'Necromancy': .83,'SpiritSpeak': .83,'Magery': .83,'EvaluateIntelligence': .83,'Bushido': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':0,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':11,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':0,'DamageIncrease':0,'LowerReagentCost':.4
+            },
+        //Dexxer
+        Disarmcher: {
+            'Archery':.83,'Swordsmanship':.83,'SwordsmanshipCut':10,'Parrying':.83,'ResistingSpells':.83,'Anatomy':.83,'Tactics':.83,'Healing':.83,'Fencing':.53,'MaceFighting':.53,'Magery':.53,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':1,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':.67,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        GlendaBasher: {
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Healing': .83,'Ninjitsu': .83,'Bushido': .83,'Parrying': .53,'ResistingSpells': .83,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        DSer: {
+            'Swordsmanship':.83,'Ninjitsu':.83,'Tactics':.53,'Parrying':.83,'ResistingSpells':.83,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        BokTamer: { 'TemplateMultiplier':.90,
+            'AnimalTaming':.83,'AnimalLore':.83,'Swordsmanship':.83,'Tactics':.53,'Parrying':.83,'ResistingSpells':.83,
+            'StrengthBonus':.44,'DexterityBonus':.44,'IntelligenceBonus':.44,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        //Hybrid
+        HSBokMage: {
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
+            },
+        LSBokMage: {
+            'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.47,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
+            },
+        HSBokMystic: {
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
+            },
+        LSBokMystic: {
+            'Swordsmanship': .83,'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.67,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.47,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
+            },
+        MysticDexxer: {
+            'Mysticism': .83,'Focus': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Fencing':.83,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.27,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.4,'LowerReagentCost':.4
+            },
+        FoNMage: { 'TemplateMultiplier':.95,
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Magery':.83,'EvaluateIntelligence':.83,'Parrying': .83,'ResistingSpells': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':.4
+            },
+        FoNNecro: {
+            'MaceFighting': .83,'Tactics': .83,'Anatomy': .83,'Necromancy':.83,'SpiritSpeak':.83,'Parrying': .83,'ResistingSpells': .83,'Healing':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.5,'LowerReagentCost':.4
+            },
+        NoxMage: {
+            'Swordsmanship': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'MaceFighting': .83,'Fencing': .83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.2,'LowerReagentCost':.4
+            },
+        HolyFister: {
+            'Swordsmanship': .83,'SwordsmanshipCut':10,'Tactics':.4,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'Fencing':.53,'MaceFighting':.53,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.44,'LowerReagentCost':0
+            },
+        SwordsArcherFister: {
+            'Archery': .83,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,'Swordsmanship':.83,'SwordsmanshipCut':10,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        MeleeArcherFister: {
+            'Archery': .6,'Tactics':.83,'Anatomy':.83,'Parrying': .83,'ResistingSpells': .83,'Bushido':.83,'Fencing':.53,'MaceFighting':.53,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        NecroArcher: { 'TemplateMultiplier':.95,
+            'Archery': .83,'ArcheryCut': 10,'Tactics':.83,'Anatomy':.83,'ResistingSpells': .83,'Necromancy':.83,'SpiritSpeak':.83,'Healing':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.1,'DamageIncrease':.5,'LowerReagentCost':0
+            },
+        ThiefMage: { 'TemplateMultiplier':.95,
+            'Wrestling': .83,'Magery': .83,'EvaluateIntelligence': .83,'Parrying': .83,'ResistingSpells': .83,'Ninjitsu': .83,'Stealth':.83,'Stealing':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':0,'LowerReagentCost':.5
+            },
+        DismountTamer: { 'TemplateMultiplier':.90,
+            'AnimalTaming':.83,'AnimalLore':.83,'Archery':.83,'Tactics':.53,'Magery':.83,'EvaluateIntelligence':.83,'ResistingSpells':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.38,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.83,'DefenseChanceIncrease':.83,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':.27,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.24,'LowerReagentCost':.4
+            },
+        MeleeDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Fencing':.53,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
+            },
+        MysticMacerDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Mysticism':.83,'MaceFighting':.83,'Bushido':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':.5,'DamageIncrease':.4,'LowerReagentCost':.4
+            },  
+        SwordsArcherDiscord: {
+            'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Swordsmanship':.83,'Archery':.83,
+            'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
+            'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
+            'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
+            'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
+            },  
+        }
+    var skillMods = 
+        {
+        Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
+        Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
+        Parrying:true,Bushido:true,Ninjitsu:true,ResistingSpells:true,Anatomy:true,
+        Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
+        Throwing:true,Healing:true, Archery:true,Musicianship:true,Discordance:true
+        }
+    var specialBonus = 
+        {
+        'EnhancePotions':[35,5],
+        'FasterCastRecovery':[4,5],
+        }
+    if(templateName == undefined)
+        {
+        var templateValues = [];
+        for(var templateName in templates)
+            {
+            var template = templates[templateName];
+            var templateMultiplier = template['TemplateMultiplier'] || 1;
+            var totalValue = 0;
+            var totalSkills = 0;
+            // Calculate the individual mod values
+            var temp = 0;
+            for(var mod in mods)
+                {
+                if(template.hasOwnProperty(mod))
+                    {
+                    if(template[mod] == 0)
+                        continue;
+                    if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                        {
+                        temp = mods[mod];
+                        mods[mod] = template[mod + 'Cut'];
+                        }
+                    var modValue = mods[mod] * template[mod];
+                    totalValue += modValue;
+                    if(specialBonus.hasOwnProperty(mod) && mods[mod] == specialBonus[mod][0])
+                        totalValue += specialBonus[mod][1];
+                    if(skillMods.hasOwnProperty(mod))
+                        totalSkills += mods[mod];
+                    if(temp)
+                        {
+                        mods[mod] = temp;
+                        temp = 0;
+                        }
+                    }
+                }
+            totalValue *= templateMultiplier;
+            templateValues.push([templateName,+totalValue.toFixed(),totalSkills])
+            }
+        return templateValues.sort(function(a,b)
+            {
+            return b[1] - a[1];
+            });
+        }
+    else
+        {
+        var template = templates[templateName];
+        var templateMultiplier = template['TemplateMultiplier'] || 1;
+        var totalValue = 0;
+        var totalSkills = 0;
+        var outArr = [];
+        var temp = 0;
+        for(var mod in mods)
+            {
+            if(template.hasOwnProperty(mod))
+                {
+                if(template[mod] == 0)
+                    continue;
+                if(template.hasOwnProperty(mod + 'Cut') && mods[mod] > template[mod + 'Cut'])
+                    {
+                    temp = mods[mod];
+                    mods[mod] = template[mod + 'Cut'];
+                    }
+                var modValue = mods[mod] * template[mod];
+                var tempArr = [mod, mods[mod], template[mod], modValue];
+                if(specialBonus.hasOwnProperty(mod) && mods[mod] >= specialBonus[mod][0])
+                    {
+                    tempArr.push(specialBonus[mod][1]);
+                    totalValue += specialBonus[mod][1];
+                    }
+                else
+                    tempArr.push(0);
+                if(skillMods.hasOwnProperty(mod))
+                    totalSkills += mods[mod];
+                if(temp)
+                    {
+                    mods[mod] = temp;
+                    temp = 0;
+                    }
+                totalValue += modValue;
+                tempArr.push(totalValue); //[modName, mods[mod], template[mod], modValue];
+                outArr.push(tempArr);
+                }
+            }
+        totalValue *= templateMultiplier;
+        Gump_DisplayInfo(templateName, outArr,totalValue,templateMultiplier);
+        return [[templateName,+totalValue.toFixed(),totalSkills]]
+        }
+    }
 
 function NeedleInAHayStack()
     { //v1
@@ -212,30 +516,134 @@ function VerifyOpenContainer(containerSerial,delay)
     return true;
     }
 
-function AliReadAndOverwriteFile(inputString,fileNameString)
-    { //"[1,2,3]","ReadAndOverwriteTest.txt"
-    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + fileNameString;
+function VerifyWalkTo(x,y,z,distance,delay)
+    {
+    var endTime = Orion.Now() + (delay || 20000);
+    while(Orion.GetDistance(x,y) > (distance || 0))
+        {
+        if(Orion.Now() > endTime)
+            return false;
+        Orion.WalkTo(x,y,z,(distance || 0));
+        Orion.Wait(100);
+        }
+    return true;
+    }
+
+function OverwriteInventoryFile(inventoryObj)
+    { 
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + inventoryFileName;
     var tmpFile = Orion.NewFile();
     if(!tmpFile.Open(tmpFilePath))
-        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + fileNameString);
-    var fileRead = tmpFile.ReadAll();
-    if(!fileRead)
-        fileRead = "[]";
-    Orion.Print("Appending " + inputString + ' To File: ' + tmpFilePath);
-    var fileArr = JSON.parse(fileRead) || [];
-    var inputArr = JSON.parse(inputString) || [];
-    var outputArr = [];
-    for(var i=0;i<inputArr.length;i++)
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + inventoryFileName);
+    var outStr = "{\n"
+    for(serial in inventoryObj)
         {
-        var inputEle = +inputArr[i];
-        var fileEle = +fileArr[i];
-        var sum = inputEle + fileEle
-        Orion.Print(inputEle + '+' + fileEle + '=' + sum)
-        outputArr[i] = sum;
+        var objectJSON = JSON.stringify(inventoryObj[serial])
+        outStr += '"' + serial + '":' + objectJSON + ",\n"
         }
-    var outputStr = JSON.stringify(outputArr)
-    tmpFile.Remove();
+    outStr = outStr.slice(0,-2) + "\n"
+    Orion.Print("Recording Inventory To File: " + tmpFilePath);
+    tmpFile.Remove()
     tmpFile.Open(tmpFilePath)
-    tmpFile.Write(outputStr);
+    tmpFile.Write(outStr + "}");
     tmpFile.Close();
     }
+
+function OverwriteInventoryFilebackup(inventoryObj)
+    { 
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + inventoryFileName;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + inventoryFileName);
+    var inventoryJSON = JSON.stringify(inventoryObj)
+    Orion.Print("Recording Inventory To File: " + tmpFilePath);
+    tmpFile.Remove()
+    tmpFile.Open(tmpFilePath)
+    tmpFile.Write(inventoryJSON);
+    tmpFile.Close();
+    }
+
+
+function GetInventoryFromFile()
+    { 
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + inventoryFileName;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + inventoryFileName);
+    var fileRead = tmpFile.ReadAll();
+    if(!fileRead)
+        fileRead = "{}";
+    var fileSani = fileRead.replace(/\r?\n/g, "");
+    var fileObj = JSON.parse(fileSani) || {};
+    tmpFile.Close();
+    return fileObj
+    }
+
+
+    
+// function FormatJewelryArrayForGoogleSheets(items)
+//     {
+//     var outData = []
+//     for(var i=0,length=items.length;i<length;i++)
+//         {
+//         var item = items[i]
+//         var itemProps = item.Properties()
+//         var itemGraphic = item.Graphic()
+
+//         var itemType
+//         if(Orion.Contains('0x1086|0x108A', itemGraphic))
+//             itemType = "Ring"
+//         else if(Orion.Contains('0x1F06|0x1F09', itemGraphic))
+//             itemType = "Bracelet"
+//         if(!itemType)
+//             continue
+
+//         var parse = parseJewelryPropertiesForGoogleSheets(itemProps)
+
+//         var skillGroup1 = ""
+//         var skillGroup2 = ""
+//         var skillGroup3 = ""
+//         var skillGroup4 = ""
+//         var skillGroup5 = ""
+        
+//         var keys = Object.keys(parse)
+//         for(var i=0,length=keys.length; i<length;i++)
+//             {           
+//            	var prop = keys[i]
+//             if(Orion.Contains("Swordsmanship|Fencing|MaceFighting|Magery|Musicianship", prop))
+//                 {
+//                 skillGroup1 = prop + " " + parse[prop]
+//                 }
+//             else if(Orion.Contains("Wrestling|Tactics|AnimalTaming|Provocation|SpiritSpeak", prop))
+//                 {
+//                 skillGroup2 = prop + " " + parse[prop]
+//                 }
+//             else if(Orion.Contains("Stealth|Parrying|Meditation|AnimalLore|Discordance|Focus", prop))
+//                 {
+//                 skillGroup3 = prop + " " + parse[prop]
+//                 }
+//             else if(Orion.Contains("Stealing|Anatomy|EvaluateIntelligence|Veterinary|Necromancy|Bushido|Mysticism", prop))
+//                 {
+//                 skillGroup4 = prop + " " + parse[prop]
+//                 }
+//             else if(Orion.Contains("Healing|ResistingSpells|Peacemaking|Archery|Chivalry|Ninjitsu|Throwing", prop))
+//                 {
+//                 skillGroup5 = prop + " " + parse[prop]
+//                 }
+//             }
+
+//         var rowData = [
+//             itemType, 
+//             skillGroup1, skillGroup2, skillGroup3, skillGroup4, skillGroup5,
+//             parse.StrengthBonus,parse.DexterityBonus,parse.IntelligenceBonus,parse.ManaIncrease,parse.StaminaIncrease,
+//             parse.ManaRegeneration,parse.EnhancePotions,parse.HitChanceIncrease,parse.DefenseChanceIncrease,
+//             parse.FasterCastRecovery,parse.FasterCasting,parse.LowerManaCost,parse.SpellDamageIncrease,
+//             parse.LowerReagentCost,parse.SwingSpeedIncrease,parse.DamageIncrease
+//             ]
+        
+//         var sanitizeRowData = []
+//         rowData.forEach(function(row){sanitizeRowData.push(row || "")})
+//         outData.push(sanitizeRowData)
+//         }
+//     return outData
+//     }
