@@ -292,7 +292,7 @@ function VSTarget()
 		searchString += " " + split[1]
 	if(split[2])
 		searchString += " " + split[2]
-	VSsearch(searchString);
+    SearchByMods([['Name',searchString]])
 	}
 
 //1060643 malas
@@ -313,8 +313,8 @@ function SearchByMods(mods)
     {
     if(!Orion.GumpExists('generic','0x000F3EC8'))
         {
-        Orion.WaitContextMenuID('0x0373C887', 1016);
-        Orion.RequestContextMenu('0x0373C887');
+        Orion.WaitContextMenuID(self, 1016);
+        Orion.RequestContextMenu(self);
         Orion.Wait(500);
         }
     VSButtonPress('Clear')

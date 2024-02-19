@@ -712,7 +712,13 @@ function JewelryModSearch()
         gump.AddTooltip('Mod Minimum Value');
         yPos += heightAdjust;
         }
-    yPos += heightAdjust;
+
+    var buttonOnGraphic = ['0x25FB','0x25FC','0x25FC']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+    var buttonOffGraphic = ['0x25F8','0x25F9','0x25F9']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
+    gump.AddText(xPos + 130,yPos + 3,554,"Clean Only");
+    gump.AddCheckbox(996, xPos + 205, yPos, '0x25F8', '0x25F9', '0x25FB', Shared.GetVar('isClean',0), '0');
+    gump.AddTooltip('Check to restrict search to only non-antique, non-imbued jewelry');    
+    yPos += heightAdjust + 12;
 
     gump.AddText(30,yPos - 20,554,'Saved Searches');
     shared = Shared.GetVar('Save Name',undefined);
@@ -817,7 +823,9 @@ function JewelryModSearchCallback(_)
             }
         var skillAmount = CustomGumpResponse.Text(2000) || (skillCheck ? '1' : 0);
         Shared.AddVar('Skill Amount', skillAmount)
-        SearchJewelry(+skillAmount,skillObj,modObj)
+        var isClean = CustomGumpResponse.CheckBox(996)
+        Shared.AddVar('isClean',isClean)
+        SearchJewelry(+skillAmount,skillObj,modObj,isClean)
         //Orion.Print(JSON.stringify(skillObj) + '\n' + JSON.stringify(modObj))
         }
     else if(code == 1001)
@@ -1925,6 +1933,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             }
         }
     var resThreshold = 40//isClean ? 25 : 50;
+    var resistsObj = parseArmorResists(props);
     var totalRes = resistsObj['TotalResists'];
     var strengthRequirement = +((props.match(/Strength Requirement (\d+)/) || [])[1] || 95);
     if(keepTrainingArmor && lrc >= 20 && lmc >= 8 && mr == 4 && strengthRequirement <= 60 && totalRes >= resThreshold)
@@ -1932,7 +1941,6 @@ function KeepArmor(propertiesObj,props,itemGraphic)
 
     if(isArtifact && anyEater && totalMods > 6)
         { //everything else
-        var resistsObj = parseArmorResists(props);
         if(luck == 150 && totalRes >= resThreshold) //keep 150 luck
             return 'Luck Armor';
         if((hci == 5 || dci == 5) && mr && lmc && (hpi || hpr || lrc || totalRes > 80)) //keep 5 dci/hci artifact armor
@@ -1985,7 +1993,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             }
         if(lrc >= lrcThreshold && lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LRC Misc Armor';
-        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold && !isGloves && !isArms && !isTunic)
+        if(lmc >= lmcThreshold && totalRegens >= totalRegensThreshold && totalStats >= statThreshold && totalRes >= resThreshold)
             return 'LMC Misc Armor';
         if(lrc >= 20 && mr >= 4 && hpr >= 3 && anyEater && totalStats >= 12)
             return '20+ LRC no LMC Armor'
@@ -2010,6 +2018,7 @@ function parseJewelryProperties(jewelryProperties)
         NightSight:true,Luck:true,PoisonResist:true,PhysicalResist:true,FireResist:true,EnergyResist:true,ColdResist:true,
         Provocation:true,Meditation:true,Veterinary:true,Stealing:true,Peacemaking:true
         }
+
     var lines = jewelryProperties.split("\n");
     var modsObj = {};
     lines.forEach(function(line)
@@ -2367,7 +2376,7 @@ function PutAwayJewelry(jewelry)
         }
     }
 
-function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //30,{'Magery':10,'EvaluatingIntelligence':10,'Mysticism':10},{'HitChanceIncrease':15}
+function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject,isClean) //30,{'Magery':10,'EvaluatingIntelligence':10,'Mysticism':10},{'HitChanceIncrease':15}
     {
     var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
         {
@@ -2405,6 +2414,12 @@ function SearchJewelry(skillsThreshold,skillsSearchObject,modsSearchObject) //30
         {
         var itemObj = Orion.FindObject(item);
         var itemProps = itemObj.Properties();
+        if( isClean && (itemProps.indexOf('Antique') > -1 || itemProps.indexOf('Imbued') > -1) )
+            {
+            Orion.TestItemColor(item,itemObj.Color());
+            return false
+            }
+
         var itemPropsObject = parseJewelryProperties(itemProps);
         //Orion.Print(JSON.stringify(itemPropsObject))
         var bool = AliCompareJewels(itemPropsObject,skillsThreshold,skillsSearchObject,modsSearchObject);
