@@ -90,12 +90,14 @@ def format_jewelry_propObj_for_google_sheets(parse,serial):
         parse.get('LowerReagentCost', ''),
         parse.get('SwingSpeedIncrease', ''),
         parse.get('DamageIncrease', ''),
-        serial,
+        parse.get('IsClean', ''),
         parse.get('ModCount', ''),
         parse.get('SkillCount',''),
-        parse.get('IsClean', ''),
         parse.get('HighScore', ''),
         parse.get('HighTemplate', ''),
+        serial,
+        parse.get('ParentContainer', ''),
+        parse.get('Coords', ''),
         #breadcrumb array
     ]
     

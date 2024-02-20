@@ -1,6 +1,6 @@
 //var lootItems = { 0x0EED: true } //include this in your main file with a list of item graphics you'd like to loot
 //Shared.AddVar('lootItems',lootItems) //include this in your main file after your list of items
-var keepTrainingArmor = true;
+var keepTrainingArmor = false;
 
 function AliLootGump()
     {
@@ -33,15 +33,15 @@ function AliLootGump()
 var serialIndex = 1;
 var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionName', optional: [arguments] ]
     [
-        [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'] ],
+        [ [100, 30, serialIndex++, "AliLootHouse", 'AliLootHouse'], [100, 30, serialIndex++, "PutAwayLoot", 'PutAwayLoot'], [100, 30, serialIndex++, "TestKeeper", 'EvalKeep'] ],
         [],
-        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "TestKeeper", 'EvalKeep'],],
-        [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'] ],
+        [ [100, 30, serialIndex++, 'HighlightKeepers', 'HighlightKeepers'], [100, 30, serialIndex++, 'HighlightTrash', 'HighlightTrash'], [100, 30, serialIndex++, "HighlightClean", 'highlightCleanJewels'],],
+        [ [100, 30, serialIndex++, 'HighlightArea', 'HighlightAreaKeepers'], [100, 30, serialIndex++, 'HlghtNoDCIHCI', 'highlightNoDCInoHCIJewels'] ],
         [ [100, 30, serialIndex++, "MoveKeepers", 'MoveKeepers'], [100, 30, serialIndex++, "MoveTrash", 'MoveTrash'], [100, 30, serialIndex++, "MoveAll", "MoveAll"] ],
         [],
         [ [100, 30, serialIndex++, "ScoreSearch", 'JewelryScoreSearch'], [100, 30, serialIndex++, "ModSearch", 'JewelryModSearch'], [100, 30, serialIndex++, "MultiColorScore", "MultiColorScore"] ],
         [],
-        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "AliStringSearchGump", 'AliStringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
+        [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "AliStringSearch", 'AliStringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
     ]
    
 
@@ -1154,7 +1154,7 @@ function CalculateScoreCall(templateName)
         outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
         });
     //TextWindow.Print(outMsg)
-    Orion.Print(outMsg)
+    //Orion.Print(outMsg)
     }
 
 function CalculateHighScore(itemProperties)
@@ -1305,6 +1305,8 @@ function MultiColorScore()
 
 function HighlightContainersCall(keep)
     {
+    ResetItemColors()
+
     var startTime = Orion.Now();
     var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
         {
@@ -1838,7 +1840,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     {
                     var lrcThreshold = 10;
                     var lmcThreshold = lrc >= 20 ? 0 : 6;
-                    var mrThreshold = 3;
+                    var mrThreshold = 2;
                     var hprThreshold = mr == 4 ? 0 : 1;
                     var statThreshold = anyEater ? 3 : 5;
                     if(lrc >= lrcThreshold)
@@ -2350,7 +2352,7 @@ function PutAwayJewelry(jewelry)
             var jewelSerial = jewel.Serial();
             var parse = parseJewelryProperties(jewel.Properties());
             var score = calculateTemplateValues(parse)[0][1];
-            Orion.Print(score)
+            //Orion.Print(score)
             var sortContainerScore;
             if(score >= 100)
                 sortContainerScore = sortContainerSkills[0];
@@ -2503,6 +2505,82 @@ function HighlightJewelryScore(templateString,score,skillInt)
                 });
         }
     Orion.Print('Total Highlighted: ' + totalHighlighted + '\nTotal Searched: ' + totalItems + '\nRatio: ' + (totalHighlighted / totalItems).toFixed(2) + '\nScan Time: ' + (Orion.Now() - startTime) + 'ms')
+    }
+
+function highlightCleanJewels()
+    {
+    var conditionCheck = function(itemObject)
+        {
+        var itemProps = itemObject.Properties()
+        var itemGraphic = itemObject.Graphic()
+        var itemColor = itemObject.Color()
+        var itemSerial = itemObject.Serial()
+        return itemProps.indexOf('Antique') === -1 && itemProps.indexOf('Imbued') === -1
+        }
+    highlightConditionalJewels(conditionCheck)
+    }
+
+function highlightNoDCInoHCIJewels()
+    {
+    var conditionCheck = function(itemObject)
+        {
+        var itemProps = itemObject.Properties()
+        var itemGraphic = itemObject.Graphic()
+        var itemColor = itemObject.Color()
+        var itemSerial = itemObject.Serial()
+        return itemProps.indexOf('Hit Chance Increase') === -1 && itemProps.indexOf('Defense Chance Increase') === -1
+        }
+    highlightConditionalJewels(conditionCheck)
+    }
+
+function highlightConditionalJewels(conditionalCallback)
+    { //conditionalCallback should be a function that takes itemProps as a parameter and returns true if the item should be highlighted
+    ResetItemColors()
+    var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
+        {
+        return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
+        });
+    var npcContainers = Orion.FindTypeEx(any,any,ground,'mobile',4,'yellow').filter(function(npc)
+        {
+        return Orion.ObjAtLayer('backpack',npc.Serial())
+        }).map(function(npc)
+            {
+            var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
+            return npcPack;
+            });
+    var containers = groundContainers.concat(packContainers).concat(npcContainers);
+    var items = [];
+    for(var i=0;i<containers.length;i++)
+        {
+        var container = containers[i];
+        if(!container)
+            Orion.Print(container);
+        Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,container.Serial(),'item', 'finddistance', '',true).forEach(function(item)
+            {
+            items.push(item);
+            });
+        }
+    Orion.FindType('0x1F06|0x1086|0x108A|0x1F09',any,ground,'item', 22).forEach(function(item)
+        {
+        items.push(item);
+        });
+    var pass = items.filter(function(item)
+        {
+        var itemObj = Orion.FindObject(item);
+        var bool = conditionalCallback(itemObj)
+        if(!bool)
+            Orion.TestItemColor(item,itemObj.Color());
+        return bool;
+        })
+    Orion.Print('Items Found: ' + pass.length);
+    pass.forEach(function(keeper)
+        {
+        Orion.TestItemColor(keeper, 1152);
+        });
     }
 
 function calculateTemplateValues(mods,templateName)
@@ -3122,7 +3200,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
         excludeString = excludeString.slice(0,-1)
     var groundContainers = Orion.FindTypeEx(any,any,ground,'item', 4, '', true).filter(function(item)
         {
-        Orion.Print(item.Name())
+        //Orion.Print(item.Name())
         return item.Properties().indexOf('Contents: ') > -1 && Orion.GumpExists('container', item.Serial());
         });
     var packContainers = Orion.FindTypeEx(any, any, self, 'item', 'finddistance', '', true).filter(function(item)
@@ -3137,7 +3215,7 @@ function SearchByStrings(searchStringsList,excludeIncludesList)
             var npcPack = Orion.ObjAtLayer('backpack',npc.Serial());
             return npcPack;
             });
-    Orion.Print(groundContainers.length)
+    //Orion.Print(groundContainers.length)
     var containers = groundContainers.concat(packContainers).concat(npcContainers);
     var items = [];
     for(var i=0;i<containers.length;i++)
@@ -3205,7 +3283,6 @@ function ResetItemColors()
             return npcPack;
             });
     var containers = groundContainers.concat(packContainers).concat(npcContainers);
-    var items = [];
     for(var i=0;i<containers.length;i++)
         {
         var container = containers[i];

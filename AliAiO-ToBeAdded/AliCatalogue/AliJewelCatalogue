@@ -2,6 +2,111 @@ var inventoryFileName = "AliSpreadsheetInventory.JSON"
 
 function StartJewelryCatalogue()
     {
+    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) 
+        {
+        var itemZ = item.Z();
+        var itemProps = item.Properties();
+        var playerZ = Player.Z();
+        var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
+        return zCheck && containerCheck && !emptyCheck;
+        }).sort(function(a,b) //sort by nearest
+            {
+            return a.Distance() - b.Distance();
+            });
+    for(var i=0;i<containers.length;i++)
+        {
+        var containerObj = containers[i];
+        var containerSerial = containerObj.Serial();
+        var parentContainer = containerSerial
+        var containerX = containerObj.X();
+        var containerY = containerObj.Y();
+        var containerZ = containerObj.Z();
+        VerifyWalkTo(containerX,containerY,containerZ,1);
+        subContainersArr = []
+        var subContainers = GetAllSubContainers(containerSerial,true);
+        var containerCoords = containerObj.X() + ',' + containerObj.Y() + ',' + containerObj.Z()
+        for(var j=0;j<subContainers.length;j++)
+            {
+            var subContainerSerial = subContainers[j];
+            var jewels = Orion.FindTypeEx('0x1086|0x108A|0x1F06|0x1F09',any,subContainerSerial)
+            for(var k=0;k<jewels.length;k++)
+                {
+                var itemObj = jewels[k]
+                AddItemToInventory(itemObj, parentContainer, containerCoords)
+                }
+            }
+        }
+    }
+
+    
+function AddItemToInventory(itemObj, parentContainer, containerCoords)
+    {
+    var tmpFilePath = Orion.CurrentScriptDirPath() + '/' + inventoryFileName;
+    var tmpFile = Orion.NewFile();
+    if(!tmpFile.Open(tmpFilePath))
+        return Orion.CharPrint(self,1159,'Something went wrong trying to read or create file: ' + inventoryFileName);
+    var fileRead = tmpFile.ReadAll();
+    if(!fileRead)
+        fileRead = "{}";
+    var fileSani = fileRead.replace(/\r?\n/g, "");
+    var currentInventory = JSON.parse(fileSani) || {};
+
+    var itemSerial = itemObj.Serial()
+
+    if(currentInventory[itemSerial])
+        {
+        var checkCoords = Orion.Split(currentInventory[itemSerial]["Coords"], ",")
+        if(currentInventory[itemSerial]["ParentContainer"] == parentContainer && Orion.GetDistance(checkCoords[0],checkCoords[1]) < 5)
+            return false
+        }
+    currentInventory[itemSerial] = parseModsObjForDatabase(itemObj)
+    currentInventory[itemSerial]["ParentContainer"] = parentContainer
+    currentInventory[itemSerial]["Coords"] = containerCoords
+
+    var outStr = "{\n"
+    for(serial in currentInventory)
+        {
+        var objectJSON = JSON.stringify(currentInventory[serial])
+        outStr += '"' + serial + '":' + objectJSON + ",\n"
+        }
+    outStr = outStr.slice(0,-2) + "\n"
+    Orion.Print("Recording Inventory To File: " + tmpFilePath);
+    tmpFile.Remove()
+    tmpFile.Open(tmpFilePath)
+    tmpFile.Write(outStr + "}");
+    tmpFile.Close();
+    }
+
+
+function AddItemToInventoryOLD(itemObj, parentContainer, currentCoords)
+    {
+    var currentInventory = GetInventoryFromFile()
+    var itemSerial = itemObj.Serial()
+
+    if(currentInventory[itemSerial])
+        return false
+    
+    currentInventory[itemSerial] = parseModsObjForDatabase(itemObj)
+    currentInventory[itemSerial]["ParentContainer"] = parentContainer
+    currentInventory[itemSerial]["Coords"] = currentCoords
+    OverwriteInventoryFile(currentInventory)
+    }
+
+// function AggregateNearbyJewelry()
+//     {
+//     var parentContainer
+//     var currentCoords
+//     var items = Orion.FindTypeEx("0x1F06|0x1F09|0x1086|0x108A",any,parentContainer).map(function(item)
+//         {
+//         return [item,parentContainer,currentCoords]
+//         });
+//     return items
+//     }
+
+function StartJewelryCatalogueOLD()
+    {
     var items = AggregateNearbyJewelry()
     var currentInventory = GetInventoryFromFile()
 
@@ -20,19 +125,6 @@ function StartJewelryCatalogue()
 
     OverwriteInventoryFile(currentInventory)
     }
-
-
-function AggregateNearbyJewelry()
-    {
-    var parentContainer
-    var currentCoords
-    var items = Orion.FindTypeEx("0x1F06|0x1F09|0x1086|0x108A",any,parentContainer).map(function(item)
-        {
-        return [item,parentContainer,currentCoords]
-        });
-    return items
-    }
-
 
 function parseModsObjForDatabase(jewelryObj)
     {
@@ -94,7 +186,7 @@ function parseModsObjForDatabase(jewelryObj)
     modsObj["IsClean"] = isClean
     modsObj["HighScore"] = highScoreData[1]
     modsObj["HighTemplate"] = highScoreData[0]
-    return modsObj; //[{goodMods},totalModsInt]
+    return modsObj;
     }
 
 
@@ -429,59 +521,13 @@ function calculateTemplateValues(mods,templateName)
         }
     }
 
-function NeedleInAHayStack()
-    { //v1
-    // This function finds all containers on the same floor as the player and systematically searches through
-    // all of them to find any object with the textSearch string in its tooltip. 
-    // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
-    var textSearch = 'Retouch';
-    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) 
-        {
-        var itemZ = item.Z();
-        var itemProps = item.Properties();
-        var playerZ = Player.Z();
-        var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
-        var containerCheck = Orion.Contains(itemProps,'Contents: ');
-        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
-        return zCheck && containerCheck && !emptyCheck;
-        }).sort(function(a,b) //sort by nearest
-            {
-            return a.Distance() - b.Distance();
-            });
-    for(var i=0;i<containers.length;i++) //loop through em
-        {
-        var containerObj = containers[i];
-        var containerSerial = containerObj.Serial();
-        var containerX = containerObj.X();
-        var containerY = containerObj.Y();
-        var containerZ = containerObj.Z();
-        VerifyWalkTo(containerX,containerY,containerZ,1);
-        var subContainers = GetAllSubContainers(containerSerial,true);
-        for(var j=0;j<subContainers.length;j++)
-            {
-            var subContainerSerial = subContainers[j];
-            var searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
-                {
-                return Orion.Contains(item.Properties(),textSearch)
-                });
-            while(searchItem[0])
-                {
-                Orion.CharPrint(containerSerial,1159,textSearch + ' Found!')
-				Orion.TestItemColor(containerSerial, 1152);
-                Orion.MoveItem(searchItem[0].Serial());
-                Orion.Wait(1300);
-                searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
-                    {
-                    return Orion.Contains(item.Properties(),textSearch)
-                    });
-                }
-            }
-        }
-    }
+
 
 var subContainersArr = [];
 function GetAllSubContainers(containerSerial,ignoreEmpties)
     {
+    if(ignoreEmpties === undefined)
+        ignoreEmpties = true
     if(!VerifyOpenContainer(containerSerial))
         return;
     subContainersArr.push(containerSerial);
