@@ -1841,7 +1841,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                     var lrcThreshold = 10;
                     var lmcThreshold = lrc >= 20 ? 0 : 6;
                     var mrThreshold = 2;
-                    var hprThreshold = mr == 4 ? 0 : 1;
+                    var hprThreshold = mr >= 3 ? 0 : 1;
                     var statThreshold = anyEater ? 3 : 5;
                     if(lrc >= lrcThreshold)
                         statThreshold -= 5;

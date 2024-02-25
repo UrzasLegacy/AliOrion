@@ -175,7 +175,7 @@ function parseModsObjForDatabase(jewelryObj)
                 var modValue = parseInt(modMatch[2]) || 1;
                 modsObj[modName] = modValue;
                 if(skillMods[modName])
-                    skillCount++
+                    skillCount += modValue
                 }
             }
         });

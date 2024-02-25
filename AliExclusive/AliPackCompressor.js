@@ -1,11 +1,13 @@
 //#include Ali/AliGumpHUD.js
+// Nested pouches one tile south, containers to PUT things west of character, containers to PULL things from to the east
+// Start helper, then compressor
 
 var itemsPerContainer = 110;
 
 var gumpAssets = 
 [
     [ ['toggle','AliCompressor','Compressor'], ['toggle','AliCompressorHelper','Helper'] ],
-    [ ['toggle','ConsolidateEggs','ConsolidateEggs'], ['toggle','EggMover6000','MoveEggs'], ['toggle','CountReadyBackpacks','CountReady'],],
+    [ ['toggle','ConsolidateItems','ConsolidateItems'], ['toggle','EggMover6000','MoveEggs'], ['toggle','CountReadyBackpacks','CountReady'],],
     [ ['toggle','NestContainerZero','NestPouches'], ['toggle','DropHere','DropHere'] ],
 ];
 function ControlsGump()
@@ -13,7 +15,7 @@ function ControlsGump()
     AliGumpRenderer()
     }
 //----------------------
-var itemGraphic = '0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18';
+var itemGraphic = any//'0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18';
 var pouchGraphic = '0x0E79';
 var backpackGraphic = '0x0E75';
 
@@ -45,7 +47,7 @@ function AliCompressor()
         return Orion.CharPrint(self,1159,'Bag Zero missing!');
     var subPouches = GetAllSubPouches(bagZero);
     while(true)
-        {
+        { 
         var currentPouch = subPouches.pop();
         if(!currentPouch)
             {
@@ -103,6 +105,7 @@ function AliCompressorHelper()
     var create = Orion.CreateUdpServer('Compressor', port);
     if(create != 0)
         return Orion.CharPrint(self,1159,'Server Creation Failed: ' + create);
+    subContainersArr = []
     var subPouches = GetAllSubPouches(bagZero);
     var endIndex = subPouches.length - 1;
     while(true)
@@ -151,25 +154,7 @@ function AliCompressorHelper()
         }
     }
 
-function RareEggCheck(containerSerial)
-    {
-    VerifyOpenContainer(containerSerial);
-    var rareEggs = Orion.FindType(itemGraphic,'0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B|0x0AA1|0x044B|0x044C',containerSerial);
-    if(rareEggs.length)
-        {
-        while(rareEggs.length)
-            {
-            Orion.CharPrint(self,1159,'Pulling rare egg from container!')
-            Orion.MoveItem(rareEggs[0]);
-            Orion.Wait(1100);
-            rareEggs = Orion.FindType(itemGraphic,'0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B|0x0AA1|0x044B|0x044C',containerSerial);
-            }
-        return true;
-        }
-    return false;
-    }
-
-function ConsolidateEggs()
+function ConsolidateItems()
     {
     var playerX = Player.X();
     var containers = Orion.FindTypeEx(any,any,ground,'item',2).filter(function(item)
@@ -197,9 +182,9 @@ function ConsolidateEggs()
             return aContents - bContents;
             });
     if(containersPut.length == 0)
-            return Orion.CharPrint(self,1159,'Out of containers to put eggs into!')
+            return Orion.CharPrint(self,1159,'Out of containers to put things into!')
     if(containersPull.length == 0)
-            return Orion.CharPrint(self,1159,'Out of containers to pull eggs from!')
+            return Orion.CharPrint(self,1159,'Out of containers to pull things from!')
     while(containersPut.length && containersPull.length)
         {
         Orion.Print('test1')
@@ -217,10 +202,8 @@ function ConsolidateEggs()
             var currentPullSerial = currentPull.Serial();
             VerifyOpenContainer(currentPullSerial);
             VerifyOpenContainer(currentPutSerial);
-            if(RareEggCheck(currentPullSerial) || RareEggCheck(currentPutSerial))
-                break;
             Orion.MoveItemType(itemGraphic, any, currentPullSerial, 0, currentPutSerial);
-            Orion.Wait(1100);
+            Orion.Wait(1200);
             currentPutContents = +((currentPut.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
             currentPullContents = +((currentPull.Properties().match(/Contents: (\d+)/) || [])[1] || '0');
             }
@@ -237,21 +220,6 @@ function ConsolidateEggs()
         Orion.Wait(100)
         }
     }
-
-function EggMover6000()
-	{
-    Orion.CharPrint(self,1159,'Target source container')
-    Orion.WaitForAddObject('myTarget');
-    var sourceContainer = Orion.GetSerial('myTarget');
-    Orion.CharPrint(self,1159,'Target destination container')
-    Orion.WaitForAddObject('myTarget');
-    var destinationContainer = Orion.GetSerial('myTarget');
-	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', any, sourceContainer)[0])
-		{
-		Orion.MoveItemType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', any, sourceContainer, 0, destinationContainer);
-		Orion.Wait(1100);
-		}
-	}	
 
 function Move80()
     {

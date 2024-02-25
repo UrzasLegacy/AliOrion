@@ -3,8 +3,6 @@ import gspread
 import json
 import os
 
-test_array = [["Ring","","","","","Resisting Spells 15","","","","","","",25,15,"","",1,8,"",25,10,35]]
-
 
 def main():
     item_data = retrieve_item_data()
@@ -23,7 +21,7 @@ def send_to_google(data):
 
     data = retrieve_item_data()
     range_start = 'A2'
-    sheet.update(range_name=range_start, values=data)
+    #sheet.update(range_name=range_start, values=data)
 
 
 def retrieve_item_data():
@@ -36,12 +34,12 @@ def retrieve_item_data():
     for serial in data:
         row_data = format_jewelry_propObj_for_google_sheets(data[serial],serial)
         out_data.append(row_data)
-
+    print(f"Entries: {len(data)}")
     return out_data
 
 
 def format_jewelry_propObj_for_google_sheets(parse,serial):
-    print(parse)
+    #print(parse)
     skill_groups = ["", "", "", "", ""]
     skill_group_checks = [
         "Swordsmanship|Fencing|MaceFighting|Magery|Musicianship",

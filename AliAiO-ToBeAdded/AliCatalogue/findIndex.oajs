@@ -1,0 +1,58 @@
+
+function testExample()
+    {
+    var animals = [
+        {"Species": "Cat", "Legs": 4, "Tail": true},
+        {"Species": "Dog", "Legs": 4, "Tail": true},
+        {"Species": "Ape", "Legs": 2, "Tail": false},
+        {"Species": "Grasshopper", "Legs": 6, "Tail": false},
+    ]
+    
+    // here's how you would accomplish what findIndex does using a for loop
+	var firstAnimalWithMoreThanFourLegs = -1
+    for(var i = 0, len = animals.length; i < len; i++)
+        {
+        var element = animals[i]
+        if(element["Legs"] && element["Legs"] > 4) // 
+        	{
+            firstAnimalWithMoreThanFourLegs = i;
+            break;
+            }
+        }
+	if(firstAnimalWithMoreThanFourLegs !== -1)
+		Orion.Print("index: " + firstAnimalWithMoreThanFourLegs + " species: " + animals[firstAnimalWithMoreThanFourLegs]["Species"])
+
+
+    
+    var firstAnimalWithTwoLegs = findIndex(animals,function(element)
+        {
+        if(element["Legs"] && element["Legs"] == 2)
+            return true
+        return false
+        })
+	if(firstAnimalWithTwoLegs !== -1)
+        Orion.Print("index: " + firstAnimalWithTwoLegs + " species: " + animals[firstAnimalWithTwoLegs]["Species"])
+
+
+    var firstAnimalWithATail = findIndex(animals, function(element)
+        {
+        return element["Tail"]
+        })
+	if(firstAnimalWithATail !== -1)
+        Orion.Print("index: " + firstAnimalWithATail + " species: " + animals[firstAnimalWithATail]["Species"])
+    
+
+    }
+
+
+
+
+function findIndex(array,callbackFn)
+    {
+    for(var i = 0, len = array.length; i < len; i++)
+        {
+        if(callbackFn(array[i]))
+            return i
+        }
+    return -1
+    }
