@@ -1828,22 +1828,24 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 DebugLoot('hpi intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
                 Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
             case '3':
-                if(isTunic || isArms || isGloves)
+                if(isArms || isGloves)
                     {
-                    var lrcThreshold = 20;
-                    var lmcThreshold = 8;
-                    var mrThreshold = 3;
+                    var lrcThreshold = 15;
+                    var lmcThreshold = mr == 4 ? 0 : 6;
+                    var mrThreshold = 2;
                     var hprThreshold = 3;
-                    var statThreshold = anyEater ? 5 : 7;
+                    var statThreshold = anyEater ? 10 : 15;
+                    if(lrc >= 20)
+                        statThreshold -= 5;
                     }
                 else
                     {
                     var lrcThreshold = 10;
-                    var lmcThreshold = lrc >= 20 ? 0 : 6;
+                    var lmcThreshold = lrc >= 15 ? 0 : 6;
                     var mrThreshold = 2;
                     var hprThreshold = mr >= 3 ? 0 : 1;
-                    var statThreshold = anyEater ? 3 : 5;
-                    if(lrc >= lrcThreshold)
+                    var statThreshold = anyEater ? 10 : 15;
+                    if(lrc >= 20)
                         statThreshold -= 5;
                     }
                 break;

@@ -1,0 +1,67 @@
+function BandieBot()
+	{ // This function runs continuously in the background
+
+    // User Settings
+	var healSelf = true;
+	var selfHitPointThresholdPercentage = 60; 
+	var healOthers = true;
+	var otherHitPointThresholdPercentage = 80;
+
+    var notorietiesToHeal = "green"; // "blue|green"
+    var attemptToRezGhosts = true;
+    var pauseWhileTargetCursorUp = true;
+
+    // No Edit
+	var flags = attemptToRezGhosts ? 'ignoreself|mobile' : 'ignoreself|live';
+	while(!Player.Dead())
+		{
+		while(!Player.Dead())
+			{
+			Orion.Wait(200);
+			if(Orion.BuffExists("Healing Skill") || (pauseWhileTargetCursorUp && Orion.HaveTarget()))
+				continue;
+            
+			while(!Orion.GumpExists('container',backpack))
+                {
+                Orion.UseObject(backpack);
+                Orion.Wait(1300);
+                }
+
+			var bandies = Orion.FindType('0x0E21')[0];
+            if(!bandies)
+                {
+                Orion.CharPrint(self,1159,"No bandies");
+                continue;
+                }
+			if(Orion.Count('0x0E21') < 50)
+				{
+				Orion.Wait(200);
+				if(Orion.Count('0x0E21') < 50) // with just one check, was getting false positives for some reason
+					Orion.CharPrint(self,1159,'Low on Bandies');
+				}
+
+            var injuredList = Orion.FindTypeEx(any, any, ground, flags, 2, notorietiesToHeal)
+                .filter(function(friend)
+                    {
+                    return friend.Hits('%') < otherHitPointThresholdPercentage;
+                    }).sort(function(a,b)
+                        {
+                        return a.Hits() - b.Hits();
+                        });
+            var target = injuredList.length ? injuredList[0] : false;
+
+			if(healOthers && target)
+				{
+				Orion.UseObject(bandies);
+				if(Orion.WaitForTarget(2000))
+					Orion.TargetObject(target.Serial());
+				}
+			else if(healSelf && Player.Hits('%') < selfHitPointThresholdPercentage)
+				{
+				Orion.UseObject(bandies);
+				if(Orion.WaitForTarget(2000))
+					Orion.TargetObject(self);
+				}
+			}
+		}
+	}
