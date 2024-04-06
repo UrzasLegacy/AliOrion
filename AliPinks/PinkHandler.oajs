@@ -1,163 +1,258 @@
-//v42 Atl/Yamato
+//v43 MultiShard
+//each shard has its own entry below
 //set maxcount to how many of each scroll you want to stock
 //set price of each scroll in the last column of scrollinfo array
+//set vendor serials in the vendorData array
 var passphrase = 'BallTableHorseShoe'; //say this near GoodWill to turn off reconnect and log out
 
-var maxCountAtlantic = 5
-var maxCountYamato = 2
-Shared.AddVar('debug',true);
-//------------------------------------------------------------------------------------------------------------------------------ATLANTIC
-var scrollinfoAtlantic = //[skillname, categoryindex, skillindex, bookbutton, price]
-	[
-	//0 Misc Atlantic
-		["Arms Lore",           0,  0,  1044064,    7199992],
-		["Begging",             0,  1,  1044066,    5175495],
-		["Camping",             0,  2,  1044070,    45000],
-		["Cartography",         0,  3,  1044072,    4999999],
-		["Forensics",           0,  4,  1044079,    45000],
-		["Item Identification", 0,  5,  1044063,    45000],
-		["Taste Identification",0,  6,  1044096,    45000],
-	//1 Combat Atlantic
-		["Anatomy",             1,  0,  1044061,    7999996],
-		["Archery",             1,  1,  1044091,    9999999],
-		["Fencing",             1,  2,  1044102,    1899996],
-		["Focus",               1,  3,  1044110,    89999],
-		["Healing",             1,  4,  1044077,    9999996],
-		["Mace Fighting",       1,  5,  1044101,    3999997],
-		["Parrying",            1,  6,  1044065,    8599999],
-		["Swordsmanship",       1,  7,  1044100,    8999999],
-		["Tactics",             1,  8,  1044087,    20999999],
-		["Throwing",            1,  9,  1044117,    2999996],
-		["Wrestling",           1,  10, 1044103,    4799996],
-	//2 Trade Skills Atlantic
-		["Alchemy",             2,  0,  1044060,    6999990],
-		["Blacksmithing",       2,  1,  1044067,    4999999],
-		["Fletching",           2,  2,  1044068,    4399997],
-		["Carpentry",           2,  3,  1044071,    3999999],
-		["Cooking",             2,  4,  1044073,    7989986],
-		["Inscription",         2,  5,  1044083,    5498985],
-		["Lumberjacking",       2,  6,  1044104,    499998],
-		["Mining",              2,  7,  1044105,    1249998],
-		["Tailoring",           2,  8,  1044094,    4999998],
-		["Tinkering",           2,  9,  1044097,    1999998],
-	//3 Magic Atlantic
-		["Bushido",             3,  0,  1044112,    39999999], 
-		["Chivalry",            3,  1,  1044111,    14799999],
-		["Eval Intelligence",   3,  2,  1044076,    14849998],
-		["Imbuing",             3,  3,  1044116,    14999997],
-		["Magery",              3,  4,  1044085,    43000000],
-		["Meditation",          3,  5,  1044106,    199997],
-		["Mysticism",           3,  6,  1044115,    11999997],
-		["Necromancy",          3,  7,  1044109,    24999995],
-		["Ninjitsu",            3,  8,  1044113,    22999999],
-		["Resisting Spells",    3,  9,  1044086,    14999997],
-		["Spellweaving",        3,  10, 1044114,    24799999],
-		["Spirit Speak",        3,  11, 1044092,    6999999],
-	//4 Wilderness 3499998
-		["Animal Lore",         4,  0,  1044062,    9999999],
-		["Animal Taming",       4,  1,  1044095,    75999997],
-		["Fishing",             4,  2,  1044078,    5689998],
-		["Herding",             4,  3,  1044080,    45000],
-		["Tracking",            4,  4,  1044098,    7899999],
-		["Veterinary",          4,  5,  1044099,    22999998],
-	//5 Thievery Atlantic
-		["Detecting Hidden",    5,  0,  1044074,    4899999],
-		["Hiding",              5,  1,  1044081,    9999999],
-		["Lock Picking",        5,  2,  1044084,    9999999],
-		["Poisoning",           5,  3,  1044090,   11999999],
-		["Remove Trap",         5,  4,  1044108,    7999999],
-		["Snooping",            5,  5,  1044088,    1499995],
-		["Stealing",            5,  6,  1044093,    499999],
-		["Stealth",             5,  7,  1044107,    14999999],
-	//6 Bard Atlantic
-		["Discordance",         6,  0,  1044075,    38999997],
-		["Musicianship",        6,  1,  1044089,    9999999],
-		["Peacemaking",         6,  2,  1044069,    9999999],
-		["Provocation",         6,  3,  1044082,    24999997],
-	]
-//------------------------------------------------------------------------------------------------------------------------------YAMATO
-var scrollinfoYamato = //[skillname, categoryindex, skillindex, bookbutton, price]
-	[
-	//0 Misc Yamato
-		["Arms Lore",           0,  0,  1044064,    399999],
-		["Begging",             0,  1,  1044066,    3000000],
-		["Camping",             0,  2,  1044070,    100000],
-		["Cartography",         0,  3,  1044072,    5000000],
-		["Forensics",           0,  4,  1044079,    100000],
-		["Item Identification", 0,  5,  1044063,    100000],
-		["Taste Identification",0,  6,  1044096,    100000],
-	//1 Combat Yamato
-		["Anatomy",             1,  0,  1044061,    10000000],
-		["Archery",             1,  1,  1044091,    15000000],
-		["Fencing",             1,  2,  1044102,    3500000],
-		["Focus",               1,  3,  1044110,    5000000],
-		["Healing",             1,  4,  1044077,    19999999],
-		["Mace Fighting",       1,  5,  1044101,    3500000],
-		["Parrying",            1,  6,  1044065,    30000000],
-		["Swordsmanship",       1,  7,  1044100,    7999999],
-		["Tactics",             1,  8,  1044087,    45000000],
-		["Throwing",            1,  9,  1044117,    10000000],
-		["Wrestling",           1,  10, 1044103,    5000000],
-	//2 Trade Skills Yamato
-		["Alchemy",             2,  0,  1044060,    9000000],
-		["Blacksmithing",       2,  1,  1044067,    9000000],
-		["Fletching",           2,  2,  1044068,    6000000],
-		["Carpentry",           2,  3,  1044071,    6000000],
-		["Cooking",             2,  4,  1044073,    3000000],
-		["Inscription",         2,  5,  1044083,    6000000],
-		["Lumberjacking",       2,  6,  1044104,    2000000],
-		["Mining",              2,  7,  1044105,    3000000],
-		["Tailoring",           2,  8,  1044094,    10000000],
-		["Tinkering",           2,  9,  1044097,    9000000],
-	//3 Magic Yamato
-		["Bushido",             3,  0,  1044112,    65000000],
-		["Chivalry",            3,  1,  1044111,    60000000],
-		["Eval Intelligence",   3,  2,  1044076,    20000000],
-		["Imbuing",             3,  3,  1044116,    25000000],
-		["Magery",              3,  4,  1044085,    50000000],
-		["Meditation",          3,  5,  1044106,    1000000],
-		["Mysticism",           3,  6,  1044115,    20000000],
-		["Necromancy",          3,  7,  1044109,    20000000],
-		["Ninjitsu",            3,  8,  1044113,    50000000],
-		["Resisting Spells",    3,  9,  1044086,    20000000],
-		["Spellweaving",        3,  10, 1044114,    50000000],
-		["Spirit Speak",        3,  11, 1044092,    5000000],
-	//4 Wilderness Yamato
-		["Animal Lore",         4,  0,  1044062,    9999999],
-		["Animal Taming",       4,  1,  1044095,    80000000],
-		["Fishing",             4,  2,  1044078,    10000000],
-		["Herding",             4,  3,  1044080,    1000000],
-		["Tracking",            4,  4,  1044098,    5000000],
-		["Veterinary",          4,  5,  1044099,    10000000],
-	//5 Thievery Yamato
-		["Detecting Hidden",    5,  0,  1044074,    3000000],
-		["Hiding",              5,  1,  1044081,    10000000],
-		["Lock Picking",        5,  2,  1044084,    5000000],
-		["Poisoning",           5,  3,  1044090,    10000000],
-		["Remove Trap",         5,  4,  1044108,    2000000],
-		["Snooping",            5,  5,  1044088,    1000000],
-		["Stealing",            5,  6,  1044093,    7000000],
-		["Stealth",             5,  7,  1044107,    10000000],
-	//6 Bard Yamato
-		["Discordance",         6,  0,  1044075,    30000000],
-		["Musicianship",        6,  1,  1044089,    8000000],
-		["Peacemaking",         6,  2,  1044069,    15000000],
-		["Provocation",         6,  3,  1044082,    15000000],
-	]
+Shared.AddVar('debug',false);
+
+var shard = Orion.ShardName();
+if(shard == 'Atlantic') //-----------------------------------------------------------------------------------------------------ATLANTIC
+    {
+    var maxcount = 5;
+    var scrollinfo = //[skillname, categoryindex, skillindex, bookbutton, price]
+        [
+        //0 Misc Atlantic
+            ["Arms Lore",           0,  0,  1044064,    7199992],
+            ["Begging",             0,  1,  1044066,    5175495],
+            ["Camping",             0,  2,  1044070,    45000],
+            ["Cartography",         0,  3,  1044072,    4999999],
+            ["Forensics",           0,  4,  1044079,    45000],
+            ["Item Identification", 0,  5,  1044063,    45000],
+            ["Taste Identification",0,  6,  1044096,    45000],
+        //1 Combat Atlantic
+            ["Anatomy",             1,  0,  1044061,    7999996],
+            ["Archery",             1,  1,  1044091,    9999999],
+            ["Fencing",             1,  2,  1044102,    1899996],
+            ["Focus",               1,  3,  1044110,    89999],
+            ["Healing",             1,  4,  1044077,    9999996],
+            ["Mace Fighting",       1,  5,  1044101,    3999997],
+            ["Parrying",            1,  6,  1044065,    8599999],
+            ["Swordsmanship",       1,  7,  1044100,    8999999],
+            ["Tactics",             1,  8,  1044087,    20999999],
+            ["Throwing",            1,  9,  1044117,    2999996],
+            ["Wrestling",           1,  10, 1044103,    4799996],
+        //2 Trade Skills Atlantic
+            ["Alchemy",             2,  0,  1044060,    6999990],
+            ["Blacksmithing",       2,  1,  1044067,    4999999],
+            ["Fletching",           2,  2,  1044068,    4399997],
+            ["Carpentry",           2,  3,  1044071,    3999999],
+            ["Cooking",             2,  4,  1044073,    7989986],
+            ["Inscription",         2,  5,  1044083,    5498985],
+            ["Lumberjacking",       2,  6,  1044104,    499998],
+            ["Mining",              2,  7,  1044105,    1249998],
+            ["Tailoring",           2,  8,  1044094,    4999998],
+            ["Tinkering",           2,  9,  1044097,    1999998],
+        //3 Magic Atlantic
+            ["Bushido",             3,  0,  1044112,    39999999], 
+            ["Chivalry",            3,  1,  1044111,    14799999],
+            ["Eval Intelligence",   3,  2,  1044076,    14849998],
+            ["Imbuing",             3,  3,  1044116,    14999997],
+            ["Magery",              3,  4,  1044085,    43000000],
+            ["Meditation",          3,  5,  1044106,    199997],
+            ["Mysticism",           3,  6,  1044115,    11999997],
+            ["Necromancy",          3,  7,  1044109,    24999995],
+            ["Ninjitsu",            3,  8,  1044113,    22999999],
+            ["Resisting Spells",    3,  9,  1044086,    14999997],
+            ["Spellweaving",        3,  10, 1044114,    24799999],
+            ["Spirit Speak",        3,  11, 1044092,    6999999],
+        //4 Wilderness 3499998
+            ["Animal Lore",         4,  0,  1044062,    9999999],
+            ["Animal Taming",       4,  1,  1044095,    75999997],
+            ["Fishing",             4,  2,  1044078,    5689998],
+            ["Herding",             4,  3,  1044080,    45000],
+            ["Tracking",            4,  4,  1044098,    7899999],
+            ["Veterinary",          4,  5,  1044099,    22999998],
+        //5 Thievery Atlantic
+            ["Detecting Hidden",    5,  0,  1044074,    4899999],
+            ["Hiding",              5,  1,  1044081,    9999999],
+            ["Lock Picking",        5,  2,  1044084,    9999999],
+            ["Poisoning",           5,  3,  1044090,   11999999],
+            ["Remove Trap",         5,  4,  1044108,    7999999],
+            ["Snooping",            5,  5,  1044088,    1499995],
+            ["Stealing",            5,  6,  1044093,    499999],
+            ["Stealth",             5,  7,  1044107,    14999999],
+        //6 Bard Atlantic
+            ["Discordance",         6,  0,  1044075,    38999997],
+            ["Musicianship",        6,  1,  1044089,    9999999],
+            ["Peacemaking",         6,  2,  1044069,    9999999],
+            ["Provocation",         6,  3,  1044082,    24999997],
+        ]
+    var vendorData = [
+        ['0x057F6DBC', 12*maxcount, 'Magic'],
+        ['0x057F6D78', 11*maxcount, 'Combat'],
+        ['0x057F6D5A', 10*maxcount, 'Trade Skills'],
+        ['0x057F5FD8', 8*maxcount, 'Thievery'],
+        ['0x057F5FF9', 6*maxcount, 'Wilderness'],
+        ['0x057F5FCB', 4*maxcount, 'Bard'],
+        ['0x057F5F5D', 7*maxcount, 'Misc'],
+        ]
+    }
+else if(shard == 'Yamato') //-----------------------------------------------------------------------------------------------------YAMATO
+    {
+    var maxcount = 2;
+    var scrollinfo = //[skillname, categoryindex, skillindex, bookbutton, price]
+        [
+        //0 Misc Yamato
+            ["Arms Lore",           0,  0,  1044064,    399999],
+            ["Begging",             0,  1,  1044066,    3000000],
+            ["Camping",             0,  2,  1044070,    100000],
+            ["Cartography",         0,  3,  1044072,    5000000],
+            ["Forensics",           0,  4,  1044079,    100000],
+            ["Item Identification", 0,  5,  1044063,    100000],
+            ["Taste Identification",0,  6,  1044096,    100000],
+        //1 Combat Yamato
+            ["Anatomy",             1,  0,  1044061,    10000000],
+            ["Archery",             1,  1,  1044091,    15000000],
+            ["Fencing",             1,  2,  1044102,    3500000],
+            ["Focus",               1,  3,  1044110,    5000000],
+            ["Healing",             1,  4,  1044077,    19999999],
+            ["Mace Fighting",       1,  5,  1044101,    3500000],
+            ["Parrying",            1,  6,  1044065,    30000000],
+            ["Swordsmanship",       1,  7,  1044100,    7999999],
+            ["Tactics",             1,  8,  1044087,    45000000],
+            ["Throwing",            1,  9,  1044117,    1000000],
+            ["Wrestling",           1,  10, 1044103,    5000000],
+        //2 Trade Skills Yamato
+            ["Alchemy",             2,  0,  1044060,    9000000],
+            ["Blacksmithing",       2,  1,  1044067,    9000000],
+            ["Fletching",           2,  2,  1044068,    6000000],
+            ["Carpentry",           2,  3,  1044071,    6000000],
+            ["Cooking",             2,  4,  1044073,    3000000],
+            ["Inscription",         2,  5,  1044083,    6000000],
+            ["Lumberjacking",       2,  6,  1044104,    2000000],
+            ["Mining",              2,  7,  1044105,    3000000],
+            ["Tailoring",           2,  8,  1044094,    10000000],
+            ["Tinkering",           2,  9,  1044097,    9000000],
+        //3 Magic Yamato
+            ["Bushido",             3,  0,  1044112,    65000000],
+            ["Chivalry",            3,  1,  1044111,    60000000],
+            ["Eval Intelligence",   3,  2,  1044076,    20000000],
+            ["Imbuing",             3,  3,  1044116,    25000000],
+            ["Magery",              3,  4,  1044085,    50000000],
+            ["Meditation",          3,  5,  1044106,    1000000],
+            ["Mysticism",           3,  6,  1044115,    20000000],
+            ["Necromancy",          3,  7,  1044109,    20000000],
+            ["Ninjitsu",            3,  8,  1044113,    50000000],
+            ["Resisting Spells",    3,  9,  1044086,    20000000],
+            ["Spellweaving",        3,  10, 1044114,    50000000],
+            ["Spirit Speak",        3,  11, 1044092,    5000000],
+        //4 Wilderness Yamato
+            ["Animal Lore",         4,  0,  1044062,    9999999],
+            ["Animal Taming",       4,  1,  1044095,    80000000],
+            ["Fishing",             4,  2,  1044078,    10000000],
+            ["Herding",             4,  3,  1044080,    1000000],
+            ["Tracking",            4,  4,  1044098,    5000000],
+            ["Veterinary",          4,  5,  1044099,    10000000],
+        //5 Thievery Yamato
+            ["Detecting Hidden",    5,  0,  1044074,    3000000],
+            ["Hiding",              5,  1,  1044081,    10000000],
+            ["Lock Picking",        5,  2,  1044084,    5000000],
+            ["Poisoning",           5,  3,  1044090,    10000000],
+            ["Remove Trap",         5,  4,  1044108,    2000000],
+            ["Snooping",            5,  5,  1044088,    1000000],
+            ["Stealing",            5,  6,  1044093,    7000000],
+            ["Stealth",             5,  7,  1044107,    10000000],
+        //6 Bard Yamato
+            ["Discordance",         6,  0,  1044075,    30000000],
+            ["Musicianship",        6,  1,  1044089,    8000000],
+            ["Peacemaking",         6,  2,  1044069,    15000000],
+            ["Provocation",         6,  3,  1044082,    15000000],
+        ]
+    var vendorData = [
+        ['0x002F800C', 12*maxcount, 'Magic'],
+        ['0x002F7FF5', 11*maxcount, 'Combat'],
+        ['0x002F7FDF', 10*maxcount, 'Trade Skills'],
+        ['0x002F7FBD', 8*maxcount, 'Thievery'],
+        ['0x002F7FA5', 6*maxcount, 'Wilderness'],
+        ['0x002F7F98', 4*maxcount, 'Bard'],
+        ['0x002F7F8E', 7*maxcount, 'Misc'],
+        ]
+    }
+else if(shard == 'Europa') //-----------------------------------------------------------------------------------------------------EUROPA
+    {
+    var maxcount = 2;
+    var scrollinfo = //[skillname, categoryindex, skillindex, bookbutton, price]
+        [
+        //0 Misc
+            ["Arms Lore",           0,  0,  1044064,    399999],
+            ["Begging",             0,  1,  1044066,    3000000],
+            ["Camping",             0,  2,  1044070,    100000],
+            ["Cartography",         0,  3,  1044072,    5000000],
+            ["Forensics",           0,  4,  1044079,    100000],
+            ["Item Identification", 0,  5,  1044063,    100000],
+            ["Taste Identification",0,  6,  1044096,    100000],
+        //1 Combat
+            ["Anatomy",             1,  0,  1044061,    10000000],
+            ["Archery",             1,  1,  1044091,    15000000],
+            ["Fencing",             1,  2,  1044102,    3500000],
+            ["Focus",               1,  3,  1044110,    5000000],
+            ["Healing",             1,  4,  1044077,    19999999],
+            ["Mace Fighting",       1,  5,  1044101,    3500000],
+            ["Parrying",            1,  6,  1044065,    30000000],
+            ["Swordsmanship",       1,  7,  1044100,    7999999],
+            ["Tactics",             1,  8,  1044087,    45000000],
+            ["Throwing",            1,  9,  1044117,    10000000],
+            ["Wrestling",           1,  10, 1044103,    5000000],
+        //2 Trade Skills
+            ["Alchemy",             2,  0,  1044060,    9000000],
+            ["Blacksmithing",       2,  1,  1044067,    9000000],
+            ["Fletching",           2,  2,  1044068,    6000000],
+            ["Carpentry",           2,  3,  1044071,    6000000],
+            ["Cooking",             2,  4,  1044073,    3000000],
+            ["Inscription",         2,  5,  1044083,    6000000],
+            ["Lumberjacking",       2,  6,  1044104,    2000000],
+            ["Mining",              2,  7,  1044105,    3000000],
+            ["Tailoring",           2,  8,  1044094,    10000000],
+            ["Tinkering",           2,  9,  1044097,    9000000],
+        //3 Magic
+            ["Bushido",             3,  0,  1044112,    65000000],
+            ["Chivalry",            3,  1,  1044111,    60000000],
+            ["Eval Intelligence",   3,  2,  1044076,    20000000],
+            ["Imbuing",             3,  3,  1044116,    25000000],
+            ["Magery",              3,  4,  1044085,    50000000],
+            ["Meditation",          3,  5,  1044106,    1000000],
+            ["Mysticism",           3,  6,  1044115,    20000000],
+            ["Necromancy",          3,  7,  1044109,    20000000],
+            ["Ninjitsu",            3,  8,  1044113,    50000000],
+            ["Resisting Spells",    3,  9,  1044086,    20000000],
+            ["Spellweaving",        3,  10, 1044114,    50000000],
+            ["Spirit Speak",        3,  11, 1044092,    5000000],
+        //4 Wilderness
+            ["Animal Lore",         4,  0,  1044062,    9999999],
+            ["Animal Taming",       4,  1,  1044095,    80000000],
+            ["Fishing",             4,  2,  1044078,    10000000],
+            ["Herding",             4,  3,  1044080,    1000000],
+            ["Tracking",            4,  4,  1044098,    5000000],
+            ["Veterinary",          4,  5,  1044099,    10000000],
+        //5 Thievery
+            ["Detecting Hidden",    5,  0,  1044074,    3000000],
+            ["Hiding",              5,  1,  1044081,    10000000],
+            ["Lock Picking",        5,  2,  1044084,    5000000],
+            ["Poisoning",           5,  3,  1044090,    10000000],
+            ["Remove Trap",         5,  4,  1044108,    2000000],
+            ["Snooping",            5,  5,  1044088,    1000000],
+            ["Stealing",            5,  6,  1044093,    7000000],
+            ["Stealth",             5,  7,  1044107,    10000000],
+        //6 Bard
+            ["Discordance",         6,  0,  1044075,    30000000],
+            ["Musicianship",        6,  1,  1044089,    8000000],
+            ["Peacemaking",         6,  2,  1044069,    15000000],
+            ["Provocation",         6,  3,  1044082,    15000000],
+        ]
+    var vendorData = [
+        ['', 12*maxcount, 'Magic'],
+        ['', 11*maxcount, 'Combat'],
+        ['', 10*maxcount, 'Trade Skills'],
+        ['', 8*maxcount, 'Thievery'],
+        ['', 6*maxcount, 'Wilderness'],
+        ['', 4*maxcount, 'Bard'],
+        ['', 7*maxcount, 'Misc'],
+        ]
+    }
 
 //------------------------------------------------------------------------------------------------------------------------------
-var shard = Orion.ShardName();
-if(shard == 'Atlantic')
-    {
-    var scrollinfo = scrollinfoAtlantic;
-    var maxcount = maxCountAtlantic;
-    }
-else if(shard == 'Yamato')
-    {
-    var scrollinfo = scrollinfoYamato
-    var maxcount = maxCountYamato;
-    }
-
 function Autostart()
     {
     while(!Orion.GumpExists('container',backpack))
@@ -294,26 +389,10 @@ var buttons = //xsize ysize CallBackID Text FunctionName
         [ [100, 30, b++, "VSPinks", 'VSResultPinks'], [100, 30, b++, "VendorResults", 'CheckAllNearbyVendors'] ]
     ]
 
-function combostsest()
-    {
-    TextWindow.Open();
 
-    var tempArr1 = CombinationCall([1,2,3],50);
-    var tempArr2 = CombinationCall([4,5,6,7,8,9,10],50);
-    TextWindow.Print(tempArr1.length)
-    TextWindow.Print(tempArr2.length)
-
-    }
 
 function Gump()
     {
-    //var tempArr1 = CombinationCall([1,2,3,4,5,6,7,8,9,10],50);
-    //Orion.Print('test')
-    //var tempArr2 = tempArr1.slice(35027).reverse()
-    //var tempArr2 = CombinationCall([4,5,6,7,8,9,10],50);
-    //tempArr.push([50,0,0,0,0,0,0])
-    //Shared.AddArray('combo50', tempArr2);
-    //Orion.Print(tempArr2.length)
     Orion.Exec('GMScan',true);
     var gump = Orion.CreateCustomGump(12002);
     gump.Clear();
@@ -375,39 +454,6 @@ function gridTX(x){
 function gridTY(y){
     return y * 29 + 6
     }
-
-function GMJournalScan()
-	{
-	var bot = "https://discordapp.com/api/webhooks/"
-        + '941921319463841843' //hook
-        + "/"
-        + '7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI'; //key
-    var paramText = "content=" + Player.Name() + ": GM";
-	var msg = 'GM';
-	while(true)
-		{
-		var check = Orion.WaitJournal(msg, Orion.Now(), 0, ' ');
-		Orion.Wait(100);
-        var checkarr = Orion.Split(check.Text(), ' ');
-		for(i = 0;i<checkarr.length;i++)
-			{
-			switch(checkarr[i])
-				{	
-				case 'GM':
-					DiscordPushPink(Player.Name() + ": GM");
-					//Orion.PlayWav('Alarm09.wav');
-					Orion.PauseScript('all', 'GMJournalScan');
-                    Orion.Wait(1000);
-                    Orion.StopWalking();
-					Orion.OAOptionSet('AutoReconnect', '0');
-					Orion.Wait(2000);
-					break;	
-				default:
-					break;
-				}
-			}
-		}
-	}
 
 function DiscordPushPink(message)
 	{
@@ -605,9 +651,9 @@ function CheckAllNearbyVendors()
         GetAllPinkPrices(vendorPack);
         }
     var outMsg = '';
-    for(var i=0;i<scrollinfoAtlantic.length;i++)
+    for(var i=0;i<scrollinfo.length;i++)
         {
-        var skillArr = scrollinfoAtlantic[i];
+        var skillArr = scrollinfo[i];
         var skillName = skillArr[0];
         var skillPrice = skillArr[4];
         var skillPinks = pinkArr.filter(function(pinkObj)
@@ -641,7 +687,7 @@ function CheckAllNearbyVendors()
             var skillMsg = symbol + ':\t' + skillName + ':\t' + JSON.stringify(skillPinks);
             //TextWindow.Print(skillMsg);
             outMsg += skillMsg;
-            if(i < scrollinfoAtlantic.length - 1)
+            if(i < scrollinfo.length - 1)
            		 outMsg += '\n';
             }
         }
@@ -768,19 +814,12 @@ function VerifyOpenVendor(vendorSerial,vendorPack,delay)
     
 function VSResultPinks()
 	{
-		Orion.RemoveDisplayTimer('searchWait');
+    Orion.RemoveDisplayTimer('searchWait');
     var pushToDiscord = false;
-    var hook = '1080059761640353863';
-    var key = 'eLZBOOgTXWoMxy2pFu2aEMtnlAuoP9pEV8fgDkUhCmXmBZQwlB_MwvqmAzVcTERsV0KB';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
-	TextWindow.Open();
+    TextWindow.Open();
     TextWindow.Print('--START VS--');
     if(pushToDiscord)
-        Orion.HttpPost(bot,'content=--START VS--');
+        DiscordPushPink('content=--START VS--')
     var totalVSprice = 0;
 	for(var i=0;i<scrollinfo.length;i++)
 		{
@@ -845,7 +884,7 @@ function VSResultPinks()
                 if(pushToDiscord)
                     {
                     truncMsg = truncMsg.replace(/-/,'\\-');
-                    Orion.HttpPost(bot,'content=' + truncMsg);
+                    DiscordPushPink('content=' + truncMsg);
                     }
 				}
 			}
@@ -855,7 +894,7 @@ function VSResultPinks()
 		}
     TextWindow.Print('Total price of VS: ' + totalVSprice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,") +'\n--END VS--');
     if(pushToDiscord)
-        Orion.HttpPost(bot,'content=--End VS--');
+        DiscordPushPink('content=--End VS--');
 	}
 
 function FormatArray(arr)
@@ -1039,30 +1078,7 @@ function CloseGumps(_)
 //------------------------------------------------------------------------Begin Vendor Script
 function FullAutoVendor()
     {
-    if(shard == 'Atlantic')
-        {
-        var vendors = [
-            [0x057F6DBC, 12*maxcount, 'Magic'],
-            [0x057F6D78, 11*maxcount, 'Combat'],
-            [0x057F6D5A, 10*maxcount, 'Trade Skills'],
-            [0x057F5FD8, 8*maxcount, 'Thievery'],
-            [0x057F5FF9, 6*maxcount, 'Wilderness'],
-            [0x057F5FCB, 4*maxcount, 'Bard'],
-            [0x057F5F5D, 7*maxcount, 'Misc'],
-            ]
-        }
-    else if(shard == 'Yamato')
-        {
-        var vendors = [
-            [0x002F800C, 12*maxcount, 'Magic'],
-            [0x002F7FF5, 11*maxcount, 'Combat'],
-            [0x002F7FDF, 10*maxcount, 'Trade Skills'],
-            [0x002F7FBD, 8*maxcount, 'Thievery'],
-            [0x002F7FA5, 6*maxcount, 'Wilderness'],
-            [0x002F7F98, 4*maxcount, 'Bard'],
-            [0x002F7F8E, 7*maxcount, 'Misc'],
-            ]
-        }
+    var vendors = vendorData
 
     var loopInterval = 1000 * 5; //check vendor backpacks every 5 seconds
     var restockDelay = 1000 * 15; //when someone buys a scroll, wait this long before restocking the first vendor
@@ -1161,30 +1177,11 @@ function FullAutoVendor()
 
 function AutoVendor()
     {
-    if(shard == 'Atlantic')
+    var vendorSerials = vendorData.map(function(ele)
         {
-        var vendorSerials = [
-            '0x057F6DBC',
-            '0x057F6D78',
-            '0x057F6D5A',
-            '0x057F5FD8',
-            '0x057F5FF9',
-            '0x057F5FCB',
-            '0x057F5F5D'
-            ]
-        }
-    else if(shard == 'Yamato')
-        {
-        var vendorSerials = [
-            '0x002F800C',
-            '0x002F7FF5',
-            '0x002F7FDF',
-            '0x002F7FBD',
-            '0x002F7FA5',
-            '0x002F7F98',
-            '0x002F7F8E'
-            ]
-        }
+        return ele[0]
+        })
+
     for(var i=0;i<vendorSerials.length;i++)
         {
         while(!Player.Hidden())
@@ -1290,14 +1287,7 @@ function PinkToVendorCall(vendorSerial)
             requestArr = PinkBookRequestCount(updScrollInfo,vendorContainer);
             if(!PinkPull(updScrollInfo, requestArr, bookPouch,vendorContainer))
                 {
-                var hook = '1058909586746265733';
-                var key = 'KeRvl3b8x6cbI91JQXVc5cLbWxblkHcrIqd2XwQTcC54G-nl0GjLvlGAbCk1gqCushAk';
-                var bot =
-                    "https://discordapp.com/api/webhooks/"
-                    + hook
-                    + "/"
-                    + key; // Webhook url
-                Orion.HttpPost(bot,'content=' + 'Restock Vendor Book: ' + vendorName + ': ' + PinkBookRequestCount(updScrollInfo,vendorContainer));
+                DiscordPushPink('Restock Vendor Book: ' + vendorName + ': ' + PinkBookRequestCount(updScrollInfo,vendorContainer));
                 }
             }
         PinkGumpButton(0);
@@ -1357,13 +1347,6 @@ function AppendRequestArrayToFile(requestArr)
 
 function DecrementRunningTotals(requestArr)
     {//var requestArr = ["Thievery",0,0,1,3,4,0,1]
-    var hook = '1058909586746265733';
-    var key = 'KeRvl3b8x6cbI91JQXVc5cLbWxblkHcrIqd2XwQTcC54G-nl0GjLvlGAbCk1gqCushAk';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
     var passArr = JSON.parse(JSON.stringify(requestArr));
     var groups = ['Misc', 'Combat', 'Trade Skills', 'Magic', 'Wilderness', 'Thievery', 'Bard'];
     var groupName = passArr.shift();
@@ -1381,19 +1364,12 @@ function DecrementRunningTotals(requestArr)
             discordString += tmpRunningTotals[i][0] + ': ' + skillAmount + ' remaining\n';
         }
     if(discordString)
-        Orion.HttpPost(bot, "content=\n" + shard + ':\n**' + groupName + ':**\n' + discordString);
+        DiscordPushPink("\n" + shard + ':\n**' + groupName + ':**\n' + discordString);
     Shared.AddArray('runningTotals', tmpRunningTotals);    
     }
 
 function SalesReport()
     {
-    var hook = '949444453188390982';
-    var key = 'zBJe--X6khd7MuFOomtx_JFaHUDDIOWXCO4cTK_vJIKa0rdO9MUNgAh6EYF7ZNr8GRTb';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/Pink Info ' + shard + '/IndividualSales' + Orion.Date() + '.json';
     var newFilePath = Orion.CurrentScriptDirPath() + '/Pink Info ' + shard + '/TotalSalesReport' + Orion.Date() + '.json';
     var tmpFile = Orion.NewFile();
@@ -1462,13 +1438,10 @@ function SalesReport()
         outStr += '                   **Total**: ' + groupTotal + '\n';
         gumpStr += groupName + 'Total: ' + groupTotal + '\n';
         }
-    if(shard == 'Atlantic')
-        outStr += '**\nOverall Total: ' + overallTotal + '**\nBank of GoodWill Balance: ' + ParsePlayerGold();
-    if(shard == 'Yamato')
-        outStr += '**\nOverall Total: ' + overallTotal + '**\nBank of Hunting Balance: ' + ParsePlayerGold();
+    outStr += '**\nOverall Total: ' + overallTotal + '**\nBank of ' + shard + ' Balance: ' + ParsePlayerGold();
     gumpStr += '   Overall Total: ' + overallTotal;
     Shared.AddVar('gumpStr', gumpStr);
-    Orion.HttpPost(bot,'content=' + outStr);
+    DiscordPushPink(outStr);
     }
 
 function VendorInfoGump()
@@ -1490,32 +1463,10 @@ function VendorInfoGump()
     
 function AutoCountStock(_)
     {
-    if(Orion.GetDistance(775,729) < 6)
+    var vendorSerials = vendorData.map(function(ele)
         {
-        var startX = 773, startY = 729; 
-        var vendorSerials = [
-            '0x057F6DBC',
-            '0x057F6D78',
-            '0x057F6D5A',
-            '0x057F5FD8',
-            '0x057F5FF9',
-            '0x057F5FCB',
-            '0x057F5F5D'
-            ]
-        }
-    else if(Orion.GetDistance(794,749) < 6)
-        {
-        var startX = 790, startY = 750;
-        var vendorSerials = [
-            '0x002F800C',
-            '0x002F7FF5',
-            '0x002F7FDF',
-            '0x002F7FBD',
-            '0x002F7FA5',
-            '0x002F7F98',
-            '0x002F7F8E'
-            ]
-        }
+        return ele[0]
+        })
     var fullScrollInfo = []
     for(var i=0,len=vendorSerials.length;i<len;i++)
         {
@@ -1548,13 +1499,6 @@ function AutoCountStock(_)
 
 function PinkStockCount(vendorSerial)
     {
-    var hook = '1058909586746265733';
-    var key = 'KeRvl3b8x6cbI91JQXVc5cLbWxblkHcrIqd2XwQTcC54G-nl0GjLvlGAbCk1gqCushAk';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
     var vendor = Orion.FindObject(vendorSerial);
     var vendorName = vendor.Name();
     var groups = ['Misc', 'Combat', 'Trade Skills', 'Magic', 'Wilderness', 'Thievery', 'Bard'];
@@ -1586,7 +1530,7 @@ function PinkStockCount(vendorSerial)
         containerGumps.push(skillGroupContainer);
         var books = Orion.FindType('0x577E', '0x0490', skillGroupContainer, 'item', 2)
         if(!books[0])
-            return Orion.HttpPost(bot, "content=\n" + shard + ':\n**' + vendorName + ':**\nBooks Missing!');
+            return DiscordPushPink("\n" + shard + ':\n**' + vendorName + ':**\nBooks Missing!');
         for(var ii=0,len2=books.length;ii<len2;ii++)
             {
             var book = books[ii];
@@ -1646,7 +1590,7 @@ function PinkStockCount(vendorSerial)
         fullCategoryInfo.push(updScrollInfo[i]);
         }
     if(discordString)
-        Orion.HttpPost(bot, "content=\n" + shard + ':\n**' + vendorName + ':**\n' + discordString);
+        DiscordPushPink("\n" + shard + ':\n**' + vendorName + ':**\n' + discordString);
     TextWindow.Open();
     TextWindow.Print(outString);
     containerGumps.forEach(function(gump)
@@ -1674,17 +1618,10 @@ function PrintRunningTotals()
     
 function MonitorVendorsForSales()
 	{
-    if(shard = 'Atlantic')
-	    var vendors = '0x057F6DBC|0x057F6D78|0x057F6D5A|0x057F5FD8|0x057F5FF9|0x057F5FCB|0x057F5F5D';
-    else if(shard = 'Yamato')
-	    var vendors = '0x002F800C|0x002F7FF5|0x002F7FDF|0x002F7FBD|0x002F7FA5|0x002F7F98|0x002F7F8E';
-    var hook = '949444453188390982';
-	var key = 'zBJe--X6khd7MuFOomtx_JFaHUDDIOWXCO4cTK_vJIKa0rdO9MUNgAh6EYF7ZNr8GRTb';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
+    var vendors = vendorData.map(function(ele)
+        {
+        return ele[0]
+        }).join("|")
 	while(true)
 		{
 		var check = Orion.WaitJournal('',Orion.Now(),0,'mobile',vendors,'0x03B2');
@@ -1692,7 +1629,7 @@ function MonitorVendorsForSales()
 		if(!Orion.Contains(check.Text() ,'Take a look at|How much of the|I am holding no|Your gold has been transferred|Very well. I will hold'))
             {
 		    var paramText = "content=" + vendor.Name() + ': ' + check.Text();
-		    Orion.HttpPost(bot, paramText);
+		    DiscordPushPink(paramText)
             Orion.Wait(10000);
             }
         }
@@ -1878,25 +1815,6 @@ function PinkPull(updScrollInfo, requestArr, restockContainer, vendorContainer)
         Orion.Print('Some pinks are missing! Either book is out of that skill or lag happened!');
         return false;
         }
-    }
-
-function tesdsfasfdats()
-    {
-    var totalSales = filteredSales.map(function(sales)
-        {
-        return sales.reduce(function(sum,curr)
-            {
-            var tmpArr = [];
-		    for(var i=0;i<curr.length;i++)
-		        {
-		        if(typeof curr[i] == 'string')
-		            tmpArr[i] = curr[i];
-		        else
-		            tmpArr[i] = curr[i] + (sum[i] || 0);
-		        }
-		    return tmpArr;
-            },[]);
-        });
     }
 
 function PutToVendor(vendorContainer,scrollNames,pos)
@@ -2147,13 +2065,6 @@ function ComboCategories()
     Orion.PlayWav('Alarm.wav'); //never reach
     Orion.Print('All done!')
 	}
-
-function testputaway()
-    {
-    Orion.WaitForAddObject('myTarget')
-    var a = Orion.GetSerial('myTarget');
-    PutAway5s(a,0)
-    }
 
 function PutAway5s(combinedParentContainer,currentSkillIndex)
     {

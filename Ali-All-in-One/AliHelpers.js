@@ -127,6 +127,13 @@ function VerifyWalkTo(x,y,z,distance,delay)
     return true;
     }
 
+function TimeMStoHHMMSSstring(milliseconds)
+    {
+    var date = new Date(milliseconds);
+    var time = date.toISOString().substring(11, 19);
+    return time
+    }
+
 function VerifyOpenVendor(vendorSerial,vendorPack,delay)
     {
     var startTime = Orion.Now();
@@ -343,8 +350,8 @@ function cPrint(txt)
     Orion.CharPrint(self,1159,txt) 
     }
 
-function isTargetHour(targetHour)
-	{
+function isTargetHourUTC(targetHour)
+	{ //Timed Auto Logout
 	var now = new Date();
 	var UTCHour = now.getUTCHours();
 	return UTCHour == targetHour;

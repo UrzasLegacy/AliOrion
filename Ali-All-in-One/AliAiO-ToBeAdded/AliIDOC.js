@@ -1,19 +1,17 @@
-//v16
-var houseButtons = [3, 5219];
-var houseTargetCoords = [2065,683,0]; //x,y,z
-var placerName = 'Carl'; //Put placer name here. Can be multiple if separated with | 'Baccus|Cassius'
-//var domName = 'Intolephi';
+//v17 Refactor to Interval Mode
+var houseButtons = [3, 5243];
+var houseTargetCoords = [762,740,0]; //x,y,z
+var placementCooldown = 32000 //milliseconds
+var testTime = 7200000 //two hours
 
-var placeRepeatedlyOnFailure = true;
-var fullAuto = true; //wait for house to fall, do barrels, move only placer to front of house, initiate Checkers, Placer, and Dom, Close Checkers/Dom after attempting placement
-
-var walkToFront = false; //walk all non-EJs to the front of the plot after doing barrels
-var relogAccounts = false; //relog paid accounts from barrel smackers to another character on that account (i.e. pinks)
+var fullAuto = false; //wait for house to fall, do barrels, move only placer to front of house, initiate Checkers, Placer, and Dom, Close Checkers/Dom after attempting placement
+var walkToFront = true; //walk all non-EJs to the front of the plot after doing barrels
 var castleMode = false; //set to true if the IDOC is a castle, too big to get accurate foundation size the normal way
 var limitViewRange = false; //set to true to limit client view range after doing barrels.
+var placeRepeatedlyOnFailure = true;
 
+//DISABLED var relogAccounts = false; //relog paid accounts from barrel smackers to another character on that account (i.e. pinks)
 
-//grey barrel color 0x09C4, brown 0x0000
 function Autostart()
 	{
     while(!Orion.GumpExists('container',backpack))
@@ -22,9 +20,9 @@ function Autostart()
         Orion.Wait(1300);
         }
     Orion.ClientViewRange(24);
-    var outMsg = 'House Code: ' + JSON.stringify(houseButtons) + '\nHouse Coords: ' + JSON.stringify(houseTargetCoords) + '\nWalk to Front: ' + walkToFront + '\nCastle Mode: ' + castleMode + '\n Relog to Pinks: ' + relogAccounts;
+    var outMsg = 'House Code: ' + JSON.stringify(houseButtons) + '\nHouse Coords: ' + JSON.stringify(houseTargetCoords) + '\nWalk to Front: ' + walkToFront + '\nCastle Mode: ' + castleMode;
     if(fullAuto)
-        outMsg += '\nFull Auto: true\nPlacer: ' + placerName;
+        outMsg += '\nFull Auto: true';
     Orion.Wait(2000);
     Orion.Print(outMsg);
     Gump();
@@ -601,6 +599,7 @@ function IDOC_SignMonitorOLD(_test)
     }
 
 //--#Barrels
+//grey barrel color 0x09C4, brown 0x0000
 function IDOCBarrels()
  	{
     Orion.ClientViewRange(24);
@@ -697,8 +696,8 @@ function IDOCBarrels()
         Orion.UseSkill('Hiding');
         Orion.Wait(1000);
         }
-    if(relogAccounts && !fullAuto)
-        RelogAccountToDifferentShard();
+    // if(relogAccounts && !fullAuto)
+    //     RelogAccountToDifferentShard();
     if(walkToFront)
         {
         var frontX = startX + 6;
@@ -723,20 +722,15 @@ function IDOCBarrels()
     if(fullAuto)
         {
         Orion.Wait(2000);
-        if(Orion.Contains(Player.Properties(),placerName))
+        var frontX = startX + 6;
+        var frontY = startY + 4
+        var endTime = Orion.Now() + 20000;
+        while(Orion.GetDistance(frontX,frontY) > 0 && Orion.Now() < endTime)
             {
-            var frontX = startX + 6;
-            var frontY = startY + 4
-            var endTime = Orion.Now() + 20000;
-            while(Orion.GetDistance(frontX,frontY) > 0 && Orion.Now() < endTime)
-                {
-                Orion.WalkTo(startX + 6,startY + 4,0,0,255,0);
-                Orion.Wait(500);
-                }
-            Orion.Exec('SubEthyPlacer');
+            Orion.WalkTo(startX + 6,startY + 4,0,0,255,0);
+            Orion.Wait(500);
             }
-        else
-            Orion.Exec('SubEthyChecker');
+        Orion.Exec('SubPlacer');
         }
     else
         Gump();
@@ -840,9 +834,9 @@ function RelogAccountToDifferentShard()
 var serialIndex = 1;
 var buttons = //[ xsize, ysize, CallBackID, 'Text', 'FunctionName', [arguments] ]
     [
-        [ [100, 30, serialIndex++, "Dom", 'DomEthy'] ],
+        [ [100, 30, serialIndex++, "Dom", 'DomPlacer'] ],
         [],
-        [ [100, 30, serialIndex++, "Checker", "SubEthyChecker"], [100, 30, serialIndex++, "Placer", "SubEthyPlacer"]],
+        [ [100, 30, serialIndex++, "Placer", "SubPlacer"]],
     ]
 
 function Gump()
@@ -895,37 +889,43 @@ function GumpCallback(_)
         });
     }
 
-function DomEthy()
+function DomPlacer()
     {
     Orion.Exec('StayHidden',true);
     Orion.Exec('GMJournalScan',true);
     Orion.Exec('StayLoggedIn',true);
     Orion.RemoveAllUdpServers();
-    var create = Orion.CreateUdpServer('DomEthy', 60000);
+    var create = Orion.CreateUdpServer('DomPlacer', 60000);
     if(create == 0)
         Orion.Print('Server Creation Success');
     else
         return Orion.Print('Server Creation Fail');
-    while(fullAuto && !Orion.UdpRecv('DomEthy'))
+    while(fullAuto && !Orion.UdpRecv('DomPlacer'))
         {
         Orion.Wait(500);
         }
+    if(fullAuto)
+        {
+        Orion.Wait(20000);
+        while(Orion.UdpRecv("DomPlacer"))
+            Orion.Wait(10)
+        }
     for(var i=60001;i<60051;i++)
         {
-        Orion.UdpSend(i,'R')
+        Orion.UdpSend(i,'Send Report Back')
         Orion.Wait(10);
         }
     Orion.Wait(2000);
     var playerList = [];
     var namesStr = '';
-    var recv = Orion.UdpRecv('DomEthy');
+    var recv = Orion.UdpRecv('DomPlacer');
     while(recv)
         {
         var recvSplit = Orion.Split(recv, ':');
         playerList.push(+recvSplit[0]);
         namesStr += recvSplit[1] + '\n';
         Orion.Wait(10);
-        recv = Orion.UdpRecv('DomEthy');
+        recv = Orion.UdpRecv('DomPlacer');
         }
     if(!playerList.length)
         return Orion.CharPrint(self,1159,'No Subs Connected! Halting...');
@@ -933,7 +933,7 @@ function DomEthy()
         {
         return a - b;
         });
-    var interval = (1250/playerList.length).toFixed(0);
+    var interval =  (placementCooldown/playerList.length).toFixed(0);//timeout interval
     TextWindow.Open();
     TextWindow.Print('Players: ' + playerList.length + '\nInterval: ' + interval + 'ms\n' + namesStr)
     Orion.Wait(100);
@@ -945,7 +945,7 @@ function DomEthy()
         //Orion.Print(player)
         Orion.UdpSend(player, 'E')
         Orion.Wait(interval);
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPlacer');
         if(recv)
             {
             TextWindow.Print(recv);
@@ -961,57 +961,61 @@ function DomEthy()
         }
     }
 
-function SubEthyChecker()
-    {
-    Orion.Exec('StayHidden',true);
-    Orion.Exec('GMJournalScan',true);
-    var ethy = Orion.FindTypeEx(any).filter(function(item)
+
+
+function SubPlacer()
+    { //Interval Method
+    var hook = '1060433841111695410';
+    var key = 'THDHA-UrLnAcuDpmbbKmRDQyCWCcEqcUhMwp1gOsJjVUSGEfqPjS4RwlmrK6VjEt1jzL';
+    var bot =
+        "https://discordapp.com/api/webhooks/"
+        + hook
+        + "/"
+        + key; // Webhook url
+    var categoryCode = houseButtons[0];
+    var houseCode = houseButtons[1];
+    Shared.AddVar('categoryCode',categoryCode);
+    Shared.AddVar('houseCode',houseCode);
+    var coordX = houseTargetCoords[0];
+    var coordY = houseTargetCoords[1];
+    Shared.AddVar('coordX',coordX);
+    Shared.AddVar('coordY',coordY);
+    
+    var tool = Orion.FindType('0x14F6')[0];
+    if(!tool)
+        return Orion.CharPrint(self,1159,'Placement Tool missing! Halting...');
+    if(Shared.GetVar('PlacementTimer') == false);
+        Shared.AddVar('PlacementTimer', Orion.Now())
+    var closeGump = Orion.GetGump(any);
+    while(closeGump)
         {
-        return Orion.Contains(item.Properties(), 'Mount Hue:')
-        })[0];
-    if(ethy) var ethySerial = ethy.Serial();
-    if(!ethySerial)
-        return Orion.CharPrint(self,1159,'No ethy found! Halting...');
-    while(!Orion.BuffExists('Animal Form'))
-        {
-        Orion.Cast('Animal Form');
-        if(Orion.WaitForGump(5000))
-            {
-            var gump = Orion.GetGump('any', '0x00002336');
-            if(gump !== null)
-                {
-                var buttons = gump.ButtonList().filter(function(button)
-                    {
-                    return Orion.Contains(button, 'buttontileart');
-                    }).length;
-                gump.Select(Orion.CreateGumpHook(98 + buttons));
-                Orion.Wait(200);
-                }
-            }
-        Orion.Wait(500);
-        }
-    var gump = Orion.GetGump(any);
-    while(gump)
-        {
-        Orion.Print('Closing gump: ' + gump.ID());
-        gump.Select(Orion.CreateGumpHook(0));
+        Orion.Print('Closing gump: ' + closeGump.ID());
+        closeGump.Select(Orion.CreateGumpHook(0));
         Orion.Wait(200);
-        gump = Orion.GetGump(any);
+        closeGump = Orion.GetGump(any);
         }
+    Orion.Exec('StayLoggedIn',true);
     Orion.RemoveAllUdpServers();
-    var port = 60000;
+    var i = 60000;
     var create = 1;
     var endTime = Orion.Now() + 5000;
-    while(create != 0 && Orion.Now() < endTime) 
+    while(create != 0 && Orion.Now() < endTime)
         {
-        create = Orion.CreateUdpServer('DomEthy', ++port);
+        create = Orion.CreateUdpServer('DomPlacer', ++i);
         Orion.Wait(10);
         }
+    var port = i
     Orion.Print('Port: ' + port);
     Orion.Wait(2000);
+    if(fullAuto)
+        {
+        Orion.CharPrint(self,1159,'Waiting 20 seconds before sending Start signal...')
+        Orion.Wait(20000);
+        Orion.UdpSend(60000,'Start');
+        }
     while(true)
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPlacer');
         if(recv)
             {
             Orion.Print('Sending Report');
@@ -1020,97 +1024,11 @@ function SubEthyChecker()
             }
         Orion.Wait(500);
         }
-    while(true) 
-        {
-        var recv = Orion.UdpRecv('DomEthy');
-        if(recv)
-            {
-            var startTime = Orion.Now();
-            //var time = Orion.Time();
-            Orion.UseObject(ethySerial);
-            var check = Orion.WaitJournal('You cannot use this in your current form.|You cannot use this while mounted.|You cannot cast spells here.', startTime, Orion.Now() + 1000, 'sys|item')
-            if(check)
-                {
-                if(check.Text() == 'You cannot use this in your current form.')
-                    {
-                    for(var i=65001;i<65010;i++)
-                        {
-                        Orion.UdpSend(i,Orion.Now() - startTime);
-                        }
-                    Orion.RemoveAllUdpServers();
-                    break;
-                    }
-                }
-            if(recv == 'removeudp')
-                {
-                Orion.RemoveAllUdpServers();
-                Orion.Terminate('all');
-                }
-            }
-        Orion.Wait(1);
-        }
-    Orion.Wait(500);
-    if(fullAuto)
-        {
-        Orion.Wait(Orion.Random(1,25) * 200);
-        Orion.CloseUO();
-        }
-    }
-
-function SubEthyPlacer()
-    {
-    var hook = '1060433841111695410';
-    var key = 'THDHA-UrLnAcuDpmbbKmRDQyCWCcEqcUhMwp1gOsJjVUSGEfqPjS4RwlmrK6VjEt1jzL';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
-    var categoryCode = houseButtons[0];
-    var houseCode = houseButtons[1];
-    Shared.AddVar('categoryCode',categoryCode);
-    Shared.AddVar('houseCode',houseCode);
-    var coordX = houseTargetCoords[0];
-    var coordY = houseTargetCoords[1];
-    Shared.AddVar('coordX',coordX);
-    Shared.AddVar('coordY',coordY);
-    
-    var tool = Orion.FindType('0x14F6')[0];
-    if(!tool)
-        return Orion.CharPrint(self,1159,'Placement Tool missing! Halting...');
-    if(Shared.GetVar('PlacementTimer') == false);
-        Shared.AddVar('PlacementTimer', Orion.Now())
-    var closeGump = Orion.GetGump(any);
-    while(closeGump)
-        {
-        Orion.Print('Closing gump: ' + closeGump.ID());
-        closeGump.Select(Orion.CreateGumpHook(0));
-        Orion.Wait(200);
-        closeGump = Orion.GetGump(any);
-        }
-    Orion.Exec('StayLoggedIn',true);
-    Orion.RemoveAllUdpServers();
-    var i = 65000;
-    var create = 1;
-    var endTime = Orion.Now() + 5000;
-    while(create != 0 && Orion.Now() < endTime)
-        {
-        create = Orion.CreateUdpServer('DomEthy', ++i);
-        Orion.Wait(10);
-        }
-    Orion.Print('Port: ' + i);
-    Orion.Wait(2000);
-    if(fullAuto)
-        {
-        Orion.CharPrint(self,1159,'Waiting 10 seconds before sending Start signal...')
-        Orion.Wait(10000);
-        Orion.UdpSend(60000,'Start');
-        }
     Orion.ClearJournal('attempted to place a house too many times recently.');
     Orion.Exec('KeepUpHouseTarget',true);
     while(true) 
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPlacer');
         if(recv)
             {
             var placeX = Shared.GetVar('coordX',coordX);
@@ -1119,7 +1037,7 @@ function SubEthyPlacer()
             var startTime = Orion.Now();
             Orion.PauseScript('KeepUpHouseTarget');
             var gump = Orion.GetGump(any, '0x000001EC'); //accept house placement gump
-            while(!gump && Orion.Now() < startTime + 2000 && !Orion.InJournal('This is an invalid location.', 'sys', '0', any, startTime))
+            while(!gump && Orion.Now() < startTime + 3000 && !Orion.InJournal('This is an invalid location.', 'sys', '0', any, startTime))
                 {
                 Orion.Print('Catching gump');
                 Orion.Wait(1);
@@ -1129,195 +1047,28 @@ function SubEthyPlacer()
                 gump.Select(Orion.CreateGumpHook(1));
             var endTime = Orion.Now();
             var check = Orion.WaitJournal('gold has been removed from your bank box.', startTime, Orion.Now() + 2000);
-            if(!check && placeRepeatedlyOnFailure)
+            if(check)
+                break;
+            if(recv == "STOPSIGNAL")
                 {
-                var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
-                Orion.HttpPost(bot,'content=' + outStr);
+                Orion.Wait(2000);
+                Orion.RemoveAllUdpServers();
+                Orion.Wait(2000);
+                Orion.LogOut()
                 }
-            while(!check && placeRepeatedlyOnFailure)
-                {
-                Orion.CharPrint(self,1159,'Trying to place again...');
-                HouseTarget();
-                Orion.TargetTile('any', coordX, coordY, 0);
-                var startTime2 = Orion.Now();
-                var gump = Orion.GetGump(any, '0x000001EC'); //accept house placement gump
-                while(!gump && Orion.Now() < startTime2 + 1000)
-                    {
-                    Orion.Print('Catching gump');
-                    Orion.Wait(10);
-                    gump = Orion.GetGump(any, '0x000001EC');
-                    }
-                if(gump)
-                    {
-                    gump.Select(Orion.CreateGumpHook(1));
-                    check = Orion.WaitJournal('gold has been removed from your bank box.', startTime2, Orion.Now() + 1500);
-                    }
-                else if(Orion.InJournal('attempted to place a house too many times recently.', 'sys', '0', 'any'))
-                    {
-                    endTime2 = Orion.Now();
-                    break;
-                    }
-                endTime2 = Orion.Now();
-                Orion.Wait(100);
-                }
+            Orion.ResumeScript('KeepUpHouseTarget');
             Orion.Wait(5000);
-            break;
             }
-        Orion.Wait(1);
-        }
-    if(startTime2)
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
-    else
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
-    var signObj = Orion.FindTypeEx(any,any,ground,'item',16).filter(function(item)
-        {
-        var itemProps = item.Properties();
-        return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, Player.Name());
-        })[0];
-    if(check && signObj)
-        outStr += '\n**Success!**';
-    else
-        outStr += '\n**Failed**';
-    var placementTimer = Shared.GetVar('PlacementTimer',0);
-    if(placementTimer)
-        {
-        var ms = startTime - placementTimer;
-        var date = new Date(ms);
-        var time = date.toISOString().substring(11, 19);
-        outStr += '\nTime to Place: ' + time;
-        }
-    Orion.HttpPost(bot,'content=' + outStr);
-    Orion.Wait(2000);
-    Orion.UdpSend(60000, Player.Name());
-    Orion.Wait(2000);
-    Orion.RemoveAllUdpServers();
-    // if(fullAuto)
-    //     Orion.CloseUO();
-    Orion.Terminate('all');
-    }
-
-
-function SubEthyPlacerCastle()
-    {
-    var hook = '1060433841111695410';
-    var key = 'THDHA-UrLnAcuDpmbbKmRDQyCWCcEqcUhMwp1gOsJjVUSGEfqPjS4RwlmrK6VjEt1jzL';
-    var bot =
-        "https://discordapp.com/api/webhooks/"
-        + hook
-        + "/"
-        + key; // Webhook url
-    var categoryCode = houseButtons[0];
-    var houseCode = houseButtons[1];
-    Shared.AddVar('categoryCode',categoryCode);
-    Shared.AddVar('houseCode',houseCode);
-    var coordX = houseTargetCoords[0];
-    var coordY = houseTargetCoords[1];
-    Shared.AddVar('coordX',coordX);
-    Shared.AddVar('coordY',coordY);
-    
-    var tool = Orion.FindType('0x14F6')[0];
-    if(!tool)
-        return Orion.CharPrint(self,1159,'Placement Tool missing! Halting...');
-    if(Shared.GetVar('PlacementTimer') == false);
-        Shared.AddVar('PlacementTimer', Orion.Now())
-    var closeGump = Orion.GetGump(any);
-    while(closeGump)
-        {
-        Orion.Print('Closing gump: ' + closeGump.ID());
-        closeGump.Select(Orion.CreateGumpHook(0));
-        Orion.Wait(200);
-        closeGump = Orion.GetGump(any);
-        }
-    Orion.Exec('StayLoggedIn',true);
-    Orion.RemoveAllUdpServers();
-    var i = 65000;
-    var create = 1;
-    var endTime = Orion.Now() + 5000;
-    while(create != 0 && Orion.Now() < endTime)
-        {
-        create = Orion.CreateUdpServer('DomEthy', ++i);
         Orion.Wait(10);
         }
-    Orion.Print('Port: ' + i);
-    Orion.Wait(2000);
-    if(fullAuto)
-        {
-        Orion.CharPrint(self,1159,'Waiting 10 seconds before sending Start signal...')
-        Orion.Wait(10000);
-        Orion.UdpSend(60000,'Start');
-        }
-    Orion.ClearJournal('attempted to place a house too many times recently.');
-    Orion.Exec('KeepUpHouseTarget',true);
-    while(true) 
-        {
-        var recv = Orion.UdpRecv('DomEthy');
-        if(recv)
-            {
-            var placeX = Shared.GetVar('coordX',coordX);
-            var placeY = Shared.GetVar('coordY',coordY);
-            Orion.TargetTile('any', placeX, placeY, 0);
-            var startTime = Orion.Now();
-            Orion.PauseScript('all');
-            var gump = Orion.GetGump(any, '0x000001EC'); //accept house placement gump
-            while(!gump && Orion.Now() < startTime + 2000 && !Orion.InJournal('This is an invalid location.', 'sys', '0', any, startTime))
-                {
-                Orion.Print('Catching gump');
-                Orion.Wait(1);
-                gump = Orion.GetGump(any, '0x000001EC');
-                }
-            if(gump)
-                gump.Select(Orion.CreateGumpHook(1));
-            var endTime = Orion.Now();
-            var check = Orion.WaitJournal('gold has been removed from your bank box.', startTime, Orion.Now() + 2000);
-            if(!check && placeRepeatedlyOnFailure)
-                {
-                var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
-                Orion.HttpPost(bot,'content=' + outStr);
-                }
-            while(!check && placeRepeatedlyOnFailure)
-                {
-                Orion.CharPrint(self,1159,'Trying to place again...');
-                HouseTarget();
-                Orion.TargetTile('any', coordX, coordY, coordZ);
-                var startTime2 = Orion.Now();
-                var gump = Orion.GetGump(any, '0x000001EC'); //accept house placement gump
-                while(!gump && Orion.Now() < startTime2 + 1000)
-                    {
-                    Orion.Print('Catching gump');
-                    Orion.Wait(10);
-                    gump = Orion.GetGump(any, '0x000001EC');
-                    }
-                if(gump)
-                    {
-                    gump.Select(Orion.CreateGumpHook(1));
-                    check = Orion.WaitJournal('gold has been removed from your bank box.', startTime2, Orion.Now() + 1500);
-                    }
-                else if(Orion.InJournal('attempted to place a house too many times recently.', 'sys', '0', 'any'))
-                    {
-                    endTime2 = Orion.Now();
-                    break;
-                    }
-                endTime2 = Orion.Now();
-                Orion.Wait(100);
-                }
-            Orion.Wait(5000);
-            break;
-            }
-        Orion.Wait(1);
-        }
-    if(startTime2)
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
-    else
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
+    var outStr = "";
     var signObj = Orion.FindTypeEx(any,any,ground,'item',16).filter(function(item)
         {
         var itemProps = item.Properties();
         return Orion.Contains(itemProps, 'a house sign') && Orion.Contains(itemProps, Player.Name());
         })[0];
     if(check && signObj)
-        outStr += '\n**Success!**';
-    else
-        outStr += '\n**Failed**';
+        outStr += '\n' + Player.Name() + ' **Success!**';
     var placementTimer = Shared.GetVar('PlacementTimer',0);
     if(placementTimer)
         {
