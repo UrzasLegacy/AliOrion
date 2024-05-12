@@ -311,6 +311,7 @@ function InputSearch(_)
 
 function SearchByMods(mods)
     {
+    //Name field must be last element in mods list
     if(!Orion.GumpExists('generic','0x000F3EC8'))
         {
         Orion.WaitContextMenuID(self, 1016);

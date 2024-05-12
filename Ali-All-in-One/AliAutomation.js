@@ -7,6 +7,8 @@ run in the background all the time as you do other things, or are useful for acc
 */
 
 
+
+
 function GMScan()
 	{
 	var useDiscordPush = true//profile.useDiscordPush;

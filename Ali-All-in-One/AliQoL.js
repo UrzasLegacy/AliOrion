@@ -1562,7 +1562,7 @@ function VendorRepricer()
         var itemContainer = item.Container()
         var itemX = item.X();
         var itemY = item.Y();
-        var itemIndex = item.GridIndex();
+        var gridIndex = item.GridIndex();
         var priceNumber = +priceString.replace(/,/g, '');
         var adjString = String(priceNumber * adjAmount)
         var stringLength = adjString.length - 2
@@ -1591,7 +1591,7 @@ function VendorRepricer()
         timeout = false;
         while(itemContainer == item.Container() && !timeout)
             {
-            Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, itemIndex);
+            Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
             Orion.Wait(1300);
             timeout = Orion.Now() > endTime;
             }
@@ -1606,19 +1606,203 @@ function VendorRepricer()
                break; 
             else
                 {
-                Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, itemIndex);
+                Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
                 Orion.Wait(1300);
                 }
             if(ii == 1)
                 {
                 TextWindow.Print("Problem with pricing, storing item in backpack: " + item.Name() + '\n' + priceNumber + ' -> ' + adjPrice + '\n\n')
                 TextWindow.Open()
-                Orion.MoveItem(itemSerial, 0, backpack, itemX, itemY, -1, itemIndex);
+                Orion.MoveItem(itemSerial, 0, backpack, itemX, itemY, -1, gridIndex);
                 }
             Orion.Wait(1300);
             }
         }
     }
+
+/*
+var vendorRecords = {
+    vendor1Serial: {
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        }
+        
+    vendor2Serial: {
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        }
+    };
+*/
+
+function VendorPacker()
+    {
+    // Target your vendor and a container to put everything into. Doesn't open subcontainers
+    var vendorDict = Orion.RegRead("vendorJSON");
+    if(vendorDict)
+        var vendorRecordsObj = JSON.parse(vendorDict)
+    else
+        var vendorRecordsObj = {}
+    TextWindow.Clear()
+    TextWindow.Open()
+    Orion.CancelWaitPrompt();
+    if(Orion.PromptExists())
+        Orion.SendPrompt(' ');
+    Orion.CharPrint(self,1159,'Choose vendor to pack')
+    Orion.WaitForAddObject('myTarget');
+    var vendorSerial = Orion.GetSerial('myTarget');
+    var vendorObj = Orion.FindObject(vendorSerial);
+    if(!vendorObj.Mobile())
+    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')    
+    var vendorContainer = Orion.ObjAtLayer('backpack', vendorSerial).Serial();
+    Orion.CharPrint(self,1159,'Choose container to pack items to')
+    Orion.WaitForAddObject('myTarget');
+    var containerSerial = Orion.GetSerial('myTarget');
+    while(!Orion.GumpExists('container', containerSerial))
+        {
+        Orion.UseObject(containerSerial)
+        Orion.Wait(1300);
+        }
+    var items = Orion.FindTypeEx(any,any, vendorContainer).sort(function(a,b)
+        {
+        return a.GridIndex() - b.GridIndex();
+        });
+        
+ // VendorRecordsObj[containerContents][inventoryItemObj][itemPrice]
+    vendorRecordsObj[containerSerial] = {}; // VendorRecordsObj[containerSerial][itemSerial][itemData]
+    TextWindow.Print("{");
+    for(var i=0,len=items.length;i<len;i++)
+        {
+        var item = items[i];
+        var priceString = (item.Properties().match(/Price: ([\d,]+)/) || [])[1];
+        if(!priceString)
+            {
+            TextWindow.Open();
+            TextWindow.Print('Couldn\'t find price, trying again...' + item.Properties() + '\n\n');
+            i--;
+            Orion.Wait(1300);
+            continue;
+            }
+        var itemSerial = item.Serial();
+        var itemContainer = item.Container()
+        var itemX = item.X();
+        var itemY = item.Y();
+        var gridIndex = item.GridIndex();
+        var priceNumber = priceString.replace(/,/g, '');
+       // "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
+        TextWindow.Print('"' + item.Serial() + '": {"itemName": "' + item.Name() + '", "itemX": "' + itemX + '", "itemY": "' + itemY + '", "gridIndex": "' + gridIndex + '", "price": "' + priceNumber + '"},');
+
+        var endTime = Orion.Now() + 7500;
+        var timeout = false;
+        while(item.Container() == itemContainer && !timeout)
+            {
+            Orion.MoveItem(itemSerial, 0, containerSerial, itemX, itemY, -1, gridIndex);
+            Orion.Wait(1300);
+            timeout = Orion.Now() > endTime;
+            }
+        if(timeout)
+            {
+            Orion.CharPrint(self,1159,'Item didnt move, retrying...');
+            Orion.Wait(1300);
+            i--;
+            continue;
+            }
+        vendorRecordsObj[containerSerial][itemSerial] = {"itemName": item.Name(), "itemX": itemX, "itemY": itemY, "gridIndex": gridIndex, "price": String(priceNumber)}
+        }
+    TextWindow.Print("}\n");
+
+    Orion.RegWrite("vendorJSON",JSON.stringify(vendorRecordsObj))
+    }
+
+function VendorUNPacker()
+    {
+    // Target your vendor and a container to put everything into. Doesn't open subcontainers
+    var vendorDict = Orion.RegRead("vendorJSON");
+    var vendorRecordsObj = JSON.parse(vendorDict)
+    TextWindow.Clear()
+    Orion.CancelWaitPrompt();
+    if(Orion.PromptExists())
+        Orion.SendPrompt(' ');
+    Orion.CharPrint(self,1159,'Choose vendor to stock')
+    Orion.WaitForAddObject('myTarget');
+    var vendorSerial = Orion.GetSerial('myTarget');
+    var vendorObj = Orion.FindObject(vendorSerial);
+    if(!vendorObj.Mobile())
+    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')    
+    var vendorContainer = Orion.ObjAtLayer('backpack', vendorSerial).Serial();
+    Orion.CharPrint(self,1159,'Choose container to stock items from')
+    Orion.WaitForAddObject('myTarget');
+    var containerSerial = Orion.GetSerial('myTarget');
+    while(!Orion.GumpExists('container', containerSerial))
+        {
+        Orion.UseObject(containerSerial)
+        Orion.Wait(1300);
+        }
+        
+    var items = Orion.FindTypeEx(any,any, containerSerial).sort(function(a,b)
+        {
+        return a.GridIndex() - b.GridIndex();
+        });
+    var vendorInventory = vendorRecordsObj[containerSerial]
+    for(var i=0,len=items.length;i<len;i++)
+        {
+        var item = items[i];
+        var itemSerial = item.Serial();
+        var itemContainer = item.Container()
+        var itemX = vendorInventory[itemSerial]["itemX"];
+        var itemY = vendorInventory[itemSerial]["itemY"];
+        var gridIndex = vendorInventory[itemSerial]["gridIndex"];
+        var price = vendorInventory[itemSerial]["price"];
+        var endTime = Orion.Now() + 7500;
+        var timeout = false;
+        Orion.WaitPrompt(price);
+        while(item.Container() == itemContainer && !timeout)
+            {
+            Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
+            Orion.Wait(1300);
+            timeout = Orion.Now() > endTime;
+            }
+        Orion.CancelWaitPrompt();
+        if(Orion.PromptExists())
+            Orion.SendPrompt(' ');
+        if(timeout)
+            {
+            Orion.CharPrint(self,1159,'Item didnt move, retrying...');
+            Orion.Wait(1300);
+            i--;
+            continue;
+            }
+        for(var ii = 0; ii < 2; ii++)
+            {
+            Orion.CharPrint(self,1159, "Checking price...")
+            var itemCheck = Orion.FindObject(itemSerial);
+            if(Orion.Contains(itemCheck.Properties().replace(/,/g,""), 'Price: ' + price))
+               break; 
+            else
+                {
+                Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
+                Orion.Wait(1300);
+                }
+            if(ii == 1)
+                {
+                TextWindow.Print("Problem with pricing, storing item in backpack: " + item.Name() + '\n' + priceNumber + ' -> ' + adjPrice + '\n\n')
+                TextWindow.Open()
+                Orion.MoveItem(itemSerial, 0, backpack, itemX, itemY, -1, gridIndex);
+                }
+            Orion.Wait(1300);
+            }
+        }
+    }
+
+function VendorRecordsread()
+    {
+    TextWindow.Open()
+    TextWindow.Print(Orion.RegRead("vendorJSON"))
+    }
+
 
 function WaitForAuctionItem()
 	{

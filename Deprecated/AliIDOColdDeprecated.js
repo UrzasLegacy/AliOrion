@@ -1,5 +1,5 @@
-/* Deprecated
-function SubEthyPlacer()
+
+function SubPetBallPlacer()
     {
     var hook = '1060433841111695410';
     var key = 'THDHA-UrLnAcuDpmbbKmRDQyCWCcEqcUhMwp1gOsJjVUSGEfqPjS4RwlmrK6VjEt1jzL';
@@ -37,7 +37,7 @@ function SubEthyPlacer()
     var endTime = Orion.Now() + 5000;
     while(create != 0 && Orion.Now() < endTime)
         {
-        create = Orion.CreateUdpServer('DomEthy', ++i);
+        create = Orion.CreateUdpServer('DomPetBall', ++i);
         Orion.Wait(10);
         }
     Orion.Print('Port: ' + i);
@@ -52,7 +52,7 @@ function SubEthyPlacer()
     Orion.Exec('KeepUpHouseTarget',true);
     while(true) 
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPetBall');
         if(recv)
             {
             var placeX = Shared.GetVar('coordX',coordX);
@@ -73,7 +73,7 @@ function SubEthyPlacer()
             var check = Orion.WaitJournal('gold has been removed from your bank box.', startTime, Orion.Now() + 2000);
             if(!check && placeRepeatedlyOnFailure)
                 {
-                var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
+                var outStr = Player.Name() + '\nPetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
                 Orion.HttpPost(bot,'content=' + outStr);
                 }
             while(!check && placeRepeatedlyOnFailure)
@@ -108,9 +108,9 @@ function SubEthyPlacer()
         Orion.Wait(1);
         }
     if(startTime2)
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
+        var outStr = Player.Name() + '\npetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
     else
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
+        var outStr = Player.Name() + '\npetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
     var signObj = Orion.FindTypeEx(any,any,ground,'item',16).filter(function(item)
         {
         var itemProps = item.Properties();
@@ -138,7 +138,7 @@ function SubEthyPlacer()
     Orion.Terminate('all');
     }
 
-function SubEthyPlacerCastle()
+function SubPetBallPlacerCastle()
     {
     var hook = '1060433841111695410';
     var key = 'THDHA-UrLnAcuDpmbbKmRDQyCWCcEqcUhMwp1gOsJjVUSGEfqPjS4RwlmrK6VjEt1jzL';
@@ -176,7 +176,7 @@ function SubEthyPlacerCastle()
     var endTime = Orion.Now() + 5000;
     while(create != 0 && Orion.Now() < endTime)
         {
-        create = Orion.CreateUdpServer('DomEthy', ++i);
+        create = Orion.CreateUdpServer('DomPetBall', ++i);
         Orion.Wait(10);
         }
     Orion.Print('Port: ' + i);
@@ -191,7 +191,7 @@ function SubEthyPlacerCastle()
     Orion.Exec('KeepUpHouseTarget',true);
     while(true) 
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPetBall');
         if(recv)
             {
             var placeX = Shared.GetVar('coordX',coordX);
@@ -212,7 +212,7 @@ function SubEthyPlacerCastle()
             var check = Orion.WaitJournal('gold has been removed from your bank box.', startTime, Orion.Now() + 2000);
             if(!check && placeRepeatedlyOnFailure)
                 {
-                var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
+                var outStr = Player.Name() + '\npetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms\nFirst try failed! Trying again';
                 Orion.HttpPost(bot,'content=' + outStr);
                 }
             while(!check && placeRepeatedlyOnFailure)
@@ -247,9 +247,9 @@ function SubEthyPlacerCastle()
         Orion.Wait(1);
         }
     if(startTime2)
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
+        var outStr = Player.Name() + '\npetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime2 - startTime2) + 'ms';
     else
-        var outStr = Player.Name() + '\nEthy Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
+        var outStr = Player.Name() + '\npetBall Ping: ' + recv + 'ms\nPlace Ping: ' + (endTime - startTime) + 'ms';
     var signObj = Orion.FindTypeEx(any,any,ground,'item',16).filter(function(item)
         {
         var itemProps = item.Properties();
@@ -277,17 +277,17 @@ function SubEthyPlacerCastle()
     Orion.Terminate('all');
     }
 
-function SubEthyChecker()
+function SubPetBallChecker()
     {
     Orion.Exec('StayHidden',true);
     Orion.Exec('GMJournalScan',true);
-    var ethy = Orion.FindTypeEx(any).filter(function(item)
+    var petBall = Orion.FindTypeEx(any).filter(function(item)
         {
-        return Orion.Contains(item.Properties(), 'Mount Hue:')
+        return Orion.Contains(item.Properties(), 'Crystal Ball of Pet Summoning')
         })[0];
-    if(ethy) var ethySerial = ethy.Serial();
-    if(!ethySerial)
-        return Orion.CharPrint(self,1159,'No ethy found! Halting...');
+    if(petBall) var petBallSerial = petBall.Serial();
+    if(!petBallSerial)
+        return Orion.CharPrint(self,1159,'No petBall found! Halting...');
     while(!Orion.BuffExists('Animal Form'))
         {
         Orion.Cast('Animal Form');
@@ -320,14 +320,14 @@ function SubEthyChecker()
     var endTime = Orion.Now() + 5000;
     while(create != 0 && Orion.Now() < endTime) 
         {
-        create = Orion.CreateUdpServer('DomEthy', ++port);
+        create = Orion.CreateUdpServer('DomPetBall', ++port);
         Orion.Wait(10);
         }
     Orion.Print('Port: ' + port);
     Orion.Wait(2000);
     while(true)
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPetBall');
         if(recv)
             {
             Orion.Print('Sending Report');
@@ -338,12 +338,12 @@ function SubEthyChecker()
         }
     while(true) 
         {
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPetBall');
         if(recv)
             {
             var startTime = Orion.Now();
             //var time = Orion.Time();
-            Orion.UseObject(ethySerial);
+            Orion.UseObject(petBallSerial);
             var check = Orion.WaitJournal('You cannot use this in your current form.|You cannot use this while mounted.|You cannot cast spells here.', startTime, Orion.Now() + 1000, 'sys|item')
             if(check)
                 {
@@ -373,18 +373,18 @@ function SubEthyChecker()
         }
     }
 
- function DomEthy()
+ function DomPetBall()
     {
     Orion.Exec('StayHidden',true);
     Orion.Exec('GMJournalScan',true);
     Orion.Exec('StayLoggedIn',true);
     Orion.RemoveAllUdpServers();
-    var create = Orion.CreateUdpServer('DomEthy', 60000);
+    var create = Orion.CreateUdpServer('DomPetBall', 60000);
     if(create == 0)
         Orion.Print('Server Creation Success');
     else
         return Orion.Print('Server Creation Fail');
-    while(fullAuto && !Orion.UdpRecv('DomEthy'))
+    while(fullAuto && !Orion.UdpRecv('DomPetBall'))
         {
         Orion.Wait(500);
         }
@@ -396,14 +396,14 @@ function SubEthyChecker()
     Orion.Wait(2000);
     var playerList = [];
     var namesStr = '';
-    var recv = Orion.UdpRecv('DomEthy');
+    var recv = Orion.UdpRecv('DomPetBall');
     while(recv)
         {
         var recvSplit = Orion.Split(recv, ':');
         playerList.push(+recvSplit[0]);
         namesStr += recvSplit[1] + '\n';
         Orion.Wait(10);
-        recv = Orion.UdpRecv('DomEthy');
+        recv = Orion.UdpRecv('DomPetBall');
         }
     if(!playerList.length)
         return Orion.CharPrint(self,1159,'No Subs Connected! Halting...');
@@ -423,7 +423,7 @@ function SubEthyChecker()
         //Orion.Print(player)
         Orion.UdpSend(player, 'E')
         Orion.Wait(interval);
-        var recv = Orion.UdpRecv('DomEthy');
+        var recv = Orion.UdpRecv('DomPetBall');
         if(recv)
             {
             TextWindow.Print(recv);
@@ -572,14 +572,13 @@ function IDOCBarrels()
                 Orion.WalkTo(startX + 6,startY + 4,0,0,255,0);
                 Orion.Wait(500);
                 }
-            Orion.Exec('SubEthyPlacer');
+            Orion.Exec('SubPetBallPlacer');
             }
         else
-            Orion.Exec('SubEthyChecker');
+            Orion.Exec('SubPetBallChecker');
         }
     else
         Gump();
     if(limitViewRange)
         Orion.ClientViewRange(5);
 	}
-*/

@@ -306,3 +306,49 @@ function alignText(strings) {
         return firstWord + tabs + restOfText;
     });
 }
+
+function SilentAuctionAlert()
+	{
+	var bulletinBoard = 0x4353EE65
+	var monitorNum = 0
+	var catchNum
+	while(true)
+		{
+		Orion.UseObject(bulletinBoard)
+		if(Orion.WaitForGump(3000))
+			{
+			Orion.Wait(1000)
+			var gump = Orion.GetGump(bulletinBoard,0x00002330)
+			if(gump)
+				{
+				var entries = Number(gump.Text(8))
+				if(!catchNum)
+					{
+					monitorNum = entries
+					catchNum = true
+					}
+				else if(entries != monitorNum)
+					{
+					 DiscordPush(Player.Name() + ' tripped')
+					 }
+				Orion.CharPrint(self,1159,entries)
+				Orion.Wait(1000)
+				Orion.CloseGump('generic',bulletinBoard,0x00002330)
+				}
+			}
+		Orion.Wait(5000)
+		}
+	}
+
+function DiscordPush(message)
+	{
+	var bot = SetDiscordRegistryEntry();
+	Orion.HttpPost(bot, "content=" + message);
+	}
+
+function SetDiscordRegistryEntry()
+    {
+    var discordConfig = "https://discordapp.com/api/webhooks/" + "887268637315047444" + '/' + "SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z";
+
+    return discordConfig;
+    }
