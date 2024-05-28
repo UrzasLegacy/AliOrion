@@ -1,0 +1,709 @@
+function CastChivHeal() {
+	Orion.SetGlobal("spellRange", "2");
+	Orion.Cast("Close Wounds");
+}
+
+function CastSpellRange(spell, range) {
+	Orion.SetGlobal("spellRange", range);
+	Orion.Cast(spell);
+	Orion.WaitForTarget(3000);
+	while (Orion.HaveTarget()) {
+		Orion.Wait(100);
+	}
+	Orion.SetGlobal("spellRange", "10");
+}
+
+function WallTarget() {
+	if (!Orion.HaveTarget()) {
+		//Orion.Cast("Wall of Stone");
+		CastSpellRange("Wall of Stone", 15);
+	} else {
+		var value = 3;
+		var empty = 0;
+
+		var offset = [
+			[empty, -value], //direction = 0
+			[value, -value], //direction = 1
+			[value, empty], //direction = 2
+			[value, value], //direction = 3
+			[empty, value], //direction = 4
+			[-value, value], //direction = 5
+			[-value, empty], //direction = 6
+			[-value, -value], //direction = 7
+		];
+		var currtar = Orion.FindObject(Orion.ClientLastTarget());
+		if (currtar != null) {
+			var xy = offset[currtar.Direction() & 7];
+			xy[0] = xy[0] + currtar.X();
+			xy[1] = xy[1] + currtar.Y();
+			var tempTile = Orion.GetTiles("land", xy[0], xy[1]);
+			if (tempTile.length > 0) {
+				if (Orion.ValidateTargetTile("land", tempTile[0].X(), tempTile[0].Y())) {
+					Orion.TargetTile("land", tempTile[0].X(), tempTile[0].Y(), tempTile[0].Z());
+				} else {
+					Orion.Print("Cannot target tile.");
+				}
+				//Orion.Print(tempTile[0].X() + " " + tempTile[0].Y()  + " " + tempTile[0].Z())
+			} else {
+				Orion.Print("Invalid tile.");
+			}
+		}
+		//Orion.Cast('Wall of Stone');
+	}
+}
+
+//--#Mystic Scripts
+
+function CreateCleaseTrigger() {
+	Orion.Cast("686");
+	if (Orion.WaitForGump(8000)) {
+		var gump0 = Orion.GetGump("last");
+		if (gump0 !== null && !gump0.Replayed() && gump0.ID() === "0x00002336") {
+			gump0.Select(Orion.CreateGumpHook(109));
+			Orion.Wait(100);
+		}
+	}
+}
+
+function MaxMyst_CreateTrigger(dressMax, spell, dressNormal) {
+	var mystTrigger = {};
+	mystTrigger.Sleep = 104;
+	mystTrigger["Nether Bolt"] = 100;
+	mystTrigger["Purge Magic"] = 102;
+	mystTrigger["Eagle Strike"] = 105;
+	Orion.Dress(dressMax);
+	Orion.Cast("Spell Trigger");
+	while (GumpByID("0x00002336") == false) {
+		Orion.Wait(100);
+	}
+	var gump0 = GumpByID("0x00002336");
+	if (gump0 != null && gump0.ID() == "0x00002336") {
+		gump0.Select(Orion.CreateGumpHook(104));
+		Orion.Wait(100);
+	}
+	Orion.Dress(dressNormal);
+}
+
+function TriggerTarLT() {
+	var triggerCD = 5;
+	var stone = Orion.FindType("0x4079", "0xFFFF");
+	if (stone.length == 0) {
+		return false;
+	}
+	Orion.UseItemOnMobile(stone[0], lasttarget);
+	Orion.Wait(500);
+	var stone = Orion.FindType("0x4079", "0xFFFF");
+	if (stone.length == 0 && Orion.GetGlobal("doTriggerTimer") == "true") {
+		Orion.AddDisplayTimer("triggerTimer", triggerCD * 60000 - 500, "bottom", "Line|Bar", "", 200, -5, color.white, 3, color.redRGB);
+		Orion.DisplayTimerSetIconType("triggerTimer", "gump");
+		Orion.DisplayTimerSetShowTime("triggerTimer", false);
+		Orion.DisplayTimerSetIcon("triggerTimer", "center", 0x5dc8, 0, 40, 12, 30, 30);
+	}
+}
+
+function TriggerTarLT_old() {
+	Orion.UseType("0x4079", "0xFFFF");
+	Orion.Wait(100);
+	if (Orion.WaitForTarget(5000)) Orion.TargetObject("lasttarget");
+}
+
+function CreateTriggerBombard() {
+	Orion.Cast("686");
+	if (Orion.WaitForGump(10000)) {
+		var gump0 = Orion.GetGump("last");
+		if (gump0 !== null && gump0.ID() === "0x00002336") {
+			gump0.Select(Orion.CreateGumpHook(110));
+			Orion.Wait(100);
+		}
+	}
+}
+function CreateTriggerClense() {
+	Orion.Cast("686");
+	if (Orion.WaitForGump(10000)) {
+		var gump0 = Orion.GetGump("last");
+		if (gump0 !== null && gump0.ID() === "0x00002336") {
+			gump0.Select(Orion.CreateGumpHook(109));
+			Orion.Wait(100);
+		}
+	}
+}
+
+function Enchant_Lightning() {
+	Orion.Cast("681");
+	if (Orion.WaitForGump(10000)) {
+		var gump0 = Orion.GetGump("last");
+		if (gump0 !== null && gump0.ID() === "0x000F3E91") {
+			gump0.Select(Orion.CreateGumpHook(4));
+			Orion.Wait(100);
+		}
+	}
+}
+
+function Sleep_Disarm() {
+	var dmountdist = 3;
+	var myTarget = Orion.FindObject(Orion.ClientLastTarget());
+	if (myTarget) {
+		var range = Orion.GetDistance(myTarget.Serial());
+		Orion.CharPrint(self, "2128", "Ready to sleep...");
+	}
+	while (range > dmountdist && Orion.HaveTarget()) {
+		Orion.Wait(100);
+		range = Orion.GetDistance(myTarget.Serial());
+	}
+	if (range <= dmountdist && Orion.HaveTarget()) {
+		Orion.TargetObject("lasttarget");
+		Orion.Wait(50);
+		Orion.UseAbility("Secondary", "true");
+		Orion.Attack(myTarget.Serial());
+	}
+}
+
+function Sleep_FocusDisarm() {
+	var dmountdist = 10;
+	var myTarget = Orion.FindObject(Orion.ClientLastTarget());
+	if (myTarget) {
+		var range = Orion.GetDistance(myTarget.Serial());
+		Orion.CharPrint(self, "2128", "Ready to sleep...");
+	}
+	while (range > dmountdist && Orion.HaveTarget()) {
+		Orion.Wait(100);
+		range = Orion.GetDistance(myTarget.Serial());
+	}
+	if (range <= dmountdist && Orion.HaveTarget()) {
+		Orion.TargetObject("lasttarget");
+		Orion.Wait(50);
+		Orion.Cast("Focus Attack");
+		Orion.Wait(100);
+		Orion.UseAbility("Secondary", "true");
+		Orion.Attack(myTarget.Serial());
+	}
+}
+
+function Sleep_Bash() {
+	var dmountdist = 3;
+	var myTarget = Orion.FindObject(Orion.ClientLastTarget());
+	if (myTarget) {
+		var range = Orion.GetDistance(myTarget.Serial());
+		Orion.CharPrint(self, "2128", "Ready to sleep...");
+	}
+	while (range > dmountdist && Orion.HaveTarget()) {
+		Orion.Wait(100);
+		range = Orion.GetDistance(myTarget.Serial());
+	}
+	if (range <= dmountdist && Orion.HaveTarget()) {
+		Orion.TargetObject("lasttarget");
+		Orion.Wait(100);
+		Orion.Cast("Shield Bash");
+		//Orion.UseAbility('Secondary', 'true');
+		//Orion.Attack(myTarget.Serial());
+		//ShieldBash('wep_glendashield');
+		Orion.Wait(100);
+		Orion.Attack(myTarget.Serial());
+	}
+}
+
+//Discord Scripts
+
+function AutoDiscord() {
+	while (!Player.Dead()) {
+		var theTargs = Orion.FindTypeEx("any", "-1", "ground", "ignoreself|ignorefriends|nothuman|live|near", "18", "gray|criminal");
+		if (theTargs.length > 0 && Orion.Timer("pvmDiscordTimer") >= -1) {
+			Orion.UseSkill("Discordance");
+			Orion.WaitForTarget(2000);
+			if (Orion.HaveTarget()) {
+				Orion.TargetObject(theTargs.Serial());
+				var temp = Orion.WaitJournal("play jarring|attempt to disrupt", Orion.Now() - 2000, Orion.Now() + 2000, "sys");
+				if (temp != null && Orion.Contains(temp.Text(), "play jarring")) {
+					Orion.AddDisplayTimer(199, 5000, "UnderChar", "Circle|Bar", "Discord", 60, 0, "55", 0xff, "0xFFFFFF");
+					Orion.SetTimer("pvmDiscordTimer", -12000);
+					while (Orion.ObjectExists(theTargs.Serial())) {
+						Orion.Wait(500);
+					}
+				} else {
+					Orion.CharPrint(self, 37, "Discord failed!");
+				}
+			}
+		}
+		Orion.Wait(500);
+	}
+}
+
+function DiscordSpam() {
+	var discTimer = -10000;
+	while (true) {
+		var tempTar = Orion.FindObject("lasttarget");
+		if (tempTar != null && tempTar.Distance() <= 18 && Orion.Timer("discordTimer") >= -1) {
+			Orion.UseSkillTarget("discordance", lasttarget);
+			var temp = Orion.WaitJournal("play jarring|attempt to disrupt", Orion.Now() - 2000, Orion.Now() + 20000, "sys");
+			if (temp != null && Orion.Contains(temp.Text(), "play jarring")) {
+				Orion.AddDisplayTimer(199, 5000, "UnderChar", "Circle|Bar", "Discord", 60, 0, "55", 0xff, "0xFFFFFF");
+				Orion.SetTimer("discordTimer", discTimer);
+			} else {
+				Orion.CharPrint(self, 37, "Discord failed!");
+				Orion.SetTimer("discordTimer", discTimer);
+			}
+		}
+		Orion.Wait(500);
+	}
+}
+
+function DiscordFist() {
+	//while(Orion.GetDistance('lasttarget') > 10){
+	//    Orion.Wait(100);
+	//}
+
+	if (Orion.HaveTarget() && Orion.GetDistance(Orion.ClientLastTarget()) <= 10) {
+		Orion.TargetObject(Orion.ClientLastTarget());
+	}
+	Orion.UseSkillTarget("discordance", lasttarget);
+	Orion.Wait(100);
+	Orion.Cast("Holy Fist");
+	Orion.Wait(100);
+	var temp = Orion.WaitJournal("play jarring|attempt to disrupt", Orion.Now() - 1000, Orion.Now() + 2000, "sys");
+	if (temp != null && Orion.Contains(temp.Text(), "play jarring")) {
+		Orion.AddDisplayTimer(199, 5000, "UnderChar", "Circle|Bar", "Discord", 60, 0, "55", 0xff, "0xFFFFFF");
+	} else {
+		Orion.CharPrint(self, 37, "Discord failed!");
+	}
+	Orion.WaitForTarget(2000);
+	if (Orion.HaveTarget() && Orion.GetDistance(Orion.ClientLastTarget()) <= 10) {
+		Orion.TargetObject(Orion.ClientLastTarget());
+	}
+}
+
+function DiscordTimer() {
+	if (Orion.HaveTarget() && Orion.GetDistance("lasttarget") < 10) {
+		Orion.TargetObject("lasttarget");
+		Orion.Wait(200);
+	}
+	if (!Orion.HaveTarget()) {
+		Orion.UseSkillTarget("discordance", lasttarget);
+		Orion.WaitForTarget(2000);
+		if (Orion.HaveTarget()) {
+			var temp = Orion.WaitJournal("play jarring|attempt to disrupt", Orion.Now() - 2000, Orion.Now() + 20000, "sys");
+			if (temp != null && Orion.Contains(temp.Text(), "play jarring")) {
+				Orion.AddDisplayTimer(199, 5000, "UnderChar", "Circle|Bar", "Discord", 60, 0, "55", 0xff, "0xFFFFFF");
+			} else {
+				Orion.CharPrint(self, 37, "Discord failed!");
+			}
+		}
+	}
+}
+
+function FistFist() {
+	if (Orion.HaveTarget()) {
+		Orion.TargetObject("lasttarget");
+	} else {
+		Orion.Cast("Holy Fist");
+	}
+}
+
+//Bashing Scripts
+
+function ShieldBash(set) {
+	Orion.Dress("wep_glendashield");
+	Orion.Wait(100);
+	Orion.Cast("Shield Bash");
+	Orion.AddDisplayTimer("bashtimer", 3500, "UnderChar", "Circle|Bar", "Shield Bash", 0, 0, "55", 0xff, "0xFFFFFF");
+}
+
+function WrestleBash() {
+	var dmountdist = 2;
+	var myTarget = Orion.FindObject(Orion.ClientLastTarget());
+	if (myTarget) {
+		var range = Orion.GetDistance(myTarget.Serial());
+		Orion.CharPrint(self, "2128", "Ready to bash...");
+	}
+	while (range > dmountdist) {
+		Orion.Wait(100);
+		range = Orion.GetDistance(myTarget.Serial());
+	}
+	if (range <= dmountdist) {
+		Orion.Cast("Shield Bash");
+		Orion.Wait(50);
+		Orion.Attack(myTarget.Serial());
+		//Orion.UseAbility('Secondary', 'true');
+	}
+}
+
+//Teleport Scripts
+
+function tele() {
+	var value = 10;
+	var empty = 0;
+
+	var offset = [
+		[empty, -value], //direction = 0
+		[value, -value], //direction = 1
+		[value, empty], //direction = 2
+		[value, value], //direction = 3
+		[empty, value], //direction = 4
+		[-value, value], //direction = 5
+		[-value, empty], //direction = 6
+		[-value, -value], //direction = 7
+	];
+
+	//var xy = offset[Player.Direction() & 10];
+	var dire;
+	if (Player.Direction() > 7) {
+		dire = Player.Direction() - 128;
+	} else {
+		dire = Player.Direction();
+	}
+
+	if (!Orion.HaveTarget()) {
+		Orion.WaitTargetTileRelative("land", offset[dire][0], offset[dire][1], Player.Z());
+		Orion.Cast("Teleport");
+	} else {
+		Orion.TargetTileRelative("land", offset[dire][0], offset[dire][1], Player.Z());
+	}
+}
+
+function tele_new() {
+	while (true) {
+		Orion.Print("bing");
+		var value = 11;
+		var empty = 0;
+
+		var offset = [
+			[empty, -value], //direction = 0
+			[value, -value], //direction = 1
+			[value, empty], //direction = 2
+			[value, value], //direction = 3
+			[empty, value], //direction = 4
+			[-value, value], //direction = 5
+			[-value, empty], //direction = 6
+			[-value, -value], //direction = 7
+		];
+
+		//var xy = offset[Player.Direction() & 10];
+		var dire;
+		if (Player.Direction() > 7) {
+			dire = Player.Direction() - 128;
+		} else {
+			dire = Player.Direction();
+		}
+		Orion.Cast("teleport");
+		PingWait(700);
+		var temptile = Orion.GetTiles("tree", Player.X() + offset[dire][0], Player.Y() + offset[dire][1]);
+		if (temptile.length == 0) {
+			var temptile2 = Orion.GetTiles("land", Player.X() + offset[dire][0], Player.Y() + offset[dire][1]);
+			//Orion.Print(temptile.length + "normal " + temptile[0].X() + " " + temptile[0].Y() + " " + temptile[0].Z());
+			Orion.TargetTile("any", temptile2[0].X(), temptile2[0].Y(), temptile2[0].Z());
+			Orion.AddHighlightArea("451", 5000, "pos", "0x0386", 0, 0, "land", temptile2[0].X(), temptile2[0].Y());
+		} else {
+			var tiledata = Orion.GetTilesInRect("land", Player.X() + offset[dire][0] - 1, Player.Y() + offset[dire][1] - 1, -255, Player.X() + offset[dire][0] + 1, Player.Y() + offset[dire][1] + 1, 255);
+			Orion.Print("data" + tiledata.length);
+			for (var i = 0; i < tiledata.length; i++) {
+				Orion.Print("boom" + i);
+				if (Orion.GetTiles("tree", tiledata[i].X(), tiledata[i].Y()).length == 0 && GetDistance(tiledata[i].X(), tiledata[i].Y()) <= value) {
+					Orion.AddHighlightArea("451", 5000, "pos", "0x0386", 1, 1, "land", tiledata[i].X(), tiledata[i].Y());
+					Orion.TargetTile("any", tiledata[i].X(), tiledata[i].Y(), tiledata[i].Z());
+					Orion.Print("other");
+					break;
+				}
+			}
+		}
+		Orion.Wait(100);
+	}
+}
+
+function scrolltele() {
+	var value = 10;
+	var empty = 0;
+
+	var offset = [
+		[empty, -value], //direction = 0
+		[value, -value], //direction = 1
+		[value, empty], //direction = 2
+		[value, value], //direction = 3
+		[empty, value], //direction = 4
+		[-value, value], //direction = 5
+		[-value, empty], //direction = 6
+		[-value, -value], //direction = 7
+	];
+
+	//var xy = offset[Player.Direction() & 10];
+	var dire;
+	if (Player.Direction() > 7) {
+		dire = Player.Direction() - 128;
+	} else {
+		dire = Player.Direction();
+	}
+
+	if (!Orion.HaveTarget()) {
+		Orion.WaitTargetTileRelative("land", offset[dire][0], offset[dire][1], Player.Z());
+		Orion.UseType("0x1F42", "0xFFFF");
+	} else {
+		Orion.TargetTileRelative("land", offset[dire][0], offset[dire][1], Player.Z());
+	}
+}
+
+function DispelFieldInFront() {
+	if (!Orion.HaveTarget() && !Player.Frozen()) {
+		Orion.Cast("Dispel Field");
+	}
+	var field, fieldObject, index, fieldIndex;
+	var tile = [
+		[Player.X(), Player.Y() - 1],
+		[Player.X() + 1, Player.Y() - 1],
+		[Player.X() + 1, Player.Y()],
+		[Player.X() + 1, Player.Y() + 1],
+		[Player.X(), Player.Y() + 1],
+		[Player.X() - 1, Player.Y() + 1],
+		[Player.X() - 1, Player.Y()],
+		[Player.X() - 1, Player.Y() - 1],
+	];
+	field = Orion.FindType("0x0082|0x3967|0x0080|0x3956|0x3922", "-1", "ground", "item", 1);
+	if (field.length != 0) {
+		for (index = 0; index < tile.length; index++) {
+			if (Player.Direction() == index || Player.Direction() == index + 128) {
+				for (fieldIndex = 0; fieldIndex < field.length; fieldIndex++) {
+					fieldObject = Orion.FindObject(field[fieldIndex]);
+					if (fieldObject.X() == tile[index][0] && fieldObject.Y() == tile[index][1]) {
+						if (!Orion.HaveTarget() && !Player.Frozen()) {
+							Orion.WaitTargetObject(fieldObject.Serial());
+							Orion.Cast("Dispel Field");
+							return;
+						} else {
+							Orion.TargetObject(fieldObject.Serial());
+						}
+					}
+				}
+				Orion.CharPrint(self, 1153, "Before me there are no fields!");
+				break;
+			}
+		}
+	}
+}
+
+function InfiniteTelering() {
+	var rings = Orion.FindTypeEx("0x108A", "0xFFFF", backpack);
+	if (rings.length) {
+		for (var i = 0; i < rings.length; i++) {
+			if (!Orion.Contains(rings[i].Properties(), "Teleport Charges: 0")) {
+				Orion.UseObject(rings[i].Serial());
+				return;
+			}
+		}
+	}
+}
+
+//All Other Scripts
+function Cast_Gift() {
+	Orion.Cast("Gift of Renewal");
+	Orion.WaitForTarget(5000);
+	while (Orion.HaveTarget()) {
+		Orion.Wait(500);
+	}
+	Orion.Wait(1000);
+	if (Orion.BuffExists("Gift of Renewal")) {
+		Orion.RemoveDisplayTimer("gift_check");
+		while (Orion.BuffExists("Gift of Renewal")) {
+			Orion.Wait(1000);
+		}
+		Orion.SetGlobal("giftCD", "true");
+		if (Orion.GetGlobal("doGiftTimer") == "true") {
+			Orion.AddDisplayTimer("gift_check", 59000, "bottom", "Line|Bar", "", -300, -20, color.green, 3, color.greenRGB);
+			Orion.DisplayTimerSetIconType("gift_check", "gump");
+			Orion.DisplayTimerSetShowTime("gift_check", false);
+			Orion.DisplayTimerSetIcon("gift_check", "center", 0x59d9, color.green, 45, 15, 40, 40);
+		}
+	}
+}
+
+function LightningStrikeMomentum() {
+	while (!Player.Dead()) {
+		if (Player.Mana() > 20) {
+			var creatures = Orion.FindType("any", "any", "ground", "live", 1, "gray|criminal");
+			if (Orion.SkillValue("Bushido", "base") >= 700 && creatures.length > 1 && !Orion.BuffExists("Momentum Strike")) {
+				Orion.Cast("Momentum Strike");
+				Orion.Wait(1000);
+			} else if (Orion.SkillValue("Bushido", "base") >= 500 && !Orion.BuffExists("Lightning Strike") && !Orion.BuffExists("Momentum Strike")) {
+				Orion.Cast("Lightning Strike");
+				Orion.Wait(1000);
+			} else if (Orion.SkillValue("Bushido", "base") >= 300 && Orion.Timer("conftimer") >= -1) {
+				Orion.Cast("Confidence");
+				Orion.SetTimer("conftimer", -6000);
+				Orion.Wait(1000);
+			}
+		}
+		Orion.Wait(200);
+	}
+}
+
+function AddMount() {
+	Orion.AddObject("myMount");
+	Orion.Print("-1", "Target your mount");
+}
+
+function MountAndDismount() {
+	if (Orion.Timer("allfollowTimer") >= -1) {
+		Orion.Say("all follow me");
+		Orion.SetTimer("allfollowTimer", -1500);
+	}
+	if (!Orion.ObjAtLayer("Mount")) {
+		var thetarg = Orion.FindTypeEx("any", "-1", "ground", "ignoreself|ignorefriends|nothuman|live|near", "1", "green");
+		if (thetarg.length > 0) {
+			Orion.UseObject(thetarg[0].Serial());
+		} else if (Orion.FindObject("myMount")) {
+			Orion.UseObject("myMount");
+		} else {
+			Orion.Print("Click to add your mount.");
+			Orion.WaitForAddObject("myMount");
+		}
+	} else {
+		Orion.UseObject("self");
+	}
+}
+
+function UseGate() {
+	Orion.CancelWaitGump();
+	Orion.WaitGump(Orion.CreateGumpHook(1));
+	if (!Orion.UseFromGround("0x0F6C|0x4BCB", "-1", 2)) {
+		Orion.CharPrint(self, 1153, "Gate is too far away!");
+		Orion.CancelWaitGump();
+	}
+}
+function BoatRope() {
+	Orion.UseObject("0x43F2CE8E");
+	Orion.UseObject("0x440C6C2E");
+	var rope = Orion.FindTypeEx("0x14FA", any, ground, "near", 20);
+	if (rope[0]) Orion.UseObject(rope[0].Serial());
+}
+
+//Evade Scripts
+
+function DisarmShieldEvade() {
+	if (Orion.ObjAtLayer("RightHand") && Orion.ObjAtLayer("LeftHand")) {
+		DisarmLeftHand();
+	}
+	Orion.Wait(50);
+	if (Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) {
+		Orion.Cast("Evasion");
+		if (!Orion.DisplayTimerExists("10")) {
+			Orion.AddDisplayTimer("10", 26000, "AboveChar", "Circle|Bar", "Evade", 0, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}
+
+function EvadeTimer() {
+	var evadeCD = 27000;
+	var waitDelay = 750;
+	Orion.Wait(50);
+	if (Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) {
+		Orion.Cast("Evasion");
+		if (Orion.ScriptRunning("ActionTimers")) {
+			return false;
+		}
+		Orion.Wait(waitDelay);
+		if (Orion.BuffExists("Evasion")) {
+			Orion.AddDisplayTimer("evade_duration", Orion.BuffTimeRemaining("Evasion"), "bottom", "Line|Bar", "", 300, -75, color.green, 3, color.greenRGB);
+			Orion.DisplayTimerSetIconType("evade_duration", "gump");
+			Orion.DisplayTimerSetShowTime("evade_duration", false);
+			Orion.DisplayTimerSetIcon("evade_duration", "center", 0x5422, color.green, 45, 15, 40, 40);
+			if (!Orion.DisplayTimerExists("evade")) {
+				Orion.AddDisplayTimer("evade", evadeCD - waitDelay, "bottom", "Line|Bar", "", 300, -20, color.red, 3, color.redRGB);
+				Orion.DisplayTimerSetIconType("evade", "gump");
+				Orion.DisplayTimerSetShowTime("evade", false);
+				Orion.DisplayTimerSetIcon("evade", "center", 0x5422, color.red, 45, 15, 40, 40);
+			}
+		}
+	}
+}
+
+function EvadeTimer_Archery() {
+	Orion.Wait(50);
+	if (Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) {
+		if (Orion.ObjAtLayer("LeftHand") && Orion.Contains(Orion.ObjAtLayer("LeftHand").Properties(), "Archery", true)) {
+			Orion.Dress("wep_secondary");
+			Orion.Wait(500);
+		}
+		Orion.Cast("Evasion");
+		if (!Orion.DisplayTimerExists("10")) {
+			Orion.AddDisplayTimer("10", 26000, "AboveChar", "Circle|Bar", "Evade", 0, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}
+
+function EvadeTimer_Archery_new() {
+	Orion.Wait(50);
+	if (Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) {
+		if (Orion.ObjAtLayer("LeftHand") && Orion.Contains(Orion.ObjAtLayer("LeftHand").Properties(), "Archery", true)) {
+			Orion.Dress("wep_secondary");
+			Orion.Wait(500);
+		}
+		if (!Orion.ObjAtLayer(1) && !Orion.Contains(Orion.ObjAtLayer(1).Properties(), "Range") && !Orion.ObjAtLayer(1) && !Orion.Contains(Orion.ObjAtLayer(1).Properties(), "Range")) {
+			Orion.Cast("Evasion");
+			if (!Orion.DisplayTimerExists("10")) {
+				Orion.AddDisplayTimer("10", 26000, "AboveChar", "Circle|Bar", "Evade", 0, 0, "55", 0xff, "0xFFFFFF");
+			}
+		}
+	}
+}
+
+function TwoHandEvadeTimer() {
+	Orion.Wait(50);
+	Orion.Dress("wep_secondary");
+	Orion.Wait(100);
+	if (Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) {
+		Orion.Cast("Evasion");
+		Orion.Wait(200);
+		if (Orion.BuffExists("Evasion") && !Orion.DisplayTimerExists("10")) {
+			Orion.AddDisplayTimer("10", 26000, "AboveChar", "Circle|Bar", "Evade", 0, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}
+
+//Spell Timer Scripts
+
+function GiftTimer() {
+	Orion.Cast("Gift of Renewal");
+	Orion.WaitForTarget(4000);
+	Orion.TargetObject(Player.Serial());
+	Orion.Wait(300);
+	while (Player.Frozen()) {
+		Orion.Wait(100);
+	}
+	Orion.Wait(200);
+	if (Orion.BuffExists("Gift of Renewal")) {
+		if (!Orion.DisplayTimerExists("giftofrenew")) {
+			Orion.AddDisplayTimer("giftofrenew", Orion.BuffTimeRemaining("Gift of Renewal"), "Bottom", "Circle|Bar", "Gift", 30, 0, "55", 0xff, "0xFFFFFF");
+			Orion.Wait(Orion.BuffTimeRemaining("Gift of Renewal"));
+			Orion.Wait(100);
+			Orion.AddDisplayTimer("giftofrenew", 60000, "Bottom", "Circle|Bar", "Gift CD", 30, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}
+
+function AttunementTimer() {
+	Orion.Cast("Attunement");
+	Orion.Wait(200);
+	while (Player.Frozen()) {
+		Orion.Wait(100);
+	}
+	Orion.Wait(1000);
+	if (Orion.BuffExists("Attunement")) {
+		Orion.Print("boop");
+		if (!Orion.DisplayTimerExists("attunment")) {
+			Orion.AddDisplayTimer("attunment", Orion.BuffTimeRemaining("Attunement"), "Bottom", "Circle|Bar", "Attunement", 60, 0, "55", 0xff, "0xFFFFFF");
+			Orion.Wait(Orion.BuffTimeRemaining("Attunement"));
+			Orion.Wait(100);
+			Orion.AddDisplayTimer("attunment", 120000, "Bottom", "Circle|Bar", "Attunement CD", 60, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}
+
+function ArcaneEmpowermentTimer() {
+	Orion.Cast("Arcane Empowerment");
+	Orion.Wait(300);
+	while (Player.Frozen()) {
+		Orion.Wait(100);
+	}
+	Orion.Wait(200);
+	if (Orion.BuffExists("Arcane Empowerment")) {
+		if (!Orion.DisplayTimerExists("arcaneempowerment")) {
+			Orion.AddDisplayTimer("arcaneempowerment", Orion.BuffTimeRemaining("Arcane Empowerment"), "Bottom", "Circle|Bar", "Arcane", 90, 0, "55", 0xff, "0xFFFFFF");
+		}
+	}
+}

@@ -1,0 +1,102 @@
+//@@Set the caller for PvP.  Used for the 'ScrollNearTargets' function.
+//PvP,Targetting
+function SetCaller() {
+	var highlightCaller = Orion.GetGlobal("doCallerHighlight") == "true" || Orion.GetGlobal("doCallerHighlight") == "" ? true : false;
+	var highlightCallerColor = Orion.GetGlobal("callerHighlightColor") == "" ? 1153 : Orion.GetGlobal("callerHighlightColor");
+	if (highlightCaller) {
+		Orion.WaitForAddObject("CallerCharacter");
+		var tempTarget = Orion.FindObject("CallerCharacter");
+		if (tempTarget) {
+			Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+			Orion.AddHighlightCharacter(tempTarget.Serial(), highlightCallerColor, true);
+			Orion.SetGlobal("LeadHighlight", tempTarget.Serial());
+		} else {
+			Orion.Print("You'll need to try to set a caller again.");
+		}
+	} else {
+		Orion.Print("You need to turn on 'Target Caller' in the Gump, under Targetting.");
+		Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+	}
+}
+
+//@@Returns the distance between the caller selected with 'SetCaller' and a set of coordinates. Used for sorting the distance of the 'ScrollNearTargets' function.
+//Programming,Support
+function CallerDistance(tarX, tarY) {
+	var referenceChar = Orion.GetGlobal("LeadHighlight") == "" ? Player : Orion.FindObject(Orion.GetGlobal("LeadHighlight"));
+	if (!referenceChar) {
+		referenceChar = Player;
+	}
+	return TwoObjectDistance(referenceChar.X(), referenceChar.Y(), tarX, tarY);
+}
+
+function TwoObjectDistance(X, Y, X2, Y2) {
+	var dist = null;
+
+	dist = Math.sqrt(Math.pow(X - X2, 2) + Math.pow(Y - Y2, 2));
+	//Orion.Print(dist);
+	return dist;
+}
+
+//@@Scrolls through the closest, variable number of OJ targets (default 3).  If a caller is set, it will scroll through the 3 nearest targets to the caller (and player if caller not on screen).
+//PvP,Targetting
+function ScrollNearTargets() {
+	var scrollCount = 3;
+	var humanArr = Orion.FindTypeEx("-1", "-1", "ground", "live|ignoreself|ignorefriends", 20, "orange|red");
+	var creatureArr = Orion.FindTypeEx("0x0084|0x007A|0x00F6|0x0019|0x00DC|0x00DB|0x04E6", "-1", "ground", "", 18, "orange|red");
+	var mobArr = humanArr.concat(creatureArr);
+
+	mobArr.sort(function (a, b) {
+		//return a.Distance() - b.Distance();
+		return CallerDistance(a.X(), a.Y()) - CallerDistance(b.X(), b.Y());
+	});
+	var curPos = Orion.GetGlobal("OJScrollPosition");
+	curPos = curPos == "" ? 0 : curPos;
+	if (mobArr.length > 0) {
+		if (curPos >= mobArr.length || curPos >= scrollCount) {
+			if (mobArr.length > 0) {
+				PvPSetTarget(mobArr[0]);
+				Orion.SetGlobal("OJScrollPosition", 1);
+			} else {
+				Orion.SetGlobal("OJScrollPosition", 0);
+			}
+		} else {
+			if (mobArr[curPos].Serial() != Orion.GetGlobal("LTHighlight")) {
+				PvPSetTarget(mobArr[curPos]);
+				Orion.SetGlobal("OJScrollPosition", ++curPos);
+			} else {
+				curPos++;
+				if (curPos >= scrollCount) {
+					curPos = 0;
+				}
+				PvPSetTarget(mobArr[curPos]);
+				Orion.SetGlobal("OJScrollPosition", ++curPos);
+			}
+		}
+	} else {
+		Orion.Print("No nearby targets.");
+	}
+}
+
+//@@Support function that takes a passed in object class, sets highlights them to the color that has been selected in the gump (or glacial as default) and sets the object as your Last Target.
+//Support,Programming
+function PvPSetTarget(currtar) {
+	if (currtar == null) {
+		return false;
+	}
+	var highlightLTcolor = Orion.GetGlobal("targetHighlightColor");
+	if (highlightLTcolor == null || highlightLTcolor == 0 || highlightLTcolor == "") {
+		highlightLTcolor = 1152;
+	}
+	Orion.ClearHighlightCharacters(true);
+	Orion.ClientLastTarget(currtar.Serial());
+	Orion.CharPrint(Player.Serial(), "48", "Target:[" + currtar.Name() + "]");
+	Orion.SetGlobal("LTHighlight", currtar.Serial());
+	Orion.AddHighlightCharacter(currtar.Serial(), highlightLTcolor, true);
+	var tempTarget = Orion.FindObject(Orion.GetGlobal("LeadHighlight"));
+	var highlightCaller = Orion.GetGlobal("doCallerHighlight") == "true" || Orion.GetGlobal("doCallerHighlight") == "" ? true : false;
+	var highlightCallerColor = Orion.GetGlobal("callerHighlightColor") == "" ? 1153 : Orion.GetGlobal("callerHighlightColor");
+	if (highlightCaller && tempTarget) {
+		Orion.AddHighlightCharacter(tempTarget.Serial(), highlightCallerColor, true);
+	}
+	Orion.SetGlobal("CTActionFlag", "true");
+}

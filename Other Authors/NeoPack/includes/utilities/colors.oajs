@@ -1,0 +1,55 @@
+//--#Misc
+var color = {};
+color.yellow = 0x35;
+color.darkred = 0x25;
+color.red = 0x26;
+color.orange = 0x2b;
+color.green = 0x43;
+color.white = "0x9C3";
+
+color.black = 0x0;
+color.blackRGB = "#010101";
+color.redRGB = "0xFF0000FF";
+color.greenRGB = "0x00FF00FF";
+color.whiteRGB = "0xFFf7f0BB"; //White with opacity
+//Gump colors
+color.yellowgold = "0x0094";
+
+//Item Colors
+color.europagold = 1177;
+color.glacial = 1152;
+color.supergold = 1174;
+color.icewhite = 1153;
+color.bloodwood = 1194;
+color.dullruby = 2731;
+color.dragonred = 1645;
+color.glacial_red = 0x508;
+color.red_glacial = 0x507;
+
+//Text Color (Some specific colors needed for this)
+color.whiteText = 0x802;
+
+//Slider Colors
+color.sliderwhite = "0x481";
+
+//Target Colors (Used for Dropdowns)
+var targetColors = {};
+targetColors[1152] = ItemColorObject("Glacial", 1152);
+targetColors[1152].defaultIndex = true;
+targetColors[1289] = ItemColorObject("Glacial Pink", 1289);
+targetColors[1161] = ItemColorObject("Blaze", 1161);
+targetColors[1177] = ItemColorObject("Europa Gold", 1177);
+targetColors[1174] = ItemColorObject("Super Gold", 1174);
+targetColors[1153] = ItemColorObject("White", 1153);
+targetColors[2760] = ItemColorObject("Neon Green/Orange", 2760);
+targetColors[1092] = ItemColorObject("Psychedelic Pink", 1092);
+targetColors[1182] = ItemColorObject("Psychedelic Black", 1182);
+targetColors[1674] = ItemColorObject("Psychedelic Green", 1674);
+targetColors[2058] = ItemColorObject("All White", 2058);
+targetColors[2075] = ItemColorObject("Abyss", 2075);
+targetColors[1194] = ItemColorObject("Bloodwood Red", 1194);
+targetColors[1148] = ItemColorObject("Dark Red/Brown", 1148);
+targetColors[1645] = ItemColorObject("Dragon Red", 1645);
+targetColors[1359] = ItemColorObject("Fire Orange", 1359);
+targetColors[1167] = ItemColorObject("Dryad Green", 1167);
+targetColors[2731] = ItemColorObject("Dull Ruby", 2731);

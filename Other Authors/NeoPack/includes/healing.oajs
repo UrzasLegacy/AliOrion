@@ -1,0 +1,187 @@
+//--#Healing
+
+function HealSelfFriend() {
+    while (!Player.Dead()) {
+        fulllist = Orion.FindType("-1", "-1", 'ground', "live", 2, "green");
+        healtar = null;
+        fulllist.push(Player.Serial())
+        for (var i = 0; i < fulllist.length; i++){
+          if(healtar == null && Orion.FindObject(fulllist[i])){
+            temptar = Orion.FindObject(fulllist[i]);
+            healtar = temptar;
+            //Orion.Print(temptar.Name())
+          }
+          else{
+            if(Orion.FindObject(fulllist[i])){
+              temptar = Orion.FindObject(fulllist[i]);
+              Orion.GetStatus(temptar.Serial());
+              Orion.GetStatus(healtar.Serial());
+              //Orion.Print(temptar.Name() && healtar.Name())
+              if (temptar.Hits() < healtar.Hits()){
+                healtar = temptar;
+              }
+            }
+          }
+        }
+        target = healtar;
+        Orion.Wait(200);
+        if (target != null) {
+            if (target != null && (target.Poisoned() || target.Hits() < (target.MaxHits())) && !Orion.BuffExists('healing skill') && target.Distance() <= 2) {
+                Orion.BandageTarget(target.Serial());
+                Orion.AddDisplayTimer('bandageFriend',
+                    Orion.BuffTimeRemaining('healing skill'),
+                    'Top', 'Circle', 'Heal', 0, 0,
+                    'any', -1, '0x0000FFFE');
+                Orion.DisplayTimerSetIcon('bandageFriend', 'Top', '0x0E21');
+                Orion.Wait(500);
+            }
+        }
+        else {
+            Orion.Wait(200);
+            if (Player.Hits() < Player.MaxHits()) {
+                Orion.BandageSelf();
+                Orion.Wait(100);
+
+                Orion.AddDisplayTimer('bandageSelf',
+                    Orion.BuffTimeRemaining('healing skill'),
+                    'Top', 'Circle', 'HealSelf', 0, 0,
+                    'any', -1, '0x00FF00FE');
+                Orion.DisplayTimerSetIcon('bandageSelf', 'Top', '0x0E21');
+
+
+                while (Orion.BuffExists('healing skill')) {
+                    Orion.Wait(100);
+                }
+            }
+        }
+    }
+}
+
+function AutoHealing()
+{
+    var msg = "You finish applying the bandages|You have been cured of all poisons|You apply the bandages";
+    while (Orion.Count("bandage") && !Player.Dead())
+    {
+        //var aids =  Orion.FindTypeEx('0x0E21','any','backpack','','','',true);
+        //Orion.Print(aids.length);
+        if ((Player.Poisoned() || Player.Hits() < Player.MaxHits()) && !Orion.HaveTarget())
+        {
+            if(Player.Dex() > 80){
+              var bandagetime = 8000;
+              //bandagetime = 8000 - (((Player.Dex()-80)/20)*1000)  I think this one is wrong
+              bandagetime = 12000 - (((Player.Dex())/20)*1000)
+            }
+            else{
+              var bandagetime = 8000;
+            }
+            //Orion.CreateClientMacro("BandageSelf").Play();
+            Orion.BandageSelf();
+            didband = Orion.WaitJournal("You begin applying the bandages.", Orion.Now(), Orion.Now() + 2000, "sys");
+            if(didband){
+              Orion.AddDisplayTimer("64", bandagetime, "UnderChar", "Circle|Bar", "Bandage", 60, 0, '55', 0xFF, '0xFFFFFF');
+              Orion.Wait(bandagetime);
+            }
+            else{
+              Orion.Wait(500);
+            }
+        }
+        else
+        {
+            Orion.Wait(100);
+        }
+    }
+    if (!Player.Dead() && Orion.Count("bandage") == 0)
+    {
+        Orion.CharPrint(self, 1153, "-- no bandages left --");
+        var belts = Orion.FindType('0xA1F6','any');
+        if(belts.length > 0){
+          for(var i = 0; i < belts.length; i++){
+            Orion.OpenContainer(belts.Serial());
+            Orion.Wait(1200);
+            Orion.Exec("AutoHealing");
+          }
+        }
+    }
+}
+
+function HealTimer()
+{
+  if (Player.Hits() < Player.MaxHits())
+  {
+      if(Player.Dex() > 80){
+        var bandagetime = 8000;
+        bandagetime = 8000 - (((Player.Dex()-80)/20)*1000)
+      }
+      else{
+        var bandagetime = 8000;
+      }
+      Orion.CreateClientMacro("BandageSelf").Play();
+      Orion.AddDisplayTimer("64", bandagetime, "UnderChar", "Circle|Bar", "Bandage", 60, 0, '55', 0xFF, '0xFFFFFF');
+      Orion.Wait(100);
+  }
+
+}
+
+function MasterObserver(){
+	var bandageGOING = false;
+	while (!Player.Dead()) {
+		if ( Player.Hits() < Player.MaxHits() ) {
+			if ( bandageGOING == false ) {
+				Orion.CharPrint(self,2119,'Apply a Bandage!');
+				//Orion.Exec('BandageTimer');
+			}
+		}
+		Orion.Wait(500);
+		if (Orion.InJournal('begin applying', 'sys') ) {
+			Orion.ClearJournal();
+			bandageGOING = true;
+			Orion.CharPrint(self, '906', 'Bandage Started.')
+		}
+		if (Orion.InJournal('finish applying | barely help | You have been cured', 'sys') ) {
+			Orion.ClearJournal();
+			Orion.CharPrint(self, '906', 'Bandage Finished.')
+			bandageGOING = false;
+			Orion.Terminate('BandageTimer');
+		}
+	}
+}
+
+function MasterObserverWBandageTimer(){
+	var bandageGOING = false;
+	while (!Player.Dead()) {
+		if ( Player.Hits() < Player.MaxHits() ) {
+			if ( bandageGOING == false ) {
+				Orion.CharPrint(self,2119,'Apply a Bandage!');
+				Orion.Exec('BandageTimer');
+			}
+		}
+		Orion.Wait(500);
+		if (Orion.InJournal('begin applying', 'sys') ) {
+			Orion.ClearJournal();
+			bandageGOING = true;
+			Orion.CharPrint(self, '906', 'Bandage Started.')
+		}
+		if (Orion.InJournal('finish applying | barely help | You have been cured', 'sys') ) {
+			Orion.ClearJournal();
+			Orion.CharPrint(self, '906', 'Bandage Finished.')
+			bandageGOING = false;
+			Orion.Terminate('BandageTimer');
+		}
+	}
+}
+
+function BandageTimer() {
+	Orion.CreateClientMacro('BandageSelf').Play();
+	Orion.Wait(1000);
+	var seconds = 1;
+	while ( !Orion.InJournal('finish applying | barely help', 'sys') ) {
+	    	Orion.CharPrint(self, '906', '-- ' + seconds + ' --');
+      	Orion.Wait(1000);
+      	++seconds;
+	}
+}
+
+function BandageSelfNOtarget() {
+	Orion.CreateClientMacro('BandageSelf').Play();
+
+}

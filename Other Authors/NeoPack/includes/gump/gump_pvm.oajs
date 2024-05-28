@@ -1,0 +1,17 @@
+function AutoSampStopButton(){
+  var gumpx = Orion.RegRead(Player.Serial() + "/stopautogumpx");
+  var gumpy = Orion.RegRead(Player.Serial() + "/stopautogumpy");
+  if(true){
+    var gumpnum = 151;
+    var gump = Orion.CreateCustomGump(gumpnum);
+    gump.SetNoClose(true);
+  	gump.Clear();
+  	// Set callback function
+  	gump.SetCallback('GumpLaunchResp');
+    // Gump position
+    gump.SetX(600);
+    gump.SetY(10);
+    gump.AddButton(2, 0, 0, 0xF1, 0xF2, 0xF3, '0');
+    gump.Update();
+  }
+}

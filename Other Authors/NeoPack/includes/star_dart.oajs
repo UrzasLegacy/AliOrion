@@ -1,0 +1,644 @@
+function StarDartThrow() {
+	var belts = Orion.FindTypeEx(0x2790, any, backpack);
+	var blowguns = Orion.FindTypeEx(0x27aa, any, backpack);
+	//Iterates through both arrays and removes belts that don't have dp stars/darts
+	for (var i = 0; i < belts.length; i++) {
+		if (!Orion.Contains(belts[i].Properties(), "Deadly Poison|Darkglow")) {
+			belts = PopItemArray(belts, i);
+		}
+	}
+	for (var i = 0; i < blowguns.length; i++) {
+		if (!Orion.Contains(blowguns[i].Properties(), "Deadly Poison|Darkglow")) {
+			blowguns = PopItemArray(blowguns, i);
+		}
+	}
+	if (belts.length < 1) {
+		Orion.Print("Warning: You are out of loaded belts.");
+		return;
+	}
+	if (blowguns.length < 1) {
+		Orion.Print("Warning: You are out of loaded fukiyas.");
+	}
+	if (Orion.GetDistance(lasttarget) >= 3 && Orion.Timer("StarTimer") >= -1) {
+		Orion.UseItemOnMobile(belts[0].Serial(), lasttarget);
+		Orion.SetTimer("StarTimer", -3500);
+		Orion.Wait(1000);
+	} else if (Orion.Timer("DartTimer") >= -1) {
+		Orion.UseItemOnMobile(blowguns[0].Serial(), lasttarget);
+		Orion.SetTimer("DartTimer", -3500);
+		Orion.Wait(1000);
+	}
+	/*
+	if (Orion.GetDistance(lasttarget) >= 3 && belts.length > 1 && Orion.Timer("StarTimer") >= -1) {
+		Orion.UseItemOnMobile(belts[1].Serial(), lasttarget);
+		Orion.SetTimer("StarTimer", -3500);
+		Orion.Wait(1000);
+	} else if (blowguns.length > 1 && Orion.Timer("DartTimer") >= -1) {
+		Orion.UseItemOnMobile(blowguns[1].Serial(), lasttarget);
+		Orion.SetTimer("DartTimer", -3500);
+		Orion.Wait(1000);
+	}*/
+	Orion.CancelWaitTarget();
+}
+
+function OldStarDartThrow() {
+	var thetarg = Orion.ClientLastTarget();
+	starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+	starbelt = null;
+	for (var i = 0; i < starbeltarr.length; i++) {
+		if (Orion.Contains(starbeltarr[i].Properties(), "Deadly Poison")) {
+			starbelt = starbeltarr[i];
+			break;
+		}
+	}
+	dartbeltarr = Orion.FindTypeEx("0x27AA", "any", "backpack");
+	dartbelt = null;
+	for (var i = 0; i < dartbeltarr.length; i++) {
+		if (Orion.Contains(dartbeltarr[i].Properties(), "Deadly Poison|Darkglow")) {
+			dartbelt = dartbeltarr[i];
+			break;
+		}
+	}
+	if (dartbeltarr != null && Orion.Timer("DartTimer") >= -1 && Orion.GetDistance("lasttarget") <= 4) {
+		MultiDart();
+		Orion.SetTimer("DartTimer", -3500);
+	} else if (starbeltarr != null && Orion.Timer("StarTimer") >= -1 && Orion.GetDistance("lasttarget") >= 3 && Orion.GetDistance("lasttarget") <= 9) {
+		MultiStar();
+		Orion.SetTimer("StarTimer", -3500);
+	} else if (Orion.GetDistance("lasttarget") > 9) {
+		Orion.CharPrint(self, 55, "Out of Range");
+	}
+	if (dartbelt == null) {
+		Orion.Print("You are out of DP'd darts");
+	}
+	if (starbelt == null) {
+		Orion.Print("You are out of DP'd star belts");
+	}
+}
+
+function DPBox() {
+	Orion.CharPrint(Player.Serial(), "906", "Click box/bag that has stars and DP pots...");
+	Orion.WaitForAddObject("StarBox", "10000");
+
+	if (Orion.FindObject("StarBox") == null) {
+		return false;
+	}
+	var starBox = Orion.FindObject("StarBox");
+	var potsBox = Orion.FindTypeEx("0x0F0A", "0x0000", starBox.Serial());
+	var stars = Orion.FindTypeEx("0x27AC", "0x0000", starBox.Serial());
+	for (var i = 0; i < stars.length; i++) {
+		if (Orion.Contains(stars[i].Properties(), "Deadly", true)) {
+			stars = PopItemArray(stars, i);
+		}
+	}
+	while (stars.length > 0 && potsBox.length > 0) {
+		if (Orion.Contains(stars[0].Properties(), "Deadly", true)) {
+			stars = PopItemArray(stars, 0);
+			continue;
+		}
+		Orion.Print("Stars left: " + stars.length);
+		Orion.UseSkill("Poisoning");
+		Orion.WaitForTarget(500);
+		Orion.TargetObject(potsBox[0].Serial());
+		Orion.WaitForTarget(500);
+		Orion.TargetObject(stars[0].Serial());
+		Orion.Wait(10);
+		Orion.Say("I wish to lock this down");
+		if (Orion.WaitForTarget(500)) {
+			Orion.TargetObject(stars[0].Serial());
+		}
+		Orion.Wait(10);
+		potsBox = Orion.FindTypeEx("0x0F0A", "0x0000", starBox.Serial());
+	}
+}
+
+function MultiStar() {
+	var belts = Orion.FindTypeEx("0x2790");
+	var LT = Orion.FindObject("lasttarget");
+	for (var i = 0; i < belts.length; i++) {
+		if (!Orion.Contains(belts[i].Properties(), "Deadly Poison|Darkglow")) {
+			belts = PopItemArray(belts, i);
+		}
+	}
+	if (belts.length > 0) {
+		Orion.UseObject(belts[0].Serial());
+		PingWait(1000);
+	} else {
+		if (belts.length == 0) {
+			Orion.Print("No belts (or belts with poison stars).");
+		}
+		if (LT && LT.Distance() > 5) {
+			Orion.Print("Target out of distance.");
+		} else {
+			Orion.Print("No last target.");
+		}
+	}
+	if (belts.length > 1 && LT && LT.Distance() <= 9) {
+		Orion.UseItemOnMobile(belts[1].Serial(), lasttarget);
+		PingWait(0);
+	}
+	if (Orion.HaveTarget() && LT && LT.Distance() <= 9) {
+		Orion.TargetObject("lasttarget");
+	} else {
+		if (Orion.HaveTarget()) {
+			Orion.CancelTarget();
+		}
+	}
+}
+
+function MultiDart() {
+	var belts = Orion.FindTypeEx("0x27AA");
+	var LT = Orion.FindObject("lasttarget");
+	for (var i = 0; i < belts.length; i++) {
+		if (!Orion.Contains(belts[i].Properties(), "Deadly Poison|Darkglow")) {
+			belts = PopItemArray(belts, i);
+		}
+	}
+	if (belts.length > 0) {
+		Orion.UseObject(belts[0].Serial());
+		PingWait(1000);
+	} else {
+		if (belts.length == 0) {
+			Orion.Print("No belts (or belts with poison stars).");
+		}
+		if (LT && LT.Distance() > 5) {
+			Orion.Print("Target out of distance.");
+		} else {
+			Orion.Print("No last target.");
+		}
+	}
+	if (belts.length > 1 && LT && LT.Distance() <= 4) {
+		Orion.UseItemOnMobile(belts[1].Serial(), lasttarget);
+		PingWait(0);
+	}
+	if (Orion.HaveTarget() && LT && LT.Distance() <= 4) {
+		Orion.TargetObject("lasttarget");
+	} else {
+		if (Orion.HaveTarget()) {
+			Orion.CancelTarget();
+		}
+	}
+}
+
+function PoisonOJPet() {
+	var thetarg = Orion.FindTypeEx("any", "-1", "ground", "ignoreself|ignorefriends|nothuman|live|near", "30", "orange");
+	if (thetarg.length == 0) {
+		Orion.Print("No OJ pets around!");
+	} else {
+		thetarg = thetarg[0].Serial();
+		if (Orion.HaveTarget()) {
+			Orion.TargetObject(thetarg);
+		} else {
+			Orion.Cast("Poison");
+			Orion.WaitTargetObject(thetarg);
+		}
+	}
+}
+
+function StarDartThrowOJPet() {
+	var thetarg = Orion.FindTypeEx("any", "-1", "ground", "ignoreself|ignorefriends|nothuman|live", "30", "orange");
+	if (thetarg.length == 0) {
+		Orion.Print("No OJ pets around!");
+	} else {
+		thetarg = thetarg[0].Serial();
+		starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+		starbelt = null;
+		for (var i = 0; i < starbeltarr.length; i++) {
+			if (Orion.Contains(starbeltarr[i].Properties(), "Deadly Poison")) {
+				starbelt = starbeltarr[i];
+				break;
+			}
+		}
+		dartbeltarr = Orion.FindTypeEx("0x27AA", "any", "backpack");
+		dartbelt = null;
+		for (var i = 0; i < dartbeltarr.length; i++) {
+			if (Orion.Contains(dartbeltarr[i].Properties(), "Deadly Poison")) {
+				dartbelt = dartbeltarr[i];
+				break;
+			}
+		}
+		if (dartbelt != null && Orion.Timer("DartTimer") >= -1 && Orion.GetDistance("lasttarget") <= 5) {
+			Orion.UseObject(dartbelt.Serial());
+			Orion.WaitForTarget(1500);
+			Orion.TargetObject(thetarg);
+			Orion.SetTimer("DartTimer", -5000);
+		} else if (starbelt != null && Orion.GetDistance("lasttarget") <= 10 && Orion.GetDistance("lasttarget") >= 3) {
+			Orion.UseObject(starbelt.Serial());
+			Orion.WaitForTarget(1500);
+			Orion.TargetObject(thetarg);
+		} else if (Orion.GetDistance("lasttarget") > 10) {
+			Orion.CharPrint(self, 55, "Out of Range");
+		}
+		if (dartbelt == null) {
+			Orion.Print("You are out of DP'd darts");
+		}
+		if (starbelt == null) {
+			Orion.Print("You are out of DP'd star belts");
+		}
+	}
+}
+function MakeStarTen() {
+	//Makes ten stacks of stars
+	//Target resource box
+	if (!Orion.FindObject("ResourceBox")) {
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag with your resources.");
+		Orion.WaitForAddObject("ResourceBox", "10000");
+	}
+	//Make sure both were valid objects
+	if (!Orion.FindObject("ResourceBox")) {
+		Orion.CharPrint(Player.Serial(), "906", "Error with resource container.");
+		Orion.SetGlobal("doTink", 0);
+	} else {
+		Orion.OpenContainer("ResourceBox");
+		Orion.Wait(1100);
+	}
+	var stararr = Orion.FindTypeEx("0x27AC", "any", "ResourceBox");
+	Orion.Print("Stars in box: " + stararr.length);
+	for (var i = 0; i < stararr.length; i++) {
+		if (Orion.Contains(stararr[i].Properties(), "Uses Remaining: 2")) {
+			Orion.MoveItem(stararr[i].Serial());
+			Orion.Wait(1200);
+		}
+	}
+	stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+	var starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+	var theBelt = null;
+	for (var i = 0; i < starbeltarr.length; i++) {
+		if (Orion.Contains(starbeltarr[i].Properties(), "Uses Remaining: 0")) {
+			theBelt = starbeltarr[i];
+			break;
+		}
+	}
+	if (theBelt == null) {
+		Orion.Print("You need at least one empty belt to do this.");
+		return false;
+	} else {
+		while (stararr.length > 0) {
+			theBelt = Orion.FindObject(theBelt.Serial());
+			if (!Orion.Contains(theBelt.Properties(), "Uses Remaining: 10")) {
+				Orion.RequestContextMenu(theBelt.Serial());
+				Orion.WaitContextMenuID(theBelt.Serial(), 701);
+				Orion.WaitForTarget(1000);
+				if (Orion.HaveTarget()) {
+					Orion.TargetObject(stararr[0].Serial());
+					stararr.splice(i, 1);
+				}
+			} else {
+				Orion.RequestContextMenu(theBelt.Serial());
+				Orion.WaitContextMenuID(theBelt.Serial(), 702);
+			}
+			Orion.Wait(1000);
+			stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+			for (var i = 0; i < stararr.length; i++) {
+				if (!Orion.Contains(stararr[i].Properties(), "Uses Remaining: 10")) {
+					stararr.splice(i, 1);
+				}
+			}
+		}
+	}
+}
+
+function DP_All_Container_Type() {
+	if (!Orion.FindObject("ResourceBox")) {
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag with your resources (dp pots).");
+		Orion.WaitForAddObject("ResourceBox", "10000");
+	}
+	Orion.CharPrint(Player.Serial(), "906", "Click box/bag type that has stars within one tile...");
+	Orion.WaitForAddObject("StarBox", "10000");
+
+	if (Orion.FindObject("StarBox") == null || Orion.FindObject("ResourceBox") == null) {
+		Orion.Print("Error with bag selection.");
+		return false;
+	} else {
+		Orion.OpenContainer("ResourceBox");
+		Orion.Wait(1700);
+	}
+	var potsBox = Orion.FindTypeEx("0x0F0A", "0x0000", "ResourceBox");
+	var allContainers = Orion.FindTypeEx(Orion.FindObject("StarBox").Graphic(), "any", "ground", "", 1);
+	while (allContainers.length > 0 && potsBox.length > 0) {
+		if (!Orion.GumpExists("container", allContainers[0].Serial())) {
+			Orion.OpenContainer(allContainers[0].Serial());
+			Orion.Wait(1700);
+		}
+		var starBox = allContainers[0];
+		potsBox = Orion.FindTypeEx("0x0F0A", "0x0000", "ResourceBox");
+		var stars = Orion.FindTypeEx("0x27AC", "0x0000", starBox.Serial());
+		while (stars.length > 0 && potsBox.length > 0) {
+			var newArray = [];
+			for (var i = 0; i < stars.length; i++) {
+				if (!Orion.Contains(stars[i].Properties(), "Deadly", true)) {
+					newArray.push(stars[i]);
+				}
+			}
+			var stars = newArray;
+			Orion.Print("Stars left: " + stars.length);
+			if (stars.length > 0) {
+				if (!Orion.Contains(stars[0].Properties(), "Deadly", true)) {
+					Orion.UseSkill("Poisoning");
+					Orion.WaitForTarget(500);
+					Orion.TargetObject(potsBox[0].Serial());
+					Orion.WaitForTarget(500);
+					Orion.TargetObject(stars[0].Serial());
+					Orion.Wait(10);
+				}
+				Orion.Say("I wish to lock this down");
+				if (Orion.WaitForTarget(500)) {
+					Orion.TargetObject(stars[0].Serial());
+				}
+			}
+			Orion.Wait(1100);
+			potsBox = Orion.FindTypeEx("0x0F0A", "0x0000", "ResourceBox");
+		}
+		if (stars.length == 0) {
+			Orion.Ignore(allContainers[0].Serial());
+		}
+		allContainers = Orion.FindTypeEx(Orion.FindObject("StarBox").Graphic(), "any", "ground", "", 1);
+	}
+}
+
+function Start_Fill_Containers() {
+	//Makes ten stacks of stars
+	//Target resource box
+	if (!Orion.FindObject("ResourceBox")) {
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag with your resources.");
+		Orion.WaitForAddObject("ResourceBox", "10000");
+	}
+	if (!Orion.FindObject("DestinationContainer")) {
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag type you want to fill (must be within one tile).");
+		Orion.WaitForAddObject("DestinationContainer", "10000");
+	}
+	//Make sure both were valid objects
+	if (!Orion.FindObject("ResourceBox") || !Orion.FindObject("DestinationContainer")) {
+		Orion.CharPrint(Player.Serial(), "906", "Error with resource container.");
+		return false;
+	} else {
+		Orion.OpenContainer("ResourceBox");
+		Orion.Wait(2000);
+	}
+	//Verifying that we have an empty belt to start with
+	var starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+	var theBelt = null;
+	for (var i = 0; i < starbeltarr.length; i++) {
+		if (Orion.Contains(starbeltarr[i].Properties(), "Uses Remaining: 0")) {
+			theBelt = starbeltarr[i];
+			break;
+		}
+	}
+	if (theBelt == null) {
+		Orion.Print("You need at least one empty belt to do this.");
+		return false;
+	}
+
+	while (true) {
+		//Verifying how many 2 qty stars we have in our pack
+		var stararr = StarFilter(2);
+		//Verifying containers around to fill
+		var fillCont = Orion.FindTypeEx(Orion.FindObject("DestinationContainer").Graphic(), "any", "ground", "", 1);
+		Orion.Print("Total Containers Found: " + fillCont.length);
+		fillCont = ContainerFilter(fillCont);
+		Orion.Print("Not full containers: " + fillCont.length);
+		if (fillCont.length == 0 || fillCont.length == 0) {
+			return false;
+		}
+		//Crafting 5 stars (10 uses)
+		if (15 - stararr.length > 0) {
+			var craftReturn = CraftItem(craftItems.NinjaStars, "iron", 15 - stararr.length, true);
+			if (craftReturn == false) {
+				Orion.Print("Crafting Error");
+				//return false;
+				continue;
+			}
+		}
+		//Reverifying star count
+		var stararr = StarFilter(2);
+		if (stararr.length < 5) {
+			continue;
+		}
+		while (stararr.length >= 5) {
+			var stararr = StarFilter(2);
+			if (!Orion.Contains(theBelt.Properties(), "Uses Remaining: 10")) {
+				if (Orion.Contains(stararr[0].Properties(), "Uses Remaining: 2")) {
+					Orion.RequestContextMenu(theBelt.Serial());
+					Orion.WaitContextMenuID(theBelt.Serial(), 701);
+					Orion.WaitForTarget(1000);
+					if (Orion.HaveTarget()) {
+						Orion.TargetObject(stararr[0].Serial());
+						stararr.splice(i, 1);
+					}
+				} else {
+					Orion.Print("The zero index star should have been filtered.");
+				}
+			} else {
+				Orion.RequestContextMenu(theBelt.Serial());
+				Orion.WaitContextMenuID(theBelt.Serial(), 702);
+			}
+			Orion.Wait(1000);
+		}
+		var stararr = StarFilter(10);
+		while (stararr.length > 0 && fillCont.length > 0) {
+			if (Orion.Contains(stararr[0].Properties(), "Uses Remaining: 10")) {
+				Orion.MoveItem(stararr[0].Serial(), 0, fillCont[0].Serial());
+			}
+			stararr = StarFilter(10);
+			fillCont = ContainerFilter(Orion.FindTypeEx(Orion.FindObject("DestinationContainer").Graphic(), "any", "ground", "", 1));
+		}
+	}
+}
+
+function StarFilter(starNum) {
+	var stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+	var newarray = [];
+	//Orion.Print("before" + stararr.length);
+	for (var i = 0; i < stararr.length; i++) {
+		if (Orion.Contains(stararr[i].Properties(), "Uses Remaining: " + starNum.toString())) {
+			newarray.push(stararr[i]);
+		}
+	}
+	//Orion.Print("after" + newarray.length);
+	return newarray;
+}
+//Filters full containers out of any arry
+function ContainerFilter(fillCont) {
+	var newarray = [];
+	for (var i = 0; i < fillCont.length; i++) {
+		if (ContainerCount(fillCont[i].Serial()) != 125) {
+			newarray.push(fillCont[i]);
+		}
+	}
+	return newarray;
+}
+
+function StarDartLoad() {
+	//0x0F0A = DP
+	//Ninja star section
+	starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+	stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+	for (var i = 0; i < stararr.length; i++) {
+		poisons = Orion.FindTypeEx("0x0F0A", "any", "backpack");
+		if (poisons.length == 0) {
+			Orion.Print("You need to grab DP pots");
+		} else if (Orion.Contains(stararr[i].Properties(), "Uses Remaining: 10") && !Orion.Contains(stararr[i].Properties(), "Deadly")) {
+			stars = stararr[i];
+			Orion.UseSkill("Poisoning");
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(poisons[0].Serial());
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(stars.Serial());
+			if (i != stararr.length - 1) {
+				Orion.Wait(11000);
+			}
+		} else if (!Orion.Contains(stararr[i].Properties(), "Uses Remaining: 10")) {
+			Orion.Print("You have stars in your pack that could mess shit up.");
+			Orion.Print("Make sure you only have clean or DP'd stacks of 10.");
+			Orion.Print("Dropping the shitty star to ground.");
+			Orion.MoveItem(stararr[i].Serial(), -1, "ground", Player.X(), Player.Y() + 1);
+			Orion.Wait(1000);
+			stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+			i = 0;
+		}
+	}
+	//Loading the ninja belt with DP stars
+	for (var i = 0; i < starbeltarr.length; i++) {
+		if (Orion.Contains(starbeltarr[i].Properties(), "Uses Remaining: 0") && stararr.length > 0) {
+			stararr = Orion.FindTypeEx("0x27AC", "any", "backpack");
+			starbelt = starbeltarr[i];
+			Orion.RequestContextMenu(starbelt.Serial());
+			Orion.WaitContextMenuID(starbelt.Serial(), 701);
+			if (Orion.WaitForTarget(1000)) Orion.TargetObject(stararr[0].Serial());
+		}
+		Orion.Wait(1200);
+	}
+	//Dart Section
+	var dartstacks = 5;
+	dartregexp = new RegExp("Uses Remaining: (\\d+)");
+	var dartgunarr = Orion.FindTypeEx("0x27AA", "any", "backpack");
+	var dartarr = Orion.FindTypeEx("0x2806", "any", "backpack");
+	var tenstack = [];
+	var morestack = [];
+	for (var i = 0; i < dartarr.length; i++) {
+		var properties = dartarr[i].Properties();
+		var matches = dartregexp.exec(properties);
+		if (matches.length > 0) {
+			if (Number(matches[1]) == 10) {
+				tenstack.push(dartarr[i]);
+			} else if (Number(matches[1]) >= 0) {
+				morestack.push(dartarr[i]);
+			}
+		}
+	}
+	//Only builds more dart stacks if at zero
+	if (tenstack.length == 0) {
+		if (dartgunarr.length != 0) {
+			var actualstacks = 0;
+			var dartgun = dartgunarr[0];
+			while (actualstacks < dartstacks && morestack.length > 0) {
+				Orion.RequestContextMenu(dartgun.Serial());
+				Orion.WaitContextMenuID(dartgun.Serial(), 703);
+				if (Orion.WaitForTarget(1000)) Orion.TargetObject(morestack[0].Serial());
+				Orion.Wait(1000);
+				Orion.RequestContextMenu(dartgun.Serial());
+				Orion.WaitContextMenuID(dartgun.Serial(), 704);
+				Orion.Wait(1000);
+				actualstacks++;
+			}
+		} else {
+			Orion.Print("You need a dart gun!");
+		}
+	} else if (tenstack.length == 0 && morestack.length == 0) {
+		Orion.Print("You need more darts.");
+	}
+	var tenstack = [];
+	var morestack = [];
+	var dartarr = Orion.FindTypeEx("0x2806", "any", "backpack");
+	for (var i = 0; i < dartarr.length; i++) {
+		var properties = dartarr[i].Properties();
+		var matches = dartregexp.exec(properties);
+		if (matches.length > 0) {
+			if (Number(matches[1]) == 10) {
+				tenstack.push(dartarr[i]);
+			} else if (Number(matches[1]) >= 0) {
+				morestack.push(dartarr[i]);
+			}
+		}
+	}
+	//Checking and DP'ing the ten dartstacks
+	for (var i = 0; i < tenstack.length; i++) {
+		poisons = Orion.FindTypeEx("0x0F0A", "any", "backpack");
+		if (poisons.length == 0) {
+			Orion.Print("You need to grab DP pots");
+			break;
+		} else if (Orion.Contains(tenstack[i].Properties(), "Uses Remaining: 10") && !Orion.Contains(tenstack[i].Properties(), "Deadly Poison Charges: 10")) {
+			dart = tenstack[i];
+			Orion.UseSkill("Poisoning");
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(poisons[0].Serial());
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(dart.Serial());
+			Orion.Wait(1000);
+			Orion.RequestContextMenu(Player.Serial());
+			Orion.WaitContextMenuID(Player.Serial(), 418);
+			if (Orion.WaitForTarget(1000)) {
+				Orion.TargetObject(dart.Serial());
+			}
+			Orion.Wait(100);
+			Orion.CancelTarget();
+			if (i != tenstack.length - 1) {
+				Orion.Wait(10000);
+			}
+		}
+	}
+	//Loading dart gun
+	for (var i = 0; i < dartgunarr.length; i++) {
+		if (Orion.Contains(dartgunarr[i].Properties(), "Uses Remaining: 0")) {
+			var dartgun = dartgunarr[i];
+			if (tenstack.length > 0) {
+				Orion.RequestContextMenu(dartgun.Serial());
+				Orion.WaitContextMenuID(dartgun.Serial(), 703);
+				if (Orion.WaitForTarget(1000)) {
+					Orion.TargetObject(tenstack[0].Serial());
+				}
+				tenstack.splice(0, 1);
+				Orion.Wait(500);
+				Orion.CancelContextMenu();
+				Orion.Wait(700);
+			}
+		}
+	}
+
+	Orion.Print("All done!");
+}
+
+function OldStarDartThrow() {
+	var thetarg = Orion.ClientLastTarget();
+	starbeltarr = Orion.FindTypeEx("0x2790", "any", "backpack");
+	starbelt = null;
+	for (var i = 0; i < starbeltarr.length; i++) {
+		if (Orion.Contains(starbeltarr[i].Properties(), "Deadly Poison")) {
+			starbelt = starbeltarr[i];
+			break;
+		}
+	}
+	dartbeltarr = Orion.FindTypeEx("0x27AA", "any", "backpack");
+	dartbelt = null;
+	for (var i = 0; i < dartbeltarr.length; i++) {
+		if (Orion.Contains(dartbeltarr[i].Properties(), "Deadly Poison|Darkglow")) {
+			dartbelt = dartbeltarr[i];
+			break;
+		}
+	}
+	if (dartbeltarr != null && Orion.Timer("DartTimer") >= -1 && Orion.GetDistance("lasttarget") <= 4) {
+		MultiDart();
+		Orion.SetTimer("DartTimer", -3500);
+	} else if (starbeltarr != null && Orion.Timer("StarTimer") >= -1 && Orion.GetDistance("lasttarget") >= 3 && Orion.GetDistance("lasttarget") <= 9) {
+		MultiStar();
+		Orion.SetTimer("StarTimer", -3500);
+	} else if (Orion.GetDistance("lasttarget") > 9) {
+		Orion.CharPrint(self, 55, "Out of Range");
+	}
+	if (dartbelt == null) {
+		Orion.Print("You are out of DP'd darts");
+	}
+	if (starbelt == null) {
+		Orion.Print("You are out of DP'd star belts");
+	}
+}

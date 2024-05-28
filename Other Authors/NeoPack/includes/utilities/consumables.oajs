@@ -1,0 +1,754 @@
+//@@This is the function that houses a lot of the auto-action/chugging activation (apple, box, pies, warcry, seed, refresh, dex, str).
+//PvP,Buff
+function AutoEverything() {
+	//Giving the game time to load
+	Orion.Wait(10000);
+	var loopDelay = 250;
+	while (true) {
+		//Update everything that is currently toggled on
+		var doSeed = Orion.GetGlobal("doSeed") == "true" ? true : false;
+		var doBox = Orion.GetGlobal("doBoxPop") == "true" ? true : false;
+		var doApple = Orion.GetGlobal("doApple") == "true" ? true : false;
+		var doRun = Orion.GetGlobal("doRun") == "true" ? true : false;
+		var doCry = Orion.GetGlobal("doCry") == "true" ? true : false;
+		var doDexStr = Orion.GetGlobal("doDexStr") == "true" ? true : false;
+		var doCA = Orion.GetGlobal("doCA") == "true" ? true : false;
+		var doHeal = Orion.GetGlobal("doHeal") == "true" ? true : false;
+		var doDmgDrop = Orion.GetGlobal("doDmgDrop") == "true" ? true : false;
+		var doRA = Orion.GetGlobal("doRA") == "true" ? true : false;
+		var doBarrab = Orion.GetGlobal("doBarrab") == "true" ? true : false;
+		var doPie = Orion.GetGlobal("doPie") == "true" ? true : false;
+		var doStone = Orion.GetGlobal("doHealStone") == "true" ? true : false;
+		var doDisarmSwap = Orion.GetGlobal("doDisarmSwap") == "true" ? true : false;
+		var doRefresh = Orion.GetGlobal("doRefresh") == "true" ? true : false;
+		//Apple Eat debuff toggles
+		doCorpse = Orion.GetGlobal("doCorpse") == "true" ? true : false;
+		doSleep = Orion.GetGlobal("doSleep") == "true" ? true : false;
+		doMortal = Orion.GetGlobal("doMortal") == "true" ? true : false;
+		doPlague = Orion.GetGlobal("doPlague") == "true" ? true : false;
+		doCurse = Orion.GetGlobal("doCurse") == "true" ? true : false;
+		doStrangle = Orion.GetGlobal("doStrangle") == "true" ? true : false;
+		doBloodOath = Orion.GetGlobal("doBloodOath") == "true" ? true : false;
+		//Getting the latest activation levels for auto things
+		autostartlevel = parseInt(Orion.GetGlobal("doDexStr_act")) * 0.01;
+		seedhits = parseInt(Orion.GetGlobal("doSeed_act")) * 0.01;
+		warcryhits = parseInt(Orion.GetGlobal("doCry_act")) * 0.01;
+		autoheal = parseInt(Orion.GetGlobal("doHeal_act")) * 0.01;
+		stoneAct = parseInt(Orion.GetGlobal("doHealStone_act")) * 0.01;
+		barrabAct = parseInt(Orion.GetGlobal("doBarrab_act")) * 0.01;
+		hprpieAct = parseInt(Orion.GetGlobal("doHPRPie_act")) * 0.01;
+		mprpieAct = parseInt(Orion.GetGlobal("doMPRPie_act")) * 0.01;
+		var swapDress = Orion.GetGlobal("swapDress");
+		var refreshChug = Orion.GetGlobal("refreshChug") == "" ? 90 : parseInt(Orion.GetGlobal("refreshChug"));
+		//Autostart Dex/Str Pot Chugging script
+		var hitsper = 0;
+		hitsper = (Player.Hits() * 1.0) / (Player.MaxHits() * 1.0);
+		if (doDexStr && hitsper < autostartlevel) {
+			if (Orion.ScriptRunning("AutoDrinkDexStr")) {
+				Orion.SetTimer("AuotStartDexTimer", 180000);
+			} else {
+				Orion.Exec("AutoDrinkDexStr");
+				Orion.SetTimer("AuotStartDexTimer", 180000);
+			}
+		}
+		//Check for Reactive Armor Need
+		if (doRA && Orion.Timer("RAtimer") >= -1 && !Orion.BuffExists("Reactive Armor")) {
+			//Orion.Print("Your reactive armor is not on.")
+			if (!Player.WarMode() && Orion.SkillValue("Magery", "base") > 200 && Player.LRC() > 80) {
+				Orion.Cast("Reactive Armor");
+			}
+			Orion.SetTimer("RAtimer", -10000);
+		}
+		//Auto Box Pop
+		if (doBox) {
+			PopBox();
+		}
+		//Auto Seed
+		if (doSeed && hitsper < seedhits) {
+			Eat_Seed();
+		}
+		//Auto Barrab
+		if (doBarrab && hitsper < barrabAct) {
+			Eat_Barrab();
+		}
+		//Auto Healstone
+		if (doStone && hitsper < stoneAct && Orion.Timer("healstoneTimer") >= -1 && !Player.Dead()) {
+			UseHealStone();
+			Orion.SetTimer("healstoneTimer", -15000);
+		}
+		//Auto Pie
+		if (doPie && !Orion.BuffExists("Magic Fish Buff") && !Player.Dead()) {
+			Eat_Pie(Orion.GetGlobal("pieTypeSelected"));
+		}
+		//Auto Warcry
+		if (doCry && hitsper < warcryhits && !Player.Dead() && Orion.SkillValue("bushido", "real") > 900) {
+			if (Orion.Timer("CryTimer") >= -1 && !Orion.HaveTarget()) {
+				Orion.Cast("Warcry");
+				Orion.Wait(100);
+				if (Orion.BuffExists("Warcry")) {
+					Orion.SetTimer("CryTimer", -60000 * 20);
+				}
+			}
+			Orion.Wait(1000);
+		}
+		//Auto Apple
+		if (
+			doApple &&
+			((doBloodOath && Orion.BuffExists("Blood Oath")) ||
+				(doCorpse && Orion.BuffExists("Corpse Skin")) ||
+				(doSleep && Orion.BuffExists("Sleep")) ||
+				(doMortal && Orion.BuffExists("Mortal Strike")) ||
+				(doPlague && Orion.BuffExists("Spell Plague")) ||
+				(doCurse && Orion.BuffExists("Curse")) ||
+				(doStrangle && Orion.BuffExists("Strangle")))
+		) {
+			Eat_Apple();
+		}
+		//Auto Run Toggle
+		if (doRun && Player.Hidden()) {
+			Orion.OptionAlwaysRun(false);
+		} else if (doRun) {
+			Orion.OptionAlwaysRun(true);
+		}
+		if (!doRun) {
+			Orion.OptionAlwaysRun(false);
+		}
+		//Auto Swap Wep After Disarm
+		if (doDisarmSwap && !Player.Dead()) {
+			currAbil = Orion.GetCurrentAbilityNames();
+
+			if (Orion.FindObject("lasttarget") && ((currAbil[0] == "Disarm" && Orion.AbilityStatus("Primary") == true) || (currAbil[1] == "Disarm" && Orion.AbilityStatus("Secondary") == true))) {
+				if (!enemy_hasWeapon(Orion.ClientLastTarget()) && !enemy_hasShield(Orion.ClientLastTarget())) {
+					Orion.Dress(swapDress);
+					Orion.Wait(1000);
+				}
+			}
+		}
+		//Auto Counterattack
+		if (
+			doCA &&
+			Orion.SkillValue("Bushido", "base") >= 900 &&
+			!Player.Hidden() &&
+			!Orion.BuffExists("Counter Attack") &&
+			!Orion.HaveTarget() &&
+			Player.Mana() > 50 &&
+			Player.WarMode() &&
+			!Orion.BuffExists("Evasion") &&
+			!Orion.BuffExists("Confidence")
+		) {
+			Orion.Cast("Counter Attack");
+		}
+		//Auto Cure/Heal
+		if (doHeal && (Player.Poisoned() || hitsper < autoheal)) {
+			DrinkCureHeal();
+		}
+		var pos = Orion.GetGumpPosition("custom", 150);
+		if (pos.X() != -1 && Orion.Timer("GumpUpdateTimerLaunch") >= -1) {
+			//Orion.Print('Custom gump now at: ' + pos.X() + ' ' + pos.Y());
+			Orion.RegWrite(Player.Serial() + "/launchgumpx", pos.X());
+			Orion.RegWrite(Player.Serial() + "/launchgumpy", pos.Y());
+			Orion.SetTimer("GumpUpdateTimerLaunch", -1000);
+		}
+		//Timer / Status Check Function
+		TimerCheck();
+		//Damage check and drop item if damaged
+		if (doDmgDrop && Orion.Timer("DmgCheckTimer") >= -1) {
+			DamageDropCheck(5);
+		}
+		//Chug refresh if ability up and stamp low
+		var stamPer = Player.Stam() / (Player.MaxStam() * 1.001);
+		if (doRefresh && !Player.Dead() && stamPer <= refreshChug && !Orion.HaveTarget() && Orion.FindObject("lasttarget") && Orion.FindObject("lasttarget").Distance() < 5) {
+			Orion.UseType(0x0f0b, 0x0000, Player.Serial(), true);
+		}
+		Orion.Wait(loopDelay);
+	}
+}
+
+//@@Script that is called by the AutoEverything script to check for timers for buffs (specifically Spellweaving).
+//PvP,Spellweaving,Buff
+function TimerCheck() {
+	//Checking for SW debuffs
+	//Circle
+	if (Orion.GetGlobal("doHaveCircleTimer") == "true") {
+		if (Orion.Count("0x3155") == 0 && !Orion.DisplayTimerExists("HaveCircle_check")) {
+			Orion.AddDisplayTimer("HaveCircle_check", 600000, "bottom", "Line|Bar", "", -400, -20, color.red, 3, color.redRGB);
+			Orion.DisplayTimerSetIconType("HaveCircle_check", "gump");
+			Orion.DisplayTimerSetShowTime("HaveCircle_check", false);
+			Orion.DisplayTimerSetIcon("HaveCircle_check", "center", 0x59d8, color.red, 45, 15, 40, 40);
+		}
+		if (Orion.Count("0x3155") > 0 && Orion.DisplayTimerExists("HaveCircle_check")) {
+			Orion.RemoveDisplayTimer("HaveCircle_check");
+		}
+	}
+	//Mana Sheild
+	if (Orion.GetGlobal("doManaShieldTimer") == "true") {
+		if (!Orion.BuffExists("Mana Shield") && !Orion.DisplayTimerExists("ManaShield_check")) {
+			Orion.AddDisplayTimer("ManaShield_check", 600000, "bottom", "Line|Bar", "", -200, -20, color.red, 3, color.redRGB);
+			Orion.DisplayTimerSetIconType("ManaShield_check", "gump");
+			Orion.DisplayTimerSetShowTime("ManaShield_check", false);
+			Orion.DisplayTimerSetIcon("ManaShield_check", "center", 0x9b91, color.red, 45, 15, 40, 40);
+		}
+		if (Orion.BuffExists("Mana Shield") && Orion.DisplayTimerExists("ManaShield_check")) {
+			Orion.RemoveDisplayTimer("ManaShield_check");
+		}
+	}
+	//Gift of Renewal
+	if (Orion.GetGlobal("doGiftTimer") == "true") {
+		if (!Orion.BuffExists("Gift of Renewal") && !Orion.DisplayTimerExists("gift_check")) {
+			Orion.AddDisplayTimer("gift_check", 600000, "bottom", "Line|Bar", "", -300, -20, color.red, 3, color.redRGB);
+			Orion.DisplayTimerSetIconType("gift_check", "gump");
+			Orion.DisplayTimerSetShowTime("gift_check", false);
+			Orion.DisplayTimerSetIcon("gift_check", "center", 0x59d9, color.red, 45, 15, 40, 40);
+		}
+		//if (Orion.BuffExists("Gift of Renewal") && Orion.DisplayTimerExists("gift_check")) {
+		//	Orion.RemoveDisplayTimer("gift_check");
+		//}
+	}
+	//Magic Relfect
+	if (Orion.GetGlobal("doReflectTimer") == "true") {
+		var reflectUpdate = false;
+		var reflectUpdateTime = 5000;
+		var theTime = 600000;
+		var theColor = color.red;
+		var theColor2 = color.redRGB;
+		if (!Orion.BuffExists("Gift of Renewal") && !Orion.DisplayTimerExists("gift_check")) {
+			var theTime = 600000;
+			var theColor = color.red;
+			var theColor2 = color.redRGB;
+			reflectUpdate = true;
+		} else if (Orion.GetGlobal("reflectPool") != "") {
+			var currVal = Orion.GetGlobal("reflectPool");
+			if (currVal == "full" && Orion.BuffExists("Magic Reflection")) {
+				var theTime = 30000;
+				var theColor = color.green;
+				var theColor2 = color.greenRGB;
+				reflectUpdate = true;
+			} else if (currVal == "0" && Orion.BuffExists("Magic Reflection")) {
+				var theTime = 5000;
+				var theColor = color.orange;
+				var theColor2 = color.redRGB;
+				reflectUpdate = true;
+			}
+		}
+		if (reflectUpdate) {
+			Orion.AddDisplayTimer("reflect_check", theTime, "bottom", "Line|Bar", "", 400, -20, theColor, 3, theColor2);
+			Orion.DisplayTimerSetIconType("reflect_check", "gump");
+			Orion.DisplayTimerSetShowTime("reflect_check", false);
+			Orion.DisplayTimerSetIcon("reflect_check", "center", 0x8e3, theColor, 45, 15, 40, 40);
+			reflectUpdate = false;
+		}
+		//if (Orion.BuffExists("Gift of Renewal") && Orion.DisplayTimerExists("gift_check")) {
+		//	Orion.RemoveDisplayTimer("gift_check");
+		//}
+	}
+}
+
+//@@Script that runs in the background, if turned on in the gump, to keep Dexterity and Strength pots up.
+//PvP,Buff
+function AutoDrinkDexStr() {
+	var dexbool = true;
+	var strbool = true;
+	if (Orion.GetGlobal("RunningAuotDexStr") == "") {
+		Orion.SetGlobal("RunningAuotDexStr", "True");
+	} else {
+		if (Orion.GetGlobal("RunningAuotDexStr") == "True" || !dexbool & !strbool) {
+			Orion.SetGlobal("RunningAuotDexStr", "False");
+			Orion.Print("51", "Stopping Auto Dex/Str Chug");
+			Orion.Terminate("AutoDrinkDexStr");
+		} else {
+			Orion.SetGlobal("RunningAuotDexStr", "True");
+		}
+	}
+	var AutoDoIt = true;
+	if (Orion.GetGlobal("RunningAuotDexStr") == "True") {
+		AutoDoIt = true;
+		Orion.Print("63", "Starting Auto Dex/Str Chug");
+	} else {
+		AutoDoIt = false;
+	}
+	var bothhands = false;
+	while (AutoDoIt) {
+		if (
+			(Orion.ObjAtLayer("RightHand") && Orion.ObjAtLayer("RightHand").Properties().indexOf("Two-handed") != -1) ||
+			(Orion.ObjAtLayer("LeftHand") && Orion.ObjAtLayer("LeftHand").Properties().indexOf("Two-handed") != -1)
+		) {
+			var twohander = true;
+		} else {
+			var twohander = false;
+		}
+		if ((Orion.ObjAtLayer("RightHand") && Orion.ObjAtLayer("LeftHand")) || twohander) {
+			bothhands = true;
+		} else {
+			bothhands = false;
+		}
+		if (!Orion.BuffExists("Agility") && !Player.Hidden() && !Orion.HaveTarget() && !bothhands) {
+			if (!Orion.FindType("0x0F08", "any", "backpack", "any", "any", "any", true)) {
+				Orion.CharPrint("self", "63", "No Agility Pots!");
+				dexbool = false;
+				//AutoDoIt == False;
+			} else {
+				//Orion.UseType('0x0F08', '0x0000');
+				var pot = Orion.FindType(0x0f08, 0x0000, backpack);
+				Orion.UseItemOnMobile(pot[0], self);
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(100);
+		if (!Orion.BuffExists("Strength") && !Player.Hidden() && !Orion.HaveTarget() && !bothhands) {
+			if (!Orion.FindType("0x0F09", "any", "backpack", "any", "any", "any", true)) {
+				Orion.CharPrint("self", "63", "No Strength Pots!");
+				strbool = false;
+				//AutoDoIt == False;
+			} else {
+				var pot = Orion.FindType(0x0f09, 0x0000, backpack);
+				Orion.UseItemOnMobile(pot[0], self);
+				//Orion.UseType('0x0F09', '0x0000');
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(1000);
+	}
+}
+
+//@@This function pops a box if the character is nerved or paralyzed.
+//PvP,Buff
+function PopBox() {
+	nervepopdelay = Orion.GetGlobal("doBox_nervedelay") == "" ? 500 : parseInt(Orion.GetGlobal("doBox_nervedelay"));
+	parapopdelay = 0;
+	//Orion.Wait(100)
+	if (Orion.BuffExists("Paralyzed") || Orion.BuffExists("Paralyze") || Orion.BuffExists("Nerve Strike")) {
+		var pot = Orion.FindType(0x09a9, any, backpack);
+		Orion.UseItemOnMobile(pot[0], self);
+		//Orion.UseObject(box);
+		Orion.Wait(200);
+		Orion.Hide(Orion.GetSerial(pot[0]));
+	}
+	var NerveStriked = Orion.InJournal("Your attacker dealt a crippling nerve strike!", "sys", "0", "any", Orion.Now() - 2000, Orion.Now());
+	if (NerveStriked) {
+		Orion.Wait(nervepopdelay);
+		var pot = Orion.FindType(0x09a9, any, "backpack");
+		Orion.UseType(0x09a9);
+		Orion.Wait(350);
+		Orion.Hide(Orion.GetSerial(pot[0]));
+		//Orion.ClearJournal();
+	}
+	Orion.Wait(50);
+}
+
+//@@A function to run in the background (activated in the gump) and if an OJ is within 4 tiles and below the percentage (set in the gump) it will auto nova.
+//PvP,VvV,Pots,Alchemy
+function NovaWhenLow() {
+	var novaDistance = 4;
+	while (Orion.GetGlobal("doNovaLow") == "true") {
+		//var supernova = Orion.FindType("0x0F09", "0x000D", backpack, true);
+		var activationLevel = parseInt(Orion.GetGlobal("doNovaLow_act")) * 0.01;
+		var nearbyLowOrange = null;
+		var nearbyOrange = Orion.FindTypeEx(any, any, ground, "human|ignorefriends", novaDistance, "orange");
+		for (i = 0; i < nearbyOrange.length; i++) {
+			if (nearbyOrange[i].Hits() < nearbyOrange[i].MaxHits() * activationLevel && nearbyOrange[i].Hits() > 1) {
+				var nearbyLowOrange = nearbyOrange[i];
+				break;
+			} else {
+				var nearbyLowOrange = null;
+			}
+		}
+		if (Orion.Timer("NovaTimer") >= -1 && nearbyLowOrange != null && nearbyLowOrange.Distance() <= novaDistance) {
+			Use_Nova();
+			var nearbyLowOrange = null;
+			Orion.Wait(200);
+		}
+		Orion.Wait(500);
+	}
+}
+
+//Hotkey functions for using consumables
+
+//@@Uses a supernova pot and adds a timer at the bottom of the screen.
+//PvP,VvV,Alchemy,Pots
+function Use_Nova() {
+	//Orion.UseType('0x0F09', '0x000D')
+	var pot = Orion.FindType(0x0f09, 0x000d, backpack);
+	if (pot.length > 0) {
+		if (Orion.Timer("NovaTimer") >= -1) {
+			Orion.UseItemOnMobile(pot[0], self);
+			Orion.AddDisplayTimer("novaDisplayTimer", 120000, "Bottom", "Line|Bar", "", 0, -20, color.red, 3, color.redRGB);
+			Orion.DisplayTimerSetIconType("novaDisplayTimer", "item");
+			Orion.DisplayTimerSetShowTime("novaDisplayTimer", false);
+			Orion.DisplayTimerSetIcon("novaDisplayTimer", "center", 0x9b8d, "0x000D", 40, 15, 40, 40);
+			Orion.SetTimer("NovaTimer", -120000);
+		}
+	} else {
+		Orion.Print("You are out novas.");
+	}
+}
+
+//@@Eats an apple and if the apple is succesfully eaten, adds a timer at the bottom of the screen.
+//PvP,Pots,Buff
+function Eat_Apple() {
+	if (Orion.Timer("AppleTimer") >= -1 && !Orion.HaveTarget()) {
+		Orion.UseType("0x2FD8", "0x0488", Player.Serial(), true);
+		Orion.Wait(500);
+		//Checking to see if apple was eaten
+		if (Orion.InJournal("tasty bite of the enchanted", "sys", "0", "any", Orion.Now() - 1000, Orion.Now() + 2000)) {
+			Orion.SetTimer("AppleTimer", -29500);
+			Orion.AddDisplayTimer("apple_timer_" + Player.Serial(), 29500, "bottom", "Line|Bar", "", 300, -20, color.green, 3, color.greenRGB);
+			Orion.DisplayTimerSetIconType("apple_timer_" + Player.Serial(), "item");
+			Orion.DisplayTimerSetShowTime("apple_timer_" + Player.Serial(), false);
+			Orion.DisplayTimerSetIcon("apple_timer_" + Player.Serial(), "center", 0x9bab, "0x0488", 40, 15, 40, 40);
+			//Orion.ClearJournal();
+		}
+		Orion.Wait(1000);
+	}
+}
+
+//@@Eats a Seed of Life.
+//PvP,Pots
+function Eat_Seed() {
+	if (!Player.Dead() && Orion.Count("0x1727") > 0) {
+		if (Orion.Timer("SeedTimer") >= -1 && !Orion.HaveTarget()) {
+			Orion.UseType("0x1727");
+			Orion.Wait(200);
+			if (Orion.InJournal("bitter seed instantly", "my")) {
+				Orion.SetTimer("SeedTimer", -60000 * 10);
+				Orion.ClearJournal();
+			}
+		}
+		Orion.Wait(1000);
+	}
+}
+
+//@@Eats a Barrab pot.
+//PvP,Pots,Buff
+function Eat_Barrab() {
+	if (!Player.Dead() && Orion.Count("0x0F06", "0x04F8") > 0) {
+		var tempCount = Orion.Count("0x0F06", "0x04F8");
+		if (Orion.Timer("BarrabTimer") >= -1 && !Orion.HaveTarget()) {
+			Orion.UseType("0x0F06", "0x04F8");
+			Orion.Wait(200);
+			if (tempCount > Orion.Count("0x0F06", "0x04F8")) {
+				Orion.SetTimer("BarrabTimer", -60000 * 10);
+			}
+		}
+		Orion.Wait(1000);
+	}
+}
+var pieTypes = {};
+pieTypes["+10 Focus"] = [0x1041, 0x09eb];
+pieTypes["Mana Regen"] = [0x1041, 0x0b8f];
+pieTypes["Hit Point Regen"] = [0x1041, 0x09d3];
+pieTypes["Hit Chance Inc."] = [0x1041, 0x0507];
+pieTypes["Defence Chance Inc."] = [0x1041, 0x04e9];
+
+//@@Eats a pie based on the pie type passed into the function.  This function is called if a pie is selected to be eaten in the gump (Consumables tab).  Can be hotkeyed if you like as well.
+//PvP,Buff,Pots
+function Eat_Pie(type) {
+	var id = pieTypes[type][0];
+	var color = pieTypes[type][1];
+	var timerName = "PieTimer";
+	var eatTimer = 10;
+	if (!Player.Dead() && Orion.Count(id, color) > 0) {
+		var tempCount = Orion.Count(id, color);
+		if (Orion.Timer(timerName) >= -1 && !Orion.HaveTarget()) {
+			Orion.UseType(id, color);
+			Orion.Wait(200);
+			if (tempCount > Orion.Count(id, color)) {
+				Orion.SetTimer(timerName, -60000 * eatTimer);
+			}
+		}
+		Orion.Wait(1000);
+	}
+}
+
+//@@A function to be hot-keyed.  If the player is poisoned it will chug a cure pot, otherwise it will chug a heal pot.
+//PvP,Pots,Buff,Alchemy
+function DrinkCureHeal() {
+	if (Orion.ObjAtLayer("RightHand") && Orion.ObjAtLayer("LeftHand")) {
+		DisarmLeftHand();
+		Orion.Wait(500);
+	}
+	if (Orion.ObjAtLayer("LeftHand") && Orion.ObjAtLayer("LeftHand").Properties().indexOf("Two-handed") != -1 && !Orion.Contains(Orion.ObjAtLayer("LeftHand").Properties(), "Balanced")) {
+		Orion.Dress("wep_primary");
+		Orion.Wait(1100);
+	}
+	if (Player.Poisoned()) {
+		//Orion.UseType('0x0F07', '0x0000');
+		var pot = Orion.FindType(0x0f07, 0x0000, backpack);
+		Orion.UseItemOnMobile(pot[0], self);
+		Orion.Wait(50);
+		//Orion.ClearJournal();
+	} else if (Orion.Timer("chugheal") >= -1) {
+		var pot = Orion.FindType(0x0f0c, 0x0000, backpack);
+		Orion.UseItemOnMobile(pot[0], self);
+		//Orion.UseType('0x0F0C', '0x0000');
+		Orion.Wait(100);
+		if (Orion.InJournal("some damage", "sys", "0", "any", Orion.Now() - 2000, Orion.Now() + 2000)) {
+			Orion.SetTimer("chugheal", -12000);
+		}
+		Orion.Wait(50);
+	}
+}
+
+//@@Drinks a refresh pot if Stamina < Max Stamina.
+//PvP,Pots,Buff
+function DrinkRefresh() {
+	if (Player.Stam() < Player.MaxStam()) {
+		var Lhand = Orion.ObjAtLayer("2");
+		var RHand = Orion.ObjAtLayer("RightHand");
+		if (Lhand != null && RHand != null) {
+			DisarmLeftHand();
+			Orion.Wait(500);
+		}
+		if (Lhand && Lhand.Properties().indexOf("Two-handed") != -1 && !Orion.Contains(Lhand.Properties(), "Balanced")) {
+			Orion.Dress("wep_primary");
+			Orion.Wait(1100);
+		}
+		//Orion.UseType('0x0F0B', '0x0000');
+		var pot = Orion.FindType(0x0f0b, 0x0000, backpack);
+		Orion.UseItemOnMobile(pot[0], self);
+		if (!Orion.FindType("0x0F0B", "any", "backpack", "any", "any", "any", true)) {
+			Orion.CharPrint("self", "63", "refresh potion not found");
+		}
+	} else {
+		Orion.CharPrint("self", "63", "Stamina is full.");
+	}
+}
+
+//@@If you ahve multiple stacks of explosion pots, cooks them, and then evades before you they blow up.  With the latest patch, this script is likely not very useful.
+//PvP,Alchemy,Pots
+function Blowup_Evade() {
+	var betweenWait = 1100;
+	var afterWait = 2500;
+	var pot = Orion.FindType(0x0f0d, 0x0000, backpack);
+	if (pot.length > 0) {
+		if (Orion.Timer("expEvadeTimer") >= -1) {
+			Orion.UseObject(pot[0]);
+			Orion.WaitForTarget(2000);
+			Orion.CancelTarget();
+			Orion.Wait(betweenWait);
+			if (pot.length > 1) {
+				Orion.UseObject(pot[1]);
+				Orion.WaitForTarget(2000);
+				Orion.CancelTarget();
+			} else {
+				Orion.Print("Only one stack of explosion pots.");
+			}
+			Orion.Wait(afterWait);
+			Orion.Cast("Evasion");
+			Orion.Wait(500);
+			if (Orion.BuffExists("Evasion")) {
+				Orion.SetTimer("expEvadeTimer", -26000);
+			}
+		} else {
+			Orion.Print("Evade is on cooldown.");
+		}
+	} else {
+		Orion.Print("You are out novas.");
+	}
+}
+
+//@@While you have explosion pots in your pack, this script will constantly throw explosion pots at the last target.
+//PvM,Events,Alchemy
+function ChainExplodePot() {
+	while (true && Orion.Count(0x0f0d, 0x0000, "self", "10", true) > 0) {
+		var target = Orion.FindObject("lasttarget");
+		if (target && target.Distance() <= 10) {
+			Orion.UseType(0x0f0d, 0x0000);
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(target.Serial());
+			PingWait(1100);
+		}
+		Orion.Wait(100);
+	}
+}
+
+//@@A function to time throwing Explosion pots to hold them until the last possible second to throw and they still damage the character.
+//Alchemy,Pots
+function ExplodeTimedThrow() {
+	var cookDelay = 800;
+	if (Orion.Count(0x0f0d, 0x0000, "self", "10", true) == 0) {
+		Orion.CharPrint("self", "63", "[Explosion Pot] Out of pots.");
+		return false;
+	}
+	var target = Orion.FindObject("lasttarget");
+	if (target) {
+		Orion.Print(target.Direction());
+
+		Orion.Print("Cooking...");
+		Orion.UseType(0x0f0d, 0x0000);
+		Orion.SetTimer("expPotTimer", -5000);
+		Orion.WaitForTarget(1000);
+		while (Orion.Timer("expPotTimer") < -1 * cookDelay) {
+			Orion.Wait(100);
+		}
+		runOffset = target.Direction() > 8 ? 2 : 3;
+		var targetCoords = CharacterDirectionOffset(target.Direction(), runOffset, true, target.X(), target.Y());
+		if (targetCoords == false) {
+			Orion.TargetTileRelative("any", tempCoords.x, tempCoords.y, Player.Z());
+		} else {
+			Orion.TargetTile("any", targetCoords.x, targetCoords.y, target.Z());
+			Orion.Wait(500);
+		}
+		if (Orion.InJournal("Target cannot be seen", "sys", "0", "any", Orion.Now() - 700, Orion.Now())) {
+			var tempCoords = CharacterDirectionOffset(Player.Direction(), 14, false);
+			if (tempCoords != false) {
+				Orion.TargetTileRelative("any", tempCoords.x, tempCoords.y, Player.Z());
+			}
+		} else {
+			Orion.Print("Coordinate error.");
+		}
+	} else {
+		Orion.CharPrint("self", "63", "[Explosion Pot] No valid target.");
+	}
+}
+
+//@@Uses a Heal Stone
+//Mysticism,Pots
+function UseHealStone() {
+	//Orion.UseType('0x4078', '0x0000');
+	var pot = Orion.FindType("0x4078", "0x0000", backpack);
+	Orion.UseItemOnMobile(pot[0], self);
+}
+
+//@@Uses a smokebomb or egg.
+//Stealth,Pots
+function Use_Smokebomb() {
+	//Orion.UseType('0x0F09', '0x000D')
+	var pot = Orion.FindType("0x2808|0x2809", "-1", backpack);
+	if (pot.length > 0) {
+		if (Orion.Timer("BombTimer") >= -1) {
+			Orion.UseItemOnMobile(pot[0], self);
+			Orion.AddDisplayTimer("101", 12000, "Bottom", "Circle|Bar", "Bomb", 150, 0, "60", 0xff, "0xFFFFFF");
+			Orion.SetTimer("BombTimer", -12000);
+		}
+	} else {
+		Orion.Print("You are out novas.");
+	}
+}
+
+//@@Uses a conflag pot.
+//PvP,Pots,Alchemy
+function Use_Conflag() {
+	Orion.UseType("0x0F06", "0xFFFF");
+}
+//@@Throws a conflag pot directly in front of the character.
+//Alchemy,Pots,PvP
+function Use_Conflag_In_Front_Self() {
+	var preCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+	Orion.UseType("0x0F06", "0xFFFF");
+	Orion.WaitForTarget(600);
+	var targetCoords = CharacterDirectionOffset(Player.Direction(), 4, false);
+	if (targetCoords != false) {
+		Orion.TargetTileRelative("any", targetCoords.x, targetCoords.y, Player.Z());
+		var postCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+		if (postCount < preCount) {
+			Orion.SetTimer("conflagTimer", -30100);
+		}
+	} else {
+		Orion.CharPrint("self", "63", "[Conflag] Invalid Target.");
+	}
+}
+//@@Throws a conflag pot directly in front of the last target.
+//Alchemy,Pots,PvP
+function Use_Conflag_In_Front_LT() {
+	var LT = FindObject("lasttarget");
+	if (LT) {
+		var preCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+		Orion.UseType("0x0F06", "0xFFFF");
+		Orion.WaitForTarget(600);
+		var targetCoords = CharacterDirectionOffset(LT.Direction(), 2, false);
+		if (targetCoords != false) {
+			Orion.TargetTileRelative("any", targetCoords.x, targetCoords.y, Player.Z());
+			var postCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+			if (postCount < preCount) {
+				Orion.SetTimer("conflagTimer", -30100);
+			}
+		} else {
+			Orion.CharPrint("self", "63", "[Conflag] Invalid Target.");
+		}
+	}
+}
+//@@Throws a conflag pot directly in front of the last target.
+//Alchemy,Pots,PvP
+function Use_Conflag_In_Front_Serial(serial, offset) {
+	var LT = FindObject(serial);
+	if (LT) {
+		var preCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+		Orion.UseType("0x0F06", "0xFFFF");
+		Orion.WaitForTarget(600);
+		var targetCoords = CharacterDirectionOffset(LT.Direction(), offset, false);
+		if (targetCoords != false) {
+			Orion.TargetTileRelative("any", targetCoords.x, targetCoords.y, Player.Z());
+			var postCount = Orion.Count("0x0F06", "0xFFFF", "backpack", "10", true);
+			if (postCount < preCount) {
+				Orion.SetTimer("conflagTimer", -30100);
+			}
+		} else {
+			Orion.CharPrint("self", "63", "[Conflag] Invalid Target.");
+		}
+	}
+}
+
+function ApplyPoison() {
+	var PoisonPotion = Orion.FindType("0x0F0A");
+	if (!PoisonPotion.length) {
+		Orion.Print("poison potion NOT found");
+	} else {
+		Orion.Print("poison potion found");
+		var Rhand = Orion.ObjAtLayer("1");
+		if (Rhand === null) {
+			Orion.Print("something appropriate not armed");
+		} else {
+			//Orion.Print('right hand weapon is armed');
+			Orion.UseSkill("Poisoning");
+			Orion.WaitTargetObject(PoisonPotion);
+			Orion.WaitTargetObject(Rhand.Serial());
+		}
+	}
+}
+
+//Old Standalone functions
+//@@Old version of an eat apple script.  Would need to be hot-keyed and will only activate for Corpse, Sleep, or Mortal.
+//PvP,Pots
+function EatApple_standalone() {
+	if (Orion.BuffExists("Corpse Skin") || Orion.BuffExists("Sleep") || Orion.BuffExists("Mortal Strike")) {
+		if (Orion.Timer("AppleTimer") >= -1 && !Orion.HaveTarget()) {
+			Orion.UseType("0x2FD8", "0x0488");
+			if (Orion.InJournal("tasty bite of the enchanted", "my")) {
+				Orion.SetTimer("AppleTimer", -30000);
+				Orion.ClearJournal();
+			}
+		}
+		Orion.Wait(500);
+	}
+	Orion.Wait(500);
+}
+
+//@@A standalone version of the auto-seed function.  Do not run this if you have it turned on in the gump.
+//PvP,Pots
+function AutoSeed_standalone() {
+	seedhits = 40;
+	warcryhits = 50;
+	while (true) {
+		if (Player.Hits() < seedhits && !Player.Dead() && Orion.Count("0x1727") > 0) {
+			if (Orion.Timer("SeedTimer") >= -1 && !Orion.HaveTarget()) {
+				Orion.UseType("0x1727");
+				if (Orion.InJournal("bitter seed instantly", "my")) {
+					Orion.SetTimer("SeedTimer", -60000 * 10);
+					Orion.ClearJournal();
+				}
+			}
+			Orion.Wait(1000);
+		}
+		if (Player.Hits() < warcryhits && !Player.Dead() && Orion.SkillValue("bushido", "real") > 1000) {
+			if (Orion.Timer("CryTimer") >= -1 && !Orion.HaveTarget()) {
+				Orion.Cast("Warcry");
+				Orion.Wait(100);
+				if (Orion.BuffExists("Warcry")) {
+					Orion.SetTimer("CryTimer", -60000 * 20);
+				}
+			}
+			Orion.Wait(1000);
+		}
+		Orion.Wait(500);
+	}
+}

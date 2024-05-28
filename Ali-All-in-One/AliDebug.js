@@ -21,6 +21,18 @@ function Debug(msg,type)
         }
     }
 
+const Logger = {
+    Error: function(text) { Orion.Print(0x0021, JSON.stringify(text)); },
+    Info: function(text) { Orion.Print(0x03E9, JSON.stringify(text)); },
+    Warn: function(text) { Orion.Print(0x035, JSON.stringify(text)); },
+    Debug: function(text) {
+        TextWindow.Print(JSON.stringify(text));
+        if (!TextWindow.IsOpened()) {
+            TextWindow.Open();
+        }
+    },
+};
+
 function ClearUdp()
 	{
 	Orion.RemoveAllUdpServers();

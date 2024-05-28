@@ -1,0 +1,70 @@
+function RunicAtlasRecall(book, ID, scroll) {
+	minscrolls = 10;
+	Orion.Wait(5000);
+	if (Orion.BuffExists("Animal Form") || Orion.BuffExists("White Tiger Form")) {
+		Orion.Cast("Animal Form");
+		Orion.Wait(2000);
+	}
+	var dorecall = true;
+	while (dorecall) {
+		Orion.UseObject(book);
+		Orion.Wait(1000);
+		ID = 50000 + parseInt(ID);
+		//Orion.Print(book + " " +ID+ " " +scroll)
+		for (var p = 0; p < Orion.GumpCount(); p++) {
+			temp9 = Orion.GetGump(p);
+			if (temp9.ID() == "0x000001F2") {
+				var gump0 = temp9;
+			}
+		}
+		//var gump0 = Orion.GetGump('last');
+		if (scroll && gump0.ID() === "0x000001F2") {
+			charges = gump0.TextList();
+			charges = charges[0];
+			charges = charges.split(">");
+			charges = charges[1];
+			charges = charges.split(" ");
+			charges = charges[0];
+			if (parseInt(charges) < minscrolls) {
+				SendDiscord("```" + Player.Name() + " is almost out of recall scrolls in his Runic Atlas (Currently:" + charges + ").```");
+				if (parseInt(charges) == 0) {
+					Orion.CloseUO();
+				}
+			}
+		}
+		if (gump0 !== null && !gump0.Replayed() && gump0.ID() === "0x000001F2") {
+			gump0.Select(Orion.CreateGumpHook(ID));
+			Orion.Wait(500);
+		}
+
+		if (Orion.WaitForGump(5000)) {
+			var gump1 = null;
+			for (var p = 0; p < Orion.GumpCount(); p++) {
+				temp9 = Orion.GetGump(p);
+				if (temp9.ID() == "0x000001F2") {
+					gump1 = temp9;
+				}
+			}
+			if (gump1 !== null && !gump1.Replayed() && gump1.ID() === "0x000001F2") {
+				if (scroll) {
+					gump1.Select(Orion.CreateGumpHook(3000));
+				} else {
+					gump1.Select(Orion.CreateGumpHook(4000));
+				}
+				Orion.Wait(2000);
+				Orion.CloseGump(gump1);
+			}
+		}
+		Orion.Wait(2000);
+		if (Orion.InJournal("spell fizzles.|reagents are needed", "", 0, "any", Orion.Now() - 4000, Orion.Now() + 20000)) {
+			if (Orion.InJournal("blocking the location.", "", 0, "any", Orion.Now() - 4000, Orion.Now() + 20000)) {
+				Orion.Print("blocked location :(");
+				//dorecall = false;
+			}
+			Orion.Wait(100);
+		} else {
+			dorecall = false;
+		}
+	}
+	Orion.Wait(500);
+}

@@ -1,0 +1,69 @@
+//Version 6.0
+
+//Autostart scripts after login into the game.
+function Autostart() {
+	init_MainGump();
+}
+
+//Enable/Disable Sections of Pack
+var craftingActive = false; // 		Enabling the crafting section
+var trainingActive = false; //  	Enable the training section of the script pack
+var farmActive = false; //   		Flags whether or not Farming Package is enabled
+var currentVersion = 6.3; // 		Current Version of script (used for reseting to default if needed)
+
+//Including your own script file here
+
+//##################################################
+//####                                          ####
+//####    You can add all your extra/peronsal   ####
+//#### 			scripts below here.             ####
+//####                                          ####
+//##################################################
+
+//##################################################
+//####                                          ####
+//#### 			   And above here.              ####
+//####                                          ####
+//##################################################
+
+//Including the various support files
+
+//  General Utility Files
+
+//#include ./includes/utilities/colors.oajs
+//#include ./includes/utilities/utilities.oajs
+//#include ./includes/utilities/char_status.oajs
+//#include ./includes/utilities/consumables.oajs
+//#include ./includes/utilities/file_manip.oajs
+//#include ./includes/organizing.oajs
+//#include ./includes/utilities/pathfinding.oajs
+//#include ./includes/utilities/recall.oajs
+//#include ./includes/gump/gump_examples.oajs
+//#include ./includes/gump/utilities_gump_vars.oajs
+//#include ./includes/gump/utilities_gump.oajs
+//#include ./includes/gump/gump_skill_training.oajs
+//#include ./includes/utilities/file_scanner.oajs
+
+//  PvP Specific
+
+//#include ./includes/pvp.oajs
+//#include ./includes/debuff_tracker.oajs
+//#include ./includes/spells.oajs
+//#include ./includes/star_dart.oajs
+//#include ./includes/utilities/targetting.oajs
+//#include ./includes/weapon.oajs
+//#include ./includes/utilities/status_bars.oajs
+//#include ./includes/serial_share.oajs
+
+//  Gump Functions
+//#include ./includes/gump/utilities_gump_fast.oajs
+//#include ./includes/gump/gump_main.oajs
+//#include ./includes/gump/gump_main_launcher.oajs
+//#include ./includes/gump/gump_current_target.oajs
+
+//  PVM Specific
+//#include ./includes/healing.oajs
+
+//  Zone Specific
+//#include ./includes/idoc.oajs
+//#include ./includes/vvv.oajs

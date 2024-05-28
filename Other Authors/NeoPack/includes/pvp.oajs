@@ -1,0 +1,449 @@
+//@@This script will rotate through the ward removal talisman's in your pack.  You will need to re-dress any talisman that you normally wear.
+//PvP
+function WardRemoval() {
+	var talitimer = 15; //Time in minutes
+	talitimer = talitimer * -60000; //Coverting to minutes;
+	var packItems = Orion.FindTypeEx("any", "any", "backpack");
+	var tali = [];
+	for (var i = 0; i < packItems.length; i++) {
+		if (packItems[i].EquipLayer() == 9 && Orion.Contains(packItems[i].Name(), "Ward Removal")) {
+			tali.push(packItems[i]);
+		}
+	}
+	//Orion.Print("Ward Removal Tali's: " + tali.length);
+	//Orion.Print(Orion.ObjAtLayer(9))
+	if (!Orion.ObjAtLayer(9) || !Orion.Contains(Orion.ObjAtLayer(9).Name(), "Ward Removal") || Orion.Timer("TT:" + Orion.ObjAtLayer(9).Serial()) < -1) {
+		var didequip = false;
+		for (var i = 0; i < tali.length; i++) {
+			if (Orion.Timer("TT:" + tali[i].Serial()) >= -1) {
+				Orion.Equip(tali[i].Serial());
+				didequip = true;
+				Orion.Wait(1100);
+				break;
+			}
+		}
+		if (!didequip) {
+			Orion.Print("You are out of tali's not on timer.");
+		}
+	} else if (Orion.ObjAtLayer(9)) {
+		Orion.UseObject(Orion.ObjAtLayer(9).Serial());
+		Orion.WaitForTarget(1000);
+		if (Orion.HaveTarget()) {
+			if (Orion.FindObject(Orion.ClientLastTarget()) != null) {
+				Orion.TargetObject(Orion.ClientLastTarget());
+			} else {
+				Orion.CancelTarget();
+				Orion.Print("Last target not found.");
+			}
+		}
+		//Commenting this out as it has weird behavoir around queuing targets.
+		//Orion.WaitTargetObject(Orion.ClientLastTarget());
+		Orion.Wait(200);
+		//Orion.UseItemOnMobile(Orion.ObjAtLayer(9).Serial(), Orion.ClientLastTarget());
+		if (Orion.InJournal("wards have been removed!", "sys", 0, "any", Orion.Now() - 1000, Orion.Now() + 5000)) {
+			Orion.SetTimer("TT:" + Orion.ObjAtLayer(9).Serial(), talitimer);
+			Orion.Print("Wards removed!");
+		}
+	} else {
+		Orion.Print("You either don't have a tali equipped at all, you're out of tali's or both!");
+	}
+}
+
+function WardRemoval_Self() {
+	var talitimer = 15; //Time in minutes
+	talitimer = talitimer * -60000; //Coverting to minutes;
+	var packItems = Orion.FindTypeEx("any", "any", "backpack");
+	var tali = [];
+	for (var i = 0; i < packItems.length; i++) {
+		if (packItems[i].EquipLayer() == 9 && Orion.Contains(packItems[i].Name(), "Ward Removal")) {
+			tali.push(packItems[i]);
+		}
+	}
+	//Orion.Print("Ward Removal Tali's: " + tali.length);
+	//Orion.Print(Orion.ObjAtLayer(9))
+	if (!Orion.ObjAtLayer(9) || !Orion.Contains(Orion.ObjAtLayer(9).Name(), "Ward Removal") || Orion.Timer("TT:" + Orion.ObjAtLayer(9).Serial()) < -1) {
+		var didequip = false;
+		for (var i = 0; i < tali.length; i++) {
+			if (Orion.Timer("TT:" + tali[i].Serial()) >= -1) {
+				Orion.Equip(tali[i].Serial());
+				didequip = true;
+				Orion.Wait(1100);
+				break;
+			}
+		}
+		if (!didequip) {
+			Orion.Print("You are out of tali's not on timer.");
+		}
+	} else if (Orion.ObjAtLayer(9)) {
+		Orion.UseObject(Orion.ObjAtLayer(9).Serial());
+		Orion.WaitForTarget(1000);
+		if (Orion.HaveTarget()) {
+			Orion.TargetObject(Player.Serial());
+		}
+		//Commenting this out as it has weird behavoir around queuing targets.
+		//Orion.WaitTargetObject(Orion.ClientLastTarget());
+		Orion.Wait(200);
+		//Orion.UseItemOnMobile(Orion.ObjAtLayer(9).Serial(), Orion.ClientLastTarget());
+		if (Orion.InJournal("wards have been removed!", "sys", 0, "any", Orion.Now() - 1000, Orion.Now() + 5000)) {
+			Orion.SetTimer("TT:" + Orion.ObjAtLayer(9).Serial(), talitimer);
+			Orion.Print("Wards removed!");
+		}
+	} else {
+		Orion.Print("You either don't have a tali equipped at all, you're out of tali's or both!");
+	}
+}
+
+//@@A script that runs in the background and watches for a player that is splintered or footed and automatically performs an action.
+//PvP,Pots
+function DebuffWatch() {
+	Orion.SetGlobal("doDebuffWatch", "true");
+	while (Orion.GetGlobal("doDebuffWatch") == "true") {
+		//Find all the characters on screen (and certain creatures)
+		var humanArr = Orion.FindTypeEx("-1", "-1", "ground", "live|ignoreself|ignorefriends", 20, "orange|red");
+		var creatureArr = Orion.FindTypeEx("0x0084|0x007A|0x00F6|0x0019|0x00DC|0x00DB|0x04E6", "-1", "ground", "", 18, "orange|red");
+		var mobArr = humanArr.concat(creatureArr);
+		//Variable initialization
+		//var isSplint = false;
+		//var isFoot = false;
+		var serial = false;
+		for (var i = 0; i < mobArr.length; i++) {
+			if (!Orion.ObjAtLayer("Mount", mobArr[i].Serial())) {
+				//isFoot = false;
+				serial = mobArr[i].Serial();
+				break;
+			}
+		}
+		if (serial == false) {
+			for (var i = 0; i < mobArr.length; i++) {
+				if (!Orion.ObjAtLayer("Mount", mobArr[i].Serial())) {
+					//isFoot = false;
+					serial = mobArr[i].Serial();
+					break;
+				}
+			}
+		}
+		var extraDelay = 0;
+		if (serial != false && Orion.Timer("coflagTimer") >= -1) {
+			Use_Conflag_In_Front_Serial(serial, 2);
+			if (Orion.Timer("coflagTimer") < -1) {
+				extraDelay = Orion.Timer(Orion.Timer("coflagTimer"));
+			}
+		}
+		Orion.Wait(500 + extraDelay);
+	}
+}
+
+//@@Standalone auto box popping if nerve striked or paralyzed. Shouldn't need to run this with the rest of the PvP pack.
+//PvP
+function AutoBoxPop() {
+	Orion.ClearJournal();
+	var L = 1;
+	var nervepopdelay = 500;
+	while (L == 1) {
+		//Orion.Wait(100)
+		if (Orion.BuffExists("Paralyzed") || Orion.BuffExists("Paralyze")) {
+			var pot = Orion.FindType(0x09a9, any, backpack);
+			Orion.UseItemOnMobile(pot[0], self);
+			//Orion.UseObject(box);
+			Orion.Wait(200);
+			Orion.Hide(Orion.GetSerial(pot[0]));
+		}
+		var NerveStriked = Orion.InJournal("Your attacker dealt a crippling nerve strike!", "sys", "0", "any", Orion.Now() - 2000, Orion.Now() + 2000);
+		if (NerveStriked) {
+			Orion.Wait(nervepopdelay);
+			var pot = Orion.FindType(0x09a9, any, backpack);
+			Orion.UseItemOnMobile(pot[0], self);
+			//Orion.UseObject(box);
+			Orion.Wait(350);
+			Orion.Hide(Orion.GetSerial(pot[0]));
+			//Orion.ClearJournal();
+		}
+		Orion.Wait(50);
+	}
+}
+
+//@@Automatically uses a 16th aniversary horse, or VVV horse, and mounts it.
+//PvP
+function AutoAfroHorse() {
+	Orion.UseType("0x2124", "0xFFFF");
+	if (Orion.WaitForGump(2000)) {
+		var gump0 = GumpByID("0x00002340");
+		if (gump0 !== null && gump0.ID() === "0x00002340") {
+			gump0.Select(Orion.CreateGumpHook(7));
+			Orion.Wait(500);
+			Orion.Say("all follow me");
+			Orion.Wait(400);
+		}
+	}
+	var i;
+	var j;
+	var Mounts = [0x00cc, 0x0076, 0x0072, 0x0076];
+	var Colors = [0x065d, 0x0aa5, 0x0aa4, 0x084c, 0x09c7, 0x0a84, 0x05b5, 0x09c4];
+
+	for (i = 0; i < Mounts.length; i++) {
+		for (j = 0; j < Colors.length; j++) {
+			if (i.Graphic == Mounts[i] && j.Color == Colors[j]);
+			{
+				Orion.UseType(Mounts[i], Colors[j], "ground");
+			}
+		}
+	}
+}
+
+//@@This is supposed to be an upgrade to the AutoAfroHorse, to pop a horse (VVV/16th Ani) and mount it.
+//PvP
+function PopHorse() {
+	Orion.UseType("0x2124");
+	Orion.SetTimer("popMountTimer", -5000);
+	while (GumpByID("0x00002340") == false && Orion.Timer("popMountTimer") < 0) {
+		Orion.Wait(100);
+	}
+	var gump0 = GumpByID("0x00002340");
+	if (gump0 !== null && gump0.ID() == "0x00002340") {
+		gump0.Select(Orion.CreateGumpHook(7));
+	}
+
+	var Mounts = [0x00cc, 0x0076, 0x0072, 0x0076];
+	var Colors = [0x065d, 0x0aa5, 0x0aa4, 0x084c, 0x09c7, 0x0a84, 0x05b5, 0x09c4];
+	Orion.WarMode(0);
+	var Timer = Orion.Now();
+	while (Orion.ObjAtLayer("Mount") == null) {
+		Orion.Say("all follow me");
+		Orion.Wait(100);
+		Orion.UseFromGround(Mounts, Colors, "1", "nothuman|near|live");
+		if (Orion.Now() >= Timer + 3000) break;
+	}
+}
+
+//@@This will highlight the attack area for the weapon in hand.  Designed for archers or throwers.
+//PvP,PvM,Archery,Throwing
+function ToggleAttackArea() {
+	if (Orion.GetGlobal("areaOn") == null || Orion.GetGlobal("areaOn") == "" || Orion.GetGlobal("areaOn") == "false") {
+		Orion.SetGlobal("areaOn", "true");
+		while (Orion.GetGlobal("areaOn") == "true") {
+			var theRange = 10;
+			var rhWep = Orion.ObjAtLayer("RightHand");
+			if (rhWep != null && Orion.Contains(rhWep.Properties(), "Range")) {
+				var matches = /Range (\d+)/.exec(rhWep.Properties());
+				theRange = parseInt(matches[1]);
+			} else if (Orion.GetGlobal("spellRange") != null && Orion.GetGlobal("spellRange") != "") {
+				theRange = parseInt(Orion.GetGlobal("spellRange"));
+			}
+			Orion.AddHighlightArea(6969, -1, "pos", "0x016E", theRange, theRange, "land", Player.X(), Player.Y());
+			Orion.Wait(100);
+		}
+	} else {
+		Orion.SetGlobal("areaOn", "false");
+		Orion.RemoveHighlightArea(6969);
+	}
+}
+
+function MagicReflectAware() {
+	if (!Orion.BuffExists("Magic Reflection")) {
+		Orion.Cast("Magic Reflection");
+		while (Player.Frozen()) {
+			Orion.Wait(200);
+		}
+		Orion.Wait(2000);
+	}
+	if (Orion.BuffExists("Magic Reflection")) {
+		var matches = /(\d{1,2})% reflection pool/.exec(Orion.BuffDescription("Magic Reflection"));
+		if (matches.length > 1) {
+			var startLevel = parseInt(matches[1]);
+			if (startLevel == 0) {
+				Orion.Cast("Magic Reflection");
+				while (Player.Frozen()) {
+					Orion.Wait(200);
+				}
+				Orion.Wait(2000);
+				if (Orion.BuffExists("Magic Reflection")) {
+					var matches = /(\d{1,2})% reflection pool/.exec(Orion.BuffDescription("Magic Reflection"));
+					if (matches.length > 1) {
+						startLevel = parseInt(matches[1]);
+					}
+				}
+			}
+
+			var currLevel = startLevel;
+			var keepGoing = true;
+			//Orion.Print("D:" + currLevel + "/" + startLevel);
+			while (startLevel != 0 && keepGoing && Orion.BuffExists("Magic Reflection")) {
+				//Orion.Print(currLevel + "/" + startLevel);
+				if (currLevel < startLevel) {
+					Orion.CharPrint(Player.Serial(), color.red, "You're being targetted!");
+					startLevel = currLevel;
+					if (currLevel == 0) {
+						Orion.SetGlobal("reflectPool", "0");
+						keepGoing = false;
+					}
+				}
+				var matches = /(\d{1,2})% reflection pool/.exec(Orion.BuffDescription("Magic Reflection"));
+				if (matches.length > 1) {
+					currLevel = parseInt(matches[1]);
+				} else {
+					keepGoing == false;
+				}
+				Orion.Wait(100);
+			}
+		}
+	}
+}
+
+//@@If the "MyMount" variable is set, it will mount the set mount.  This is set by a different function.
+//PvP,Mount
+function MountAndDismount() {
+	if (Orion.Timer("allfollowTimer") >= -1) {
+		Orion.Say("all follow me");
+		Orion.SetTimer("allfollowTimer", -1500);
+	}
+	if (!Orion.ObjAtLayer("Mount")) {
+		var thetarg = Orion.FindTypeEx("any", "-1", "ground", "ignoreself|ignorefriends|nothuman|live|near", "1", "green");
+		if (thetarg.length > 0) {
+			Orion.UseObject(thetarg[0].Serial());
+		} else if (Orion.FindObject("myMount")) {
+			Orion.UseObject("myMount");
+		} else {
+			Orion.Print("Click to add your mount.");
+			Orion.WaitForAddObject("myMount");
+		}
+	} else {
+		Orion.UseObject("self");
+	}
+}
+
+//@@This is deisgned for mages that use <120 mage.  It will dress a set called "mage_book", which should have the +15 Magery spellbook in it, and then cast res to increase success.
+//PvP,Magery
+function EquipSpellbookRes() {
+	bookdress = "mage_book";
+	Orion.Dress(bookdress);
+	Orion.Wait(500);
+	Orion.Cast("Resurrection");
+	Orion.Wait(500);
+}
+
+//@@When standing over a players body, it will open it and loot it (only if its not a criminal act).
+//PvP
+function PVPLooter() {
+	findids = [
+		["0x0F09", "0x09C4", 1000], //Stat Pots
+		["0x1727", "-1", 1000], //Seed
+		["0x0F09", "0x000D", 1000], //Nova's
+		["0x09A9", "-1", 1000], //Trapped box
+		["0x0F08", "0x0000", 20], //Dex Pots
+		["0x0F09", "0x0000", 20], //Str Pots
+		["0x2FD8", "0x0488", 20], //Apples
+		["0x0F07", "0x0000", 20], //Cures
+		["0x0F0C", "0x0000", 20], //Heals
+		["0x0F0B", "0x0000", 50], //Refresh
+	];
+	bodid = null;
+	var body = Orion.FindTypeEx("any", "any", "ground", "item", 1);
+	//Orion.Print(body.length + "prop:"+ body[0].Properties())
+
+	for (var i = 0; i < body.length; i++) {
+		if (body[i].Properties().indexOf("Corpse") != -1) {
+			bodid = i;
+			Orion.OpenContainer(body[bodid].Serial());
+			PingWait(1100);
+			if (Orion.InJournal("criminal act", "sys", "0", "any", Orion.Now() - 2000, Orion.Now() + 2000)) {
+				return false;
+			}
+			for (var i = 0; i < findids.length; i++) {
+				var loot = Orion.FindTypeEx(findids[i][0], findids[i][1], body[bodid].Serial(), "item", "1", "any", true);
+				var pack = Orion.Count(findids[i][0], findids[i][1]);
+				//Orion.Print("i=" + i + "/ " + loot.length);
+				while (pack < findids[i][2] && loot.length > 0) {
+					if (Player.Weight() / (Player.MaxWeight() * 1.0000001) > 0.9) {
+						Orion.Print("Looting this object would make you overweight.");
+						return false;
+					}
+					Orion.MoveItemType(findids[i][0], findids[i][1], body[bodid].Serial(), findids[i][2] - pack, "backpack");
+					Orion.Wait(PingWait(1000));
+					loot = Orion.FindTypeEx(findids[i][0], findids[i][1], body[bodid].Serial(), "item", "1", "any", true);
+				}
+			}
+		}
+	}
+	if (bodid == null) {
+		Orion.CharPrint(Player.Serial(), "48", "No corpse found!");
+		return false;
+	}
+}
+//This script runs in the background and watches for corpses.  When it sees someone die it will talk shit in gen chat.
+//PvP
+function ShitTalker() {
+	var phrases = [];
+	phrases = [
+		"Nice sync script %n.",
+		"Good lord %n, how many tele rings did you burn to still die?",
+		"%n, you're 10 pounds of suck in a 5 pound bag.",
+		"Damn %n, you died faster than it took me to type your name.",
+		"Should have warcried %n.",
+		"Sorry %n, you can't overcome the skill that is disarm AI spam",
+		"I didn't even bother looting your stat pot %n.",
+		"Losing with double numbers %n? Embarassing.",
+		"Man %n, that's an ambitious amount of pots for how fast you died.",
+		"I swear %n's horse put up a harder fight than he did.",
+	];
+
+	while (true) {
+		var deathFound = Orion.WaitJournal("soundecho: id=0x0423|soundecho: id=0x0315", Orion.Now(), 0, "sys");
+		if (deathFound != null) {
+			Orion.Wait(600);
+			var deathMsg = Orion.InJournal("a corpse of", "item", 0, "any", Orion.Now() - 1500, Orion.Now() + 1000);
+			if (deathMsg != null) {
+				deathMsg = deathMsg.Text().split("a corpse of ");
+				deathMsg = deathMsg[1];
+				var name = deathMsg;
+				var randIndex = Math.floor(Math.random() * phrases.length);
+				deathMsg = phrases[randIndex].replace(/%n/g, name);
+				var friendList = Orion.GetFriendList(true);
+				var newFriend = [];
+				for (var i = 0; i < friendList.length; i++) {
+					var temp = friendList[i].split(" ");
+					var pushName = "";
+					for (j = 1; j < temp.length; j++) {
+						pushName += temp[j];
+						if (temp.length > 2 && j != temp.length - 1) {
+							pushName += " ";
+						}
+					}
+					newFriend.push(pushName);
+				}
+				newFriend.push(Player.Name());
+				if (newFriend.indexOf(name) == -1) {
+					Orion.Say(", " + deathMsg);
+					//Orion.Print(deathMsg);
+				}
+			}
+		}
+		Orion.Wait(500);
+	}
+}
+
+//@@This is a hot-keyable function that will flag all OJ's on the screen.
+//PvP,VvV
+function FlagAllOJs() {
+	var ojS = Orion.FindTypeEx(any, any, ground, "human|live|ignorefriends|ignoreself", 25, "enemy");
+	if (ojS.length) {
+		for (var i = 0; i < ojS.length; i++) {
+			Orion.Attack(ojS[i].Serial());
+			Orion.Wait(100);
+		}
+	}
+}
+
+//@@This is a function that has to be activated in the gump and will run in the background at all times and flag all OJ's on screen.
+//PvP,VvV
+function FlagAllOJs_Constant() {
+	while (Orion.GetGlobal("doFlagOJ") == "true") {
+		var ojS = Orion.FindTypeEx(any, any, ground, "human|live|ignorefriends|ignoreself", 25, "enemy");
+		if (ojS.length) {
+			for (var i = 0; i < ojS.length; i++) {
+				Orion.Attack(ojS[i].Serial());
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(500);
+	}
+}

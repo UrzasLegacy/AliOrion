@@ -16,7 +16,7 @@ else if(playerName == "Spice") //SW Corner
 else if(playerName == "Adam") //SE Corner
     houseTargetCoords = [2072,1256,0];
 
-
+//sadie castle [1,126],[2063,1257]
 var fullAuto = false; //wait for house to fall, do barrels, move only placers to front of house, initiate Checkers, Placers, and Dom, Close Checkers/Dom after attempting placement
 var walkToFront = false; //walk all non-EJs to the front of the plot after doing barrels
 var castleMode = true; //set to true if the IDOC is a castle, too big to get accurate foundation size the normal way

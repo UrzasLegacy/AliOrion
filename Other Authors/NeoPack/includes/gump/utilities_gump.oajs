@@ -1,0 +1,873 @@
+function ResposeSerialFinder(serial, gumpObj) {
+	//Not sure why i'm having to do all this, but it would not return from the function itself.
+	var tempcheck2 = false;
+	Object.keys(gumpObj).forEach(function (key) {
+		Debug("[ResposeSerialFinder][Trace] " + key);
+		if (gumpObj && gumpObj[key] && "serial" in gumpObj[key]) {
+			//Debug("[ResposeSerialFinder][Trace] " + key + " : " + gumpObj[key].name + " : " + gumpObj[key].serial);
+			var tempcheck = parseInt(gumpObj[key].serial) == parseInt(serial);
+			Debug("[ResposeSerialFinder][Trace] " + gumpObj[key].serial + " : " + parseInt(serial) + " : " + tempcheck);
+			if (tempcheck) {
+				tempcheck2 = key;
+			}
+		}
+	});
+	if (tempcheck2 != false) {
+		return tempcheck2;
+	}
+	Debug("[ResposeSerialFinder][Log] Did not find serial in dictionary: " + serial);
+	return false;
+}
+
+//takes a passed in gump and array and generates the combo text
+function GenerateComboText(gump, array, defaultIndex) {
+	if (!defaultIndex) {
+		defaultIndex = 0;
+	}
+	for (var i = 0; i < array.length; i++) {
+		gump.AddComboBoxText(array[i][1], 0, defaultIndex);
+		Debug("[GenerateComboText][Trace] Adding item to the gump combobox: " + array[i][1]);
+	}
+}
+
+function GumpResponseAction(mainGump, JSON, action, validation, addVar) {
+	switch (action) {
+		case "commit":
+			var gump = Orion.CreateCustomGump(mainGump);
+			var gumpObj = JSON_import_handler(JSON, false);
+			if (!gumpObj) {
+				Debug("[GumpResponseAction][Error] invalid file name: " + action);
+				return false;
+			}
+			gumpObj = UpdateGumpObjects(gumpObj, JSON, validation);
+			//Saving gump position
+			var gumpPos = Orion.GetGumpPosition("custom", mainGump);
+			gumpObj.main.x = gumpPos.X();
+			gumpObj.main.y = gumpPos.Y();
+			Debug("[GumpResponseAction][Trace] Saving gump X/Y: " + gumpPos.X() + "/" + gumpPos.Y());
+			Debug("[GumpResponseAction][Trace] Exporting updated gumpObj to JSON.");
+			Debug("[GumpResponseAction][Trace] addVar value: " + addVar);
+			JSON_export(JSON, gumpObj);
+			if (addVar == "refresh") {
+				Orion.Exec(validation, true);
+			} else if (addVar != "save") {
+				gump.Close();
+			}
+			break;
+		case "launch":
+			var gumpObj = JSON_import_handler(JSON, false);
+			var arguments = [];
+			if (!(typeof addVar === "string")) {
+				arguments = addVar[1];
+				addVar = addVar[0];
+			}
+			if (arguments.indexOf("saveFirst") > -1) {
+				Debug("[GumpResponseAction][Log] Saving to JSON: " + JSON);
+				arguments.splice(arguments.indexOf("saveFirst"), 1);
+				gumpObj = UpdateGumpObjects(gumpObj, JSON, validation);
+			}
+			//Updating the gump position and exporting to the JSON.
+			var gumpPos = Orion.GetGumpPosition("custom", mainGump);
+			gumpObj.main.x = gumpPos.X();
+			gumpObj.main.y = gumpPos.Y();
+			Debug("[GumpResponseAction][Trace] Saving gump X/Y: " + gumpPos.X() + "/" + gumpPos.Y());
+			Debug("[GumpResponseAction][Trace] Exporting updated gumpObj to JSON.");
+			JSON_export(JSON, gumpObj);
+			//Orion.Wait(50);
+			//This determines on whether to send the json file name as an argument to the executed function.
+			if (arguments.indexOf("sendJSON") != -1) {
+				arguments.splice(arguments.indexOf("sendJSON"), 1);
+				arguments.push(JSON);
+			}
+			Debug("[GumpResponseAction][Log] Launching the following script (arguements): " + addVar + " (" + arguments + ").");
+			Orion.Exec(addVar, false, arguments);
+			break;
+		case "page":
+			var tempGump = Orion.CreateCustomGump(mainGump);
+			var gumpObj = JSON_import_handler(JSON, false);
+			gump = UpdateGumpObjects(gumpObj, JSON, validation);
+			if (!gumpObj) {
+				Debug("[GumpResponseAction][Error] invalid file name: " + action);
+				return false;
+			}
+			//Saving gump position
+			var gumpPos = Orion.GetGumpPosition("custom", mainGump);
+			gumpObj.main.x = gumpPos.X();
+			gumpObj.main.y = gumpPos.Y();
+			gumpObj = SetPageVisibility(gumpObj, parseInt(addVar));
+
+			Debug("[GumpResponseAction][Log] Setting to page: " + addVar);
+
+			GenerateGump(gumpObj);
+			tempGump.SetPage(parseInt(addVar));
+
+			//Orion.Exec(validation, true);
+			tempGump.Update();
+			JSON_export(JSON, gumpObj);
+			//
+
+			break;
+		default:
+			Debug("[GumpResponseAction][Log] No action response found for: " + action);
+			break;
+	}
+}
+
+function SetPageVisibility(gumpObj, page) {
+	var pageName = "page_" + page;
+	Debug("[SetPageVisibility][Log] Page : " + pageName);
+	if (pageName in gumpObj || page == 0) {
+		if (page == 0) {
+			pageVis = "page_0";
+		} else {
+			var pageVis = gumpObj[pageName].pageVis;
+			if (pageVis == false) {
+				pageVis = pageName;
+			} else {
+				pageVis += "|" + pageName;
+			}
+		}
+		Object.keys(gumpObj).forEach(function (key) {
+			if (gumpObj[key]) {
+				var tempPage = "page_" + gumpObj[key].parentPage;
+				Debug("[SetPageVisibility][Trace] page / tempParent: " + tempPage + " in " + pageVis + " / " + Orion.Contains(pageVis, tempPage, true));
+				if (gumpObj[key] && !("parentPage" in gumpObj[key])) {
+					tempPage = "page_0";
+				}
+				if (Orion.Contains(pageVis, tempPage, true) || gumpObj[key].type == "page") {
+					gumpObj[key].pageVisChange = false;
+					gumpObj[key].visible = true;
+					Debug("[SetPageVisibility][Trace] Setting visible (key): " + key);
+				} else {
+					gumpObj[key].pageVisChange = true;
+					gumpObj[key].visible = false;
+				}
+			}
+		});
+		return gumpObj;
+	} else {
+		Debug("[SetPageVisibility][Log] Page isn't in gumpoObj or isn't page 0");
+		return gumpObj;
+	}
+}
+
+function UpdateGumpObjects(gumpObj, JSON, validation) {
+	//Pulling all the info from the gump
+	Object.keys(gumpObj).forEach(function (key) {
+		if (gumpObj[key] && "type" in gumpObj[key] && gumpObj[key].type in gumpWidgets && gumpObj[key].visible == true) {
+			gumpObj[key].value = CustomGumpResponse[gumpWidgets[gumpObj[key].type]](gumpObj[key].serial);
+			Debug("[UpdateGumpObjects][Trace] Saving key (" + key + ") with the following value: " + gumpObj[key].value);
+		}
+	});
+	if (validation) {
+		var tempResponse = GumpValidation_Handler(validation, gumpObj, JSON);
+		if (tempResponse != true) {
+			Debug("[UpdateGumpObjects][Error] Gump validation failed.");
+			//return false;
+			gumpObj = tempResponse;
+		} else {
+			Debug("[UpdateGumpObjects][Log] Gump validation Sucessful.");
+		}
+	}
+	return gumpObj;
+}
+
+//This will be a handling function to pass the validation off to the gump specific validation function
+function GumpValidation_Handler(validation, gumpObj) {
+	switch (validation) {
+		case "Craft_Manager":
+			return GumpValidation_CraftManager(gumpObj, JSON);
+		case "MainGump":
+			return GumpValidation_MainGump(gumpObj);
+		default:
+			Debug("[GumpValidation_Handler][Log] Returning true, no validation function found for: " + validation);
+			return true;
+	}
+}
+
+//Function that handles the creation of the gump itself using the gumpDictionary passed into it
+function GenerateGump(gumpDictionary) {
+	Debug("[GenerateGump][Trace] Starting function.");
+	if (gumpDictionary && "main" in gumpDictionary) {
+		if (gumpDictionary["main"].background == "default") {
+			gumpDictionary["main"].background = gumpGraphic.background_greygold.graphic;
+		} else if (gumpDictionary["main"].background in gumpGraphic) {
+			gumpDictionary["main"].background = gumpGraphic[gumpDictionary["main"].background].graphic;
+		}
+		var gump = Orion.CreateCustomGump(gumpDictionary["main"].serial);
+		//gump.SetPage(0);
+		var key = "main";
+		gump.SetNoClose(gumpDictionary["main"].noclose);
+		gump.SetNoMove(gumpDictionary["main"].nomove);
+		gump.Clear();
+		if (gumpDictionary["main"].background != false) {
+			gump.AddResizepic(0, 0, gumpDictionary["main"].background, gumpDictionary["main"].width, gumpDictionary["main"].height);
+		}
+		gump.SetCallback(gumpDictionary["main"].callback);
+		gump.SetX(gumpDictionary["main"].x);
+		gump.SetY(gumpDictionary["main"].y);
+	} else {
+		Debug("[GenerateGump][Error] No 'main' object in gump object dictionary.");
+		return false;
+	}
+	var tempWindows = GumpConstructor(gump, gumpDictionary, false);
+	Debug("[GenerateGump][Trace] GumpConstructor html window response: " + tempWindows[0]);
+	if (tempWindows[0]) {
+		Debug("[GenerateGump][Trace] GumpConstructor html/page windows: " + tempWindows[1]);
+		for (var i = 0; i < tempWindows[1].length; i++) {
+			//Handling HTML windows
+			if (tempWindows[1][i][0] == "html") {
+				var windowKey = tempWindows[1][i][1];
+				Debug("[GenerateGump][Trace] HTML window detected, key: " + windowKey);
+				Debug("[GenerateGump][Trace]Selected window: " + gumpDictionary[windowKey].serial);
+				gump.Select("htmlgump", parseInt(gumpDictionary[windowKey].serial));
+				GumpConstructor(gump, gumpDictionary, true, windowKey, false);
+				gump.Select("gump");
+				gump.Update();
+			} else if (tempWindows[1][i][0] == "page") {
+				var windowKey = tempWindows[1][i][1];
+				GumpConstructor(gump, gumpDictionary, true, windowKey, true);
+				//gump.SetPage(parseInt(gumpDictionary[windowKey].value));
+				GumpConstructor(gump, gumpDictionary, true, windowKey, false);
+				//gump.SetPage(0);
+				gump.Update();
+			}
+		}
+	}
+	gump.Select("gump");
+	if (false && "hideFirstLoad" in gumpDictionary.main && gumpDictionary.main.hideFirstLoad == true && Orion.GetGlobal("MainGump_opened_" + gumpDictionary.main.serial) != "true") {
+		gump.Close();
+		Orion.SetGlobal("MainGump_opened_" + gumpDictionary.main.serial, "true");
+	} else {
+		gump.Update();
+	}
+
+	return true;
+}
+
+//Filter used to filter only for page type objects.
+function pageOnly(dict) {
+	if ("type" in dict && dict.type == "page") {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function specificPage(dict, windowKey) {
+	if ("parentPage" in dict && windowKey == "page_" + dict.parentPage) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function GumpConstructor(gump, gumpDictionary, doChild, windowKey, doPage) {
+	var htmlWindows = [false, []];
+	delete gumpDictionary.PosVariable;
+	Object.keys(gumpDictionary).forEach(function (key) {
+		if (gumpDictionary[key] != null && !("global" in gumpDictionary[key] && gumpDictionary[key].global)) {
+			//Using switch expression to skip if its a child object
+			var switchExpression = gumpDictionary[key].type;
+			if (doChild) {
+				Debug("[GumpConstructor[Trace] doChild / windowKey: " + doChild + "/" + windowKey);
+				if (gumpDictionary[key].parent != false && gumpDictionary[key].parent == windowKey) {
+					//gump.Select("htmlgump", gumpDictionary[gumpDictionary[key].parent].serial);
+					Debug("[GumpConstructor[Trace] Parent window for object: " + key + "(" + gumpDictionary[key].parent + ")");
+				} else if ((doPage && gumpDictionary[key].type == "page" && key == windowKey) || (!doPage && windowKey == "page_" + gumpDictionary[key].parentPage)) {
+					Debug("[GumpConstructor[Trace] doPage / windowKey / : " + doPage + "/" + windowKey + " / " + gumpDictionary[key].parentPage);
+				} else {
+					switchExpression = "skip";
+				}
+			} else {
+				if (gumpDictionary[key].parent != false || gumpDictionary[key].parentPage != 0) {
+					switchExpression = "skip";
+				} else {
+					//gump.Select("gump", gumpDictionary.main.serial);
+				}
+			}
+			//Handling if the background is default, or in the name of an object in gumpGraphic, else continuing with the value.
+			if (gumpDictionary[key].background == "default") {
+				gumpDictionary[key].background = gumpGraphic.background_greygold.graphic;
+			} else if (gumpDictionary[key].background in gumpGraphic) {
+				gumpDictionary[key].background = gumpGraphic[gumpDictionary[key].background].graphic;
+			}
+			//First checking to see if the object is in a visible column
+			var isFiltered = gumpDictionary[key].filtered == null || gumpDictionary[key].filtered == false ? false : true;
+			if (
+				!isFiltered &&
+				gumpDictionary[key].visible == true &&
+				!("columnParent" in gumpDictionary[key] && gumpDictionary[key].columnParent in gumpDictionary && !gumpDictionary[gumpDictionary[key].columnParent].visible)
+			) {
+				//Handling if the autoposition is set
+				if (!("json" in gumpDictionary)) {
+					gumpDictionary["json"] = null;
+				}
+				if (switchExpression != "skip") {
+					//gumpDictionary[key] = GumpPositionHandler(gumpDictionary[key], gumpDictionary["json"].value);
+					gumpDictionary = GumpPositionHandler_Fast(gumpDictionary, key);
+				}
+
+				//Main switch of how to handle the different types
+				gump.AddGlobalColor(false);
+				switch (switchExpression) {
+					case "checkbox":
+						if (gumpDictionary[key].graphic == "default") {
+							gumpDictionary[key].graphic = "checkbox_diamond";
+						}
+						var graphic = gumpGraphic[gumpDictionary[key].graphic];
+						gumpDictionary[key].value = gumpDictionary[key].value == true ? 1 : 0;
+						gump.AddCheckbox(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							graphic.graphic,
+							graphic.selected,
+							graphic.checked,
+							gumpDictionary[key].value,
+							gumpDictionary[key].color,
+							gumpDictionary[key].text,
+							gumpDictionary[key].txtColor
+						);
+						break;
+					case "html":
+						if (!doChild) {
+							htmlWindows[0] = true;
+							htmlWindows[1].push(["html", key]);
+						}
+						gump.AddHtmlGump(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							gumpDictionary[key].width,
+							gumpDictionary[key].height,
+							gumpDictionary[key].background,
+							gumpDictionary[key].hasbackground
+						);
+						break;
+					case "page":
+						if (!doChild) {
+							htmlWindows[0] = true;
+							htmlWindows[1].push(["page", key]);
+						} else {
+							gump.AddPage(gumpDictionary[key].value);
+							if (gumpDictionary[key].background != false) {
+								gump.AddResizepic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].background, gumpDictionary[key].width, gumpDictionary[key].height);
+							}
+						}
+						break;
+					case "gump_graphic":
+						if (gumpDictionary[key].color == null) {
+							var theColor = 0;
+						} else {
+							var theColor = gumpDictionary[key].color;
+						}
+						gump.AddGumpPic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].graphic, theColor, gumpDictionary[key].serial);
+						break;
+					case "graphic":
+						if (gumpDictionary[key].color == null) {
+							var theColor = 0;
+						} else {
+							var theColor = gumpDictionary[key].color;
+						}
+						gump.AddTilePic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].graphic, theColor);
+						break;
+					case "graphicbutton":
+						//This isn't at all functional
+						if (gumpDictionary[key].color == null) {
+							var theColor = 0;
+						} else {
+							var theColor = gumpDictionary[key].color;
+						}
+						//gump.AddResizepic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].graphic, 15, 15, gumpDictionary[key].serial);
+						gump.AddGumpPic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].graphic, 0, gumpDictionary[key].serial, 0, 15, 15);
+						//gump.AddTilePic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].graphic, theColor);
+						break;
+					case "plusminus":
+						var butGraphic = gumpGraphic[gumpDictionary[key].graphic];
+						gump.AddResizepic(gumpDictionary[key].x - 4, gumpDictionary[key].y - 4, gumpDictionary[key].background, gumpDictionary[key].width, gumpDictionary[key].height);
+						gump.AddMinMaxButtons(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							butGraphic.graphic,
+							0,
+							gumpDictionary[key].valMin,
+							gumpDictionary[key].valMax,
+							gumpDictionary[key].value
+						);
+						gump.SetTextParameters(gumpDictionary[key].showText, gumpDictionary[key].showPos, gumpDictionary[key].color);
+						break;
+					case "slider":
+						if ("valParent" in gumpDictionary[key]) {
+							var tempMinMax = MinMaxHandler(gumpDictionary[key].valParent, gumpDictionary);
+							gumpDictionary[key].valMin = tempMinMax.valMin;
+							gumpDictionary[key].valMax = tempMinMax.valMax;
+						}
+						var butGraphic = gumpGraphic[gumpDictionary[key].graphic];
+						gump.AddSlider(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							butGraphic.graphic,
+							butGraphic.graphic,
+							butGraphic.graphic,
+							gumpDictionary[key].background,
+							1,
+							0,
+							gumpDictionary[key].width,
+							0,
+							gumpDictionary[key].valMax,
+							gumpDictionary[key].value
+						);
+						gump.SetTextParameters(gumpDictionary[key].showText, gumpDictionary[key].showPos, gumpDictionary[key].color);
+						break;
+					case "button":
+						Debug("[GumpConstructor][Trace] Button action variables: (action / button):" + gumpDictionary[key].butAction + "/" + gumpDictionary[key].butToPage);
+						var butGraphic = gumpGraphic[gumpDictionary[key].graphic];
+						if (!butGraphic) {
+							Debug("[GumpConstructor][Error] Button graphic is invalid: " + gumpDictionary[key].graphic);
+						}
+						//gump.AddButton(gumpDictionary[key].serial, 0, 0, butGraphic.graphic, butGraphic.graphic, butGraphic.graphic, "0");
+						//If not color is provided, setting a default.
+						if (gumpDictionary[key].buttonColor == null) {
+							gumpDictionary[key].buttonColor == 0;
+						}
+						//Handling for dynamic buttons
+						if (butGraphic.dynamic) {
+							if (!("butWidth" in gumpDictionary[key])) {
+								gumpDictionary[key].butWidth = butGraphic.butWidth;
+							} else {
+								butGraphic.butWidth = gumpDictionary[key].butWidth;
+							}
+							if (!("butHeight" in gumpDictionary[key])) {
+								gumpDictionary[key].butHeight = butGraphic.butHeight;
+							} else {
+								butGraphic.butHeight = gumpDictionary[key].butHeight;
+							}
+
+							gump.AddResizepic(gumpDictionary[key].x, gumpDictionary[key].y, butGraphic.graphic, gumpDictionary[key].butWidth, gumpDictionary[key].butHeight, gumpDictionary[key].serial, true);
+						} else {
+							gump.AddButton(
+								gumpDictionary[key].serial,
+								gumpDictionary[key].x,
+								gumpDictionary[key].y,
+								butGraphic.graphic,
+								butGraphic.selected,
+								butGraphic.pressed,
+								gumpDictionary[key].buttonColor,
+								gumpDictionary[key].butAction,
+								gumpDictionary[key].butToPage
+							);
+						}
+						if (gumpDictionary[key].text) {
+							var textWidth = TextWidth(gumpDictionary[key].text);
+							var textHeight = 20;
+							var centerCal = butGraphic.butWidth / 2 - textWidth / 2;
+							var vertCal = butGraphic.butHeight / 2 - textHeight / 2;
+							gump.AddText(
+								gumpDictionary[key].x + butGraphic.butTextOffX + gumpDictionary[key].butTextOffX + centerCal,
+								gumpDictionary[key].y + butGraphic.butTextOffY + gumpDictionary[key].butTextOffY + vertCal,
+								gumpDictionary[key].color,
+								gumpDictionary[key].text
+							);
+						}
+						break;
+					case "textbox":
+						gumpDictionary[key].textOffset = (gumpDictionary[key].width - TextWidth(gumpDictionary[key].value)) / 2;
+						gump.AddResizepic(gumpDictionary[key].x - 5, gumpDictionary[key].y, gumpDictionary[key].background, gumpDictionary[key].width, gumpDictionary[key].height - 5);
+						Debug("[GumpConstructor][Trace] Textbox key/serial:" + key + ": " + gumpDictionary[key].serial);
+						gump.AddTextEntry(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							gumpDictionary[key].color,
+							gumpDictionary[key].value,
+							gumpDictionary[key].width - 7,
+							gumpDictionary[key].height,
+							50
+						);
+						//gump.SetTextEntryPlaceholderText("any");
+						break;
+					case "text":
+						var width = 0;
+						if ("width" in gumpDictionary[key]) {
+							width = gumpDictionary[key].width;
+						}
+						gump.AddText(gumpDictionary[key].x + gumpDictionary[key].textOffset, gumpDictionary[key].y, gumpDictionary[key].color, gumpDictionary[key].text, width, gumpDictionary[key].serial);
+						break;
+					case "column":
+						gump.AddText(gumpDictionary[key].x + gumpDictionary[key].textOffset, gumpDictionary[key].y, gumpDictionary[key].color, gumpDictionary[key].text);
+						break;
+					case "radio":
+						var butGraphic = gumpGraphic[gumpDictionary[key].graphic];
+						var state = gumpDictionary[key].value == true ? 1 : 0;
+						gump.AddRadio(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							butGraphic.graphic,
+							butGraphic.selected,
+							butGraphic.checked,
+							state,
+							0,
+							gumpDictionary[key].text,
+							gumpDictionary[key].color
+						);
+						break;
+					case "combobox":
+						gump.AddComboBox(
+							gumpDictionary[key].serial,
+							gumpDictionary[key].x,
+							gumpDictionary[key].y,
+							gumpDictionary[key].background,
+							0,
+							gumpDictionary[key].background,
+							gumpDictionary[key].width,
+							-3,
+							gumpDictionary[key].droplist.length
+						);
+						for (var i = 0; i < gumpDictionary[key].droplist.length; i++) {
+							var selection = 0;
+							if (parseInt(gumpDictionary[key].value) == i) {
+								selection = 1;
+							}
+							gump.AddComboBoxText(gumpDictionary[key].droplist[i][1], 0, selection);
+							//Debug("[GumpConstructor[Trace] Adding item to the gump combobox: " + gumpDictionary[key].droplist[i][1]);
+						}
+						break;
+					case "background":
+						gump.AddResizepic(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].background, gumpDictionary[key].width, gumpDictionary[key].height);
+						break;
+					case "line":
+						gump.AddLine(gumpDictionary[key].x, gumpDictionary[key].y, gumpDictionary[key].x + gumpDictionary[key].width, gumpDictionary[key].y, "#CEA552", 2);
+						break;
+					case "main":
+						break;
+					case "skip":
+						break;
+					default:
+						Debug("[GenerateGump][Error] Invalid object type: " + gumpDictionary[key].type);
+					//return false;
+				}
+			}
+		}
+	});
+	return htmlWindows;
+}
+
+//Handles the position of the object in the gump, if the autoPosition variable is set to true
+//The "PosVariable" is stored main JSON file, and flagged as global.  In it there is a dictionary of pages, and in that dictionary of pages is
+//a dictionary of rows.  In that row is stored the current X position. Y is based only on the number of the row and the set row heigh.
+function GumpPositionHandler(theObj, json) {
+	if ("autoPosition" in theObj && theObj.autoPosition == true) {
+		var importObj = JSON_import(json);
+		//Handling if the import file is empty/wrong
+		if (importObj == false) {
+			Debug("[GumpPositionHandler][Error] Error importing json.");
+			importObj = {};
+		}
+		if (importObj != false && "PosVariable" in importObj) {
+			var pos = importObj.PosVariable;
+		} else {
+			Debug("[GumpPositionHandler][Log] No PosVariable data, creating it.");
+			importObj.PosVariable = {};
+			importObj.PosVariable.global = true;
+			importObj.PosVariable.pages = {};
+			if ("rowHeight" in theObj) {
+				importObj.PosVariable.rowHeight = theObj.rowHeight;
+			} else {
+				importObj.PosVariable.rowHeight = 35;
+			}
+			var pos = importObj.PosVariable;
+		}
+		//Checking/creating a new page if necessary
+		if (!(theObj.parentPage in pos.pages)) {
+			pos.pages[theObj.parentPage] = {};
+		}
+		//Setting the object page to zero if that variable doesn't exist, similar for the x offset.
+		theObj.autoRow = theObj.autoRow == null ? 0 : theObj.autoRow;
+		theObj.xOffset = theObj.xOffset == null ? 0 : theObj.xOffset;
+		//Checking if the row is in the page, creating it if not, and adding the offset.
+		if (!(theObj.autoRow in pos.pages[theObj.parentPage])) {
+			pos.pages[theObj.parentPage][theObj.autoRow] = theObj.xOffset;
+		} else {
+			pos.pages[theObj.parentPage][theObj.autoRow] = parseInt(pos.pages[theObj.parentPage][theObj.autoRow]) + parseInt(theObj.xOffset);
+		}
+		//Setting the X and Y of the object to be returned based on the current position.
+		Debug("[GumpPositionHandler][Trace] Object Name / X :" + theObj.name + " / " + theObj.parentPage + " / " + parseInt(pos.pages[theObj.parentPage][theObj.autoRow]));
+		theObj.x = parseInt(pos.pages[theObj.parentPage][theObj.autoRow]);
+		theObj.y = parseInt(theObj.autoRow * pos.rowHeight);
+		if ("yOffset" in theObj && theObj.yOffset > 0) {
+			theObj.y += theObj.yOffset;
+		}
+		//Now updating the row position to include this object to be exported to the JSON.
+		var width = 50;
+		if (theObj.type == "text") {
+			width = TextWidth(theObj.text);
+		}
+		if (theObj.width != 0 && theObj.width != null) {
+			width = theObj.width;
+		}
+		pos.pages[theObj.parentPage][theObj.autoRow] += width;
+		//Not importing just passing it in, not sure if we need to export
+		importObj.PosVariable = pos;
+		if (json != null) {
+			importObj.PosVariable = importObj.PosVariable;
+			JSON_export(json, importObj);
+		}
+
+		return theObj;
+	} else {
+		Debug("[GumpPositionHandler][Trace] autoPosition not set to true, returning the same object");
+		return theObj;
+	}
+}
+
+//Hoping to depricate this, it's saving an extra JSON for some reason instead of just adding it to the existing larger gump obj.
+function GumpPositionHandler_Old(theObj) {
+	if ("autoPosition" in theObj && theObj.autoPosition == true && "json" in theObj && theObj.json != null) {
+		var importObj = JSON_import(theObj.json);
+		if ("PosVariable" in importObj) {
+			var pos = importObj.PosVariable;
+		} else {
+			importObj.PosVariable = {};
+			importObj.PosVariable.global = true;
+			importObj.PosVariable.pages = {};
+			if ("rowHeight" in theObj) {
+				importObj.PosVariable.rowHeight = theObj.rowHeight;
+			} else {
+				importObj.PosVariable.rowHeight = 35;
+			}
+			var pos = importObj.PosVariable;
+		}
+		//Checking/creating a new page if necessary
+		if (!(theObj.parentPage in pos.pages)) {
+			pos.pages[theObj.parentPage] = {};
+		}
+		//Setting the object page to zero if that variable doesn't exist, similar for the x offset.
+		theObj.autoRow = theObj.autoRow == null ? 0 : theObj.autoRow;
+		theObj.xOffset = theObj.xOffset == null ? 0 : theObj.xOffset;
+		//Checking if the row is in the page, creating it if not, and adding the offset.
+		if (!(theObj.autoRow in pos.pages[theObj.parentPage])) {
+			pos.pages[theObj.parentPage][theObj.autoRow] = 0 + theObj.xOffset;
+		} else {
+			pos.pages[theObj.parentPage][theObj.autoRow] += theObj.xOffset;
+		}
+		//Setting the X and Y of the object to be returned based on the current position.
+		theObj.x = pos.pages[theObj.parentPage][theObj.autoRow];
+		theObj.y = theObj.parentPage * pos.rowHeight;
+		//Now updating the row position to include this object to be exported to the JSON.
+		var width = 50;
+		if (theObj.type == "text") {
+			width = TextWidth(theObj.text);
+		}
+		if (theObj.width != 0 && theObj.widht != null) {
+			width = theObj.width;
+		}
+		pos.pages[theObj.parentPage][theObj.autoRow] += width;
+		importObj.PosVariable = pos;
+		JSON_export(theObj.json, importObj);
+
+		return theObj;
+	} else {
+		Debug("[MinMaxHandler][Log] autoPosition not set to true, returning the same object");
+		return theObj;
+	}
+}
+
+//Should be pretty general, may need to be cleaned up.
+function DropdownListCreator(theObj) {
+	var dropArray = [];
+	Object.keys(theObj).forEach(function (key2) {
+		if (theObj[key2].maxVal != false) {
+			var tempArray = [];
+			tempArray = [key2, theObj[key2].name];
+			dropArray.push(tempArray);
+		}
+	});
+	return dropArray;
+}
+
+function MinMaxHandler(parentObject, dict) {
+	switch (parentObject[0]) {
+		case "imbueProp":
+			if (parentObject[1] in dict) {
+				var theKey = dict[parentObject[1]].value;
+				Debug("[MinMaxHandler][Trace] Dropdown selection index: " + theKey);
+				if (theKey > -1) {
+					theKey = dict[parentObject[1]].droplist[theKey][0];
+				} else {
+					return { valMin: 0, valMax: 100 };
+				}
+				Debug("[MinMaxHandler][Trace] theKey: " + theKey);
+				return { valMin: imbueAction[theKey].minVal, valMax: imbueAction[theKey].maxVal };
+			} else {
+				Debug("[MinMaxHandler][Error] Invalid imbueAction passed: " + parentObject[1]);
+			}
+		default:
+			Debug("[MinMaxHandler][Error] Invalid handle type: " + parentObject[0]);
+			return false;
+	}
+}
+
+function TextWidth(string) {
+	string = string.toString();
+	var textWidths = { slim: {}, regular: {} };
+	textWidths.slim.search = "i|I|l|1";
+	textWidths.slim.width = 3.5;
+	textWidths.regular.width = 7;
+	var otherCount = 0;
+	var returnWidth = 0;
+
+	Object.keys(textWidths).forEach(function (key) {
+		if ("search" in textWidths[key]) {
+			for (var i = 0; i < string.length; i++) {
+				if (Orion.Contains(textWidths[key].search, string[i], false)) {
+					returnWidth += textWidths.slim.width;
+					otherCount++;
+				}
+			}
+		}
+	});
+	returnWidth += (string.length - otherCount) * textWidths.regular.width;
+	return returnWidth;
+}
+
+//takes an object to center around, and returns an x/y pair.
+function AlignObject(position, compObj, modObj, width, height) {
+	var returnX = false;
+	var returnY = false;
+	if ("main" in compObj && compObj.main == true) {
+		var refObj = {};
+		refObj.x = 1;
+		refObj.y = 0;
+		refObj.width = compObj.width;
+		refObj.height = compObj.height;
+	} else {
+		var refObj = compObj;
+	}
+	switch (position) {
+		case "center":
+			if (width) {
+				returnX = refObj.width / 2 - width / 2 + refObj.x;
+			} else {
+				returnX = modObj.x;
+			}
+			if (height) {
+				returnY = refObj.height / 2 - height / 2 + refObj.y;
+			} else {
+				returnY = modObj.y;
+			}
+			return { x: returnX, y: returnY };
+		case "left":
+			return { x: refObj.x, y: modObj.y };
+		case "right":
+			Debug("[AlignObject][Trace] Ref Obj width/x & button width: " + refObj.width + "/" + refObj.x + "/" + width);
+			returnX = refObj.width - width + refObj.x;
+			Debug("[AlignObject][Trace] Alight Right Return X: " + returnX);
+			return { x: returnX, y: modObj.y };
+		case "bottom":
+			returnY = refObj.height - height + refObj.y;
+			return { x: modObj.x, y: returnY };
+		default:
+			Debug("[AlignObject][Error] Bad position passed in: " + position);
+			return { x: modObj.y, y: modObj.y };
+	}
+}
+
+function AdjustXY(theObj, XYpair) {
+	theObj.x = XYpair.x;
+	theObj.y = XYpair.y;
+	return theObj;
+}
+
+//This probably needs to be put back wherever i pulled it from
+function GumpElement() {
+	for (var i = 0; i < gumpvars.length; i++) {
+		if (gumpvars[i][1] == "cbox") {
+			//gump.AddCheckbox(i+10, positions[gumpvars[i][2]],gumpvars[i][2]*rowoff,  '0x00938', '0x093A', '0x0939', gumpvars[i][3], '0', gumpvars[i][0]);
+			gump.AddCheckbox(i + 10, positions[gumpvars[i][2]], gumpvars[i][2] * rowoff, "0x016C9", "0x016CC", "0x016C5", gumpvars[i][3], "0", gumpvars[i][0], "0x00801");
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + gumpvars[i][0].length * coloff;
+		} else if (gumpvars[i][1] == "title") {
+			gump.AddText(positions[gumpvars[i][2]], gumpvars[i][2] * rowoff, gumpvars[i][3], gumpvars[i][0]);
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + gumpvars[i][0].length * coloff;
+		} else if (gumpvars[i][1] == "radio") {
+			gump.AddRadio(i + 10, positions[gumpvars[i][2]], gumpvars[i][2] * rowoff, "0x016C9", "0x016CC", "0x016C5", gumpvars[i][3], "0", gumpvars[i][0], "0x00801");
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + gumpvars[i][0].length * coloff;
+		} else if (gumpvars[i][1] == "combo") {
+			droplength = (gumpvars[i].length - 4) / 2;
+			gump.AddComboBox(i + 10, positions[gumpvars[i][2]], gumpvars[i][2] * rowoff, "0x0BB8", 0, "0x0BB8", 125, -3, droplength);
+			var seldef = 0;
+			for (var j = 4; j < gumpvars[i].length; j++) {
+				//Orion.Print(j+ " / " + gumpvars[i][j]);
+				if (gumpvars[i][3] * 2 == j - 4) {
+					seldef = 1;
+				} else {
+					seldef = 0;
+				}
+				gump.AddComboBoxText(gumpvars[i][j], 0, seldef);
+				j++;
+			}
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + 210;
+		} else if (gumpvars[i][1] == "txtbox") {
+			//3 = value, 4 = box width,
+			gump.AddResizepic(positions[gumpvars[i][2]] - 5, gumpvars[i][2] * rowoff, "0x0BB8", gumpvars[i][4], 20);
+			gump.AddTextEntry(i + 10, positions[gumpvars[i][2]], gumpvars[i][2] * rowoff, "0x0035", gumpvars[i][3], gumpvars[i][4], 20);
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + 5;
+		} else if (gumpvars[i][1] == "plusminus") {
+			//3 = value, 4 =
+			gump.AddResizepic(positions[gumpvars[i][2]] - 5, gumpvars[i][2] * rowoff, "0x0BB8", 70, 20);
+			gump.AddMinMaxButtons(i + 10, positions[gumpvars[i][2]] + 20, gumpvars[i][2] * rowoff + 1, "0x0037", 0, 1, 100, gumpvars[i][3]);
+			gump.SetTextParameters(1, "LeftCenter");
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + 75;
+		} else if (gumpvars[i][1] == "tooltip") {
+			gump.AddTooltip(gumpvars[i][3]);
+		} else if (gumpvars[i][1] == "page") {
+			gump.AddPage(gumpvars[i][2]);
+			gump.AddResizepic(0, 0, bground, 710, 430);
+			gump.AddText(285, 5, "0x002F", "Neo's Skill Training Pack");
+			if (gumpvars[i][2] != 2) {
+				gump.AddButton(0, 315, 400, "0x0EF", "0x0F0", "0x0F0", 0, 0, 0); //Apply button returns to main page
+			}
+			if (gumpvars[i][2] == 2) {
+				gump.AddButton(0, 315, 400, "0x00F9", "0x00F8", "0x00F7", "0"); //Save & Close for second page
+			} else if (gumpvars[i][2] == 4) {
+				gump.AddButton(5, 30, 400, "0x0F6", "0x0F4", "0x0F5", 0, 1);
+				gump.AddTooltip("This action resets all the settings \n to their default settings.");
+			}
+
+			positions = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+		} else if (gumpvars[i][1] == "button") {
+			//0x7d6, hover d7
+			//0=name,1=type,2=x,3=y,4=graphic,5=hover,6=page,7=buttonID
+			gump.AddButton(gumpvars[i][7], gumpvars[i][2], gumpvars[i][3], gumpvars[i][4], gumpvars[i][5], gumpvars[i][5], 0, 0, gumpvars[i][6]);
+		} else if (gumpvars[i][1] == "buttontext") {
+			//0x7d6, hover d7
+			//0=name,1=type,2=x,3=y,4=graphic,5=width,6=height,7=buttontext,8=page,9=serial,10 =txt offset,11=txtcolor
+			gump.AddResizepic(gumpvars[i][2], gumpvars[i][3], gumpvars[i][4], gumpvars[i][5], gumpvars[i][6], gumpvars[i][9], 0, 1);
+			gump.AddText(parseInt(gumpvars[i][2]) + 7 + parseInt(gumpvars[i][10]), parseInt(gumpvars[i][3]) + 5, gumpvars[i][11], gumpvars[i][7]);
+		} else if (gumpvars[i][1] == "tilebuttonvariable") {
+			//0x7d6, hover d7
+			//0=name,1=type,2=x,3=y,4=graphic,5=width,6=height,7=buttontext,8=page,9=serial,10 =txt offset,11=txtcolor,12=hue
+			gump.AddText(parseInt(gumpvars[i][2]) + parseInt(gumpvars[i][10]), parseInt(gumpvars[i][3]) - 20, gumpvars[i][11], gumpvars[i][7]);
+			gump.AddButtonTileArt(gumpvars[i][9], gumpvars[i][2], gumpvars[i][3], "0x842", "0x843", "0x844", gumpvars[i][12], gumpvars[i][4], gumpvars[i][12], 10, 25, 1);
+		}
+		//Before next iteration make any Y adjustments to the current row.
+		if (gumpvars[i][1] != "combo" && gumpvars[i].length > 4) {
+			positions[gumpvars[i][2]] = positions[gumpvars[i][2]] + gumpvars[i][4];
+		}
+	}
+}
+
+function BackgroundDropdown() {
+	var dropArray = [];
+	Object.keys(gumpGraphic).forEach(function (key2) {
+		if (key2.indexOf("background") != -1) {
+			var tempArray = [];
+			tempArray = [key2, gumpGraphic[key2].name];
+			dropArray.push(tempArray);
+		}
+	});
+	return dropArray;
+}

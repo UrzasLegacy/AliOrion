@@ -1,0 +1,360 @@
+var gumpGraphic = {};
+var tempName = false;
+//Checkboxes
+tempName = "checkbox_diamond_bluegreen";
+gumpGraphic[tempName] = GumpGraphicObject("Diamond Checkbox", "checkbox", "0x16CC");
+gumpGraphic[tempName].selected = "0x16BF";
+gumpGraphic[tempName].checked = "0x16C4";
+//Copying above for generic
+tempName = "checkbox_diamond";
+gumpGraphic[tempName] = {};
+gumpGraphic[tempName] = gumpGraphic["checkbox_diamond_bluegreen"];
+tempName = "checkbox_diamond_redgreen";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "button", "0x16c6");
+gumpGraphic[tempName].selected = "0x16c8";
+gumpGraphic[tempName].checked = "0x16d5";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "checkbox_grey_square";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "button", "0xd2");
+gumpGraphic[tempName].selected = "0xd2";
+gumpGraphic[tempName].checked = "0xd3";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "checkbox_gold_x";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "button", "0x9C4E");
+gumpGraphic[tempName].selected = "0x9C4E";
+gumpGraphic[tempName].checked = "0x9C4F";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "checkbox_grey_circle";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "button", "0x768");
+gumpGraphic[tempName].selected = "0x768";
+gumpGraphic[tempName].checked = "0x767";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+//Buttons
+tempName = "button_grey_okay";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Okay Button", "button", "0x2EE6");
+gumpGraphic[tempName].selected = "0x2EE7";
+gumpGraphic[tempName].pressed = "0x2EE8";
+tempName = "button_x_close";
+gumpGraphic[tempName] = GumpGraphicObject("Small X button", "button", "0x9C4F");
+gumpGraphic[tempName].selected = "0x9C4F";
+gumpGraphic[tempName].pressed = "0x9C4F";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "button_grey_accept";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Accept Button", "button", "0x2EE0");
+gumpGraphic[tempName].selected = "0x2EE1";
+gumpGraphic[tempName].pressed = "0x2EE2";
+tempName = "button_grey_continue";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Continue Button", "button", "0x2EE9");
+gumpGraphic[tempName].selected = "0x2EEA";
+gumpGraphic[tempName].pressed = "0x2EEB";
+tempName = "button_green_blank";
+gumpGraphic[tempName] = GumpGraphicObject("Blank Green Button", "button", "0x9C54");
+gumpGraphic[tempName].selected = "0x9C5E";
+gumpGraphic[tempName].pressed = "0x9C5E";
+gumpGraphic[tempName].butWidth = 126;
+gumpGraphic[tempName].butHeight = 25;
+tempName = "button_blue_blank";
+gumpGraphic[tempName] = GumpGraphicObject("Blank Blue Button", "button", "0x9C55");
+gumpGraphic[tempName].selected = "0x9C5F";
+gumpGraphic[tempName].pressed = "0x9C5F";
+gumpGraphic[tempName].butWidth = 126;
+gumpGraphic[tempName].butHeight = 25;
+tempName = "button_grey_blank";
+gumpGraphic[tempName] = GumpGraphicObject("Blank Grey Button", "button", "0x9C53");
+gumpGraphic[tempName].selected = "0x9C5D";
+gumpGraphic[tempName].pressed = "0x9C5D";
+gumpGraphic[tempName].butWidth = 126;
+gumpGraphic[tempName].butHeight = 25;
+tempName = "button_arrow_left";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Left Arrow Button", "button", "0x9C50");
+gumpGraphic[tempName].selected = "0x9C5A";
+gumpGraphic[tempName].pressed = "0x9C5A";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "button_arrow_right";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Right Arrow Button", "button", "0x9C51");
+gumpGraphic[tempName].selected = "0x9C5B";
+gumpGraphic[tempName].pressed = "0x9C5B";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "button_grey_dynamic";
+gumpGraphic[tempName] = GumpGraphicObject("Grey Button with thing gold trim, tile/dynamic", "button", "0x24B8");
+gumpGraphic[tempName].butWidth = 125;
+gumpGraphic[tempName].butHeight = 25;
+gumpGraphic[tempName].butTextOffY = 1;
+gumpGraphic[tempName].dynamic = true;
+tempName = "button_circle_redgreen";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "button", "0x938");
+gumpGraphic[tempName].selected = "0x93A";
+gumpGraphic[tempName].checked = "0x939";
+gumpGraphic[tempName].pressed = "0x939";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "button_3story_house";
+gumpGraphic[tempName] = GumpGraphicObject("Three story House", "button", "0x56cc");
+gumpGraphic[tempName].selected = "0x56cc";
+gumpGraphic[tempName].pressed = "0x56cc";
+gumpGraphic[tempName].butWidth = 40;
+gumpGraphic[tempName].butHeight = 85;
+//Modified version of above used for status icon
+tempName = "status_circle_red";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "graphic", "0x938");
+gumpGraphic[tempName].selected = "0x938";
+gumpGraphic[tempName].pressed = "0x938";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+tempName = "status_circle_green";
+gumpGraphic[tempName] = GumpGraphicObject("Red circle button, green when selected, blue hover", "graphic", "0x939");
+gumpGraphic[tempName].selected = "0x939";
+gumpGraphic[tempName].pressed = "0x939";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+//Button used for targetting (small greens square with circle in the middle)
+tempName = "button_greencircle";
+gumpGraphic[tempName] = GumpGraphicObject("Green Circle debuff", "button", "0x7602");
+gumpGraphic[tempName].selected = "0x7602";
+gumpGraphic[tempName].pressed = "0x7602";
+gumpGraphic[tempName].butWidth = 16;
+gumpGraphic[tempName].butHeight = 16;
+tempName = "button_boxwithplus";
+gumpGraphic[tempName] = GumpGraphicObject("Plus sign box", "button", "0x151A");
+gumpGraphic[tempName].selected = "0x1519";
+gumpGraphic[tempName].pressed = "0x1519";
+gumpGraphic[tempName].butWidth = 22;
+gumpGraphic[tempName].butHeight = 22;
+//Plus Minus graphics
+tempName = "std_plus_minus";
+gumpGraphic[tempName] = GumpGraphicObject("Standard/Generic plus/minus button", "button", "0x0037");
+gumpGraphic[tempName].butWidth = 13;
+gumpGraphic[tempName].butHeight = 13;
+tempName = "black_plus_minus";
+gumpGraphic[tempName] = GumpGraphicObject("Standard/Generic plus/minus button", "button", "0x1519");
+gumpGraphic[tempName].butWidth = 16;
+gumpGraphic[tempName].butHeight = 16;
+//Slider Buttons / Backgrounds
+tempName = "slider_std_knob";
+//gumpGraphic[tempName] = GumpGraphicObject("Standard/Generic plus minus", "button", "0x00d8");
+gumpGraphic[tempName] = GumpGraphicObject("Standard/Generic plus minus", "button", "0x0837");
+tempName = "slider_std_background";
+gumpGraphic[tempName] = GumpGraphicObject("Standard/Generic plus minus background", "background", "0x00D5");
+//Gump Backgrounds
+tempName = "blank_background";
+gumpGraphic[tempName] = GumpGraphicObject("Blank", "background", "0");
+var tempName = "background_generic_grey";
+gumpGraphic[tempName] = GumpGraphicObject("Generic Grey", "background", "0x0BB8");
+tempName = "background_grey_gold";
+gumpGraphic[tempName] = GumpGraphicObject("Grey /w Gold Border fancy/ornate", "background", "09BF5");
+tempName = "background_grey_thing_gold";
+gumpGraphic[tempName] = GumpGraphicObject("Grey /w Simple gold Trim", "background", "0x24B8");
+tempName = "background_grey_minimal";
+gumpGraphic[tempName] = GumpGraphicObject("Grey /w Simple Trim", "background", "09C40");
+tempName = "background_grey_no_border";
+gumpGraphic[tempName] = GumpGraphicObject("Grey no border", "background", "0xBB8");
+tempName = "background_grey_thinline";
+gumpGraphic[tempName] = GumpGraphicObject("Grey /w thin elegant line", "background", "0xDAC");
+tempName = "background_grey_rounded_light";
+gumpGraphic[tempName] = GumpGraphicObject("Light gray, basic rounded border", "background", "0x13BE");
+tempName = "background_grey_rounded_dark";
+gumpGraphic[tempName] = GumpGraphicObject("Dark gray, basic rounded border", "background", "0x1400");
+tempName = "background_grey_dark";
+gumpGraphic[tempName] = GumpGraphicObject("Dark gray, thick ugly border", "background", "0xE10");
+tempName = "background_gold_ring";
+gumpGraphic[tempName] = GumpGraphicObject("Light background /w Rivet design and gold rings for crners", "background", "0x12E");
+tempName = "background_gold_rivet";
+gumpGraphic[tempName] = GumpGraphicObject("Light background /w Rivet design", "background", "0x137");
+tempName = "background_paper_burned";
+gumpGraphic[tempName] = GumpGraphicObject("Paper with 'burned' edges", "background", "0x62B");
+tempName = "background_paper_scroll";
+gumpGraphic[tempName] = GumpGraphicObject("Paper scroll", "background", "0x9D8");
+tempName = "background_paper_scroll_fancy";
+gumpGraphic[tempName] = GumpGraphicObject("Fancy Paper scroll", "background", "0x1432");
+tempName = "background_black_brown_trim";
+gumpGraphic[tempName] = GumpGraphicObject("Black background with thinner wood/brown trim", "background", "0x6DB");
+tempName = "background_black_gold_trim";
+gumpGraphic[tempName] = GumpGraphicObject("Black background with thinner yellow/gold trim", "background", "0xA3C");
+tempName = "background_chainmail";
+gumpGraphic[tempName] = GumpGraphicObject("Black background with thinner yellow/gold trim", "background", "0x7748");
+//Random other stuff
+tempName = "buff_hiding";
+gumpGraphic[tempName] = GumpGraphicObject("Hiding buff icon", "background", "0x7565");
+tempName = "buff_greencircle";
+gumpGraphic[tempName] = GumpGraphicObject("Hiding buff icon", "background", "0x7565");
+//Cursor Items
+tempName = "cursor_target_gold";
+gumpGraphic[tempName] = GumpGraphicObject("Cursor Target", "button", "0x2076");
+
+//General Backgrounds
+//Icons
+tempName = "icon_anvil_round";
+gumpGraphic[tempName] = GumpGraphicObject("Round Anvil Icon", "button", "0x15B3");
+gumpGraphic[tempName].selected = "0x15B4";
+gumpGraphic[tempName].pressed = "0x15B4";
+
+//All the types of a a custom gump
+gumpWidgets = {};
+gumpWidgets.checkbox = "CheckBox";
+gumpWidgets.text = "Text";
+gumpWidgets.combobox = "ComboBox";
+gumpWidgets.plusminus = "MinMaxButton";
+gumpWidgets.radio = "Radio";
+gumpWidgets.slider = "Slider";
+gumpWidgets.textbox = "Text";
+
+//Structure for gump objects
+function GumpObj(type, posX, posY) {
+	var test = {};
+	test.serial = null;
+	test.posX = posX;
+	test.posY = posY;
+	test.text = null;
+	test.width = null;
+	test.height = null;
+	test.butStatic = null;
+	test.butHover = null;
+	test.butClick = null;
+	test.array = null;
+	return test;
+}
+
+function GumpObject(name, serial, type, x, y, autoPosition, autoRow) {
+	var tempObj = {};
+
+	tempObj.name = name; //A name of the
+	tempObj.serial = serial;
+	tempObj.type = type; //Type: Combo,button,checkbox,
+	tempObj.text = null; //If the object displays text, value here.
+	tempObj.value = null; //This saves the state/value of the object.
+	tempObj.visible = true; //Attach to a column name or true to show always, false hide default.
+	tempObj.parent = false; //Flagging whether this object has a parent window/gump or not.
+	tempObj.color = color.black; //Setting default to match default backgrounds
+	tempObj.columnParent = false;
+	tempObj.pageVisChange = false; //Used to track if page visibility is what made it not visible.
+	tempObj.parentPage = 0;
+	tempObj.autoPosition = autoPosition; //Variable to set if you want the constructor to handle row and x position.
+	tempObj.filtered = false; //A flag to determine if this item has been filtered.
+	//tempObj.defaultVal = false;
+	tempObj.x = x;
+	tempObj.y = y;
+	if (tempObj.autoPosition == true) {
+		tempObj.rowHeight = 35;
+		tempObj.autoRow = autoRow;
+		tempObj.xOffset = 0;
+		tempObj.json = null;
+	}
+	//Defaults for various objects
+	switch (type) {
+		case "column":
+			tempObj.columnParent = true;
+			break;
+		case "html":
+			tempObj.hasbackground = 0;
+			tempObj.hasScrollbar = true;
+			break;
+		case "htmltext":
+			tempObj.height = 12;
+			break;
+		case "page":
+			tempObj.pageVis = false;
+			break;
+		case "checkbox":
+			tempObj.graphic = "default";
+			tempObj.text = "";
+			tempObj.txtColor = color.sliderwhite;
+			break;
+		case "main" || "background":
+			tempObj.background = "default";
+			tempObj.noclose = false;
+			tempObj.nomove = false;
+			break;
+		case "combobox":
+			tempObj.defselection = -1;
+			tempObj.value = -1;
+			tempObj.droplength = 5;
+			tempObj.background = "background_generic_grey";
+			tempObj.width = 100;
+			tempObj.droplist = false;
+			break;
+		case "button":
+			tempObj.butAction = 0; //Defualt 0 (to page), 1 = gump action (returns button serial)
+			tempObj.butToPage = -1; //if 0 above, which page to swtich to.
+			tempObj.butText = false;
+			tempObj.butTextOffX = 0;
+			tempObj.butTextOffY = 0;
+			tempObj.dynamic = "hello2";
+			break;
+		case "plusminus":
+			tempObj.graphic = "std_plus_minus";
+			tempObj.background = "background_generic_grey";
+			tempObj.value = 0;
+			tempObj.valMin = 0;
+			tempObj.valMax = 100;
+			tempObj.showText = 1;
+			tempObj.showPos = "right";
+			break;
+		case "text":
+			tempObj.textOffset = 0;
+			tempObj.color = color.white;
+			break;
+		case "textbox":
+			tempObj.width = 50;
+			tempObj.height = 25;
+			tempObj.value = "";
+			tempObj.background = "background_generic_grey";
+			break;
+		case "slider":
+			tempObj.graphic = "slider_std_knob";
+			tempObj.background = "slider_std_background";
+			tempObj.value = 0;
+			tempObj.valMin = 0;
+			tempObj.valMax = 100;
+			tempObj.showText = 1;
+			tempObj.showPos = "right";
+			break;
+		default:
+			break;
+	}
+
+	return tempObj;
+}
+
+function GumpGraphicObject(name, type, graphic) {
+	var tempObj = {};
+
+	tempObj.name = name;
+	tempObj.type = type;
+	tempObj.graphic = graphic;
+
+	if (type == "button") {
+		tempObj.butText = false;
+		tempObj.butTextOffX = 0;
+		tempObj.butTextOffY = 0;
+		tempObj.butWidth = 100;
+		tempObj.butHeight = 20;
+	}
+
+	return tempObj;
+}
+
+//Depricated
+/*
+function ColumnObject(text) {
+	var test = {};
+	test.text = text;
+	test.textOffset = 5;
+	test.width = 50;
+	test.ref = null;
+	test.color = color.yellowgold;
+	test.x = 0;
+	test.hide = false;
+	test.order = 10;
+	test.type = "text";
+	test.maxentry = 9;
+	test.itemProp = true;
+	return test;
+}
+*/

@@ -1,0 +1,606 @@
+var effects = {};
+effects["0x37BE"] = EffectObject("0x37BE", "Disarm", 6000, 100, 118, 21000, 55, 118, false, "disarmCheck", false);
+effects["0x374A"] = EffectObject("0x374A", "Curse", 150000, 55, 75, 0, 0, 0, false, false, "0x01E1");
+effects["0x374A"].spellBar = color.redRGB;
+effects["0x3709"] = EffectObject("0x3709", "Apple", 0, 0, 0, 0, -100, 195, "Curse", false, false); //Not trigginger CD since remove curse does the same effeect
+effects["0x3709"].CDBar = color.greenRGB;
+effects["0x3709"].condCD = 30000;
+//effects["0x3709"] = EffectObject("0x3709", "Cleanse", 0, 0, 0, 0, 0, 0, false, "removeCurseCheck", "0x064C");
+effects["0x3728"] = EffectObject("0x3728", "Splinter", 4000, 0, 195, 30000, 0, 155, false, false, "0x01DF");
+effects["0x376A"] = EffectObject("0x376A", "Evade", 6000, -100, 75, 27000, -55, 75, false, false, "0x051B");
+effects["0x3779"] = EffectObject("0x3779", "Sleep", 3000, -100, 118, 10000, -55, 118, false, false, "0x0657");
+//effects["0x37C4"].nextGraphic = "0x376A";
+
+//Top Right Corner = 75,-25
+//Bottom Right Corner = 575,25
+function ActionTimers() {
+	var beActive = Orion.GetGlobal("doActionTimer") == "true" ? true : false;
+	var doOverride = Orion.GetGlobal("doActionTimerOverride") == "true" ? true : false;
+	if (!beActive) {
+		Debug("[ActionTimer][Info] doActionTimer is false, exiting.");
+		return false;
+	}
+	//Building the search string using globals to determine whether they are active or not.
+	var searchString = "";
+	Object.keys(effects).forEach(function (key) {
+		if (Orion.GetGlobal("ActionTimer_" + effects[key].name) == "true") {
+			if (searchString != "") {
+				searchString += "|";
+			}
+			searchString += key;
+		}
+	});
+	Orion.OAOptionSet("EffectEcho", "1");
+	Orion.OAOptionSet("SoundEcho", "1");
+	Orion.OAOptionSet("AnimationEcho", "1");
+	var jMsg = Orion.WaitJournal(searchString, Orion.Now(), Orion.Now() + 6000000000);
+	Orion.Exec("ActionTimers");
+	if (Orion.Contains(jMsg.Text(), searchString)) {
+		var serial = jMsg.Text().match(/src_serial=(0x[0-9A-F]{8})/i)[1];
+		var graphic = jMsg.Text().match(/graphic=(0x[0-9A-F]{4})/i)[1];
+		var actionX = jMsg.Text().match(/dest_x=([0-9]{1,4})/i)[1];
+		var actionY = jMsg.Text().match(/dest_y=([0-9]{1,4})/i)[1];
+		if (graphic in effects) {
+			//action = effects[graphic];
+			//Orion.Print(action.name)
+			if (effects[graphic].color != false && Orion.Contains(jMsg.Text(), "color=")) {
+				var graphColor = jMsg.Text().match(/color=([0-9A-F]{4})/i)[1];
+				//return false;
+			}
+			var graphCheck = false;
+			var soundCheck = false;
+			var nextMsg = jMsg.NextMessage();
+			for (var i = 0; i < 20; i++) {
+				if (nextMsg != null) {
+					Debug("[ActionTimer][Log]" + nextMsg.Text());
+					if (effects[graphic].sound != false) {
+						var soundRefX = actionX;
+						var soundRefY = actionY;
+						Debug("[ActionTimer][Log] Sound echo has been provided for effect.");
+						//Checking to see if the sound matches
+						if (Orion.Contains(nextMsg.Text(), "soundecho")) {
+							var nextSound = nextMsg.Text().match(/id=(0x[0-9A-F]{4})/i)[1];
+							soundX = nextMsg.Text().match(/x=([0-9A-F]{1,4})/i)[1];
+							soundY = nextMsg.Text().match(/y=([0-9A-F]{1,4})/i)[1];
+							Debug("[ActionTimer][Log] Looking for:" + effects[graphic].sound + " Found Sound:" + nextSound + " " + soundX + " " + soundY + " " + soundRefX + " " + soundRefY);
+							if (effects[graphic].sound == nextSound && ((soundX == soundRefX && soundRefY == soundY) || (soundX == Player.X() && soundY == Player.Y()))) {
+								soundCheck = true;
+								break;
+							}
+						}
+					} else {
+						Debug("[ActionTimer][Log] Sound echo has NOT been provided for effect.");
+					}
+					nextMsg = nextMsg.NextMessage();
+				} else {
+					break;
+				}
+			}
+			Debug("[Debuff_Tracker][Log] Sound:" + soundCheck);
+			if (effects[graphic].sound != false && soundCheck == false) {
+				Debug("[Debuff_Tracker][Log] Soundcheck failed, exitting.");
+				return false;
+			}
+			spellTimerID = effects[graphic].name + "_timerID_" + serial;
+			cdTimerID = effects[graphic].name + "_CD_timerID_" + serial;
+			var functionCheck = true;
+			if (effects[graphic].fName != false) {
+				Orion.Exec(effects[graphic].fName, false, [serial]);
+				Orion.Wait(50);
+				functionCheck = Orion.GetGlobal(effects[graphic].fName);
+				ConditionalUpdate(graphic);
+				//Orion.Print("Try Again: " + effects[graphic].cdTime)
+				functionCheck = functionCheck == "true" ? true : false;
+			}
+			Debug("[Debuff_Tracker][Info] functionCheck: " + functionCheck);
+			if (functionCheck) {
+				//action = effects[graphic];
+				if (Orion.DisplayTimerGetTime(cdTimerID) <= 0) {
+					Orion.AddDisplayTimer(
+						spellTimerID,
+						effects[graphic].spellTime - Orion.GetPing("average"),
+						"AboveChar",
+						"Line|Bar",
+						"",
+						effects[graphic].spellX,
+						effects[graphic].spellY,
+						effects[graphic].spellText,
+						effects[graphic].spellFont,
+						effects[graphic].spellBar
+					);
+					Orion.DisplayTimerSetObject(spellTimerID, serial);
+					TimerIconSetup(spellTimerID, effects[graphic].name);
+					Orion.DisplayTimerSetSize(spellTimerID, 30, 10);
+				}
+				Orion.AddDisplayTimer(
+					cdTimerID,
+					effects[graphic].cdTime - Orion.GetPing("average"),
+					"AboveChar",
+					"Line|Bar",
+					"",
+					effects[graphic].cdX,
+					effects[graphic].cdY,
+					effects[graphic].cdText,
+					effects[graphic].cdFont,
+					effects[graphic].cdBar
+				);
+				Orion.DisplayTimerSetObject(cdTimerID, serial);
+				TimerIconSetup(cdTimerID, effects[graphic].name);
+				Orion.DisplayTimerSetSize(cdTimerID, 30, 10);
+				if (effects[graphic].remove != false) {
+					Debug(["[ActionTimer][Log] Removing: " + effects[graphic].name]);
+					Orion.RemoveDisplayTimer(effects[graphic].remove + "_timerID_" + serial);
+				}
+			}
+		}
+	}
+}
+
+function ActionHUD_Toggle() {
+	if (Orion.GetGlobal("doActionTimerOverride") != "true") {
+		Orion.SetGlobal("doActionTimerOverride", "true");
+		Orion.Exec("ActionTimer", true);
+	} else {
+		Orion.SetGlobal("doActionTimerOverride", "false");
+		Orion.Terminate("ActionTimer");
+	}
+}
+
+function ConditionalUpdate(graphic) {
+	if (Orion.GetGlobal("doCondCD") == "true") {
+		effects[graphic].cdTime = effects[graphic].condCD;
+		Orion.SetGlobal("doCondCD", "false");
+	}
+	//Orion.Print("Cond: " + effects[graphic].cdTime);
+}
+
+function removeCurseCheck(serial) {
+	if (Orion.InJournal("Extermo Vomica", "mobile", "0", "any", Orion.Now() - 4000, Orion.Now() + 2000)) {
+		Orion.SetGlobal("doCondCD", "false");
+	} else {
+		Orion.SetGlobal("doCondCD", "true");
+	}
+	Orion.SetGlobal("removeCurseCheck", "true");
+	return true;
+}
+
+function disarmCheck(serial) {
+	//Orion.Print("Enemy: " + enemy_isPlayer(serial) + " HasWeapon: " + enemy_hasWeapon(serial) + " Has Shield:" + enemy_hasShield(serial))
+	if (enemy_isPlayer(serial) && !enemy_hasWeapon(serial) && !enemy_hasShield(serial)) {
+		Orion.SetGlobal("disarmCheck", "true");
+	} else {
+		Orion.SetGlobal("disarmCheck", "false");
+	}
+}
+
+function EffectObject(graphic, name, spellTime, spellX, spellY, cdTime, cdX, cdY, remove, fName, sound) {
+	var temp = {};
+	temp.graphic = graphic;
+	temp.color = false;
+	temp.nextGraphic = false;
+	temp.sound = sound;
+	temp.name = name;
+	temp.spellTime = spellTime;
+	temp.spellX = spellX;
+	temp.spellY = spellY;
+	temp.cdTime = cdTime;
+	temp.cdX = cdX;
+	temp.cdY = cdY;
+	temp.remove = remove;
+	temp.fName = fName;
+	temp.spellText = color.yellow;
+	temp.spellBar = color.whiteRGB;
+	temp.spellFont = 3;
+	temp.cdText = color.yellow;
+	temp.cdBar = color.redRGB;
+	temp.cdFont = 3;
+	temp.condCD = 0;
+	temp.doCondCD = false;
+	return temp;
+}
+
+function DisarmTimers() {
+	Orion.OAOptionSet("option", "value");
+	if (Orion.ObjectExists("swapWeapon")) {
+		var doSwap = true;
+	} else {
+		var doSwap = false;
+	}
+	var jMsg = Orion.WaitJournal("graphic=0x37BE", Orion.Now(), Orion.Now() + 600000);
+	Orion.Exec("DisarmTimers");
+	if (Orion.Contains(jMsg.Text(), "graphic=0x37BE")) {
+		var serial_disarm = jMsg.Text().match(/src_serial=(0x[0-9A-F]{8})/i)[1];
+		var isPlayer_disarm = enemy_isPlayer(serial_disarm);
+		if (isPlayer_disarm) var disarm_timerID = "disarm_timerID_" + serial_disarm;
+		if (isPlayer_disarm) var disarm_CD_timerID = "disarm_CD_timerID_" + serial_disarm;
+		//Orion.Print(enemy_hasWeapon(serial_disarm) + " " + enemy_hasShield(serial_disarm) + " " + isPlayer_disarm)
+		if (!enemy_hasWeapon(serial_disarm) && !enemy_hasShield(serial_disarm) && isPlayer_disarm) {
+			Orion.AddDisplayTimer(disarm_CD_timerID, 21000 - Orion.GetPing("average"), "AboveChar", "Line|Bar", "", 110, 150, color.yellow, -1, "0xFF0000FF");
+			Orion.DisplayTimerSetObject(disarm_CD_timerID, serial_disarm);
+			TimerIconSetup(disarm_CD_timerID, "disarm");
+			Orion.DisplayTimerSetSize(disarm_CD_timerID, 30, 10);
+			Orion.AddDisplayTimer(disarm_timerID, 6000 - Orion.GetPing("average"), "AboveChar", "Line|Bar", "", 50, 140, color.yellow, -1, "0xFFf7f088");
+			Orion.DisplayTimerSetObject(disarm_timerID, serial_disarm);
+			TimerIconSetup(disarm_timerID, "disarm");
+			Orion.DisplayTimerSetSize(disarm_timerID, 30, 10);
+		}
+		//if (RD == 1&&serial_disarm==serial&&isPlayer_disarm) {    Orion.Exec("enemy_whenDisarmed", true, lasttarget);};
+	}
+}
+
+function TimerIconSetup(timerID, icon) {
+	if (icon == null || icon == "") {
+		return false;
+	}
+	var iconGraphic = false;
+	var offX = 0;
+	var offY = 35;
+	var graphicType = "gump";
+	var graphicColor = "0";
+	var sizeX = 30;
+	var sizeY = 30;
+	switch (icon) {
+		case "Disarm":
+			iconGraphic = 0x754a;
+			offX = 0;
+			//offY = 35;
+			offY = -5;
+			break;
+		case "Curse":
+			iconGraphic = 0x7548;
+			offX = 0;
+			//offY = 38;
+			offY = -5;
+			break;
+		case "Splinter":
+			iconGraphic = 0x7614;
+			offX = 0;
+			offY = -5;
+			break;
+		case "Sleep":
+			iconGraphic = 0x758a;
+			offX = 0;
+			offY = -5;
+			break;
+		case "Evade":
+			iconGraphic = 0x75f8;
+			offX = 0;
+			offY = -5;
+			break;
+		case "Apple":
+			iconGraphic = 0x2fd8;
+			offX = -3;
+			offY = -5;
+			sizeX = 50;
+			sizeY = 50;
+			graphicType = "item";
+			graphicColor = "0x0488";
+			break;
+
+		default:
+			if (icon == null || icon == "" || !Orion.Contains(icon, "0x")) {
+				return false;
+			}
+			iconGraphic = icon;
+	}
+	//Orion.AddDisplayTimer         (timerID, 21000-Orion.GetPing("average"), "AboveChar", "Circle|Bar", "CD: Dis", 110, 150, color.yellow, 3, color.redRGB);
+	//Orion.DisplayTimerSetObject   (timerID, Player.Serial());
+	//Orion.Print(iconGraphic)
+	Orion.DisplayTimerSetShowTime(timerID, false);
+	Orion.DisplayTimerSetIconType(timerID, graphicType);
+	Orion.DisplayTimerSetIcon(timerID, "top", iconGraphic, graphicColor, offX, offY, sizeX, sizeY);
+}
+function displayIconTest() {
+	Orion.AddDisplayTimer(6969699, 21000 - Orion.GetPing("average"), "AboveChar", "Line|Bar", "", 110, 150, color.yellow, 3, color.redRGB);
+	Orion.DisplayTimerSetObject(6969699, Player.Serial());
+	Orion.DisplayTimerSetShowTime(6969699, false);
+	Orion.DisplayTimerSetIconType(6969699, "gump");
+	Orion.DisplayTimerSetIcon(6969699, "top", 0x754a, 0, 0, -5, 30, 30);
+	Orion.DisplayTimerSetSize(6969699, 30, 10);
+}
+
+function ActionTimers_old() {
+	Orion.OAOptionSet("EffectEcho", "1");
+	var jMsg = Orion.WaitJournal(searchString, Orion.Now(), Orion.Now() + 60000000);
+	Orion.Exec("ActionTimers");
+	if (Orion.Contains(jMsg.Text(), searchString)) {
+		var serial = jMsg.Text().match(/src_serial=(0x[0-9A-F]{8})/i)[1];
+		var graphic = jMsg.Text().match(/graphic=(0x[0-9A-F]{4})/i)[1];
+		var actionX = jMsg.Text().match(/dest_x=([0-9]{1,4})/i)[1];
+		var actionY = jMsg.Text().match(/dest_y=([0-9]{1,4})/i)[1];
+		if (graphic in effects) {
+			//action = effects[graphic];
+			//Orion.Print(action.name)
+			if (effects[graphic].color != false) {
+				if (effects[graphic].color != color) {
+					var color = jMsg.Text().match(/color=([0-9A-F]{4})/i)[1];
+				}
+				return false;
+			}
+			var graphCheck = false;
+			var graphserialCheck = false;
+			var soundCheck = false;
+			var graphX = "0";
+			var graphY = "0";
+			for (var i = 0; i < 100; i++) {
+				//var nextMsg = Orion.JournalLine(jMsg.FindTextID() + i)
+				//Debug(Orion.JournalCount())
+				var nextMsg = Orion.JournalLine(Orion.JournalCount() - i);
+				if (nextMsg != null) {
+					if (nextMsg.Text() == jMsg.Text()) {
+						break;
+					}
+					//Debug(nextMsg.Text())
+					/*if (effects[graphic].nextGraphic != false ){
+              //Checking to see if the next
+              if(Orion.Contains(nextMsg.Text(),"graphic=")){
+                var nextGraphic = nextMsg.Text().match(/graphic=(0x[0-9A-F]{4})/i)[1];
+                var nextSerial = nextMsg.Text().match(/src_serial=(0x[0-9A-F]{8})/i)[1];
+                if(effects[graphic].nextGraphic == nextGraphic && nextSerial == serial){
+                  graphCheck = true;
+                  graphX = nextMsg.Text().match(/dest_x=([0-9A-F]{1,4})/i)[1];
+                  graphY = nextMsg.Text().match(/dest_y=([0-9A-F]{1,4})/i)[1];
+                  if(graphCheck == true && soundCheck == true){
+                    break;
+                  }
+                }
+              }
+            }*/
+					if (effects[graphic].sound != false) {
+						//Using the second graphic if there is one, otherwise original action/graphic
+						/*if(effects[graphic].nextGraphic != false){
+                var soundRefX = graphX;
+                var soundRefY = graphY;
+              }
+              else{
+                var soundRefX = actionX;
+                var soundRefY = actionY;
+              }*/
+						var soundRefX = actionX;
+						var soundRefY = actionY;
+						//Checking to see if the sound matches
+						if (Orion.Contains(nextMsg.Text(), "soundecho")) {
+							var nextSound = nextMsg.Text().match(/id=(0x[0-9A-F]{4})/i)[1];
+							soundX = nextMsg.Text().match(/x=([0-9A-F]{1,4})/i)[1];
+							soundY = nextMsg.Text().match(/y=([0-9A-F]{1,4})/i)[1];
+							//Orion.Print(effects[graphic].sound + " " + nextSound + ' ' + soundX + ' ' + soundY + " " + soundRefX + " " + soundRefY)
+							if (effects[graphic].sound == nextSound && soundX == soundRefX && soundRefY == soundY) {
+								soundCheck = true;
+								if (graphCheck == true && soundCheck == true) {
+									break;
+								}
+							}
+						}
+					}
+				}
+				//else{
+				//  break;
+				//}
+			}
+			//Orion.Print("GC: " + graphCheck + " Sound:" + soundCheck);
+			if (effects[graphic].nextGraphic != false && graphCheck == false) {
+				return false;
+			}
+			//if(effects[graphic].sound != false && soundCheck == false){
+			//  return false;
+			//}
+			//Orion.Print(" Sound:" + soundCheck)
+			//Orion.Print("boom");
+			spellTimerID = effects[graphic].name + "_timerID_" + serial;
+			cdTimerID = effects[graphic].name + "_CD_timerID_" + serial;
+			var functionCheck = true;
+			if (effects[graphic].fName != false) {
+				Orion.Exec(effects[graphic].fName, false, [serial]);
+				Orion.Wait(50);
+				functionCheck = Orion.GetGlobal(effects[graphic].fName);
+				ConditionalUpdate(graphic);
+				//Orion.Print("Try Again: " + effects[graphic].cdTime)
+				functionCheck = functionCheck == "true" ? true : false;
+			}
+			if (functionCheck) {
+				//action = effects[graphic];
+				if (Orion.DisplayTimerGetTime(cdTimerID) <= 0) {
+					Orion.AddDisplayTimer(
+						spellTimerID,
+						effects[graphic].spellTime - Orion.GetPing("average"),
+						"AboveChar",
+						"Line|Bar",
+						"",
+						effects[graphic].spellX,
+						effects[graphic].spellY,
+						effects[graphic].spellText,
+						effects[graphic].spellFont,
+						effects[graphic].spellBar
+					);
+					Orion.DisplayTimerSetObject(spellTimerID, serial);
+					TimerIconSetup(spellTimerID, effects[graphic].name);
+					Orion.DisplayTimerSetSize(spellTimerID, 30, 10);
+				}
+				Orion.AddDisplayTimer(
+					cdTimerID,
+					effects[graphic].cdTime - Orion.GetPing("average"),
+					"AboveChar",
+					"Line|Bar",
+					"",
+					effects[graphic].cdX,
+					effects[graphic].cdY,
+					effects[graphic].cdText,
+					effects[graphic].cdFont,
+					effects[graphic].cdBar
+				);
+				Orion.DisplayTimerSetObject(cdTimerID, serial);
+				TimerIconSetup(cdTimerID, effects[graphic].name);
+				Orion.DisplayTimerSetSize(cdTimerID, 30, 10);
+				if (effects[graphic].remove != false) {
+					Orion.RemoveDisplayTimer(effects[graphic].remove + "_timerID_" + serial);
+				}
+			}
+		}
+	}
+}
+
+//Someone elses debuff tracker
+function CrunchSlayer2() {
+	var howFarBackInJournal = 60;
+	while (true) {
+		var targetsToTrack = Orion.FindTypeEx(
+			"0x02EC|0x029A|0x029B|0x025D|0x025E|0x0190|0x0191|0x0192|0x0193|0x03DB|0x03DF|0x03E2|0x04E6|0x00DC|0x00F6|0x00DB|0x0019|0x0084|0x007A",
+			"-1",
+			"ground",
+			" ",
+			24,
+			"gray|criminal|orange|red|blue"
+		);
+		for (var i = 0; i < targetsToTrack.length; i++) {
+			// Add your cooldown tracking logic here
+			var targetsToTrack = Orion.FindTypeEx(
+				"0x02EC|0x029A|0x029B|0x025D|0x025E|0x0190|0x0191|0x0192|0x0193|0x03DB|0x03DF|0x03E2|0x04E6|0x00DC|0x00F6|0x00DB|0x0019|0x0084|0x007A",
+				"-1",
+				ground,
+				" ",
+				24,
+				"gray|criminal|orange|red|blue"
+			);
+			var mortalArray = [];
+			var splinterArray = [];
+			var splinterCooldownArray = [];
+			var splinterEnd = [];
+			var appleArray = [];
+			var evasionArray = [];
+			var evasionCooldownArray = [];
+			var disarmArray = [];
+			var disarmCooldownArray = [];
+			var sleepArray = [];
+			var paraArray = [];
+			for (i = 0; i < targetsToTrack.length; i++) {
+				if (
+					Orion.InJournal("graphic=0x3728", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x01DF", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now())
+				) {
+					var effect = Orion.InJournal("0x3728", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var effectText = effect.Text();
+					var effectSerial = /src_serial=.{10}/.exec(effectText);
+					var effectReplace = effectSerial[0].replace(/^.{11}/, "");
+					var effectSerialTwo = /.{10}/.exec(effectReplace);
+					splinterCooldownArray[i] = effectSerialTwo + "splinterCooldown";
+					splinterArray[i] = effectSerialTwo + "Splinter";
+					Orion.AddDisplayTimer(splinterCooldownArray[i], 20000, "UnderChar", "Line|Bar", "", 0, 20, any, -1, "0xFF0000FE");
+					Orion.DisplayTimerSetObject(splinterCooldownArray[i], effectSerialTwo);
+					Orion.DisplayTimerSetSize(splinterCooldownArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(splinterCooldownArray[i], false);
+					Orion.AddDisplayTimer(splinterArray[i], 4000, "UnderChar", "Line|Bar", "", 0, 20, any, -1, "0x000000FE");
+					Orion.DisplayTimerSetObject(splinterArray[i], effectSerialTwo);
+					Orion.DisplayTimerSetSize(splinterArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(splinterArray[i], false);
+					Orion.ClearJournal("0x3728", "sys");
+					Orion.Wait(20);
+				} else if (
+					Orion.InJournal("graphic=0x3779", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x0657", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now())
+				) {
+					var sleepEffect = Orion.InJournal("0x3779", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var sleepEffectText = sleepEffect.Text();
+					var sleepEffectSerial = /src_serial=.{10}/.exec(sleepEffectText);
+					var sleepEffectReplace = sleepEffectSerial[0].replace(/^.{11}/, "");
+					var sleepEffectSerialTwo = /.{10}/.exec(sleepEffectReplace);
+					sleepArray[i] = sleepEffectSerialTwo + "sleep";
+					Orion.AddDisplayTimer(sleepArray[i], 13000, "UnderChar", "Line|Bar", "", 0, 40, any, -1, "0x00FFFFFE");
+					Orion.DisplayTimerSetObject(sleepArray[i], sleepEffectSerialTwo);
+					Orion.DisplayTimerSetSize(sleepArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(sleepArray[i], false);
+					Orion.ClearJournal(sleepEffectSerialTwo, "sys");
+					Orion.Wait(20);
+				} else if (
+					Orion.InJournal("graphic=0x376A", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					(Orion.InJournal("id=0x0237", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) ||
+						Orion.InJournal("id=0x0204", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) ||
+						Orion.InJournal("id=0x023C", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) ||
+						Orion.InJournal("id=0x0537", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()))
+				) {
+					var paraEffect = Orion.InJournal("0x376A", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var paraEffectText = paraEffect.Text();
+					var paraEffectSerial = /src_serial=.{10}/.exec(paraEffectText);
+					var paraEffectReplace = paraEffectSerial[0].replace(/^.{11}/, "");
+					var paraEffectSerialTwo = /.{10}/.exec(paraEffectReplace);
+					paraArray[i] = paraEffectSerialTwo + "para";
+					Orion.AddDisplayTimer(paraArray[i], 13000, "UnderChar", "Line|Bar", "", 0, 40, any, -1, "0x000080FE");
+					Orion.DisplayTimerSetObject(paraArray[i], paraEffectSerialTwo);
+					Orion.DisplayTimerSetSize(paraArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(paraArray[i], false);
+					Orion.ClearJournal("0x376A", "sys");
+					Orion.Wait(20);
+				} else if (
+					Orion.InJournal("graphic=0x37BE", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x03B9", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now())
+				) {
+					var disarmEffect = Orion.InJournal("0x37BE", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var disarmEffectText = disarmEffect.Text();
+					var disarmEffectSerial = /src_serial=.{10}/.exec(disarmEffectText);
+					var disarmEffectReplace = disarmEffectSerial[0].replace(/^.{11}/, "");
+					var disarmEffectSerialTwo = /.{10}/.exec(disarmEffectReplace);
+					disarmArray[i] = disarmEffectSerialTwo + "disarm";
+					disarmCooldownArray[i] = disarmEffectSerialTwo + "disarmCooldown";
+					Orion.AddDisplayTimer(disarmCooldownArray[i], 20000, "UnderChar", "Line|Bar", "", 0, 35, any, -1, "0x00FF00FE");
+					Orion.DisplayTimerSetObject(disarmCooldownArray[i], disarmEffectSerialTwo);
+					Orion.DisplayTimerSetSize(disarmCooldownArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(disarmCooldownArray[i], false);
+					Orion.AddDisplayTimer(disarmArray[i], 5000, "UnderChar", "Line|Bar", "", 0, 35, any, -1, "0x000000FE");
+					Orion.DisplayTimerSetObject(disarmArray[i], disarmEffectSerialTwo);
+					Orion.DisplayTimerSetSize(disarmArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(disarmArray[i], false);
+					Orion.ClearJournal("0x37BE", "sys");
+					Orion.Exec("CallForAttackDisarmedTarget", true, disarmEffectSerialTwo);
+					Orion.Wait(20);
+				} else if (
+					Orion.InJournal("graphic=0x3709", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("graphic=0x3776", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x00F6", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x01F7", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x003", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now())
+				) {
+					var appleEffect = Orion.InJournal("0x3709", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var appleEffectText = appleEffect.Text();
+					var appleEffectSerial = /src_serial=.{10}/.exec(appleEffectText);
+					var appleEffectReplace = appleEffectSerial[0].replace(/^.{11}/, "");
+					var appleEffectSerialTwo = /.{10}/.exec(appleEffectReplace);
+					appleArray[i] = appleEffectSerialTwo + "Apple";
+					Orion.AddDisplayTimer(appleArray[i], 30000, "UnderChar", "Line|Bar", "", 0, 25, any, -1, "0x008080FE");
+					Orion.DisplayTimerSetObject(appleArray[i], appleEffectSerialTwo);
+					Orion.DisplayTimerSetSize(appleArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(appleArray[i], false);
+					Orion.ClearJournal("0x3709", "sys");
+					Orion.Wait(20);
+				} else if (
+					Orion.InJournal("graphic=0x376A", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now()) &&
+					Orion.InJournal("id=0x051B", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now())
+				) {
+					var evasionEffect = Orion.InJournal("0x376A", "sys", any, any, Orion.Now() - howFarBackInJournal, Orion.Now());
+					var evasionEffectText = evasionEffect.Text();
+					var evasionEffectSerial = /src_serial=.{10}/.exec(evasionEffectText);
+					var evasionEffectReplace = evasionEffectSerial[0].replace(/^.{11}/, "");
+					var evasionEffectSerialTwo = /.{10}/.exec(evasionEffectReplace);
+					evasionArray[i] = evasionEffectSerialTwo + "evasion";
+					evasionCooldownArray[i] = evasionEffectSerialTwo + "evasionCooldown";
+					Orion.AddDisplayTimer(evasionArray[i], 26000, "UnderChar", "Line|Bar", "", 0, 30, any, -1, "0xFF00FFFE");
+					Orion.DisplayTimerSetObject(evasionArray[i], evasionEffectSerialTwo);
+					Orion.DisplayTimerSetSize(evasionArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(evasionArray[i], false);
+					Orion.AddDisplayTimer(evasionCooldownArray[i], 5000, "UnderChar", "Line|Bar", "", 0, 30, any, -1, "0x000000FE");
+					Orion.DisplayTimerSetObject(evasionCooldownArray[i], evasionEffectSerialTwo);
+					Orion.DisplayTimerSetSize(evasionCooldownArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(evasionCooldownArray[i], false);
+					Orion.ClearJournal("0x376A", "sys");
+					Orion.Wait(20);
+				} else if (targetsToTrack[i].YellowHits()) {
+					mortalArray[i] = targetsToTrack[i].Serial() + "Mortal";
+					Orion.AddDisplayTimer(mortalArray[i], 8000, "UnderChar", "Line|Bar", "", 0, 15, any, -1, "0xFFFF00FE");
+					Orion.DisplayTimerSetObject(mortalArray[i], targetsToTrack[i].Serial());
+					Orion.DisplayTimerSetSize(mortalArray[i], 20, 0);
+					Orion.DisplayTimerSetShowTime(mortalArray[i], false);
+					Orion.Wait(20);
+				}
+			}
+			Orion.Wait(20);
+		}
+	}
+}

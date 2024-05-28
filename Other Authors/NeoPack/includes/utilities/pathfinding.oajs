@@ -1,0 +1,49 @@
+//Will go to a given location, this will accept getting to within one tile of the specified location.
+//For use with teleporters, need to use the GoToLocLong function.
+function GoToLoc(X, Y) {
+	return Orion.WalkTo(X, Y, Player.Z(), 1, 255, 0, 1);
+	//if(Player.X() == X && Player.Y.() == Y)
+}
+function GoToLocRun(X, Y) {
+	return Orion.WalkTo(X, Y, Player.Z(), 1, 255, 1, 1);
+	//if(Player.X() == X && Player.Y.() == Y)
+}
+
+function GoToLocRunZ(X, Y, Z) {
+	return Orion.WalkTo(X, Y, Z, 1, 255, 1, 1);
+	//if(Player.X() == X && Player.Y.() == Y)
+}
+
+function GoToLocRunStack(X, Y) {
+	return Orion.WalkTo(X, Y, Player.Z(), 0, 255, 1, 1);
+	//if(Player.X() == X && Player.Y.() == Y)
+}
+
+function GoToLocLong(X, Y) {
+	var temp;
+	temp = Orion.WalkTo(X, Y, Player.Z(), 0, 255, 1, 1, 30000000);
+	//if(Player.X() == X && Player.Y.() == Y)
+	return temp;
+}
+
+function GoToLocLongZ(X, Y, Z) {
+	var temp;
+	temp = Orion.WalkTo(X, Y, Z, 0, 255, 1, 1, 30000000);
+	//if(Player.X() == X && Player.Y.() == Y)
+	return temp;
+}
+
+function GoToLocClose(X, Y) {
+	var temp;
+	temp = Orion.WalkTo(X, Y, Player.Z(), 1, 255, 1, 1, 30000000);
+	//if(Player.X() == X && Player.Y.() == Y)
+	return temp;
+}
+
+function GetDistance(X, Y) {
+	var dist = null;
+
+	dist = Math.sqrt(Math.pow(X - Player.X(), 2) + Math.pow(Y - Player.Y(), 2));
+	//Orion.Print(dist);
+	return dist;
+}

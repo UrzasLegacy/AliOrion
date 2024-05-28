@@ -1,0 +1,182 @@
+function SkillTraining_Setup(gumpObj, currentSerial) {
+	//##########################
+	//     Training Main Page
+	//##########################
+
+	var tempName = "page_13";
+	gumpObj[tempName] = GumpObject("Training Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 13;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_skill_cat";
+	gumpObj[tempName] = GumpObject("Skill cat", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Skill Category:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 13;
+
+	var tempName = "button_skill_Magic";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1300;
+	gumpObj[tempName].text = "Magic";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 13;
+
+	var tempName = "button_skill_Weapon";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1301;
+	gumpObj[tempName].text = "Weapon";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 13;
+
+	var tempName = "button_skill_crafting";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 6);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1302;
+	gumpObj[tempName].text = "Crafting";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 13;
+
+	var tempName = "button_skill_taming";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 8);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1303;
+	gumpObj[tempName].text = "Taming / Bard";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 13;
+
+	var tempName = "button_skill_theiving";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 10);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1303;
+	gumpObj[tempName].text = "Thieving";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 13;
+
+	//##########################
+	//     Magic Page
+	//##########################
+
+	var tempName = "page_1300";
+	gumpObj[tempName] = GumpObject("Training Magic Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 1300;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "button_skill_Magic_home";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 505, false, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 13;
+	gumpObj[tempName].text = "Training Home";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].buttonColor = targetColors[2731].color;
+	gumpObj[tempName].parentPage = 1300;
+	gumpObj[tempName] = AdjustXY(gumpObj[tempName], AlignObject("right", gumpObj.main, gumpObj[tempName], gumpGraphic[gumpObj[tempName].graphic].butWidth));
+	gumpObj[tempName].x += -10 - gumpGraphic["button_blue_blank"].butWidth;
+
+	var tempName = "title_skill_magic_casting";
+	gumpObj[tempName] = GumpObject("Skill cat", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Casting Skills:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].width = 200;
+	gumpObj[tempName].parentPage = 1300;
+
+	var tempName = "title_skill_magic_casting_target";
+	gumpObj[tempName] = GumpObject("Skill cat", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Skill Target(s):";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 1300;
+
+	var tempName = "button_skill_Magic_mage";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = 200;
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].action = "launch";
+	gumpObj[tempName].value = ["SkillTrain_Handler", ["saveFirst", "Mage_Eval", "doMage", tempName, gumpObj.json.value]];
+	gumpObj[tempName].butAction = 1;
+	gumpObj[tempName].text = "Magery / Eval";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 1300;
+
+	gumpObj[tempName].runFunction = "Mage_Eval";
+	gumpObj[tempName].buttonColor = Training_SkillActive(gumpObj[tempName].runFunction) ? color.glacial : 0;
+
+	var tempName = "training_magic_mage_target";
+	gumpObj[tempName] = GumpObject("training magic mage target", currentSerial++, "textbox", 0, 0, true, 2);
+	gumpObj[tempName].value = Orion.SkillValue("Magery", "cap") / 10;
+	gumpObj[tempName].xOffset = 5;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 1300;
+	gumpObj[tempName].globalVal = "mageTar";
+
+	var tempName = "title_skill_magic_casting_mageevalspacer";
+	gumpObj[tempName] = GumpObject("Skill cat", currentSerial++, "text", 380, 15, true, 2);
+	gumpObj[tempName].xOffset = -2;
+	gumpObj[tempName].text = "/";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 1300;
+
+	var tempName = "training_magic_eval_target";
+	gumpObj[tempName] = GumpObject("training magic mage target", currentSerial++, "textbox", 0, 0, true, 2);
+	gumpObj[tempName].value = Orion.SkillValue("Magery", "cap") / 10;
+	gumpObj[tempName].xOffset = 12;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 1300;
+	gumpObj[tempName].globalVal = "evalTar";
+
+	//Return all the changes made back to the main function
+	return [gumpObj, currentSerial];
+}
+
+function Training_SkillActive(skill) {
+	if (Orion.ScriptRunning(skill)) {
+		return true;
+	}
+	return false;
+}
+
+function SkillTrain_Handler(theFunc, theGlobal, theObj, theJSON) {
+	var gumpObj = JSON_import(theJSON);
+	var gump = Orion.CreateCustomGump(gumpObj.main.serial);
+	gump.Close();
+	if (Orion.ScriptRunning(theFunc)) {
+		Orion.Terminate(theFunc);
+		Orion.SetGlobal(theGlobal, "false");
+		gumpObj[theObj].color = 0;
+	} else {
+		Orion.SetGlobal(theGlobal, "true");
+		Orion.Exec(theFunc, true);
+		gumpObj[theObj].color = color.glacial;
+	}
+	JSON_export(theJSON);
+}

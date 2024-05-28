@@ -1,0 +1,233 @@
+//Variable File Handling
+//Global variables - may build a GUI to control these
+var fileBase = "./OA/Scripts/";
+var fileBaseAddon = "neo_config/";
+var customMod = Player.Name();
+
+//All loop and variable files should be .txt (text files)
+loadFiles = {
+	vars_fname: ["SG_vars", "vars"],
+};
+if (fileBaseAddon != "") {
+	fileBase = fileBase + fileBaseAddon;
+}
+var vars = [];
+var loops = [];
+var stolen = [];
+
+//Loading all the variables
+function LoadVariables() {
+	var fileEnd = ".txt";
+	var customfileEnd = "_" + customMod + ".txt";
+	Object.keys(loadFiles).forEach(function (key) {
+		if (Orion.Contains(key, "fname")) {
+			if (key == "vars_fname") {
+				var readText = ReadFiles(fileBase + loadFiles[key][0] + customfileEnd, true);
+			}
+			if (readText == false) {
+				Orion.Print("Error loading file [" + loadFiles[key][0] + "]");
+			} else {
+				if (key == "vars_fname") {
+					for (var i = 0; i < readText.length; i++) {
+						if (readText[i][2] == "loop") {
+							loops[readText[i][0]] = readText[i][1];
+						} else {
+							vars[readText[i][0]] = readText[i][1];
+						}
+					}
+				}
+			}
+		}
+	});
+}
+//@@This will read a text file and return a string array separated by lines.
+//Utility,Programming
+function RawReadFile(fName) {
+	var file = Orion.NewFile();
+	if (!file.Open(fName, true)) {
+		Orion.Print("The file [" + fName + "] does not exist!");
+		return false;
+	} else {
+		if (file.Open(fName)) {
+			var theTxt = file.ReadAll();
+			theTxt = Orion.Split(theTxt, "\n");
+		}
+		return theTxt;
+	}
+}
+//@@This file read function is specific for reading files storing variables created by the write version.  Specifically for scripts like the SeedGatherer.  All newer scripts will be using JSON, so for the most part depricated.
+//Utility,Programming
+function ReadFiles(fName, custom) {
+	var file = Orion.NewFile();
+	if (!file.Open(fName, true)) {
+		Orion.Print("The file [" + fName + "] does not exist!");
+		return false;
+	} else {
+		if (file.Open(fName)) {
+			var theTxt = file.ReadAll();
+			theTxt = Orion.Split(theTxt, "\n");
+			var newTxt = [];
+			for (var i = 0; i < theTxt.length; i++) {
+				var temp1 = Orion.Split(theTxt[i], ",");
+				if (!Orion.Contains(temp1, "#")) {
+					newTxt.push(temp1);
+				}
+			}
+			for (var i = 0; i < newTxt.length; i++) {
+				var temp1 = Orion.Split(newTxt[i], ",");
+				for (var j = 0; j < temp1.length; j++) {
+					if (j == 1 && temp1[2] == "int") {
+						newTxt[i][j] = parseInt(temp1[j]);
+					} else if (j == 1 && temp1[2] == "bool") {
+						if (temp1[j] == "true") {
+							newTxt[i][j] = true;
+						} else {
+							newTxt[i][j] = false;
+						}
+					} else if ((j == 0 || j == 1 || j == 2) && temp1[2] == "coords") {
+						newTxt[i][0] = [temp1[0], temp1[1]];
+						newTxt[i][1] = temp1[2];
+						break;
+					} else {
+						newTxt[i][j] = temp1[j];
+					}
+				}
+			}
+			if (false) {
+				TextWindow.Clear();
+				TextWindow.Open();
+				for (var i = 0; i < newTxt.length; i++) {
+					TextWindow.Print(newTxt[i]);
+				}
+				TextWindow.Print(newTxt.length);
+			}
+			return newTxt;
+		} else {
+			Orion.Print("Error opening file.");
+		}
+	}
+}
+
+function WriteStatus(code, text, array) {
+	//Setting some general Variables
+	var varDelin = ";";
+	var arrayDelin = "|";
+	//Setting a master list of characters that will be making their own update registry Variables
+	var charstatList = Orion.RegRead("charstatList");
+	if (charstatList == "") {
+		Orion.RegWrite("charstatList", Player.Serial());
+	} else {
+		if (Orion.Contains(charstatList, Player.Serial()) != true) {
+			Orion.RegWrite("charstatList", charstatList + varDelin + Player.Serial());
+		}
+	}
+	//Now writing to the reg value of the character's status
+	// ; will be the delineator between variables, | will be the delineator between values of the array.
+	//Structure: (by index)
+	//0 = Status code, 1 = time (24hr), 2 = detail text, 3 = array data
+	var theTime = Orion.Time("HH mm");
+	var setString = "status_code" + arrayDelin + code + varDelin + "time" + arrayDelin + theTime + varDelin + "status_text" + arrayDelin + text;
+	if (Array.isArray(array)) {
+		setString += varDelin;
+		setString = "array" + arrayDelin;
+		for (var i = 0; i < array.length; i++) {
+			setString += array[i];
+			if (i != array.length - 1) {
+				setString = arrayDelin;
+			}
+		}
+	}
+	Orion.RegWrite(Player.Serial() + "/statusUpdate", setString);
+	//Orion.Print(Orion.RegRead("charstatList"))
+}
+
+//Exports and overwrites file
+function JSON_export(fName, dictionary, fPath) {
+	if (!fPath) {
+		fPath = "variables/";
+	}
+	var tmpFilePath = Orion.CurrentScriptDirPath() + "/" + fPath + fName + ".json";
+	var tmpFile = Orion.NewFile();
+	tmpFile.Remove(tmpFilePath);
+	Debug("[JSON_export][Trace] Recording To Path: " + tmpFilePath);
+	if (tmpFile.Open(tmpFilePath)) {
+		tmpFile.Write(JSON.stringify(dictionary));
+		tmpFile.Close();
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function JSON_import_handler(fName, dictionary, fPath) {
+	var tempResponse = JSON_import(fName, fPath);
+	if (tempResponse == false || Object.keys(tempResponse).length == 0) {
+		return dictionary;
+	} else {
+		if (dictionary != false) {
+			Object.keys(dictionary).forEach(function (key) {
+				if (!(key in tempResponse) && (!("dynamicAdd" in dictionary[key]) || dictionary[key].dynmaicAdd == true)) {
+					tempResponse[key] = dictionary[key];
+				}
+			});
+			/*Object.keys(tempResponse).forEach(function (key) {
+				if (!(key in dictionary)) {
+					delete tempResponse[key];
+				}
+			});*/
+		}
+		return tempResponse;
+	}
+}
+
+//Imports and overwrites file
+function JSON_import(fName, fPath) {
+	if (!fPath) {
+		fPath = "variables/";
+	}
+	var tmpFilePath = Orion.CurrentScriptDirPath() + "/" + fPath + fName + ".json";
+	var tmpFile = Orion.NewFile();
+	Debug("[JSON_import][Trace] Read from path: " + tmpFilePath);
+	tmpFile.Open(tmpFilePath);
+	var filestring = tmpFile.ReadAll();
+	Debug("[JSON_import][Trace] Read fliestring Length : " + filestring.length);
+	var fileJson = {};
+	if (filestring) {
+		fileJson = JSON.parse(filestring);
+		Debug("[JSON_import][Trace] Parsed JSON, returning dictionary.");
+		tmpFile.Close();
+		return fileJson;
+	} else {
+		Debug("[JSON_import][Error] No file in path:" + tmpFilePath);
+		tmpFile.Close();
+		return false;
+	}
+}
+
+function Rail_Recorder(fname) {
+	var tmpFilePath = Orion.CurrentScriptDirPath() + "/rails/" + fName + ".json";
+
+	var recordingX = Player.X();
+	var recordingY = Player.Y();
+	var railPoint = { x: recordingX, y: recordingY };
+
+	var tmpFile = Orion.NewFile();
+	tmpFile.Open(tmpFilePath);
+	var fileJson = [];
+	var filestring = tmpFile.ReadAll();
+	if (filestring) {
+		fileJson = JSON.parse(filestring);
+	}
+	tmpFile.Close();
+
+	var lastIndex = fileJson.length > 0 ? fileJson[fileJson.length - 1].index : -1;
+	railPoint.index = lastIndex + 1;
+	Orion.Print("Recording To Path: " + tmpFilePath);
+	Orion.Print("Recording Rail Point: " + JSON.stringify(railPoint));
+	fileJson.push(railPoint);
+
+	tmpFile.Open(tmpFilePath);
+	tmpFile.Write(JSON.stringify(fileJson));
+
+	tmpFile.Close();
+}

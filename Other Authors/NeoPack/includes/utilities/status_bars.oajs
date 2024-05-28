@@ -1,0 +1,1637 @@
+function BarManager() {
+	var pullbarsActive = Orion.GetGlobal("doPullbars") == "true" ? true : false;
+	var doOld = Orion.GetGlobal("doUseOldBars") == "true" ? true : false;
+	if (pullbarsActive == false || doOld) {
+		return false;
+	}
+	//Clear all old player bars
+	RemoveBars("all");
+	//Setting global variable
+	Orion.SetTimer("barMasterTimer", 0);
+	var barObj = {};
+	barObj.enemy = {};
+	barObj.enemy.players = {};
+	barObj.enemy.count = 0;
+	barObj.friend = {};
+	barObj.friend.players = {};
+	barObj.friend.count = 0;
+	barObj = Bar_HeaderBuilder(barObj);
+	Shared.RemoveArray("deleteArray");
+	Orion.SetGlobal("simpleEnemy_count", -1);
+	Orion.SetGlobal("simpleEnemy_LT", -1);
+	while (pullbarsActive) {
+		pullbarsActive = Orion.GetGlobal("doPullbars") == "true" ? true : false;
+		var doSimpleEnemy = Orion.GetGlobal("doSimpleEnemy") == "true" ? true : false;
+		//Delete any bars that have been added to the delete array
+		var deleteArray = Shared.GetArray("deleteArray", false);
+		if (deleteArray != false) {
+			for (var i = 0; i < deleteArray.length; i++) {
+				//removing the delete in favor of hiding it
+				//delete barObj[deleteArray[i][2]].players[deleteArray[i][1]];
+				Debug("[BarManager][Info] Deleting [" + deleteArray[i][2] + "] bar with serial:" + deleteArray[i][1]);
+				//Flagging bar as cleared
+				if (deleteArray[i][1] in barObj.friend.players) {
+					barObj.friend.players[deleteArray[i][1]].cleared = true;
+				}
+				if (deleteArray[i][1] in barObj.enemy.players) {
+					barObj.enemy.players[deleteArray[i][1]].cleared = true;
+				}
+				//Now close the gump
+				var typeOffset = deleteArray[i][2] == "friend" ? 0 : 1000;
+				var gump1 = Orion.CreateCustomGump(parseInt(40000 + typeOffset + deleteArray[i][0] * 10));
+				gump1.Close();
+			}
+			Shared.RemoveArray("deleteArray");
+		}
+		{
+			Debug("[BarManager][Trace] No bars to delete.");
+		}
+		//Add chracter to character library if one is flagged
+		if (Orion.GetGlobal("addCharacterLibrary") != "") {
+			Debug("[BarManager][Info] Calling the Add Character function (" + Orion.GetGlobal("addCharacterLibrary") + ")");
+			CharacterLibrary_Add(Orion.GetGlobal("addCharacterLibrary"), barObj);
+			Orion.SetGlobal("addCharacterLibrary", "");
+		}
+		//Update all character status.
+		barObj = Bar_CharacterStatusUpdate(barObj);
+		var type = ["friend", "enemy"];
+		for (var i = 0; i < type.length; i++) {
+			var typePos = Orion.GetGumpPosition("custom", barObj[type[i]].serial);
+			Debug("[BarManager][Trace] " + type[i] + " X/Y: " + typePos.X() + "/" + typePos.Y());
+			barObj[type[i]].x = typePos.X();
+			barObj[type[i]].y = typePos.Y();
+			if (typePos.X() == -1 && typePos.Y() == -1) {
+				continue;
+			}
+			//Handle deleteing of bars
+			if (Orion.GetGlobal("BarClear" + type[i]) == "true") {
+				Debug("[BarManager][Info] Clearing bars for: " + type[i]);
+				RemoveBars(type[i]);
+				Object.keys(barObj[type[i]].players).forEach(function (key) {
+					barObj[type[i]].players[key].cleared = true;
+				});
+			}
+			barObj = Bar_PositionCleanup(barObj, type[i]);
+			//Save array for reference of serials/codes of gumps
+			barObj[type[i] + "CodeRef"] = [];
+			Object.keys(barObj[type[i]].players).forEach(function (key) {
+				barObj[type[i] + "CodeRef"].push([barObj[type[i]].players[key].refKey, barObj[type[i]].players[key].serial, type[i]]);
+				if (barObj["recent" + type[i]].indexOf(key) == -1) {
+					barObj = Bar_CharacterHandler(key, barObj, type[i]);
+				}
+			});
+			var simpleEnemyClear = Orion.GetGlobal("BarClear" + type[i]) == "true" ? "true" : "false";
+			Orion.SetGlobal("BarClear" + type[i], "false");
+
+			Shared.AddArray(type[i] + "CodeRef", barObj[type[i] + "CodeRef"]);
+			//Updating the Friends/Enemy Bar
+			var startPos = { x: barObj[type[i]].x, y: barObj[type[i]].y + 40 };
+			//var startPos = { x: 1000, y: 300 };
+			var doPos = Orion.GetGlobal("doRealign" + type[i]) == "true" ? true : false;
+			if (doPos) {
+				Debug("[BarManager][Info] Received realign command,sending it with bars.");
+				Orion.SetGlobal("doRealign" + type[i], "false");
+			}
+			if (type[i] == "enemy" && doSimpleEnemy) {
+				Orion.SetGlobal("simpleEnemyClear", simpleEnemyClear);
+				barObj = GenerateSimpleEnemy(barObj);
+			} else if (type[i] == "friend" || (type[i] == "enemy" && !doSimpleEnemy)) {
+				Object.keys(barObj[type[i]].players).forEach(function (key) {
+					if (barObj[type[i]].players[key].cleared == false) {
+						var startPos = { x: barObj[type[i]].x, y: barObj[type[i]].y + 40 };
+						barObj[type[i]].players[key] = DrawCharacterBar(barObj[type[i]].players[key], startPos, doPos, type[i]);
+					}
+				});
+			}
+			//Updating location of gump over a longer period
+			if (Orion.Timer(type[i] + "barLocationTimer") >= -1) {
+				Orion.RegWrite(Player.Serial() + "/" + type[i] + "BarX", barObj[type[i]].x);
+				Orion.RegWrite(Player.Serial() + "/" + type[i] + "BarY", barObj[type[i]].y);
+				Orion.SetTimer(type[i] + "barLocationTimer", -2000);
+			}
+		}
+		//Handling the new Current Target Gump
+		barObj = CurrentTargetBar(barObj);
+		//If statistics is triggered, update the shared arrays/data.
+		if (Orion.GetGlobal("updateStats") == "true") {
+			Debug("[BarManager][Info] Updating and display stats window.");
+			UpdateBarStats(barObj);
+			Orion.SetGlobal("updateStats", "false");
+			Orion.SetGlobal("updateStats_done", "true");
+		}
+		Orion.Wait(500);
+	}
+	RemoveBars("headers");
+}
+
+function Bar_CharacterHandler(tempChar, barObj, type) {
+	if (!(typeof tempChar === "string")) {
+		if (!(tempChar.Serial() in barObj[type].players)) {
+			barObj[type].players[tempChar.Serial()] = {};
+			barObj[type].players[tempChar.Serial()].maxhits = tempChar.MaxHits();
+			barObj[type].players[tempChar.Serial()].serial = tempChar.Serial();
+			barObj[type].players[tempChar.Serial()].name = tempChar.Name();
+			barObj[type].players[tempChar.Serial()].properties = tempChar.Properties();
+			barObj[type].players[tempChar.Serial()].refKey = Object.keys(barObj[type].players).length;
+			barObj[type].players[tempChar.Serial()].isNew = true;
+		}
+		if (barObj[type].players[tempChar.Serial()].cleared == true) {
+			barObj[type].players[tempChar.Serial()].isNew = true;
+		}
+		barObj[type].players[tempChar.Serial()].hits = tempChar.Hits();
+		barObj[type].players[tempChar.Serial()].maxhits = tempChar.MaxHits();
+		barObj[type].players[tempChar.Serial()].poisoned = tempChar.Poisoned();
+		barObj[type].players[tempChar.Serial()].dead = tempChar.Dead();
+		barObj[type].players[tempChar.Serial()].properties = tempChar.Properties();
+		barObj[type].players[tempChar.Serial()].distance = tempChar.Distance();
+		barObj[type].players[tempChar.Serial()].visible = true;
+		barObj[type].players[tempChar.Serial()].position = Object.keys(barObj[type].players).length;
+		barObj[type].players[tempChar.Serial()].cleared = false;
+		barObj[type].players[tempChar.Serial()].guild = ReturnGuild(tempChar.Properties());
+		Orion.SetTimer(tempChar.Serial() + "/barSeen", 0);
+	} else {
+		if (tempChar in barObj[type].players) {
+			barObj[type].players[tempChar].visible = false;
+		} else {
+			Debug("[Bar_CharacterHandler][Error] Being passed in a serial that should exist but doesn't.");
+		}
+	}
+
+	return barObj;
+}
+
+function Bar_CharacterStatusUpdate(barObj) {
+	mobArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|ignorefriends|human", 25, "gray|orange");
+	guildArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|ignorefriends|human", 25, "green");
+	fullArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|human", 25);
+	var friends = Orion.GetFriendList();
+	var enemies = Orion.GetEnemyList();
+	if (barObj.statenemy == null) {
+		barObj.statenemy = [];
+	}
+	if (barObj.statfriend == null) {
+		barObj.statfriend = [];
+	}
+	barObj.recentfriend = [];
+	barObj.recentenemy = [];
+	for (var i = 0; i < friends.length; i++) {
+		var tempFriend = Orion.FindObject(friends[i]);
+		if (tempFriend != null && tempFriend.Name().length > 1) {
+			barObj.friend.count += 1;
+			barObj = Bar_CharacterHandler(tempFriend, barObj, "friend");
+			barObj.recentfriend.push(tempFriend.Serial());
+			if (barObj.statfriend.indexOf(tempFriend.Serial()) == -1) {
+				barObj.statfriend.push(tempFriend.Serial());
+			}
+		}
+	}
+	for (var i = 0; i < guildArr.length; i++) {
+		var tempFriend = Orion.FindObject(guildArr[i]);
+		if (tempFriend != null && tempFriend.Name().length > 1) {
+			barObj.friend.count += 1;
+			barObj = Bar_CharacterHandler(tempFriend, barObj, "friend");
+			barObj.recentfriend.push(tempFriend.Serial());
+			if (barObj.statfriend.indexOf(tempFriend.Serial()) == -1) {
+				barObj.statfriend.push(tempFriend.Serial());
+			}
+		}
+	}
+	for (var i = 0; i < mobArr.length; i++) {
+		var tempEnemy = Orion.FindObject(mobArr[i]);
+		if (tempEnemy != null && tempEnemy.Name().length > 1) {
+			barObj.enemy.count += 1;
+			barObj = Bar_CharacterHandler(tempEnemy, barObj, "enemy");
+			barObj.recentenemy.push(tempEnemy.Serial());
+			if (barObj.statenemy.indexOf(tempEnemy.Serial()) == -1) {
+				barObj.statenemy.push(tempEnemy.Serial());
+			}
+		}
+	}
+	for (var i = 0; i < enemies.length; i++) {
+		var tempEnemy = Orion.FindObject(enemies[i]);
+		if (tempEnemy != null && tempEnemy.Name().length > 1) {
+			barObj.enemy.count += 1;
+			barObj = Bar_CharacterHandler(tempEnemy, barObj, "enemy");
+			barObj.recentenemy.push(tempEnemy.Serial());
+			if (barObj.statenemy.indexOf(tempEnemy.Serial()) == -1) {
+				barObj.statenemy.push(tempEnemy.Serial());
+			}
+		}
+	}
+	return barObj;
+}
+
+function RemoveBars(type) {
+	switch (type) {
+		case "friend":
+			var uLimit = 40990;
+			var lLimit = 40000;
+			break;
+		case "enemy":
+			var uLimit = 42000;
+			var lLimit = 41000;
+			break;
+		case "all":
+			var uLimit = 42000;
+			var lLimit = 40000;
+			break;
+		case "headers":
+			var gump = Orion.CreateCustomGump(39000);
+			gump.Close();
+			var gump = Orion.CreateCustomGump(39001);
+			gump.Close();
+			var uLimit = 42000;
+			var lLimit = 40000;
+			break;
+	}
+	for (var i = lLimit; i < uLimit; i++) {
+		var gump = Orion.CreateCustomGump(i);
+		gump.Close();
+	}
+}
+
+function Bar_PositionCleanup(barObj, type) {
+	var totalChars = 0;
+	Object.keys(barObj[type].players).forEach(function (key) {
+		if (barObj[type].players[key].cleared == false) {
+			barObj[type].players[key].position = totalChars++;
+		}
+	});
+	return barObj;
+}
+
+function StatusBarCallBack(unused) {
+	var code = parseInt(CustomGumpResponse.ReturnCode());
+	var serial = parseInt(CustomGumpResponse.Serial());
+	Debug("[StatusBarCallBack][Info] Call back code: " + code + " Serial: " + serial);
+	var tempSer = ReturnfromCode(serial, code);
+	Debug("[StatusBarCallBack][Info] Returned Array: " + tempSer);
+	switch (true) {
+		case code > 0 && code < 10:
+			if (Orion.HaveTarget()) {
+				if (tempSer) {
+					var tempObj = Orion.FindObject(tempSer[1]);
+					if (tempObj != null && tempObj.Distance() <= 10) {
+						Orion.TargetObject(tempSer[1]);
+					}
+				}
+			}
+			var tempChar = Orion.FindObject(tempSer[1]);
+			if (tempChar != null) {
+				PvPSetTarget(tempChar);
+			} else {
+				PvPSetTarget_Offscreen(tempSer[1]);
+			}
+			break;
+		case code >= 20 && code < 30 && serial >= 41000 && serial < 42000:
+			if (tempSer != false) {
+				//Add to the delete/purge array
+				var deleteArray = Shared.GetArray("deleteArray", false);
+				if (deleteArray == false) {
+					deleteArray = [];
+				}
+				deleteArray.push(tempSer);
+				Shared.AddArray("deleteArray", deleteArray);
+			} else {
+				Debug("[StatusBarCallBack][Error]Caonnot find code in array.");
+			}
+			break;
+		case code >= 100 && code < 200 && serial == 39001:
+			var simpleArray = Shared.GetArray("simpleEnemyArray", false);
+			var tempCode = code - 100;
+			if (simpleArray != false && simpleArray.length - 1 >= tempCode) {
+				PvPSetTarget_Offscreen(simpleArray[tempCode][1]);
+			} else {
+				Debug("[StatusBarCallBack][Error] simpleEnemy array is bad, or wrong code passed in.");
+			}
+		case code >= 30 && code < 60 && ((serial >= 41000 && serial < 42000) || serial == 39001):
+			if (tempSer != false) {
+				if (Orion.GetGlobal("addCharacterLibrary") == "") {
+					Orion.SetGlobal("addCharacterLibrary", tempSer[1]);
+					Orion.Print("Character added, please open or refresh gump.");
+				} else {
+					Orion.Print("Please wait before adding another character.");
+				}
+			}
+			break;
+		case code >= 30 && code < 60 && serial >= 40000 && serial < 41000:
+			SetCaller_Serial(tempSer[1]);
+			break;
+		//Friend/Enemy Header Actions
+		case code == 100 && serial == 39000:
+			Debug("[StatusBarCallBack][Info] Sending command to realign friends.");
+			Orion.SetGlobal("doRealignfriend", "true");
+			break;
+		case code == 100 && serial == 39001:
+			Debug("[StatusBarCallBack][Info] Sending command to realign friends.");
+			Orion.SetGlobal("doRealignenemy", "true");
+			break;
+		case code == 20 && serial == 39001:
+			Debug("[StatusBarCallBack][Info] Sending command to clear non-visible enemies");
+			Orion.SetGlobal("doRealignenemy", "true");
+			break;
+		case code == 91 && serial == 39000:
+			Debug("[StatusBarCallBack][Info] Sending command to clear all friend.");
+			Orion.SetGlobal("BarClearfriend", "true");
+			break;
+		case code == 91 && serial == 39001:
+			Debug("[StatusBarCallBack][Info] Sending command to clear all enemy.");
+			Orion.SetGlobal("BarClearenemy", "true");
+			break;
+		case code == 92:
+			Debug("[StatusBarCallBack][Info] Sending command to update statistics window.");
+			Orion.SetGlobal("updateStats", "true");
+			break;
+	}
+}
+
+function ReturnfromCode(serial, code) {
+	if (serial == 39001) {
+		var theArray = Shared.GetArray("simpleEnemyArray_AddChar", false);
+		if (theArray != false) {
+			for (var i = 0; i < theArray.length; i++) {
+				//Debug("[ReturnfromCode][Info]Serial: " + serial + " Array Value: " + (reference + parseInt(theArray[i][0]) * 10));
+				if (parseInt(code) == parseInt(theArray[i][0])) {
+					return theArray[i];
+				}
+			}
+			Debug("[ReturnfromCode][Error]Caonnot find serial in the simple enemy array.");
+			return false;
+		} else {
+			Debug("[ReturnfromCode][Error]Caonnot find simple enemy array.");
+			return false;
+		}
+	} else if (serial >= 41000) {
+		var type = "enemy";
+		var reference = 41000;
+	} else {
+		var type = "friend";
+		var reference = 40000;
+	}
+	var theArray = Shared.GetArray(type + "CodeRef", false);
+	if (theArray != false) {
+		for (var i = 0; i < theArray.length; i++) {
+			Debug("[ReturnfromCode][Trace]Serial: " + serial + " Array Value: " + (reference + parseInt(theArray[i][0]) * 10));
+			if (parseInt(serial) == parseInt(reference + parseInt(theArray[i][0]) * 10)) {
+				return theArray[i];
+			}
+		}
+		Debug("[ReturnfromCode][Error]Caonnot find serial in the array.");
+		return false;
+	} else {
+		Debug("[ReturnfromCode][Error]Caonnot find array.");
+		return false;
+	}
+}
+
+function Bar_HeaderBuilder(barObj) {
+	barObj.friend.serial = 39000;
+	barObj.friend.headTextColor = color.green;
+	barObj.friend.headText = "Friends";
+	barObj.friend.headBorderColor = "#08c23e";
+	barObj.enemy.serial = 39001;
+	barObj.enemy.headTextColor = color.orange;
+	barObj.enemy.headBorderColor = "#fc8804";
+	barObj.enemy.headText = "Enemies";
+	type = ["friend", "enemy"];
+	for (var i = 0; i < type.length; i++) {
+		//Bar locations
+		barObj[type[i]].x = parseInt(Orion.RegRead(Player.Serial() + "/" + type[i] + "BarX"));
+		barObj[type[i]].y = parseInt(Orion.RegRead(Player.Serial() + "/" + type[i] + "BarY"));
+
+		//Create gumps
+		var tempGump = Orion.CreateCustomGump(barObj[type[i]].serial);
+
+		var boxWidth = 150;
+		var boxHeight = 30;
+		var borderWidth = 2;
+		tempGump.Clear();
+		//0x24B8 (OK)
+		//friendGump.AddResizepic(barObj.friend.x, barObj.friend.y, "0xBB8", boxWidth, boxHeight);
+		//friendGump.AddText(barObj.friend.x, barObj.friend.y, color.green, "Friends", boxWidth, 1);
+		tempGump.SetCallback("StatusBarCallBack");
+		tempGump.SetX(barObj[type[i]].x);
+		tempGump.SetY(barObj[type[i]].y);
+		tempGump.AddColoredPolygone(borderWidth * 2, borderWidth * 2, boxWidth, boxHeight, barObj[type[i]].headBorderColor, 1, borderWidth, 0, 51);
+		tempGump.AddGumpPic(borderWidth * 3, borderWidth * 3, "0xE14", 0, 100, 0, boxWidth - borderWidth, boxHeight - 2);
+		tempGump.AddCheckerTrans(borderWidth * 3, borderWidth * 3, boxWidth - borderWidth, boxHeight - 2);
+		tempGump.AddText(borderWidth + 6, +borderWidth + 7, barObj[type[i]].headTextColor, "<big=true>" + barObj[type[i]].headText);
+		tempGump.AddTooltip("Clicking this will reposition/align all the bars.");
+		//Old gree position:  90, +105, borderWidth + 9
+		tempGump.AddButton(91, 130, borderWidth + 12, gumpGraphic["status_circle_green"].pressed, gumpGraphic["status_circle_green"].pressed, gumpGraphic["status_circle_green"].pressed, 0, 1, 0);
+		tempGump.AddTooltip("Clears all non-visible characters.");
+		tempGump.AddButton(92, 105, borderWidth + 12, gumpGraphic["status_circle_red"].pressed, gumpGraphic["status_circle_red"].pressed, gumpGraphic["status_circle_red"].pressed, 0, 1, 0);
+		tempGump.AddTooltip("Show player statistics window.");
+		//friendGump.AddButton(3, barObj.friend.x + 70, barObj.friend.y + borderWidth + 9, gumpGraphic["status_circle_green"].pressed, gumpGraphic["status_circle_green"].pressed, gumpGraphic["status_circle_green"].pressed, "1152", 1, 0);
+		//friendGump.AddTooltip("Opens a gump to show information on recent character activity.\nIncluding:\n- Number of guilds.\n- Number of players per guild.\n- Number of deaths (beta)");
+		tempGump.AddHitBox(99999, 175, 35, 1, 1);
+		tempGump.Update();
+	}
+
+	return barObj;
+}
+
+function GenerateSimpleEnemy(barObj) {
+	if (false && Orion.Timer("generateSimpleEnemy") >= -1) {
+		Orion.SetTimer("generateSimpleEnemy", 0);
+		return barObj;
+	}
+	Debug("[GenerateSimpleEnemy][False] Generating simple enemy table: " + barObj.enemy.serial);
+	var gump = Orion.CreateCustomGump(barObj.enemy.serial);
+
+	if (Orion.GetGlobal("simpleEnemyClear") == "true") {
+		barObj = Bar_HeaderBuilder(barObj);
+		Orion.SetGlobal("simpleEnemyClear", "false");
+	}
+	if (barObj.enemy.simpleList == null) {
+		barObj.enemy.simpleList = [];
+	}
+	var sortedFull = Object.keys(barObj.enemy.players).forEach(function (key) {
+		if (barObj.enemy.simpleList.indexOf(key) == -1 && barObj.enemy.players[key].cleared == false) {
+			barObj.enemy.simpleList.push(key);
+		}
+	});
+	barObj.enemy.simpleList.sort(function (a, b) {
+		var nameA = barObj.enemy.players[a].name.toLowerCase(),
+			nameB = barObj.enemy.players[b].name.toLowerCase();
+		if (nameA < nameB)
+			//sort string ascending
+			return -1;
+		if (nameA > nameB) return 1;
+		return 0; //default return value (no sorting)
+	});
+	//Gump generating
+	var tempArray = []; //Used to push for lookup table for gump response
+	var enemyArray = []; //Used to push for lookup table active characters
+	var x = 20;
+	var y = 40;
+	var yStep = 20;
+	var targetButton = 1000;
+	var secondaryButton = 30;
+	var enemyHit = 100;
+	Debug("[GenerateSimpleEnemy][Trace] Number of enemies in list: " + barObj.enemy.simpleList.length);
+	var flagReset = false;
+	var flagUpdate = Orion.GetGlobal("simpleEnemy_count") != barObj.enemy.simpleList.length ? true : false;
+	var addButton = Shared.GetArray("simpleEnemy_addbutton", []);
+	var tempButton = [];
+	Orion.SetGlobal("simpleEnemy_count", barObj.enemy.simpleList.length);
+	for (var i = 0; i < barObj.enemy.simpleList.length; i++) {
+		var smallLast = [0, 0, 0];
+		if (barObj.enemy.simpleList[i] in barObj.enemy.players && barObj.enemy.players[barObj.enemy.simpleList[i]].cleared == false) {
+			//LT Flag
+			if (barObj.enemy.simpleList[i] == Orion.ClientLastTarget()) {
+				gump.AddButton(999, 3, y, "0x607", "0x608", "0x607", "1152", 1, 0);
+				flagUpdate = Orion.GetGlobal("simpleEnemy_LT") != i ? true : flagUpdate;
+				Orion.SetGlobal("simpleEnemy_LT", i);
+			}
+			//Determining name and using alias if there is one and option is enabled
+			var determinedName = barObj.enemy.players[barObj.enemy.simpleList[i]].name;
+			if (Orion.GetGlobal("doShowAlias") == "true") {
+				var serialArray = Shared.GetArray("aliasArray_Serial", false);
+				if (serialArray != false) {
+					var tempIndex = serialArray.indexOf(charObj.serial);
+					if (tempIndex != -1) {
+						var aliasArray = Shared.GetArray("aliasArray_Name", false);
+						Debug("[DrawCharacterBar][Trace] Changing " + determinedName + "'s name to : " + aliasArray[tempIndex]);
+						determinedName = aliasArray[tempIndex];
+					}
+				}
+			}
+			smallLast[1] = determinedName;
+			var tempLast = BarStatus_LastSeen(barObj.enemy.simpleList[i]);
+			Debug("[GenerateSimpleEnemy][Trace] Adding name: " + barObj.enemy.players[barObj.enemy.simpleList[i]].name);
+			gump.AddText(x, y, color.white, determinedName.toUpperCase(), 200, targetButton++);
+			gump.AddTooltip("Last seen: " + tempLast);
+			enemyArray.push([0, barObj.enemy.simpleList[i]]);
+			gump.AddHitBox(enemyHit++, x, y, TextWidth(determinedName) * 1.4, 18);
+			//Adding button to add player to library
+			var tempCharArray = Shared.GetArray("incharLib", false);
+			var doAddButton = Orion.GetGlobal("doSimpleHideAdd") == "true" ? true : false;
+			if (!doAddButton && (tempCharArray == false || tempCharArray.indexOf("characterLib_" + barObj.enemy.simpleList[i]) == -1)) {
+				gump.AddButton(
+					secondaryButton++,
+					160,
+					y + 3,
+					gumpGraphic["status_circle_green"].pressed,
+					gumpGraphic["status_circle_green"].pressed,
+					gumpGraphic["status_circle_green"].pressed,
+					color.red_glacial,
+					1,
+					0
+				);
+				gump.AddTooltip("Click to add enemy to library.");
+				tempArray.push([secondaryButton - 1, barObj.enemy.simpleList[i]]);
+				tempButton.push(i);
+			}
+			y += yStep;
+		}
+	}
+	if (addButton.length != tempButton.length) {
+		flagReset = true;
+	} else {
+		for (var i = 0; i < addButton.length; i++) {
+			if (addButton[i] != tempButton[i]) flagReset = true;
+		}
+	}
+	Shared.AddArray("simpleEnemyArray_AddChar", tempArray);
+	Shared.AddArray("simpleEnemyArray", enemyArray);
+	//gump.AddText(x, y, color.white, "bob\nbob", 200, targetButton++);
+	if (flagUpdate) gump.Update();
+	if (flagReset) Orion.SetGlobal("simpleEnemyClear", "true");
+	return barObj;
+}
+
+function BarManager_Reload() {
+	Orion.Terminate("BarManager");
+	Orion.Wait(50);
+	Orion.Exec("BarManager", true);
+}
+
+function SimpleEnemyScroll(direction) {
+	direction = direction == "up" ? false : true;
+	direction = direction ? 1 : -1;
+	var LT = Orion.ClientLastTarget();
+	var index = 0;
+	var theArray = Shared.GetArray("simpleEnemyArray", false);
+	for (var i = 0; i < theArray.length; i++) {
+		if (theArray[i][1] == LT) {
+			Debug("[SimpleEnemyScroll][Info] Found at i: " + i);
+			index = i + direction;
+			break;
+		}
+	}
+	Debug("[SimpleEnemyScroll][Info] Index before cleanup: " + index);
+	if (index < 0) {
+		index = theArray.length - 1;
+	} else if (index >= theArray.length) {
+		index = 0;
+	}
+	if (theArray != false) {
+		PvPSetTarget_Offscreen(theArray[index][1]);
+		Orion.SetTimer("generateSimpleEnemy", 0);
+	} else {
+		Debug("[SimpleEnemyScroll][Info] Reference array not valid");
+	}
+}
+
+function DrawCharacterBar(charObj, startPos, doPos, friendEnemy) {
+	//Quick return if the bar has been cleared (not shown)
+	if (charObj.cleared == true) {
+		return charObj;
+	}
+	var textColor = friendEnemy == "friend" ? color.white : color.orange;
+	var doFlip = friendEnemy == "friend" ? false : true;
+	//friendEnemy flag, 0 for friend 100 ofset for enemy
+	var gumpSerial = 40000 + charObj.refKey * 10;
+	gumpSerial = friendEnemy == "friend" ? gumpSerial : gumpSerial + 1000;
+	//Bars per row set in the gump
+	var barsPer = Number(Orion.GetGlobal("pb_barsper"));
+	//Checking to see if the gump already exists and to set the position
+	if (charObj.isNew == true) {
+		Debug("[DrawCharacterBar][Info] Name: " + charObj.name + " isNew: " + charObj.isNew);
+		var setPosition = true;
+		charObj.isNew = false;
+	} else {
+		var setPosition = false;
+	}
+	//Checking for flag being passed in to reset
+	setPosition = doPos ? true : setPosition;
+	Debug("[DrawCharacterBar][Trace] setPosition value: " + setPosition);
+	Debug("[DrawCharacterBar][Trace] gumpSerial value: " + gumpSerial);
+	Debug("[DrawCharacterBar][Trace] StartPos: " + startPos.x + " " + startPos.y);
+	var gump = Orion.CreateCustomGump(gumpSerial);
+	gump.SetNoClose(true);
+	gump.SetCallback("StatusBarCallBack");
+	gump.Clear();
+	var targetButton = 1;
+	var secondaryButton = 30;
+	var closeButton = 20;
+	var allOthers = 30;
+	//gump.AddBlending(1, 2, 6);
+	var borderWidth = 2;
+	var boxWidth = 125;
+	var boxHeight = Orion.GetGlobal("pb_barheight") == "" ? 20 : parseInt(Orion.GetGlobal("pb_barheight"));
+	var boxSpacer = 4;
+	var barGreen = "#007B00";
+	var barOrange = "#E64C00";
+	var barRed = "#990000";
+	var barGrey = "#777877";
+	var columnOffset = 155;
+	Debug("[DrawCharacterBar][Trace] Position: " + charObj.name + " " + (charObj.position % barsPer) + " " + startPos.y);
+	var xStep = charObj.position != 0 ? startPos.x + columnOffset * parseInt(charObj.position / barsPer) : startPos.x;
+	var yStep = (startPos.y = charObj.position != 0 && charObj.position % barsPer != 0 ? startPos.y + parseInt(charObj.position % barsPer) * (boxHeight + boxSpacer) : startPos.y);
+	Debug("[DrawCharacterBar][Trace] Step Position #1: " + xStep + " " + yStep);
+	var primaryButton = false;
+	//Calculated values;
+	var hitsPer = (charObj.hits / charObj.maxhits) * 1.0000001;
+	//Validating the HP (sometimes bugs out at 0)
+	if (hitsPer == "-Inifinity" || (charObj.hits == 0 && !charObj.dead)) {
+		hitsPer = 1;
+		Debug("[DrawCharacterBar][Info] " + charObj.name + " Found infinity in hitsPer (or hits 0 and not dead), changing to 1");
+		charObj.visible = false;
+	}
+	var lifeWidth = (boxWidth - 18) * hitsPer;
+	var lifeColor = charObj.poisoned ? barOrange : barGreen;
+	var xOffset = primaryButton ? 0 : -12;
+	var stretch = 0;
+	var leftStretch = 0;
+	var healthText = "-" + Math.round(hitsPer * 100) + "%";
+
+	//Making adjustments if character isn't visible.
+	if (!charObj.visible) {
+		hitsPer = 1;
+		lifeColor = barGrey;
+		healthText = "";
+	}
+	//Handling repositioning.
+	if (setPosition) {
+		Debug("[DrawCharacterBar][Trace] Column to be displayed on (X): " + parseInt(charObj.position / barsPer) + " (" + startPos.x + ")");
+		Debug("[DrawCharacterBar][Info] setPosition value: " + setPosition + " X/Y " + startPos.x + " / " + startPos.y);
+		gump.SetX(xStep);
+		gump.SetY(yStep);
+		doPos = true;
+	}
+	Debug("[DrawCharacterBar][Trace] Step Position #2: " + xStep + " " + yStep);
+	//Last seen formatting
+	var lastSeen = Orion.Timer(charObj.serial + "/barSeen");
+	if (lastSeen < 5000) {
+		var tempLast = "Just now!";
+	} else {
+		var tempLast = Math.round(parseFloat(lastSeen / 60000));
+		if (tempLast < 1) {
+			var tempLast = "";
+			tempLast = "< 1 minute ago";
+		} else {
+			tempLast = tempLast + " minute ago";
+		}
+	}
+	Debug("[DrawCharacterBar][Trace] Last seen output (variable): " + tempLast + "(" + lastSeen + "), " + Math.round(parseFloat(lastSeen / 60000)));
+	//Determining name and using alias if there is one and option is enabled
+	var determinedName = charObj.name;
+	if (Orion.GetGlobal("doShowAlias") == "true") {
+		var serialArray = Shared.GetArray("aliasArray_Serial", false);
+		if (serialArray != false) {
+			var tempIndex = serialArray.indexOf(charObj.serial);
+			if (tempIndex != -1) {
+				var aliasArray = Shared.GetArray("aliasArray_Name", false);
+				Debug("[DrawCharacterBar][Trace] Changing " + determinedName + "'s name to : " + aliasArray[tempIndex]);
+				determinedName = aliasArray[tempIndex];
+			}
+		}
+	}
+	//Updating bar ocassionally regardless
+	if (Orion.Timer("barMasterTimer") - charObj.lastUpdate > 60000) {
+		doPos = true;
+	}
+	//Is close button being show? If not stretch the bar to replace that space
+	if (false && !charObj.visible) {
+		gump.AddButton(closeButton++, 142 + xOffset, boxHeight / 2 - 11, "0x5FF", "0x600", "0x5FF", "1194", 1, 0);
+	} else {
+		stretch = 24;
+		lifeWidth = (boxWidth - 18 + stretch + leftStretch) * hitsPer;
+	}
+	//Handling if enemy side and flipping the buttons
+	var rightArrow = "0x607";
+	var rightArrowpress = "0x608";
+	var leftArrow = "0x609";
+	var leftArrowpress = "0x60A";
+	if (doFlip) {
+		var primaryBut1 = leftArrow;
+		var primaryBut2 = leftArrowpress;
+		var primaryX = 126 + xOffset + stretch;
+		var secondaryBut1 = rightArrow;
+		var secondaryBut2 = rightArrowpress;
+		var secondaryX = 5;
+		xOffset = 0;
+		stretch += 2;
+		lifeWidth = (boxWidth - 18 + stretch + leftStretch) * hitsPer;
+	} else {
+		var primaryBut1 = rightArrow;
+		var primaryBut2 = rightArrowpress;
+		var primaryX = 2;
+		var secondaryBut1 = leftArrow;
+		var secondaryBut2 = leftArrowpress;
+		var secondaryX = 126 + xOffset + stretch;
+	}
+	//Is primary button being shown?
+	if (primaryButton) {
+		gump.AddButton(targetButton++, primaryX, boxHeight / 2 - 11, primaryBut1, primaryBut2, primaryBut1, "1152", 1, 0);
+	}
+	var tempCharArray = Shared.GetArray("incharLib", false);
+	if (friendEnemy == "friend" || (friendEnemy == "enemy" && (tempCharArray == false || tempCharArray.indexOf("characterLib_" + charObj.serial) == -1))) {
+		gump.AddButton(secondaryButton++, secondaryX, boxHeight / 2 - 11, secondaryBut1, secondaryBut2, secondaryBut1, "1289", 1, 0);
+		if (friendEnemy == "friend") {
+			gump.AddTooltip("Click to to set friend as caller.");
+		} else {
+			gump.AddTooltip("Click to add enemy to library.");
+		}
+	} else if (friendEnemy == "enemy") {
+		leftStretch = -12;
+		stretch += -leftStretch;
+		lifeWidth = (boxWidth - 18 + stretch) * hitsPer;
+	}
+
+	gump.AddColoredPolygone(xOffset + 18 + leftStretch, 1, boxWidth - 18 + stretch, boxHeight - 2, barRed, 0, 0, 0, targetButton++);
+	gump.AddColoredPolygone(xOffset + 18 + leftStretch, 1, lifeWidth, boxHeight - 2, lifeColor, 0, 0, 0, targetButton++);
+	gump.AddText(xOffset + 20 + leftStretch, boxHeight / 2 - 11, textColor, determinedName + healthText, boxWidth - 21, targetButton++);
+	gump.AddTooltip("Last seen: " + tempLast);
+	if (doPos || (charObj.prevVis == false && charObj.visible == true) || (charObj.prevVis == true && charObj.visible == false) || charObj.prevLife != hitsPer) {
+		gump.Update();
+		charObj.prevVis = charObj.visible;
+		charObj.prevLife = hitsPer;
+		charObj.ctFlag = true;
+		Debug("[DrawCharacterBar][Info] Updating: " + charObj.name + "(" + gumpSerial + ")");
+		charObj.lastUpdate = Orion.Timer("barMasterTimer");
+	}
+	return charObj;
+}
+
+function CurrentTargetBar(barObj) {
+	//Updating Gump Position First
+	if (Orion.GumpExists("custom", 666) && Orion.Timer("savenewLT") >= -1) {
+		var pos = Orion.GetGumpPosition("custom", 666);
+		Debug("[CurrentTargetBar][Trace] Saving new LT gump now at: " + pos.X() + " " + pos.Y());
+		Orion.RegWrite(Player.Serial() + "/CTX", pos.X());
+		Orion.RegWrite(Player.Serial() + "/CTY", pos.Y());
+		Orion.SetTimer("savenewLT", -3000);
+	}
+
+	var type = ["friend", "enemy"];
+	var charObj = false;
+	var LTSerial = Orion.ClientLastTarget();
+	var isFriend = false;
+	for (var i = 0; i < type.length; i++) {
+		if (LTSerial in barObj[type[i]].players) {
+			charObj = barObj[type[i]].players[LTSerial];
+			if (type[i] == "friend") isFriend = true;
+		}
+	}
+	if (charObj != false) {
+		//Not showing the bar if flag is not set, and gump doesn't exist
+		if (!Orion.GumpExists("custom", 666) && Orion.GetGlobal("CTActionFlag") != "true") {
+			Debug("[CurrentTargetBar][Trace] CTActionFlag not true, exiting with no action.");
+			return barObj;
+		}
+		//Hardcoded variables
+		var boxWidth = 200;
+		var boxHeight = 35;
+		var targetButton = 0;
+		//Pulling all the other variables
+		var targetButton = 0;
+		var doPos = false;
+		//Gump initialization
+		var gump = Orion.CreateCustomGump(666);
+		gump.SetNoClose(false);
+		//gump.SetCallback("StatusBarCallBack");
+		gump.Clear();
+		if (!Orion.GumpExists("custom", 666)) {
+			var X = parseInt(Orion.RegRead(Player.Serial() + "/CTX"));
+			var Y = parseInt(Orion.RegRead(Player.Serial() + "/CTY"));
+			Debug("[CurrentTargetBar][Trace] Loading new LT gump now at: " + X + " " + Y);
+			gump.SetX(X);
+			gump.SetY(Y);
+			doPos = true;
+		}
+		//Bar and Text Color
+		var textColor = isFriend ? color.white : color.orange;
+		var boxSpacer = 4;
+		var barGreen = "#007B00";
+		var barOrange = "#E64C00";
+		var barRed = "#990000";
+		var barGrey = "#777877";
+		//Calculated values
+		var hitsPer = (charObj.hits / charObj.maxhits) * 1.0000001;
+		//Validating the HP (sometimes bugs out at 0)
+		if (hitsPer == "-Inifinity" || (charObj.hits == 0 && !charObj.dead)) {
+			hitsPer = 1;
+			Debug("[CurrentTargetBar][Info] " + charObj.name + " Found infinity in hitsPer (or hits 0 and not dead), changing to 1");
+			charObj.visible = false;
+		}
+		var lifeWidth = (boxWidth - 18) * hitsPer;
+		var lifeColor = charObj.poisoned ? barOrange : barGreen;
+		var healthText = " - " + Math.round(hitsPer * 100) + "%";
+
+		//Making adjustments if character isn't visible.
+		if (!charObj.visible) {
+			lifeWidth = boxWidth - 18;
+			lifeColor = barGrey;
+			healthText = "";
+		}
+		var tempLast = BarStatus_LastSeen(charObj.serial);
+		//Debug("[CurrentTargetBar][Trace] Last seen output (variable): " + tempLast + "(" + lastSeen + "), " + Math.round(parseFloat(lastSeen / 60000)));
+		//Determining name and using alias if there is one and option is enabled
+		var determinedName = charObj.name;
+		if (Orion.GetGlobal("doShowAlias") == "true") {
+			var serialArray = Shared.GetArray("aliasArray_Serial", false);
+			if (serialArray != false) {
+				var tempIndex = serialArray.indexOf(charObj.serial);
+				if (tempIndex != -1) {
+					var aliasArray = Shared.GetArray("aliasArray_Name", false);
+					Debug("[CurrentTargetBar][Trace] Changing " + determinedName + "'s name to : " + aliasArray[tempIndex]);
+					determinedName = aliasArray[tempIndex];
+				}
+			}
+		}
+		//Updating bar ocassionally regardless
+		if (Orion.Timer("ctlastUpdate") > 60000 || (Orion.GetGlobal("doSimpleEnemy") == "true" && Orion.Timer("ctlastUpdate") > 500)) {
+			doPos = true;
+		}
+		//Building the gump itself
+		gump.AddColoredPolygone(1, 1, boxWidth - 18, boxHeight - 2, barRed, 0, 0, 0, targetButton++);
+		gump.AddColoredPolygone(1, 1, lifeWidth, boxHeight - 2, lifeColor, 0, 0, 0, targetButton++);
+		gump.AddText(10, boxHeight / 2 - 11, textColor, determinedName + healthText, boxWidth - 21, targetButton++);
+		gump.AddTooltip("Last seen: " + tempLast);
+		if (doPos || charObj.ctFlag) {
+			gump.Update();
+			charObj.ctFlag = false;
+			Orion.SetTimer("ctlastUpdate", 0);
+			Orion.SetGlobal("CTActionFlag", "false");
+		}
+		var tempType = isFriend ? "friend" : "enemy";
+		barObj[tempType].players[LTSerial] = charObj;
+	} else {
+		if (Orion.Timer("ctBarError") >= -1) {
+			Debug("[CurrentTargetBar][Error] Not finding LT in barObj, this shouldn't be able to happen.");
+			Orion.SetTimer("ctBarError", -5000);
+		}
+	}
+	return barObj;
+}
+
+function BarStatus_LastSeen(serial) {
+	//Last seen formatting
+	var lastSeen = Orion.Timer(serial + "/barSeen");
+	if (lastSeen < 5000) {
+		var tempLast = "Just now!";
+	} else {
+		var tempLast = Math.round(parseFloat(lastSeen / 60000));
+		if (tempLast < 1) {
+			var tempLast = "";
+			tempLast = "< 1 minute ago";
+		} else {
+			tempLast = tempLast + " minute ago";
+		}
+	}
+	return tempLast;
+}
+
+function UpdateBarStats(barObj) {
+	var timePeriods = [10, 20, 30, 60, 90, 9999];
+	//var theStats = { "All Guilds": { All: { count: barObj.statenemy.length } }, "All Friends": { All: { count: barObj.statfriend.length } } };
+	var theStats = { "All Guilds": {}, "All Friends": {} };
+	var charLib = JSON_import("CharacterLibrary");
+	//Generate all the stat data
+	for (var i = 0; i < timePeriods.length; i++) {
+		var timeCutoff = timePeriods[i] * 60000;
+		if (!(timePeriods[i] in theStats["All Guilds"])) {
+			theStats["All Guilds"][timePeriods[i]] = { count: 0, tooltip: "" };
+		}
+
+		Object.keys(barObj.enemy.players).forEach(function (key) {
+			var theChar = barObj.enemy.players[key];
+			var charTime = Orion.Timer(theChar.serial + "/barSeen");
+			if (charTime <= timeCutoff) {
+				theStats["All Guilds"][timePeriods[i]].count++;
+				theStats["All Guilds"][timePeriods[i]].tooltip = theStats["All Guilds"][timePeriods[i]].tooltip == "" ? theChar.name : theStats["All Guilds"][timePeriods[i]].tooltip + "\n" + theChar.name;
+			}
+			//Now Handling the Guilds
+			var charGuild = false;
+			var charName = false;
+			if (theChar.serial in charLib) {
+				charGuild = charLib[theChar.serial].guild;
+				charName = charLib[theChar.serial].name;
+			} else if (theChar.guild != false && theChar.guild != "None") {
+				charGuild = theChar.guild;
+				charName = theChar.name;
+			}
+			if (charGuild != false) {
+				if (!(charGuild in theStats)) {
+					theStats[charGuild] = {};
+					theStats[charGuild].All = { count: 0, tooltip: "" };
+				}
+				if (!(timePeriods[i] in theStats[charGuild])) {
+					theStats[charGuild][timePeriods[i]] = { count: 0, tooltip: "" };
+				}
+				//theStats[charGuild].All.count++;
+				//theStats[charGuild].All.tooltip += charName + "\n";
+				theStats[charGuild][timePeriods[i]].count++;
+				theStats[charGuild][timePeriods[i]].tooltip = theStats[charGuild][timePeriods[i]].tooltip == "" ? charName : theStats[charGuild][timePeriods[i]].tooltip + "\n" + charName;
+			}
+		});
+		if (!(timePeriods[i] in theStats["All Friends"])) {
+			theStats["All Friends"][timePeriods[i]] = { count: 0, tooltip: "" };
+		}
+		Object.keys(barObj.friend.players).forEach(function (key) {
+			//Populating character information
+			var theChar = barObj.friend.players[key];
+			var charTime = Orion.Timer(theChar.serial + "/barSeen");
+			if (charTime <= timeCutoff) {
+				theStats["All Friends"][timePeriods[i]].count++;
+				theStats["All Friends"][timePeriods[i]].tooltip = theStats["All Friends"][timePeriods[i]].tooltip == "" ? theChar.name : theStats["All Friends"][timePeriods[i]].tooltip + "\n" + theChar.name;
+			}
+		});
+	}
+
+	//Display data in gump
+	var gump = Orion.CreateCustomGump(90);
+	var boxWidth = 375;
+	var boxHeight = 150 + (Object.keys(theStats).length - 2) * 30;
+	gump.Clear();
+	gump.SetCallback("StatusBarCallBack");
+	gump.SetX(500);
+	gump.SetY(200);
+	gump.SetNoClose(false);
+	gump.SetNoMove(false);
+	gump.AddResizepic(0, 0, gumpGraphic["background_grey_gold"].graphic, boxWidth, boxHeight);
+	var textColor = color.white;
+	var colX = 15;
+	var startX = 90;
+	var startY = 30;
+	var stepX = 40;
+	var stepY = 30;
+	var iterX = 1;
+	var iterY = 1;
+	gump.AddText(125, 10, color.yellowgold, "Last Seen (minutes)");
+	Object.keys(theStats).forEach(function (guildKey) {
+		gump.AddText(colX, startY + iterY * stepY, color.yellowgold, guildKey);
+		var currY = startY + stepY * iterY;
+		var colIt = 1;
+		Object.keys(theStats[guildKey]).forEach(function (timeKey) {
+			if (timeKey != "All") {
+				if (iterY == 1) {
+					if (timeKey != 9999) {
+						gump.AddText(startX + stepX * colIt - 1, startY, color.yellowgold, timeKey);
+					} else {
+						gump.AddText(startX + stepX * colIt - 1, startY, color.yellowgold, "All");
+					}
+				}
+				gump.AddText(startX + stepX * colIt, currY, textColor, theStats[guildKey][timeKey].count);
+				gump.AddTooltip(theStats[guildKey][timeKey].tooltip);
+				colIt++;
+			}
+		});
+		//Handling 'All' Separately so it's at the end.
+		//if (iterY == 1) {
+		//	gump.AddText(startX + stepX * colIt - 4, startY, color.yellowgold, "All");
+		//}
+		//gump.AddText(startX + stepX * colIt, currY, textColor, theStats[guildKey]["All"].count);
+		//gump.AddTooltip(theStats[guildKey]["All"].tooltip);
+
+		iterY++;
+	});
+	gump.Update();
+}
+
+function CharacterLibraryObject(name, serial, guild) {
+	var test = {};
+	test.name = name;
+	test.serial = serial;
+	test.guild = guild;
+	test.alias = false;
+	return test;
+}
+function CharacterLibrary_Init() {
+	var charLib = {};
+	charLib.characters = {};
+	charLib.characters["0x032A800A"] = CharacterLibraryObject("Void", "0x032A800A", "Test");
+	JSON_export("CharacterLibrary", charLib);
+}
+
+function CharacterLibrarySetup(gumpObj, currentSerial) {
+	var thePage = 16;
+	var libPack = JSON_import("CharacterLibrary");
+	if (libPack == false) {
+		return [gumpObj, currentSerial];
+	}
+	libPack.tagList = ["!All"];
+	Object.keys(libPack.characters).forEach(function (key) {
+		if (libPack.tagList.indexOf(libPack.characters[key].guild) == -1) {
+			libPack.tagList.push(libPack.characters[key].guild);
+		}
+	});
+	if (libPack == false) {
+		var tempName = "title_character_error";
+		gumpObj[tempName] = GumpObject("Character library error.", currentSerial++, "text", 380, 15, true, 2);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Error loading character library file.";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+	} else {
+		var tempName = "title_guild_tag_filter";
+		gumpObj[tempName] = GumpObject("Guild Tag Filter", currentSerial++, "text", 380, 15, true, 1);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Guild Tag Filter:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tagFilterDrop = [];
+		Object.keys(libPack.tagList).forEach(function (key) {
+			tagFilterDrop.push([libPack.tagList[key], libPack.tagList[key]]);
+		});
+		tagFilterDrop.sort();
+		var tempName = "GuildFilter_Dropdown";
+		gumpObj[tempName] = GumpObject("Function Filter Dropdown", currentSerial++, "combobox", 5, 5, true, 2);
+		gumpObj[tempName].droplength = tagFilterDrop.length;
+		gumpObj[tempName].droplist = tagFilterDrop;
+		gumpObj[tempName].width = 200;
+		gumpObj[tempName].parentPage = thePage;
+		gumpObj[tempName].value = 0;
+		gumpObj[tempName].globalVal = "guildtagFilter";
+		//gumpObj[tempName].runFunction = "GumpLaunchButton";
+		gumpObj[tempName].xOffset = 20;
+		//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+		var tempName = "GuildFilter_Refresh";
+		gumpObj[tempName] = GumpObject("Guild Filter Refresh", currentSerial++, "button", 390, 505, true, 3);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].parentPage = thePage;
+		gumpObj[tempName].action = "commit";
+		gumpObj[tempName].value = "refresh";
+		gumpObj[tempName].butAction = 1;
+		gumpObj[tempName].text = "Refresh";
+		gumpObj[tempName].color = color.white;
+		//gumpObj[tempName].buttonColor = color.glacial;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName] = AdjustXY(gumpObj[tempName], AlignObject("center", gumpObj["GuildFilter_Dropdown"], gumpObj[tempName], gumpGraphic[gumpObj[tempName].graphic].butWidth));
+
+		var tempName = "CharacterList_Window";
+		gumpObj[tempName] = GumpObject("HTML Window", currentSerial++, "html", 20, 150);
+		gumpObj[tempName].height = 330;
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].hasbackground = 0;
+		gumpObj[tempName].parentPage = thePage;
+		gumpObj[tempName].parent = "CharacterList_Window";
+
+		var tempX = 0;
+		var tempY = 5;
+		gumpObj.characterLib = {};
+		gumpObj.characterLib.global = true;
+		gumpObj.characterLib.value = [];
+		var tempArray = [];
+		Object.keys(libPack.characters).forEach(function (key) {
+			tempArray.push(key);
+			if (libPack.characters[key].alias != "N/A" && libPack.characters[key].alias != false) {
+				var aliasArray = Shared.GetArray("aliasArray_Serial", false);
+				if (aliasArray == false) {
+					Shared.AddArray("aliasArray_Serial", [libPack.characters[key].serial]);
+					Shared.AddArray("aliasArray_Name", [libPack.characters[key].alias]);
+				} else {
+					var theIndex = aliasArray.indexOf(libPack.characters[key].serial);
+					var aliasArray_name = Shared.GetArray("aliasArray_Name");
+					if (theIndex == -1) {
+						aliasArray.push(libPack.characters[key].serial);
+						aliasArray_name.push(libPack.characters[key].alias);
+						Shared.AddArray("aliasArray_Serial", aliasArray);
+						Shared.AddArray("aliasArray_Name", aliasArray_name);
+					} else {
+						aliasArray_name[i] = libPack.characters[key].alias;
+						Shared.AddArray("aliasArray_Name", aliasArray_name);
+					}
+				}
+			}
+		});
+		tempArray.sort(function (a, b) {
+			var nameA = libPack.characters[a].name.toLowerCase(),
+				nameB = libPack.characters[b].name.toLowerCase();
+			if (nameA < nameB)
+				//sort string ascending
+				return -1;
+			if (nameA > nameB) return 1;
+			return 0; //default return value (no sorting)
+		});
+		for (var i = 0; i < tempArray.length; i++) {
+			var theFunc = libPack.characters[tempArray[i]];
+			var tempName = "characterLib_" + tempArray[i];
+			gumpObj.characterLib.value.push(tempName);
+			gumpObj[tempName] = GumpObject(theFunc.name, currentSerial++, "radio", tempX, tempY, false);
+			gumpObj[tempName].graphic = "checkbox_gold_x";
+			gumpObj[tempName].width = 125;
+			gumpObj[tempName].xOffset = 0;
+			var tempText = theFunc.alias == false ? theFunc.name : theFunc.name + " (" + theFunc.alias + ")";
+			gumpObj[tempName].text = tempText;
+			gumpObj[tempName].value = false;
+			gumpObj[tempName].color = color.whiteText;
+			gumpObj[tempName].parent = "CharacterList_Window";
+			gumpObj[tempName].parentPage = thePage;
+			gumpObj[tempName].theFunc = theFunc;
+			gumpObj[tempName].dynamicAdd = false;
+			//gumpObj[tempName].globalVal = "doLaunchButton";
+			//gumpObj[tempName].color = color.white;
+			tempY += 30;
+			//});
+		}
+		var tempName = "title_character_title_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 33, false);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Character Name:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_title_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 55);
+		gumpObj[tempName].xOffset = 40;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_serial_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 80);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Character Serial:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_serial_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 102);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_tags_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 127);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Character Guild Tag:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_tags_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "textbox", 355, 149);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].width = 75;
+		gumpObj[tempName].value = "N/A";
+		gumpObj[tempName].color = color.black;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_alias_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 174);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Character Alias Description:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "title_character_alias_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "textbox", 355, 200);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].value = "N/A";
+		gumpObj[tempName].color = color.black;
+		gumpObj[tempName].parentPage = thePage;
+
+		var tempName = "Character_Commit";
+		gumpObj[tempName] = GumpObject("Guild Filter Refresh", currentSerial++, "button", 475, 300);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].parentPage = thePage;
+		gumpObj[tempName].action = "commit";
+		gumpObj[tempName].value = "ModifyCharacter_Save";
+		gumpObj[tempName].butAction = 1;
+		gumpObj[tempName].text = "Save Info";
+		gumpObj[tempName].color = color.black;
+		gumpObj[tempName].buttonColor = color.glacial;
+		gumpObj[tempName].xOffset = 50;
+
+		var tempName = "Character_Delete";
+		gumpObj[tempName] = GumpObject("Character Delete", currentSerial++, "button", 475, 400);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].parentPage = thePage;
+		gumpObj[tempName].action = "commit";
+		gumpObj[tempName].value = "ModifyCharacter_Delete";
+		gumpObj[tempName].butAction = 1;
+		gumpObj[tempName].text = "Delete Character";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].buttonColor = color.bloodwood;
+		gumpObj[tempName].xOffset = 50;
+		//gumpObj[tempName] = AdjustXY(gumpObj[tempName], AlignObject("center", gumpObj["GuildFilter_Dropdown"], gumpObj[tempName], gumpGraphic[gumpObj[tempName].graphic].butWidth));
+	}
+	Shared.AddArray("incharLib", gumpObj.characterLib.value);
+	return [gumpObj, currentSerial];
+}
+
+function CharacterLibrary_UpdateGump(gumpObj) {
+	var selectedOne = Orion.GetGlobal("characterLib_Selected") == "" ? false : Orion.GetGlobal("characterLib_Selected");
+	var theFilter = gumpObj.GuildFilter_Dropdown.droplist[gumpObj.GuildFilter_Dropdown.value][0];
+	Debug("[CharacterLibrary_UpdateGump][Info] Selected Character Library filter: " + theFilter + ", filtering " + gumpObj.characterLib.value.length + " guilds.");
+	//Applying filter to function list
+	for (var i = 0; i < gumpObj.characterLib.value.length; i++) {
+		if (theFilter == "!All") {
+			gumpObj[gumpObj.characterLib.value[i]].visible = true;
+		} else {
+			var theFunc = gumpObj[gumpObj.characterLib.value[i]].theFunc;
+			//Debug("[CharacterLibrary_UpdateGump][Info] Evaluating: " + gumpObj.characterLib.value[i] + " which has tags: " + theFunc.guild);
+			if (theFunc.guild == theFilter) {
+				gumpObj[gumpObj.characterLib.value[i]].visible = true;
+			} else {
+				gumpObj[gumpObj.characterLib.value[i]].visible = false;
+				Debug("[CharacterLibrary_UpdateGump][Info] Hiding: " + gumpObj.characterLib.value[i]);
+			}
+		}
+	}
+	//Adjusting the Y position of the remaining active functions
+	var tempY = 5;
+	for (var i = 0; i < gumpObj.characterLib.value.length; i++) {
+		if (gumpObj[gumpObj.characterLib.value[i]].visible == true) {
+			gumpObj[gumpObj.characterLib.value[i]].y = tempY;
+			tempY += 30;
+		}
+	}
+	//Updating the main window data
+	Debug("[CharacterLibrary_Update][Info] Selected character: " + selectedOne);
+	if (selectedOne == false) {
+		gumpObj["title_character_title_value"].text = "N/A";
+		gumpObj["title_character_serial_value"].text = "N/A";
+		gumpObj["title_character_tags_value"].value = "N/A";
+		gumpObj["title_character_alias_value"].value = "N/A";
+	} else {
+		Debug("[CharacterLibrary_Update][Info] Swapping Info to: " + selectedOne);
+		if (selectedOne in gumpObj && "theFunc" in gumpObj[selectedOne]) {
+			selectedOne = gumpObj[selectedOne].theFunc;
+			gumpObj["title_character_title_value"].text = selectedOne.name;
+			gumpObj["title_character_serial_value"].text = selectedOne.serial;
+			gumpObj["title_character_tags_value"].value = selectedOne.guild;
+			var tempAlias = selectedOne.alias == false ? "N/A" : selectedOne.alias;
+			gumpObj["title_character_alias_value"].value = tempAlias;
+		}
+	}
+	return gumpObj;
+}
+
+function CharacterLibrary_UpdateCharacter(gumpObj, action) {
+	var selectedOne = Orion.GetGlobal("characterLib_Selected") == "" ? false : Orion.GetGlobal("characterLib_Selected");
+	if (selectedOne == false) {
+		Debug("[CharacterLibrary_UpdateCharacter][Error] No character is selected");
+		return gumpObj;
+	} else {
+		var charPack = JSON_import("CharacterLibrary");
+		if (charPack == false) {
+			return gumpObj;
+		}
+		if (Orion.Contains(action, "Save")) {
+			var tempSerial = gumpObj["title_character_serial_value"].text;
+			var tempBool = tempSerial in charPack.characters;
+			Debug("[CharacterLibrary_UpdateCharacter][Info] In Pack: " + tempBool + ", Window Serial: " + "characterLib_" + tempSerial + ", SelectedOne: " + selectedOne);
+			if (tempSerial in charPack.characters && "characterLib_" + tempSerial == selectedOne) {
+				charPack.characters[tempSerial].guild = gumpObj["title_character_tags_value"].value;
+				//Check if there is a need to rebuild the alias arrays
+				Debug("[CharacterLibrary_UpdateCharacter][Info] Comparison: " + gumpObj["title_character_alias_value"].value + " " + charPack.characters[tempSerial].alias);
+				if (gumpObj["title_character_alias_value"].value != charPack.characters[tempSerial].alias) {
+					Orion.SetGlobal("doCharRebuild", "true");
+				}
+				var tempAlias = gumpObj["title_character_alias_value"].value == "N/A" ? false : gumpObj["title_character_alias_value"].value;
+				charPack.characters[tempSerial].alias = tempAlias;
+
+				gumpObj["title_character_tags_value"].value = charPack.characters[tempSerial].guild;
+				var tempAlias = charPack.characters[tempSerial].alias == false ? "N/A" : charPack.characters[tempSerial].alias;
+
+				gumpObj["title_character_alias_value"].value = tempAlias;
+				JSON_export("CharacterLibrary", charPack);
+				Debug("[CharacterLibrary_UpdateCharacter][Info] Updating CharacterLibrary JSON.");
+				//Now rebuilding the gumpObj bits that need to be updated.
+				charPack.tagList = ["!All"];
+				Object.keys(charPack.characters).forEach(function (key) {
+					if (charPack.tagList.indexOf(charPack.characters[key].guild) == -1) {
+						charPack.tagList.push(charPack.characters[key].guild);
+					}
+				});
+				var tagFilterDrop = [];
+				Object.keys(charPack.tagList).forEach(function (key) {
+					tagFilterDrop.push([charPack.tagList[key], charPack.tagList[key]]);
+				});
+				tagFilterDrop.sort();
+				var tempName = "GuildFilter_Dropdown";
+				gumpObj[tempName].droplength = tagFilterDrop.length;
+				gumpObj[tempName].droplist = tagFilterDrop;
+				gumpObj[tempName].value = 0;
+				var theFunc = charPack.characters[tempSerial];
+				var tempName = "characterLib_" + tempSerial;
+				var tempText = theFunc.alias == false ? theFunc.name : theFunc.name + " (" + theFunc.alias + ")";
+				gumpObj[tempName].text = tempText;
+				gumpObj[tempName].value = true;
+				gumpObj[tempName].theFunc = theFunc;
+			} else {
+				Debug("[CharacterLibrary_UpdateCharacter][Error] Trying to update a character that doesn't exist (Or different name is selected): " + gumpObj["title_character_title_value"].text);
+			}
+		} else if (Orion.Contains(action, "Delete")) {
+			if (selectedOne in gumpObj) {
+				if (!(gumpObj[selectedOne].theFunc.serial in charPack.characters)) {
+					Debug("[CharacterLibrary_UpdateCharacter][Error] Not finding character to delete in CharacterLibrary: " + gumpObj[selectedOne].theFunc.serial);
+					return gumpObj;
+				}
+				Debug("[CharacterLibrary_UpdateCharacter][Info] Deleting character: " + selectedOne + " / " + gumpObj[selectedOne].theFunc.serial);
+				delete charPack.characters[gumpObj[selectedOne].theFunc.serial];
+				delete gumpObj[selectedOne];
+				Orion.SetGlobal("doCharRebuild", "true");
+				JSON_export("CharacterLibrary", charPack);
+			} else {
+				Debug("[CharacterLibrary_UpdateCharacter][Error] Not finding character to delete in gumpObj: " + selectedOne);
+			}
+		}
+	}
+	return gumpObj;
+}
+
+function CharacterLibrary_Add(serial, barObj) {
+	if (serial == "") {
+		Debug("[CharacterLibrary_Add][Error] Empty serial being passed in.");
+		return false;
+	} else {
+		var charPack = JSON_import("CharacterLibrary");
+		if (charPack == false) {
+			Debug("[CharacterLibrary_Add][Error] Empty JSON being loaded.");
+			return false;
+		}
+		if (serial in barObj.enemy.players && !(serial in charPack.characters)) {
+			var player = barObj.enemy.players[serial];
+			Debug("[CharacterLibrary_Add][Info] Adding character to Library: " + player.name);
+			tempGuild = ReturnGuild(player.properties);
+			if (tempGuild == false) return false;
+			charPack.characters[serial] = CharacterLibraryObject(player.name, player.serial, tempGuild);
+			JSON_export("CharacterLibrary", charPack);
+			Debug("[CharacterLibrary_Add][Info] Adding character to Library: " + player.name);
+			Orion.SetGlobal("doCharRebuild", "true");
+		} else {
+			Debug("[CharacterLibrary_Add][Error] Serial (" + serial + ") isn't in barobj or serial is already in the Character Library" + serial in charPack.characters);
+		}
+	}
+}
+
+function ReturnGuild(properties) {
+	var tempGuild = /\[(.*?)\]/.exec(properties);
+	if (tempGuild == null) return false;
+	tempGuild = tempGuild.length > 1 ? tempGuild[1] : "None";
+	tempGuild = tempGuild == "VvV" ? "None" : tempGuild;
+	return tempGuild;
+}
+
+function CharacterLibrary_Rebuild(gumpObj) {
+	Debug("[CharacterLibrary_Rebuild][Info] Rebuilding character library.");
+	var libPack = JSON_import("CharacterLibrary");
+	if (libPack == false) {
+		return gumpObj;
+	}
+	libPack.tagList = ["!All"];
+	Object.keys(libPack.characters).forEach(function (key) {
+		if (libPack.tagList.indexOf(libPack.characters[key].guild) == -1) {
+			libPack.tagList.push(libPack.characters[key].guild);
+		}
+	});
+	var tagFilterDrop = [];
+	Object.keys(libPack.tagList).forEach(function (key) {
+		tagFilterDrop.push([libPack.tagList[key], libPack.tagList[key]]);
+	});
+	tagFilterDrop.sort();
+	var tempName = "GuildFilter_Dropdown";
+	gumpObj[tempName].droplength = tagFilterDrop.length;
+	gumpObj[tempName].droplist = tagFilterDrop;
+	gumpObj[tempName].value = 0;
+
+	var tempX = 0;
+	var tempY = 5;
+	gumpObj.characterLib = {};
+	gumpObj.characterLib.global = true;
+	gumpObj.characterLib.value = [];
+	var tempArray = [];
+	Shared.RemoveArray("aliasArray_Serial");
+	Shared.RemoveArray("aliasArray_Name");
+	Object.keys(libPack.characters).forEach(function (key) {
+		tempArray.push(key);
+		if (libPack.characters[key].alias != "N/A" && libPack.characters[key].alias != false) {
+			var aliasArray = Shared.GetArray("aliasArray_Serial", false);
+			if (aliasArray == false) {
+				Shared.AddArray("aliasArray_Serial", [libPack.characters[key].serial]);
+				Shared.AddArray("aliasArray_Name", [libPack.characters[key].alias]);
+			} else {
+				var theIndex = aliasArray.indexOf(libPack.characters[key].serial);
+				if (theIndex == -1) {
+					aliasArray.push(libPack.characters[key].serial);
+					var aliasArray_name = Shared.GetArray("aliasArray_Name");
+					aliasArray_name.push(libPack.characters[key].alias);
+					Shared.AddArray("aliasArray_Serial", aliasArray);
+					Shared.AddArray("aliasArray_Name", aliasArray_name);
+				} else {
+					aliasArray_name[i] = libPack.characters[key].alias;
+					Shared.AddArray("aliasArray_Name", aliasArray_name);
+				}
+			}
+		}
+	});
+	tempArray.sort(function (a, b) {
+		if ("characters" in libPack && a in libPack.characters) {
+			var nameA = libPack.characters[a].name.toLowerCase(),
+				nameB = libPack.characters[b].name.toLowerCase();
+			if (nameA < nameB)
+				//sort string ascending
+				return -1;
+			if (nameA > nameB) return 1;
+			return 0; //default return value (no sorting)
+		} else {
+			Debug("[CharacterLibrary_Rebuild][Info] Something going wrong with the structure: " + a);
+			return 0; //default return value (no sorting)
+		}
+	});
+	var thePage = 16;
+	for (var i = 0; i < tempArray.length; i++) {
+		var theFunc = libPack.characters[tempArray[i]];
+		var tempName = "characterLib_" + tempArray[i];
+		gumpObj.characterLib.value.push(tempName);
+		if (tempName in gumpObj) {
+			Debug("[CharacterLibrary_Rebuild][Info] Object already exists in gumpObj, only updating: " + "characterLib_" + tempArray[i]);
+			var tempText = theFunc.alias == false ? theFunc.name : theFunc.name + " (" + theFunc.alias + ")";
+			gumpObj[tempName].text = tempText;
+			gumpObj[tempName].value = false;
+			gumpObj[tempName].theFunc = theFunc;
+			gumpObj[tempName].x = tempX;
+			gumpObj[tempName].y = tempY;
+			tempY += 30;
+		} else {
+			Debug("[CharacterLibrary_Rebuild][Info] Adding new object to gumpObj: " + tempName);
+			gumpObj[tempName] = GumpObject(theFunc.name, gumpObj.currentSerial.value++, "radio", tempX, tempY, false);
+			gumpObj[tempName].graphic = "checkbox_gold_x";
+			gumpObj[tempName].width = 125;
+			gumpObj[tempName].xOffset = 0;
+			var tempText = theFunc.alias == false ? theFunc.name : theFunc.name + " (" + theFunc.alias + ")";
+			gumpObj[tempName].text = tempText;
+			gumpObj[tempName].value = false;
+			gumpObj[tempName].color = color.whiteText;
+			gumpObj[tempName].parent = "CharacterList_Window";
+			gumpObj[tempName].parentPage = thePage;
+			gumpObj[tempName].theFunc = theFunc;
+			gumpObj[tempName].dynamicAdd = false;
+			tempY += 30;
+		}
+	}
+	return gumpObj;
+}
+
+function DrawTest() {
+	while (true) {
+		var theObj = {};
+		var friendCodeRef = [];
+		theObj.hits = Player.Hits();
+		theObj.maxhits = Player.MaxHits();
+		theObj.poisoned = Player.Poisoned();
+		theObj.serial = Player.Serial();
+		theObj.name = Player.Name();
+		theObj.position = 0;
+		theObj.refKey = 0;
+		friendCodeRef.push([0, Player.Serial(), "friend"]);
+
+		DrawCharacterBar(theObj, { x: 500, y: 500 });
+		theObj.serial = Player.Serial();
+		theObj.position = 1;
+		theObj.hits = Player.MaxHits() - Player.Hits();
+		theObj.name = "Who Knows";
+		theObj.refKey = 100;
+
+		friendCodeRef.push([100, Player.Serial(), "friend"]);
+		Shared.AddArray("friendCodeRef", friendCodeRef);
+
+		DrawCharacterBar(theObj, { x: 500, y: 500 });
+
+		Orion.Wait(600);
+	}
+}
+
+function ClearBars() {
+	Orion.SetGlobal("BarClear", "true");
+}
+function ToggleAutoBars() {
+	if (Orion.GetGlobal("doPullbars") == "true") {
+		Orion.SetGlobal("BarClear", "true");
+		Orion.SetGlobal("killBars", "true");
+		Orion.SetGlobal("doPullbars", "false");
+	} else {
+		Orion.SetGlobal("doPullbars", "true");
+		Orion.RegWrite(Player.Serial() + "/Auto Bar Pulling", 1);
+		Orion.Print("Starting Auto Bars.");
+		Orion.Exec("AutoBarPopulate", true);
+	}
+}
+
+function AutoBarPopulate() {
+	//Handling if the script should be running or not
+	var prefix = Player.Serial();
+	if (Orion.RegRead(prefix + "/Auto Bar Pulling") == 0) {
+		Orion.SetGlobal("BarClear", "true");
+	} else {
+		if (!Orion.ScriptRunning("AutoBarPopulate")) {
+			Orion.Exec("AutoBarPopulate", true);
+		}
+	}
+	//Setting global variables
+	var players = [Player.Serial()];
+
+	var offsetPlayersX = 30;
+	var offsetPlayersY = 530;
+
+	var pullbarsActive = Orion.GetGlobal("doPullbars") == "true" ? true : false;
+	var doOld = Orion.GetGlobal("doUseOldBars") == "true" ? true : false;
+	var ogFriendsX = Number(Orion.GetGlobal("pb_friend_x"));
+	var ogFriendsY = Number(Orion.GetGlobal("pb_friend_y"));
+	var offsetFriendsX = Number(Orion.GetGlobal("pb_friend_x"));
+	var offsetFriendsY = Number(Orion.GetGlobal("pb_friend_y"));
+	var numFriends = 0;
+
+	var offsetEnemiesX = Number(Orion.GetGlobal("pb_enemy_x"));
+	var offsetEnemiesY = Number(Orion.GetGlobal("pb_enemy_y"));
+	var ogEnemiesX = Number(Orion.GetGlobal("pb_enemy_x"));
+	var ogEnemiesY = Number(Orion.GetGlobal("pb_enemy_y"));
+	var numEnemies = 0;
+	var doSallos = Orion.GetGlobal("doSallosSpacing") == "true" ? true : false;
+	var stepY = doSallos ? 40 : 60; //60 for standard bars, 40 for Sallos
+	var stepX = doSallos ? 130 : 153; //153 for classic, 130 sallos
+	var barsperrow = Number(Orion.GetGlobal("pb_barsper"));
+
+	//Initializing variables
+	var mobArr = [];
+	var popArr = [];
+	var guildArr = [];
+	var guildpopArr = [];
+	Orion.SetGlobal("BarClear", "false");
+	Orion.SetGlobal("killBars", "false");
+
+	while (doOld && pullbarsActive) {
+		pullbarsActive = Orion.GetGlobal("doPullbars") == "true" ? true : false;
+		Debug("[AutoBarPopulate][Trace] pullbarsActive after while call: " + pullbarsActive);
+		mobArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|ignorefriends|human", 25, "gray|orange");
+		guildArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|ignorefriends|human", 25, "green");
+		fullArr = Orion.FindType("-1", "-1", ground, "live|ignoreself|human", 25);
+		var friends = Orion.GetFriendList();
+		var enemies = Orion.GetEnemyList();
+		for (var i = 0; i < friends.length; i++) {
+			if (fullArr.indexOf(friends[i]) != -1 && guildpopArr.indexOf(friends[i]) == -1 && Orion.FindObject(friends[i]) && Orion.FindObject(friends[i]).Name().length > 1) {
+				//Orion.Print(offsetFriendsX + " | " + offsetFriendsY);
+				Orion.ShowStatusbar(friends[i], offsetFriendsX, offsetFriendsY);
+				guildpopArr.push(friends[i]);
+				numFriends++;
+				if (numFriends % barsperrow == 0) {
+					offsetFriendsY = ogFriendsY;
+					offsetFriendsX += -1 * stepX;
+				} else {
+					offsetFriendsY += stepY;
+				}
+			}
+		}
+		for (var i = 0; i < guildArr.length; i++) {
+			if (guildpopArr.indexOf(guildArr[i]) == -1 && Orion.FindObject(guildArr[i]) && Orion.FindObject(guildArr[i]).Name().length > 1) {
+				//Orion.Print(offsetFriendsX + " | " + offsetFriendsY);
+				Orion.ShowStatusbar(guildArr[i], offsetFriendsX, offsetFriendsY);
+				guildpopArr.push(guildArr[i]);
+				numFriends++;
+				if (numFriends % barsperrow == 0) {
+					offsetFriendsY = ogFriendsY;
+					offsetFriendsX += -1 * stepX;
+				} else {
+					offsetFriendsY += stepY;
+				}
+			}
+		}
+		for (var i = 0; i < mobArr.length; i++) {
+			if (popArr.indexOf(mobArr[i]) == -1 && Orion.FindObject(mobArr[i]) && Orion.FindObject(mobArr[i]).Name().length > 1) {
+				Orion.ShowStatusbar(mobArr[i], offsetEnemiesX, offsetEnemiesY);
+				popArr.push(mobArr[i]);
+				numEnemies++;
+				if (numEnemies % barsperrow == 0) {
+					offsetEnemiesY = ogEnemiesY;
+					offsetEnemiesX += stepX;
+				} else {
+					offsetEnemiesY += stepY;
+				}
+			}
+		}
+		for (var i = 0; i < enemies.length; i++) {
+			if (fullArr.indexOf(enemies[i]) != -1 && popArr.indexOf(enemies[i]) == -1 && Orion.FindObject(enemies[i]) && Orion.FindObject(enemies[i]).Name().length > 1) {
+				Orion.ShowStatusbar(enemies[i], offsetEnemiesX, offsetEnemiesY);
+				popArr.push(enemies[i]);
+				numEnemies++;
+				if (numEnemies % barsperrow == 0) {
+					offsetEnemiesY = ogEnemiesY;
+					offsetEnemiesX += stepX;
+				} else {
+					offsetEnemiesY += stepY;
+				}
+			}
+		}
+		if (Orion.GetGlobal("BarClear") == "true") {
+			for (var i = 0; i < popArr.length; i++) {
+				Orion.CloseStatusbar(popArr[i]);
+			}
+			popArr = [];
+			for (var i = 0; i < guildpopArr.length; i++) {
+				Orion.CloseStatusbar(guildpopArr[i]);
+			}
+			guildpopArr = [];
+			Orion.SetGlobal("BarClear", "false");
+			if (Orion.GetGlobal("killBars") == "true") {
+				Orion.SetGlobal("doPullbars", 0);
+				Orion.RegWrite(Player.Serial() + "/Auto Bar Pulling", 0);
+				Orion.Print("Stopping Auto Bars.");
+				Orion.SetGlobal("killBars", "false");
+			}
+			var offsetFriendsX = Number(Orion.GetGlobal("pb_friend_x"));
+			var offsetFriendsY = Number(Orion.GetGlobal("pb_friend_y"));
+			var offsetEnemiesX = Number(Orion.GetGlobal("pb_enemy_x"));
+			var offsetEnemiesY = Number(Orion.GetGlobal("pb_enemy_y"));
+		}
+		Orion.Wait(1000);
+	}
+}

@@ -1,0 +1,258 @@
+function CurrTarGump(name, serial) {
+	var doCTGump = Orion.GetGlobal("doCTGump") == "true" ? true : false;
+	var doCTScan = Orion.GetGlobal("doCTScan") == "true" ? true : false;
+	var doNewBar = Orion.GetGlobal("doPullbars") == "true" ? true : false;
+	//Checking to see if CT is active or not
+	if (!doCTGump || doNewBar) {
+		return false;
+	}
+	//Variable Initializaing
+	var healthupdate = false;
+	//Doing some error checking/validation
+	if (name != null) {
+		Orion.SetGlobal("CTname", name);
+	}
+	if (serial != null) {
+		Orion.SetGlobal("CTserial", serial);
+	}
+	if (name == null && serial == null) {
+		if (Orion.FindObject(Orion.GetGlobal("CTserial"))) {
+			serial = Orion.FindObject(Orion.GetGlobal("CTserial")).Serial();
+			name = Orion.FindObject(Orion.GetGlobal("CTserial")).Name();
+			healthupdate = true;
+		} else {
+			serial = 0;
+			name = Orion.GetGlobal("CTname");
+		}
+	}
+	LTGump = Orion.CreateCustomGump(666);
+	if (!healthupdate && doCTGump) {
+		var background = gumpGraphic[Orion.GetGlobal("CTBackground")].graphic;
+		X = parseInt(Orion.RegRead(Player.Serial() + "/CTX"));
+		Y = parseInt(Orion.RegRead(Player.Serial() + "/CTY"));
+		Debug("[CurrTarGump][Info] CT Gump Position: " + X + "/" + Y);
+		//Orion.Print(Orion.RegRead(Player.Name()+"/CTX")+ " " + Orion.RegRead(Player.Name()+"/CTY"));
+		LTGump.Clear();
+		LTGump.AddResizepic(0, 0, background, 175, 55);
+		//LTGump.AddResizepic(0, 0, '13BE', 150, 50);
+		LTGump.SetX(X);
+		LTGump.SetY(Y);
+		serial = Orion.FindObject(serial);
+		//Handling if you've seen your LT to the group
+		if (Orion.GetGlobal("SentSerial")) {
+			theSent = Orion.FindObject(Orion.GetGlobal("SentSerial"));
+			theLT = Orion.FindObject("lasttarget");
+			//Orion.Print(theSent.Serial() + " " +  theLT.Serial())
+			if (theSent && theLT && theSent.Serial() == theLT.Serial()) {
+				LTGump.AddGumpPic(8, 20, "0x939", 0);
+			} else {
+				LTGump.AddGumpPic(8, 20, "0x938", 0);
+			}
+		}
+		//Orion.Print(serial);
+		if (serial != null) {
+			//LTGump.AddText(5,5,'0',"<basefont color='green',face='UO_Arial_40pt'>"+name,1000);
+			LTGump.AddText(22, 5, "0x0048", serial.Name());
+			hitper = ((serial.Hits() + 0.00000001) / serial.MaxHits()) * 100;
+			LTGump.AddText(22, 25, "0x0048", hitper.toFixed(0) + "%");
+			if (!Orion.HaveTarget() && doCTScan) {
+				Orion.OpenPaperdoll(serial.Serial());
+				Orion.Wait(300);
+				//Orion.MovePaperdoll(serial.Serial(), 500, 500);
+				Orion.ClosePaperdoll(serial.Serial());
+			}
+		} else {
+			LTGump.AddText(22, 5, "0x0048", name);
+			LTGump.AddText(22, 25, "0x0048", "N/A");
+		}
+		//This section handles the weakest resist / decimal
+		//Opening paperdoll to get suit information
+
+		thestats = ResistStatEval(serial);
+		lowesti = 4;
+		lowdci = false;
+		for (var i = 4; i < thestats.length; i++) {
+			//Orion.Print(thestats[i][0] + ': ' + thestats[i][1] + " | " + thestats[i][2])
+			if (thestats[i][0] != "Max Defense Chance Increase" && thestats[i][0] != "Defense Chance Increase") {
+				if (thestats[i][1] < thestats[lowesti][1]) {
+					lowesti = i;
+				}
+			} else if (thestats[i][0] == "Max Defense Chance Increase" && thestats[i - 1][1] < thestats[i][2]) {
+				lowdci = true;
+			}
+		}
+		var lowtext = "";
+		if (thestats[lowesti][1] < thestats[lowesti][2]) {
+			lowtext = thestats[lowesti][0][0] + thestats[lowesti][0][1] + thestats[lowesti][0][2] + thestats[lowesti][0][3];
+		} else if (lowdci) {
+			lowtext = "DCI-";
+		} else {
+			lowtext = null;
+		}
+		if (thestats[lowesti][1] == 0) {
+			lowtext = null;
+		}
+		//Update the gump graphic
+		lowicon = "";
+		if (lowtext != null) {
+			//Orion.Print(lowtext);
+			switch (lowtext) {
+				case "DCI-":
+					//0x9BA6
+					lowicon = 0x9ba6;
+					break;
+				case "Phys":
+					//0x9B8E
+					lowicon = 0x9b8e;
+					break;
+				case "Fire":
+					//0x759B or 0x7611
+					lowicon = 0x7611;
+					break;
+				case "Cold":
+					//0x7595
+					lowicon = 0x7595;
+					break;
+				case "Pois":
+					lowicon = 0x75fe;
+					//0x75FE
+					break;
+				case "Ener":
+					//0x9B8B
+					lowicon = 0x9bd3;
+					break;
+			}
+			//LTGump.AddGumpPic(145, 30, lowicon, 0,0,0,20,20);
+			//LTGump.AddText(145, 30, '0xFFFE', '<img src="gump:'+lowicon+' width=20 height=20>');
+			if (lowicon != "") {
+				concatstring = '<img src="gump:' + lowicon + '" width=20 height=20>';
+				LTGump.AddText(148, 15, "0x9B8E", concatstring);
+			}
+		} else {
+			//grey circle = 0x768;
+			lowicon = 0x93a;
+			LTGump.AddGumpPic(155, 20, lowicon, 0);
+		}
+
+		tooltipit = "Stats Overview:\n";
+		for (var i = 1; i < thestats.length; i++) {
+			if (thestats[i][0] == "Max Defense Chance Increase") {
+				thestats[i][0] = "Defense Chance Increase";
+				tooltipit += thestats[i][0] + ": " + thestats[i - 1][1] + " / " + thestats[i][1] + "\n";
+			} else if (thestats[i][0] != "Defense Chance Increase") {
+				tooltipit += thestats[i][0] + ": " + thestats[i][1] + " / " + thestats[i][2] + "\n";
+			}
+		}
+		LTGump.AddTooltip(tooltipit);
+		LTGump.Update();
+	} else if (healthupdate) {
+		if (serial != 0) {
+			//LTGump.AddText(5,5,'0',"<basefont color='green',face='UO_Arial_40pt'>"+name,1000);
+			serial = Orion.FindObject(serial);
+			LTGump.AddText(22, 5, "0x0048", serial.Name());
+			hitper = ((serial.Hits() + 0.00000001) / serial.MaxHits()) * 100;
+			LTGump.AddText(22, 25, "0x0048", hitper.toFixed(0) + "%");
+		} else {
+			LTGump.AddText(22, 5, "0x0048", name);
+			LTGump.AddText(22, 25, "0x0048", "N/A");
+		}
+		LTGump.Update();
+	}
+	if (doCTGump != true) {
+		LTGump = Orion.CreateCustomGump(666);
+		Orion.Terminate("UpdateCTGump");
+		LTGump.Close();
+	} else {
+		Orion.Exec("UpdateCTGump", true);
+	}
+}
+
+function UpdateCTGump() {
+	var ctupdatedelay = 1000;
+	while (Orion.GetGlobal("CTGumpActive") == "true") {
+		//Save current gump positions
+		var pos = Orion.GetGumpPosition("custom", 666);
+		if (pos.X() != -1) {
+			Debug("[UpdateCTGump][Info] Custom gump now at: " + pos.X() + " " + pos.Y());
+			Orion.RegWrite(Player.Serial() + "/CTX", pos.X());
+			Orion.RegWrite(Player.Serial() + "/CTY", pos.Y());
+			for (var i = 0; i < defaultvars.length; i++) {
+				if (defaultvars[i][0] == "CTX") {
+					theindex = i;
+					break;
+				}
+			}
+		}
+		Orion.Wait(ctupdatedelay);
+	}
+	if (Orion.GetGlobal("CTGumpActive") == "false") {
+		LTGump = Orion.CreateCustomGump(666);
+		LTGump.Close();
+	}
+}
+
+function ResistStatEval(charobj) {
+	stats = [
+		0,
+		["Mana Regeneration", 0, 30],
+		["Hit Point Regeneration", 0, 18],
+		["Hit Point Increase", 0, 25],
+		["Physical Resist", 0, 70],
+		["Fire Resist", 0, 70],
+		["Cold Resist", 0, 70],
+		["Poison Resist", 0, 70],
+		["Energy Resist", 0, 70],
+		["Defense Chance Increase", 0, 45, 0],
+		["Max Defense Chance Increase", 45, 45, 1],
+	];
+	//charobj = Orion.FindObject(0x030833F8);
+	if (charobj) {
+		for (var i = 0; i < 35; i++) {
+			if (Orion.ObjAtLayer(i, charobj.Serial())) {
+				var theobj = Orion.ObjAtLayer(i, charobj.Serial());
+				var properties = theobj.Properties();
+				for (var j = 1; j < stats.length; j++) {
+					if (Orion.Contains(theobj.Properties(), stats[j][0])) {
+						//Looking for and adding the stat
+						patt = new RegExp(stats[j][0] + " (\\d+)");
+						var matches = patt.exec(properties);
+						if (matches && matches.length > 0) {
+							stats[j][1] += Number(matches[1]);
+						}
+						//Looking for any + Modifiers
+						patt = new RegExp(stats[j][0] + " (\\d+)% / +");
+						var matches = patt.exec(properties);
+						if (matches && matches.length > 0) {
+							theobj.Name();
+							stats[j][2] += 1;
+						}
+						//Looking for any - modifiers
+						patt = new RegExp(stats[j][0] + " (\\d+)% / -");
+						var matches = patt.exec(properties);
+						if (matches && matches.length > 0) {
+							stats[j][2] += -1;
+						}
+						//Handling Max Defense chance - modifier
+						patt = new RegExp(stats[j][0] + " -(\\d+)%");
+						var matches = patt.exec(properties);
+						if (matches && matches.length > 0 && stats[j][3] == 1) {
+							//Orion.Print(theobj.Name());
+							stats[j][1] += -1;
+						}
+						//Handling Max Defense chance + modifiers
+						patt = new RegExp(stats[j][0] + " +(\\d+)%");
+						var matches = patt.exec(properties);
+						if (matches && matches.length > 0 && stats[j][3] == 1) {
+							//Orion.Print(stats[j][0])
+							stats[j][1] += 1;
+						}
+					}
+				}
+			}
+		}
+	}
+	//for(var j = 1;j<stats.length;j++){
+	//  Orion.Print(stats[j][0] + ": " + stats[j][1]);
+	//}
+	return stats;
+}

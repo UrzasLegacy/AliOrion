@@ -1,0 +1,179 @@
+function WeaponRangeCheck() {
+	var rhWep = Orion.ObjAtLayer("RightHand");
+	if (rhWep != null && Orion.Contains(rhWep.Properties(), "Range")) {
+		var matches = /Range (\d+)/.exec(rhWep.Properties());
+		return parseInt(matches[1]);
+	} else {
+		return false;
+	}
+}
+
+function enemy_isPlayer(serial) {
+	var doOJPlus = true; //Want to call players other than OJ's/red enemies
+	var ojPlus = doOJPlus ? 0 : 2;
+	var obj = Orion.FindObject(serial);
+	if (obj != null) {
+		if (obj.Notoriety() > ojPlus && obj.Notoriety() < 7 && obj.IsHuman()) {
+			return true;
+		} else return false;
+	} else return false;
+}
+
+function enemy_hasWeapon(serial) {
+	var lHand = Orion.ObjAtLayer("LeftHand", serial);
+	var rHand = Orion.ObjAtLayer("RightHand", serial);
+	if (Orion.Contains(lHand && lHand.Properties(), "Weapon")) {
+		return true;
+	} else if (Orion.Contains(rHand && rHand.Properties(), "Weapon")) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function enemy_hasShield(serial) {
+	var lHand = Orion.ObjAtLayer("2", serial);
+	if (lHand == null) {
+		return false;
+	} else if (!Orion.Contains(lHand.Properties(), "Durability")) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+//Checks for damaged equipment, drops it to pack if its below passed in amount
+function DamageDropCheck(mindur) {
+	var dmgcheck = Orion.InJournal("Your equipment is severely", "self", "0", "any", Orion.Now() - 10000, Orion.Now() + 2000);
+	if (dmgcheck) {
+		for (var i = 1; i < 32; i++) {
+			if (Orion.ObjAtLayer(i)) {
+				var theobj = Orion.ObjAtLayer(i);
+				var properties = theobj.Properties();
+				if (!Orion.Contains(theobj.Properties(), "Durability")) {
+					//Orion.Print('-')
+					Orion.Wait(10);
+				} else {
+					var matches = /Durability (\d+)\s\/\s(\d+)/.exec(properties);
+					if (matches.length > 2 && Number(matches[1]) < mindur) {
+						Orion.Print(theobj.Layer() + ": " + matches[1] + " / " + matches[2]);
+						Orion.Wait(1100);
+						Orion.MoveItem(theobj.Serial());
+					}
+				}
+			}
+		}
+	}
+	Orion.SetTimer("DmgCheckTimer", -10000);
+}
+
+function DurabilityDrop(mindur) {
+	layers = [0, "RightHand", "LeftHand", "Shoes", "Pants", "Shirt", "Helmet", "Gloves", "Ring", "Talisman", "Necklace", "Hair", "Waist", "InnerTorso", "Bracelet", "Face", "Beard", "MidTorso", "Earrings", "Arms", "Cloak", "Backpack", "Robe", "Eggs", "Legs"];
+
+	var lowestItem = [];
+	lowestItem[0] = null;
+	for (var i = 1; i < 32; i++) {
+		if (Orion.ObjAtLayer(i)) {
+			var theobj = Orion.ObjAtLayer(i);
+			var properties = theobj.Properties();
+			if (!Orion.Contains(theobj.Properties(), "Durability")) {
+				//Orion.Print('-')
+				Orion.Wait(10);
+			} else {
+				var matches = /Durability (\d+)\s\/\s(\d+)/.exec(properties);
+				if (matches.length > 2 && Number(matches[1]) < mindur && Orion.GetGlobal("doDmgDrop") == 1) {
+					//Orion.Print(theobj.Layer() + ": " +matches[1] + " / " +matches[2])
+					Orion.Wait(1200);
+					Orion.MoveItem(theobj.Serial());
+					Orion.SetGlobal("ForceDrop", "true");
+				}
+				if (lowestItem[0] == null) {
+					lowestItem[0] = Number(matches[1]);
+					lowestItem[1] = layers[theobj.Layer()];
+					lowestItem[2] = Number(matches[2]);
+				} else if (Number(matches[1]) < lowestItem[0]) {
+					lowestItem[0] = Number(matches[1]);
+					lowestItem[1] = layers[theobj.Layer()];
+					lowestItem[2] = Number(matches[2]);
+				}
+			}
+		}
+	}
+	return lowestItem;
+}
+
+function Durability() {
+	mindur = 100; //Durability to alert you at.
+
+	layers = [0, "RightHand", "LeftHand", "Shoes", "Pants", "Shirt", "Helmet", "Gloves", "Ring", "Talisman", "Necklace", "Hair", "Waist", "InnerTorso", "Bracelet", "Face", "Beard", "MidTorso", "Earrings", "Arms", "Cloak", "Backpack", "Robe", "Eggs", "Legs"];
+	Orion.Print("Minimum Durability set at: " + mindur);
+	var tempDur = 3000;
+	for (var i = 1; i < layers.length; i++) {
+		if (Orion.ObjAtLayer(i)) {
+			var theobj = Orion.ObjAtLayer(i);
+			var properties = theobj.Properties();
+			if (!Orion.Contains(theobj.Properties(), "Durability")) {
+				//Orion.Print('-')
+				Orion.Wait(10);
+			} else {
+				var matches = /Durability (\d+)\s\/\s(\d+)/.exec(properties);
+				if (matches.length > 2 && Number(matches[1]) < mindur) {
+					Orion.Print(layers[theobj.Layer()] + ": " + matches[1] + " / " + matches[2]);
+				}
+				if (matches.length > 2 && parseInt(matches[1]) < tempDur) {
+					tempDur = parseInt(matches[1]);
+				}
+			}
+		}
+	}
+	return tempDur;
+}
+
+function CheckGold() {
+	Orion.RequestContextMenu(Player.Serial());
+	Orion.WaitContextMenuID(Player.Serial(), 416);
+	Orion.WaitForGump(5000);
+	var insuregumpid = 0x000f3e9f;
+	var insureGump = GumpByID(insuregumpid);
+	if (insureGump !== false && insureGump !== null && insureGump.ID() === "0x000F3E9F") {
+		//Orion.Print("Gold:" + insureGump.TextList()[0]);
+		var gold = insureGump.TextList()[0];
+		var sendGold = [];
+		sendGold[0] = gold;
+		sendGold[2] = insureGump.TextList()[2];
+		while (GumpByID(insuregumpid) != false) {
+			var temp = GumpByID(insuregumpid);
+			if (temp != false) {
+				Orion.CloseGump("generic", insureGump.Serial());
+				Orion.Wait(500);
+			}
+		}
+		var goldsplit = gold.split(",");
+		goldnew = "";
+		for (var i = 0; i < goldsplit.length; i++) {
+			goldnew += goldsplit[i];
+		}
+		sendGold[1] = goldnew;
+		if (Number(goldnew) < 50000) {
+			//Orion.Print(goldnew);
+			Orion.CloseUO();
+		}
+		return sendGold;
+	} else {
+		return false;
+	}
+}
+
+function ItemTotal() {
+	Orion.WaitForAddObject("itemTest");
+	var box = Orion.FindObject("itemTest");
+	var items = Orion.FindTypeEx("-1", "-1", box.Serial());
+	Orion.Print(items.length);
+}
+
+function CheckHidden() {
+	while (!Player.Hidden()) {
+		Orion.UseSkill("Hiding");
+		Orion.Wait(2000);
+	}
+}

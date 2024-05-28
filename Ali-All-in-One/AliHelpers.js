@@ -788,6 +788,37 @@ function SetAvoidRadius(mobSerial,range)
         }
     }
 
+    function AvoidTile(x,y)
+    {
+    Orion.SetBadLocation(x,y);
+    Orion.AddFakeMapObject(Orion.Random(100000,1000000), '0x051A', 32, x, y, 0);
+    }
+
+function AvoidRectangle(x1,y1,x2,y2,borderOnly)
+    {
+    if(borderOnly === undefined) borderOnly = true
+    var tiles = Orion.GetTilesInRect('land', x1, y1, x2, y2).filter(function(tile) 
+        {
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        if(borderOnly)
+	        return (x1 == tileX)
+	               || (x2 == tileX)
+	               || (y1 == tileY)
+	               || (y2 == tileY);
+        return true
+        });
+    for(var i=0,len=tiles.length;i<len;i++)
+        {
+        var tile = tiles[i];
+        var tileX = tile.X();
+        var tileY = tile.Y();
+        var tileZ = tile.Z();
+        Orion.SetBadLocation(tileX,tileY);
+        Orion.AddFakeMapObject(i + 30000, '0x051A', 32, tileX, tileY, tileZ);
+        }
+    }
+    
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
     {
     if(z === undefined) z = 0;

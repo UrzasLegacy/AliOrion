@@ -26,7 +26,6 @@ function BandieBot()
                 Orion.UseObject(backpack);
                 Orion.Wait(1300);
                 }
-
 			var bandies = Orion.FindType('0x0E21')[0];
             if(!bandies)
                 {

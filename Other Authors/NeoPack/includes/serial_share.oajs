@@ -1,0 +1,306 @@
+function CatchSerial() {
+	if (Orion.GetGlobal("doCatch") == "true") {
+		if (Orion.GetGlobal("catchType") == "CatchSerial_old") {
+			Orion.Exec("CatchSerial_old", true);
+			if (Orion.ScriptRunning("CatchSerial_new")) {
+				Orion.Terminate("CatchSerial_new");
+			}
+		} else if (Orion.GetGlobal("catchType") == "CatchSerial_new") {
+			Orion.Exec("CatchSerial_new", true);
+			if (Orion.ScriptRunning("CatchSerial_old")) {
+				Orion.Terminate("CatchSerial_old");
+			}
+		}
+	}
+}
+
+function CatchSerial_new() {
+	Orion.ClearHighlightCharacters(true);
+	while (Orion.GetGlobal("doCatch") == "true") {
+		var triggerBit = ",a|/p|v/";
+		var caught = Orion.WaitJournal(triggerBit, Orion.Now(), 0, 0, 0, "0x03B2");
+		var caughtobj = caught;
+		var highlightLTcolor = Orion.GetGlobal("targetHighlightColor");
+		var highlightcallercolor = Orion.GetGlobal("callerHighlightColor");
+		var highlightcaller = Orion.GetGlobal("doCallerHighlight") == "true" ? true : false;
+		if (highlightLTcolor.length < 2) {
+			highlightLTcolor = 1152;
+		}
+		if (highlightcallercolor.length < 2) {
+			highlightcallercolor = 1153;
+		}
+		//Orion.Print(caught.Text());
+		if (caught != null) {
+			caught = caught.Text();
+			//Have to add the +1 due to leading guildsay character (i'm betting)
+			var Ser1 = [caught[caught.indexOf("~") + 1], 20 + 1];
+			var Ser2 = [caught[caught.indexOf("c") + 1], 16 + 1];
+			var Ser3 = [caught[caught.indexOf("r") + 1], 23 + 1];
+			if (Ser1[0] <= 0 || Ser2[0] <= 0 || Ser3[0] <= 0) {
+				Orion.Print("Not finding flagging bits." + caught.indexOf("~") + caught.indexOf("c") + caught.indexOf("r"));
+				attacktar = false;
+			} else {
+				attacktar = true;
+			}
+			attacktar = true;
+			caught = FindCaught(Ser1, Ser2, Ser3, caught);
+			//Orion.Print(caught);
+			if (caughtobj && Orion.GetFriendList().indexOf(caughtobj.Serial()) == -1) {
+				Orion.Print("Friend not found.");
+				attacktar = false;
+				highlightcaller = false;
+			}
+			if (attacktar && caught != false) {
+				Orion.ClientLastTarget(caught);
+				Orion.SetGlobal("LTCaught", caught);
+				if (Orion.FindObject(caught)) {
+					caughtthing = Orion.FindObject(caught);
+					Orion.CharPrint(Player.Serial(), "48", "Target:[" + caughtthing.Name() + "]");
+					Orion.SetGlobal("SentSerial", caughtthing.Serial());
+					CurrTarGump(caughtthing.Name(), caughtthing.Serial());
+				} else {
+					CurrTarGump("N/A", 0);
+				}
+				Orion.RemoveHighlightCharacter(Orion.GetGlobal("LTHighlight"), true);
+				if (Orion.GetGlobal("LeadHighlight") == Number(Orion.GetGlobal("LTHighlight"))) {
+					Orion.AddHighlightCharacter(Orion.GetGlobal("LeadHighlight"), highlightcallercolor, true);
+				}
+				Orion.SetGlobal("LTHighlight", caught);
+				Orion.AddHighlightCharacter(caught, highlightLTcolor, true);
+
+				if (highlightcaller && caughtobj.Serial() != Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caughtobj.Serial());
+					Orion.AddHighlightCharacter(caughtobj.Serial(), highlightcallercolor, true);
+				} else if (highlightcaller && caughtobj.Serial() == Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caughtobj.Serial());
+				}
+				if (!highlightcaller) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+				}
+				Orion.SetGlobal("attackdelaytar", caught);
+			} else if (caught != false) {
+				if (highlightcaller && caughtobj.Serial() != Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caught);
+					Orion.AddHighlightCharacter(caught, highlightcallercolor, true);
+				}
+			}
+			//1161 = Blaze fire, 1153 = white,Glacial=1152
+		}
+		Orion.Wait(500);
+	}
+}
+
+function FindCaught(bit1, bit2, bit3, caught) {
+	var allObj = Orion.FindType("-1", "-1", "ground", "mobile|ignoreself", 25, "");
+	//Orion.Print("Caught" + bit1[0] +bit2[0] + bit3[0])
+	for (var i = 0; i < allObj.length; i++) {
+		var currSerial = allObj[i];
+		//Orion.Print(currSerial[bit1[0]] + "==" + caught[bit1[1]] +"|"+ currSerial[bit2[0]] + "==" +  caught[bit2[1]] +"|"+ currSerial[bit3[0]] + "==" +  caught[bit3[1]])
+		if (currSerial[bit1[0]] == caught[bit1[1]] && currSerial[bit2[0]] == caught[bit2[1]] && currSerial[bit3[0]] == caught[bit3[1]]) {
+			return currSerial;
+		}
+	}
+	return false;
+}
+
+function CatchSerial_old() {
+	highlightcaller = true;
+	highlightcallercolor = "1092";
+	highlightLTcolor = "1152";
+
+	Orion.ClearHighlightCharacters(true);
+	while (Orion.GetGlobal("doCatch") == "true") {
+		var caught = Orion.WaitJournal("R;", Orion.Now(), 0, 0, 0, "0x03B2");
+		var caughtobj = caught;
+		var highlightLTcolor = Orion.GetGlobal("targetHighlightColor");
+		var highlightcallercolor = Orion.GetGlobal("callerHighlightColor");
+		var highlightcaller = Orion.GetGlobal("doCallerHighlight") == "true" ? true : false;
+		//Orion.Print(caughtobj.Serial());
+		//oldcaught = Orion.GetGlobal("CaughtSerial");
+		//Orion.RemoveHighlightCharacter(oldcaught,true);
+		if (caught != null) {
+			caught = caught.Text();
+			caught = caught.split(";");
+			if (caught[1] == "F1") {
+				caught = caught[2];
+				attacktar = "false";
+				//Orion.Print("in here");
+			} else {
+				caughtname = caught[2];
+				caught = caught[1];
+				attacktar = "true";
+			}
+			caught = Number(caught);
+			//caught = caught / 14;
+			if (caughtobj && Orion.GetFriendList().indexOf(caughtobj.Serial()) == -1) {
+				Orion.Print("Friend not found.");
+				attacktar = "false";
+				highlightcaller = false;
+			}
+
+			if (attacktar == "true") {
+				Orion.ClientLastTarget(caught);
+				Orion.SetGlobal("LTCaught", caught);
+				if (Orion.FindObject(caught)) {
+					caughtthing = Orion.FindObject(caught);
+					Orion.CharPrint(Player.Serial(), "48", "Target:[" + caughtthing.Name() + "]");
+					Orion.SetGlobal("SentSerial", caughtthing.Serial());
+					CurrTarGump(caughtthing.Name(), caughtthing.Serial());
+				} else {
+					CurrTarGump(caughtname, 0);
+				}
+				//Orion.TargetSystemSerial(caught);
+				Orion.RemoveHighlightCharacter(Orion.GetGlobal("LTHighlight"), true);
+				if (Orion.GetGlobal("LeadHighlight") == Number(Orion.GetGlobal("LTHighlight"))) {
+					Orion.AddHighlightCharacter(Orion.GetGlobal("LeadHighlight"), highlightcallercolor, true);
+				}
+				Orion.SetGlobal("LTHighlight", caught);
+				//Orion.ClearHighlightCharacters();
+				Orion.AddHighlightCharacter(caught, highlightLTcolor, true);
+
+				if (highlightcaller && caughtobj.Serial() != Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caughtobj.Serial());
+					Orion.AddHighlightCharacter(caughtobj.Serial(), highlightcallercolor, true);
+				} else if (highlightcaller && caughtobj.Serial() == Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caughtobj.Serial());
+				}
+				if (!highlightcaller) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+				}
+				Orion.SetGlobal("attackdelaytar", caught);
+				Orion.Exec("AttackDelay", true);
+				//Orion.AddDisplayTimer(101,30000, 'Top', 'Rectangle|Bar', nameit, 0, 0, '0xFFFF', 4, 'green');
+			} else {
+				if (highlightcaller && caughtobj.Serial() != Player.Serial()) {
+					Orion.RemoveHighlightCharacter(Orion.GetGlobal("LeadHighlight"), true);
+					Orion.SetGlobal("LeadHighlight", caught);
+					Orion.AddHighlightCharacter(caught, highlightcallercolor, true);
+				}
+			}
+			//1161 = Blaze fire, 1153 = white,Glacial=1152
+
+			//Orion.Print(Orion.GetGlobal("CaughtSerial"));
+		}
+		Orion.Wait(500);
+	}
+}
+
+function SendSerial_new() {
+	//0x030833F8
+	var fullLength = 25;
+	var infoLength = 15;
+	var triggerBit = [",a", "/p", "v/"];
+	var bitOne = "~";
+	var bitIndex1 = null;
+	var bitTwo = "c";
+	var bitIndex2 = null;
+	var bitThree = "r";
+	var bitIndex3 = null;
+	var minSerial = 3;
+	var maxSerial = 9;
+	var bitPos1 = 20;
+	var bitPos2 = 16;
+	var bitPos3 = 23;
+	var random = ["`", "R", "N", "G", "s", ".", "x", "z", "t", "Z", "X", "g", "V", "B", "@", "?", "#", "a", "b", "d", "f", "1", "2", "3", "4", "5", "6"];
+	("``1.accc3221");
+	bitIndex1 = RandomNumber(0, infoLength - 1);
+	bitIndex2 = ReturnRandomExclusion(0, infoLength - 1, [bitIndex1, bitIndex1 + 1, bitIndex1 - 1]);
+	bitIndex3 = ReturnRandomExclusion(0, infoLength - 1, [bitIndex1, bitIndex1 + 1, bitIndex1 - 1, bitIndex2, bitIndex2 + 1, bitIndex2 - 1]);
+	triggerIndex = ReturnRandomExclusion(0, infoLength - 1, [bitIndex1, bitIndex1 + 1, bitIndex1 - 1, bitIndex2, bitIndex2 + 1, bitIndex2 - 1, bitIndex3, bitIndex3 + 1, , bitIndex3 - 1]);
+	serIndex1 = RandomNumber(minSerial, maxSerial);
+	serIndex2 = ReturnRandomExclusion(minSerial, maxSerial, [serIndex1]);
+	serIndex3 = ReturnRandomExclusion(minSerial, maxSerial, [serIndex1, serIndex2]);
+	triggerBit = triggerBit[RandomNumber(0, triggerBit.length - 1)];
+	var LT = Orion.ClientLastTarget();
+	LT = Orion.FindObject(LT);
+	//Orion.Print("Bitbox: " + bitIndex1 + " " + bitIndex2 + " " + bitIndex3 + " " +triggerIndex)
+	if (LT) {
+		tempLT = LT.Serial();
+		var modSerial = "";
+		for (var i = 0; i < fullLength; i++) {
+			var currRand = RandomNumber(0, random.length - 1);
+			if (i == triggerIndex) {
+				modSerial += triggerBit;
+				i++;
+			} else if (i == bitIndex1) {
+				modSerial += bitOne;
+				modSerial += serIndex1;
+				i++;
+			} else if (i == bitIndex2) {
+				modSerial += bitTwo;
+				modSerial += serIndex2;
+				i++;
+			} else if (i == bitIndex3) {
+				modSerial += bitThree;
+				modSerial += serIndex3;
+				i++;
+			} else if (i == bitPos1) {
+				modSerial += tempLT[serIndex1];
+			} else if (i == bitPos2) {
+				modSerial += tempLT[serIndex2];
+			} else if (i == bitPos3) {
+				modSerial += tempLT[serIndex3];
+			} else {
+				modSerial += random[currRand];
+			}
+		}
+	}
+
+	if (modSerial) {
+		if (Orion.GetGlobal("doSendAlly") == "true") {
+			Orion.SayAlliance(modSerial);
+		} else {
+			Orion.SayGuild(modSerial);
+		}
+		//Orion.SayGuild(modSerial);
+		//Orion.Print("Sent:" + serIndex1 +"(" + tempLT[serIndex1] + ")" + serIndex2 +"(" + tempLT[serIndex2] + ")"+ serIndex3 +"(" + tempLT[serIndex3] + ")")
+		Orion.SetGlobal("SentSerial", LT.Serial());
+	} else {
+		Orion.Print("Last target cannot be found.");
+	}
+}
+
+function SendSerial_old() {
+	var LT = Orion.ClientLastTarget();
+	LT = Orion.FindObject(LT);
+	if (LT) {
+		if (Orion.GetGlobal("doSendAlly") == "true") {
+			Orion.SayAlliance("R;" + LT.Serial() + ";" + LT.Name());
+		} else {
+			Orion.SayGuild("R;" + LT.Serial() + ";" + LT.Name());
+		}
+		Orion.SetGlobal("SentSerial", LT.Serial());
+	} else {
+		Orion.Print("Last target cannot be found.");
+	}
+}
+
+function SendSerial() {
+	var pick = Orion.GetGlobal("catchType") == "CatchSerial_new" ? true : false;
+	if (pick) {
+		SendSerial_new();
+	} else {
+		SendSerial_old();
+	}
+}
+
+function ReturnRandomExclusion(min, max, array) {
+	var temp = RandomNumber(min, max);
+	while (array.indexOf(temp) != -1) {
+		temp = RandomNumber(min, max);
+		//Orion.Print(temp);
+	}
+	return temp;
+}
+
+function RandomNumber(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	var returnVal = Math.floor(Math.random() * (max - min + 1) + min);
+	return returnVal;
+}

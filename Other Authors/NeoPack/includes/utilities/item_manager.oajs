@@ -1,0 +1,208 @@
+function itemManager_Gump() {
+	var gumpnum = 8000;
+	var gumpvars = skillLoadvars();
+	var gump = Orion.CreateCustomGump(gumpnum);
+	gump.SetNoClose(false);
+	gump.Clear();
+	// Set callback function
+	gump.SetCallback("itemResponse");
+	// Gump position
+	gump.SetX(300);
+	gump.SetY(400);
+	// Main background
+	//Grey = 13BE
+	var bground = "09BF5";
+	gump.AddResizepic(0, 0, bground, 800, 500);
+	gump.AddResizepic(810, 0, bground, 300, 500);
+	//General Gump Setup
+	itemSerial = 8010;
+	mainWindow = 8000;
+	gump.AddText(285, 5, "0x0094", "Item Database & Organizer");
+	//Save & Close Button
+	//gump.AddButton(0, 400, 505, '0x00F9', '0x00F8', '0x00F7', '0');
+	gump.AddButton(0, 380, 505, "0x2EE6", "0x2EE7", "0x2EE8", "0");
+	rowoff = 30;
+	coloff = 11;
+	//Header Text
+	var colStep = 35;
+	var columnDict = itemManager_ColumnSetup();
+	var tempX = 20;
+	Object.keys(columnDict).forEach(function (key) {
+		if (!columnDict[key].hide) {
+			gump.AddText(tempX + columnDict[key].textOffset, 25, columnDict[key].color, columnDict[key].text);
+			columnDict[key].x = tempX;
+			tempX += columnDict[key].width;
+		}
+	});
+	// Select HTML gump as current container for new items
+	gump.AddHtmlGump(mainWindow, 20, 45, 760, 440, "0x0BB8", 0);
+	gump.Select("htmlgump", mainWindow);
+	var step = 50;
+	var x = 5;
+	var y = 2;
+	var ogX = 0;
+	var ogY = 0;
+	var currSerial = 5000;
+	for (var i = 0; i < 1000; i++) {
+		//gump.AddGumpPic(x, y,'0x1455', 100, 100);
+		gump.AddCheckbox(currSerial++, x, y + 10, "0x16CC", "0x16BF", "0x16C4", 0, "0");
+		gump.AddTilePic(x + 35, y + 10, "0x2309", 0);
+		//gump.AddResizepic(x+30, y, '0x0BB8', 200, 20);
+		gump.AddText(x + 80, y + 15, "0x0094", currSerial + " " + i);
+		gump.AddLine(x, y + 50, x + 750, y + 50, "#CEA552", 2);
+		y += step;
+	}
+	gump.Update();
+}
+
+function itemGumpRestoreDefault() {
+	prefix = Player.Serial();
+	Orion.RegWrite(prefix + "/itemManagerStored", "false");
+}
+
+function itemManager_Loadvars() {
+	var allthem = itemManager_defaultvars;
+	prefix = Player.Serial();
+	//TextWindow.Clear();
+	//TextWindow.Open();
+	if (Orion.RegRead(prefix + "/itemManagerStored") == "true") {
+		for (i = 0; i < allthem.length; i++) {
+			if (allthem[i][1] != "title") {
+				//TextWindow.Print(prefix + "/" + i + "|| " + Orion.RegRead(prefix + "/" + i));
+				allthem[i][3] = Orion.RegRead(prefix + "/" + allthem[i][0]);
+			}
+		}
+	}
+	return allthem;
+}
+
+function itemManager_WriteVars(thevars) {
+	prefix = Player.Serial();
+	//TextWindow.Clear();
+	//TextWindow.Open();
+
+	//Saving Gump position
+	for (var i = 0; i < thevars.length; i++) {
+		if (thevars[i][1] != "title") {
+			Orion.RegWrite(prefix + "/" + thevars[i][0], thevars[i][3]);
+			//Orion.Print(prefix + "/" + thevars[i][0] + "/" + thevars[i][3])
+			//Setting the global variable as well as the registry value (eliminating the hard code below)
+			if (Orion.Contains(thevars[i][0], "Tar")) {
+				Orion.SetGlobal(thevars[i][0], thevars[i][3]);
+			}
+			if (thevars[i][1] == "cbox") {
+				Orion.SetGlobal(thevars[i][5], thevars[i][3]);
+			}
+			//Setting the radio activity of doSkill for each function
+			if (Orion.Contains(thevars[i][1], "radio|cbox") && !Orion.Contains(thevars[i][0], "Idle / Stop")) {
+				Orion.SetGlobal(thevars[i][5], thevars[i][3]);
+				if (thevars[i][3] == 1 && thevars[i].length > 6 && !Orion.ScriptRunning(thevars[i][6])) {
+					Orion.Exec(thevars[i][6], true);
+				}
+			}
+			//Handling combo options to store actual values instead of the displayed text
+			if (thevars[i][1] == "combo") {
+				Orion.RegWrite(prefix + "/" + thevars[i][0] + "/actualval", thevars[i][thevars[i][3] * 2 + 5]);
+				//Orion.Print(prefix + "/" + thevars[i][0] + "/actualval" + " || " + thevars[i][thevars[i][3]*2+5])
+			} else if (thevars[i][1] == "plusminus") {
+				Orion.RegWrite(prefix + "/" + thevars[i][0] + "/actualval", thevars[i][3]);
+			}
+			//TextWindow.Print(prefix + "/" + thevars[i][0] + " | " + thevars[i][3]);
+		}
+		/*else if(thevars[i][1] == "gen" && Orion.RegRead(prefix +"/Stored") == "false"){
+      Orion.RegWrite(prefix + "/" + thevars[i][0], thevars[i][3]);
+      Orion.Print("Saving defaults.")
+    }*/
+	}
+	Orion.RegWrite(prefix + "/Stored", "true");
+	var gpos = Orion.GetGumpPosition("custom", 125);
+	if (gpos.X() != -1) {
+		//Orion.Print('Custom gump now at: ' + pos.X() + ' ' + pos.Y());
+		Orion.RegWrite(prefix + "/skillgumpx", gpos.X());
+		Orion.RegWrite(prefix + "/skillgumpy", gpos.Y());
+	}
+	var pos = Orion.GetGumpPosition("custom", 150);
+	if (pos.X() != -1) {
+		//Orion.Print('Custom gump now at: ' + pos.X() + ' ' + pos.Y());
+		Orion.RegWrite(Player.Serial() + "/skilllaunchgumpx", pos.X());
+		Orion.RegWrite(Player.Serial() + "/skilllaunchgumpy", pos.Y());
+	}
+
+	if (Orion.RegRead(prefix + "/Idle / Stop") == 1 && Orion.RegRead(prefix + "/Idle / Stop ") == 1 && Orion.RegRead(prefix + "/Idle / Stop  ") == 1 && Orion.RegRead(prefix + "/Idle / Stop   ") == 1) {
+		Orion.SetGlobal("doIdle", 1);
+	} else if (Orion.RegRead(prefix + "/Idle / Stop") == 0 || Orion.RegRead(prefix + "/Idle / Stop ") == 0 || Orion.RegRead(prefix + "/Idle / Stop  ") == 0 || Orion.RegRead(prefix + "/Idle / Stop   ") == 0) {
+		Orion.SetGlobal("doIdle", 0);
+	}
+}
+
+function itemManager_skillResponse(unused) {
+	var gumpnum = 125;
+	var launchgump = 150;
+	prefix = Player.Serial();
+	var code = CustomGumpResponse.ReturnCode();
+	//Orion.Print('Custom gump response code = ' + code);
+	if (code == 0) {
+		for (i = 0; i < itemManager_defaultvars.length; i++) {
+			if (itemManager_defaultvars[i][1] == "cbox") {
+				itemManager_defaultvars[i][3] = CustomGumpResponse.CheckBox(i + 10) ? 1 : 0;
+			}
+			if (itemManager_defaultvars[i][1] == "radio") {
+				itemManager_defaultvars[i][3] = CustomGumpResponse.Radio(i + 10) ? 1 : 0;
+			} else if (itemManager_defaultvars[i][1] == "txtbox") {
+				itemManager_defaultvars[i][3] = CustomGumpResponse.Text(i + 10);
+			} else if (itemManager_defaultvars[i][1] == "combo") {
+				itemManager_defaultvars[i][3] = CustomGumpResponse.ComboBox(i + 10);
+			} else if (itemManager_defaultvars[i][1] == "plusminus") {
+				itemManager_defaultvars[i][3] = CustomGumpResponse.MinMaxButton(i + 10);
+			}
+		}
+		var gump = Orion.CreateCustomGump(gumpnum);
+		WriteVars(itemManager_defaultvars);
+		gump.Close();
+	} else if (code == 2) {
+		// Button tile art, reset page index
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.SetPage(1);
+		gump.Update();
+	} else if (Orion.Contains(code, "401|402|403|404")) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.SetPage(0);
+		gump.Update();
+	} else if (Orion.Contains(code, "405|406|407|408")) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.SetPage(2);
+		gump.Update();
+	} else if (Orion.Contains(code, "415|416|417|418")) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.SetPage(3);
+		gump.Update();
+	} else if (Orion.Contains(code, "425|426|427|428")) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.SetPage(6);
+		gump.Update();
+	} else if (code == 510) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.Close();
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag with your resources.");
+		Orion.WaitForAddObject("ResourceBox", "10000");
+		if (Orion.FindObject("ResourceBox")) {
+			Orion.RegWrite(prefix + "/resourcechest", Orion.FindObject("ResourceBox").Serial());
+		}
+	} else if (code == 511) {
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.Close();
+		Orion.CharPrint(Player.Serial(), "906", "Click box/bag to drop stuff into.");
+		Orion.WaitForAddObject("DropBox", "10000");
+		if (Orion.FindObject("DropBox")) {
+			Orion.RegWrite(prefix + "/dropchest", Orion.FindObject("DropBox").Serial());
+		}
+	} else if (code == 5) {
+		// Reset all values to defaults
+		skillGumpRestoreDefault();
+		Orion.SetGlobal("skillGumpfirst", "false");
+		var gump = Orion.CreateCustomGump(gumpnum);
+		gump.Close();
+		skillGump();
+	}
+}
+//Wizard: 0xAAF or 0x776C or 0x15C1 (hat circle)

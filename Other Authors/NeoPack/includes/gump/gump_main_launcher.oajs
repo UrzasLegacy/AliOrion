@@ -1,0 +1,54 @@
+const launchButtons = {};
+var tempName = "Anvil";
+launchButtons[tempName] = {};
+launchButtons[tempName].button = 0x5de0;
+launchButtons[tempName].button_selected = 0x5de0;
+launchButtons[tempName].color = 0;
+var tempName = "Skull Eyes";
+launchButtons[tempName] = {};
+launchButtons[tempName].button = 0x45;
+launchButtons[tempName].button_selected = 0x46;
+launchButtons[tempName].color = 0;
+var tempName = "Bull";
+launchButtons[tempName] = {};
+launchButtons[tempName].button = 0x9d56;
+launchButtons[tempName].button_selected = 0x9d56;
+launchButtons[tempName].color = 0;
+var tempName = "Wizard Hat";
+launchButtons[tempName] = {};
+launchButtons[tempName].button = 0x15c1;
+launchButtons[tempName].button_selected = 0x15c2;
+launchButtons[tempName].color = color.bloodred;
+
+function GumpLaunchButton() {
+	if (Orion.GetGlobal("doLaunchButton") == "true") {
+		var gumpx = Orion.RegRead(Player.Serial() + "/launchgumpx");
+		var gumpy = Orion.RegRead(Player.Serial() + "/launchgumpy");
+		var buttonStyle = Orion.GetGlobal("launchButtonStyle");
+		var gumpnum = 50;
+		var gump1 = Orion.CreateCustomGump(gumpnum);
+		gump1.Clear();
+		// Set callback function
+		gump1.SetCallback("GumpLaunchResp");
+		// Gump position
+		gump1.SetX(gumpx);
+		gump1.SetY(gumpy);
+		if (buttonStyle == "") {
+			buttonStyle = "Wizard Hat";
+		}
+		gump1.AddButton(0, 0, 0, launchButtons[buttonStyle].button, launchButtons[buttonStyle].button_selected, launchButtons[buttonStyle].button_selected, launchButtons[buttonStyle].color);
+		gump1.Update();
+	}
+}
+
+function GumpLaunchResp() {
+	var code = CustomGumpResponse.ReturnCode();
+	//Orion.Print('Custom gump response code = ' + code);
+	var launchGumpnum = 50;
+	if (code == 0) {
+		var pos1 = Orion.GetGumpPosition("custom", launchGumpnum);
+		Orion.RegWrite(Player.Serial() + "/launchgumpx", pos1.X());
+		Orion.RegWrite(Player.Serial() + "/launchgumpy", pos1.Y());
+		MainGump();
+	}
+}

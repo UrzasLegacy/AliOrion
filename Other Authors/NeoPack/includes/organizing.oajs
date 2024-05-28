@@ -1,0 +1,166 @@
+function MoveItem_Filter() {
+	Orion.Print("Click the bag to move items FROM.");
+	Orion.WaitForAddObject("fromBag");
+	Orion.Print("Click the bag to move items TO.", 55);
+	Orion.WaitForAddObject("toBag");
+	var filter = Orion.InputText(60000, "Enter the text you wish to filter for");
+	var fromBag = Orion.FindObject("fromBag");
+	var toBag = Orion.FindObject("toBag");
+	var items = Orion.FindTypeEx("-1", "-1", fromBag.Serial(), "", "10", "", true);
+	if (filter != "" && fromBag && toBag) {
+		Orion.OpenContainer(fromBag.Serial());
+		Orion.Wait(1500);
+		for (var i = 0; i < items.length; i++) {
+			if (Orion.Contains(items[i].Properties(), filter, true)) {
+				Orion.MoveItem(items[i].Serial(), 0, toBag.Serial());
+				Orion.Wait(1800);
+			}
+		}
+	}
+}
+
+function NovaKegEmpty() {
+	//ID Keg - 0x1940
+	//ID Pot - 0x0F09
+	//Color - 0x000D
+	Orion.CharPrint(Player.Serial(), "906", "Click box/bag with Nova/Stat Kegs and empty bottles.");
+	Orion.WaitForAddObject("NovaKegBox", "10000");
+	//Orion.WaitTargetObject(5000);
+	//Orion.Wait(5000);
+	Orion.CharPrint(Player.Serial(), "906", "Click box/bag to stack Nova/Stat Pots.");
+	//Orion.WaitTargetObject(5000);
+	Orion.WaitForAddObject("NovaPotBox", "10000");
+	if (true) {
+		Orion.OpenContainer("NovaKegBox");
+		PingWait(1200);
+		Orion.OpenContainer("NovaPotBox");
+		PingWait(1200);
+		kegbox = Orion.FindObject("NovaKegBox");
+		novabox = Orion.FindObject("NovaPotBox");
+		kegs = Orion.FindTypeEx("0x1940", "0x000D|0x09C4|0x01B5", kegbox.Serial(), "", "10", "", true);
+		Orion.Print("Kegs: " + kegs.length);
+		for (var i = 0; i < kegs.length; i++) {
+			numpots = 0;
+			var properties = kegs[i].Properties();
+			var pattern = new RegExp("Potions\\: (\\d+)", "g");
+
+			var matches = pattern.exec(properties);
+			if (matches && Number(matches[1]) > 0) {
+				numpots = Number(matches[1]);
+			}
+			//Making sure there are enough Bottles (This isn't needed, they make their own bottles)
+			/*boxbottles =  Orion.FindTypeEx('0x0F0E', '0x0000', kegbox.Serial());
+      packbottles = Orion.Count('0x0F0E', '0x0000', 'backpack');
+      if(packbottles < 30 && boxbottles[0]){
+        Orion.MoveItem(boxbottles[0].Serial(), 30, 'backpack');
+        Orion.Wait(1200);
+      }*/
+			Orion.MoveItem(kegs[i].Serial(), 30, "backpack");
+			PingWait(1200);
+			//Emptying Keg into bottles
+			for (j = 0; j < numpots; j++) {
+				PingWait(1200);
+				Orion.UseObject(kegs[i].Serial());
+			}
+			PingWait(1200);
+			packnovas = Orion.FindType("0x0F09", "0x000D|0x09C4|0x01B5", "backpack", "", "10", "", true);
+			Orion.Print("Novas/Stats in pack: " + packnovas.length);
+			if (packnovas.length >= 20) {
+				for (j = 0; j < packnovas.length; j++) {
+					Orion.MoveItem(packnovas[j], "0", novabox.Serial());
+					PingWait(1200);
+				}
+			}
+		}
+		packnovas = Orion.FindType("0x0F09", "0x000D|0x09C4|0x01B5", "backpack", "", "10", "", true);
+		Orion.Print("Novas/Stats in pack: " + packnovas.length);
+		if (packnovas.length >= 0) {
+			for (j = 0; j < packnovas.length; j++) {
+				Orion.MoveItem(packnovas[j], "0", novabox.Serial());
+				PingWait(1200);
+			}
+		}
+	}
+}
+
+function GrabItem() {
+	//OpenCorpse();
+	if (!Orion.HaveTarget()) {
+		var toMove = Orion.FindObject("toMove");
+		if ((toMove !== null) | (toMove !== 0)) {
+			Orion.RemoveObject("toMove");
+		}
+		Orion.Print("-1", "Target something to grab.");
+		Orion.AddObject("toMove");
+		while (Orion.HaveTarget()) {
+			Orion.Wait("50");
+		}
+		toMove = Orion.FindObject("toMove");
+		if (toMove !== null) {
+			Orion.MoveItem(toMove.Serial(), "all", backpack);
+		}
+	}
+}
+
+function OrganizeFromList(frombag, tobag, listname, amount) {
+	//sub function for moving items around
+	var item = Orion.FindList(listname, frombag);
+	if (item !== null) {
+		Orion.CharPrint("self", "906", "moving items");
+		for (var i = 0; i < item.length; i++) {
+			Orion.MoveItem(item[i], amount, tobag);
+			Orion.Wait(700);
+		}
+	} else Orion.CharPrint("self", "906", "item not found");
+}
+
+function OrganizeToBackpack(listname, amount) {
+	var frombag = Orion.FindObject("fromBag");
+	if ((frombag !== null) | (frombag !== 0)) {
+		Orion.RemoveObject("fromBag");
+	}
+	Orion.Print("-1", "Target container to move to.");
+	Orion.AddObject("fromBag");
+	while (Orion.HaveTarget()) {
+		Orion.Wait("50");
+	}
+	frombag = Orion.FindObject("fromBag");
+	if (frombag !== null) {
+		OrganizeFromList(frombag.Serial(), backpack, listname, amount);
+	}
+}
+
+function OrganizeFromBackpack(listname, amount) {
+	var tobag = Orion.FindObject("toBag");
+	if ((tobag !== null) | (tobag !== 0)) {
+		Orion.RemoveObject("toBag");
+	}
+	Orion.Print("-1", "Target container to move from.");
+	Orion.AddObject("toBag");
+	while (Orion.HaveTarget()) {
+		Orion.Wait("50");
+	}
+	tobag = Orion.FindObject("toBag");
+	if (tobag !== null) {
+		OrganizeFromList(backpack, tobag.Serial(), listname, amount);
+	}
+}
+
+function OrganizeThisToThat(listname, amount) {
+	Orion.RemoveObject("MoveFrom");
+	Orion.RemoveObject("MoveTo");
+
+	if (!Orion.FindObject("MoveFrom")) {
+		Orion.CharPrint("self", "906", "select move from bag");
+		Orion.AddObject("MoveFrom");
+		WaitForPlayerToTarget();
+	}
+	if (!Orion.FindObject("MoveTo")) {
+		Orion.CharPrint("self", "906", "select move to bag");
+		Orion.AddObject("MoveTo");
+		WaitForPlayerToTarget();
+	}
+	if ("MoveFrom" !== null && "MoveTo" !== null) {
+		OrganizeFromList("MoveFrom", "MoveTo", listname, amount);
+	}
+}

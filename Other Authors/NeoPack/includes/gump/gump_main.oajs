@@ -1,0 +1,2550 @@
+function init_MainGump() {
+	Orion.Exec("MainGump", true);
+	Orion.Exec("GumpLaunchButton", true);
+	if (false && trainingActive) {
+		Orion.OpenContainer("backpack");
+		Orion.Wait(1200);
+		Orion.SetGlobal("skillGumpfirst", "false");
+		Orion.Exec("skillGump", true);
+	}
+}
+
+var eventColors = {};
+eventColors["other"] = ItemColorObject("Other", "other");
+eventColors["other"].defaultIndex = true;
+eventColors["0x0ACC"] = ItemColorObject("Shogun (Tokuno)", "0x0ACC");
+eventColors["0x0AC6"] = ItemColorObject("Wildfire (Fire)", "0x0AC6");
+eventColors["0x0AC1"] = ItemColorObject("Demonic (Hythloth)", "0x0AC1");
+eventColors["0x0AC3"] = ItemColorObject("Eggs (Destard)", "0x0AC3");
+eventColors["0x0A8E"] = ItemColorObject("Lichian (Deciet)", "0x0A8E");
+
+var mainGumpJSON = "Main_gump_" + Player.Serial();
+
+function MainGump() {
+	Orion.SetTimer("launchTime", 0);
+	Debug("[MainGump][Log] Launching the new main gump!");
+
+	var JSON_fName = mainGumpJSON;
+	//Loading default settings for gump
+	var gumpObj = MainGump_Setup();
+	//Reset all default settings
+	var resetDefault = Orion.GetGlobal("MainGump_resetDefault") == "true" ? true : false;
+	//resetDefault = true;
+	if (!resetDefault) {
+		Debug("[MainGump][Info] Importing JSON: " + JSON_fName);
+		gumpObj = JSON_import_handler(JSON_fName, gumpObj);
+	} else {
+		Orion.SetGlobal("MainGump_resetDefault", "false");
+		Orion.Print("Resetting all settings to default!");
+		gumpObj.version = {};
+		gumpObj.version.global = true;
+		gumpObj.version.currentVersion = currentVersion;
+	}
+	//Reset Gump Poisition
+	if (Orion.GetGlobal("MainGump_resetPosition") == "true") {
+		gumpObj.main.x = 50;
+		gumpObj.main.y = 50;
+		Orion.SetGlobal("MainGump_resetPosition", "false");
+	}
+	//Resetting Gump if Version has changed
+	if (!("version" in gumpObj) || ("version" in gumpObj && currentVersion > gumpObj.version.currentVersion)) {
+		Orion.SetGlobal("MainGump_resetDefault", "true");
+		JSON_export(JSON_fName, gumpObj);
+		Orion.Exec("MainGump", true);
+		return false;
+	}
+	//Proceeding with validating and building the gump
+	gump = GumpValidation_MainGump(gumpObj);
+	//Update the Function Library Displays
+	gumpObj = FuncLibrary_Update(gumpObj);
+	//Update the Character Library Display and JSON
+	if (Orion.GetGlobal("doCharRebuild") == "true") {
+		gumpObj = CharacterLibrary_Rebuild(gumpObj);
+		Orion.SetGlobal("doCharRebuild", "false");
+	}
+	gumpObj = CharacterLibrary_UpdateGump(gumpObj);
+	//Hiding the gump if logging in or relogging
+	Debug(
+		"[MainGump][Info] Deciding to hide MainGump (Global: " +
+			Orion.GetGlobal("MainGump_opened_" + gumpObj.main.serial) +
+			", InJournal: " +
+			Orion.InJournal("Reconnecting", "sys", "0", "any", Orion.Now() - 3000, Orion.Now()) +
+			")."
+	);
+	if (Orion.GetGlobal("MainGump_opened_" + gumpObj.main.serial) == "true" && Orion.InJournal("Reconnecting", "sys", "0", "any", Orion.Now() - 3000, Orion.Now()) == null) {
+		GenerateGump_Fast(gumpObj);
+	}
+	Orion.SetGlobal("MainGump_opened_" + gumpObj.main.serial, "true");
+	Debug("[MainGump][Trace] JSON export returned: " + JSON_export(JSON_fName, gumpObj));
+	Debug("[MainGump][Log] Launch Time: " + Orion.Timer("launchTime") / 1000 + " seconds");
+	//Auto start additional functions
+	//Orion.Exec("AutoEverything", true);
+}
+
+function MainGump_ResetDefault() {
+	Orion.SetGlobal("MainGump_resetDefault", "true");
+}
+
+function MainGump_Setup() {
+	var currentSerial = 100;
+	var gumpObj = {};
+	var txtColor = color.white;
+	var gumpObj = {};
+	//Setting global variables in the Auto Position Gump Object.
+	var JSON_fName = mainGumpJSON;
+	gumpObj.json = {};
+	gumpObj.json.global = true;
+	gumpObj.json.value = JSON_fName;
+	//Gump window objects (first ten serials allocated for this)
+	gumpObj.main = GumpObject("Main Window", currentSerial++, "main", 50, 50);
+	gumpObj.main.width = 750;
+	gumpObj.main.height = 500;
+	gumpObj.main.noclose = true;
+	gumpObj.main.callback = "MainGumpResponse";
+	gumpObj.main.background = "background_grey_gold";
+	gumpObj.main.main = true;
+	gumpObj.main.hideFirstLoad = true;
+	//Gump item objects (general basic, specific items in main body)
+	gumpObj.commit = GumpObject("Commit", currentSerial++, "button", 390, 505);
+	gumpObj.commit.graphic = "button_green_blank";
+	gumpObj.commit.action = "commit";
+	gumpObj.commit.butAction = 1;
+	gumpObj.commit.text = "Save";
+	gumpObj.commit.color = color.white;
+	gumpObj.commit = AdjustXY(gumpObj.commit, AlignObject("center", gumpObj.main, gumpObj.commit, gumpGraphic[gumpObj.commit.graphic].butWidth));
+	//Return button
+	gumpObj.home = GumpObject("Commit", currentSerial++, "button", 390, 505);
+	gumpObj.home.graphic = "button_green_blank";
+	gumpObj.home.action = "page";
+	gumpObj.home.value = "refresh";
+	gumpObj.home.butToPage = 0;
+	gumpObj.home.text = "Home Page";
+	gumpObj.home.color = color.white;
+	gumpObj.home = AdjustXY(gumpObj.home, AlignObject("right", gumpObj.main, gumpObj.home, gumpGraphic[gumpObj.home.graphic].butWidth));
+	//Main Title
+	gumpObj.gump_title = GumpObject("GumpTitle", currentSerial++, "text", 380, 15);
+	gumpObj.gump_title.text = "Neo's Script Pack";
+	gumpObj.gump_title.color = color.yellowgold;
+	gumpObj.gump_title = AdjustXY(gumpObj.gump_title, AlignObject("center", gumpObj.main, gumpObj.gump_title, TextWidth(gumpObj.gump_title.text)));
+	//First Section Title:
+	var tempName = "section1_autoactions";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 2);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Automatic Action Settings:";
+	gumpObj[tempName].color = color.yellowgold;
+
+	//Main Page of buttons / selections
+	/*var tempName = "button_global_page";
+	gumpObj[tempName] = GumpObject("Consumables Page Button", currentSerial++, "button", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 40;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1;
+	gumpObj[tempName].text = "Global Variables";
+	gumpObj[tempName].color = color.white;*/
+
+	var tempName = "button_cosumables_page";
+	gumpObj[tempName] = GumpObject("Consumables Page Button", currentSerial++, "button", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 40;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 1;
+	gumpObj[tempName].text = "Consumables";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_spells_page";
+	gumpObj[tempName] = GumpObject("Spells Page Button", currentSerial++, "button", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 2;
+	gumpObj[tempName].text = "Spells";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_actions_page";
+	gumpObj[tempName] = GumpObject("actions Page Button", currentSerial++, "button", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 3;
+	gumpObj[tempName].text = "Actions";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_tracker_page";
+	gumpObj[tempName] = GumpObject("Action HUD Page Button", currentSerial++, "button", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 4;
+	gumpObj[tempName].text = "Action HUD";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_targetting_page";
+	gumpObj[tempName] = GumpObject("Targetting Page Button", currentSerial++, "button", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 40;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 5;
+	gumpObj[tempName].text = "Targetting";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_bars_page";
+	gumpObj[tempName] = GumpObject("Bars Page Button", currentSerial++, "button", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 6;
+	gumpObj[tempName].text = "Bar Pulling";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_timers_page";
+	gumpObj[tempName] = GumpObject("Timers Page Button", currentSerial++, "button", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 10;
+	gumpObj[tempName].text = "Timers";
+	gumpObj[tempName].color = color.white;
+
+	if (farmActive == true) {
+		//Second Section Title:
+		var tempName = "section2_pvm";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 7);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Player Vs. Monster Settings:";
+		gumpObj[tempName].color = color.yellowgold;
+
+		var tempName = "button_pvm_page";
+		gumpObj[tempName] = GumpObject("PVM Page Button", currentSerial++, "button", 390, 25, true, 8);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 40;
+		gumpObj[tempName].action = "page";
+		gumpObj[tempName].butToPage = 7;
+		gumpObj[tempName].text = "Farming";
+		gumpObj[tempName].color = color.white;
+
+		var tempName = "button_looting_page";
+		gumpObj[tempName] = GumpObject("Looting Page Button", currentSerial++, "button", 390, 25, true, 8);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].action = "page";
+		gumpObj[tempName].butToPage = 8;
+		gumpObj[tempName].text = "Looting";
+		gumpObj[tempName].color = color.white;
+
+		var tempName = "button_gm_page";
+		gumpObj[tempName] = GumpObject("GM Page Button", currentSerial++, "button", 390, 25, true, 8);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].action = "page";
+		gumpObj[tempName].butToPage = 9;
+		gumpObj[tempName].text = "GM Handling";
+		gumpObj[tempName].color = color.white;
+	}
+
+	if (craftingActive || trainingActive) {
+		//Third Section Title:
+		var tempName = "section3_crafting";
+		gumpObj[tempName] = GumpObject("Crafting section", currentSerial++, "text", 380, 15, true, 10);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Crafting / Training Settings:";
+		gumpObj[tempName].color = color.yellowgold;
+	}
+
+	if (craftingActive) {
+		var tempName = "button_crafting_page";
+		gumpObj[tempName] = GumpObject("PVM Page Button", currentSerial++, "button", 390, 25, true, 11);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 40;
+		gumpObj[tempName].action = "page";
+		gumpObj[tempName].butToPage = 11;
+		gumpObj[tempName].text = "Crafting";
+		gumpObj[tempName].color = color.white;
+	}
+
+	if (trainingActive) {
+		var tempName = "button_training_page";
+		gumpObj[tempName] = GumpObject("PVM Page Button", currentSerial++, "button", 390, 25, true, 11);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].action = "page";
+		gumpObj[tempName].butToPage = 13;
+		gumpObj[tempName].text = "Training";
+		gumpObj[tempName].color = color.white;
+	}
+
+	//Fourth Section Title:
+	var tempName = "section4_General";
+	gumpObj[tempName] = GumpObject("Crafting section", currentSerial++, "text", 380, 15, true, 12);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Other Settings:";
+	gumpObj[tempName].color = color.yellowgold;
+
+	var tempName = "button_general_page";
+	gumpObj[tempName] = GumpObject("General Page Button", currentSerial++, "button", 390, 25, true, 13);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 40;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 12;
+	gumpObj[tempName].text = "General";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_functionlibrary_page";
+	gumpObj[tempName] = GumpObject("Function Library Page Button", currentSerial++, "button", 390, 25, true, 13);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 14;
+	gumpObj[tempName].text = "Function Library";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "button_characterlibrary_page";
+	gumpObj[tempName] = GumpObject("Character Library Page Button", currentSerial++, "button", 390, 25, true, 13);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "page";
+	gumpObj[tempName].butToPage = 16;
+	gumpObj[tempName].text = "Character Library";
+	gumpObj[tempName].color = color.white;
+
+	//##########################
+	//     Consumables Page
+	//##########################
+	var tempName = "page_1";
+	gumpObj[tempName] = GumpObject("Consumables Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 1;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_consume_health";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Chug/Eat for Health:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 1;
+
+	var tempName = "auto_seed";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Seed";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doSeed";
+	gumpObj[tempName].runFunction = "AutoEverything";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_seed_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Seed Plus Minus", currentSerial++, "plusminus", 0, 0, true, 2);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 40;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doSeed_act";
+
+	var tempName = "auto_cureheal";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Cure & Heal";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doHeal";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_cureheal_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Cure/Heal Plus Minus", currentSerial++, "plusminus", 0, 0, true, 3);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 75;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doHeal_act";
+
+	var tempName = "auto_healstone";
+	gumpObj[tempName] = GumpObject("Auto Healstone", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Heal Stone";
+	gumpObj[tempName].value = Orion.SkillValue("Mysticism", "base") >= 800 ? true : false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doHealStone";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_healstone_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Heal Stone Plus Minus", currentSerial++, "plusminus", 0, 0, true, 3);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 60;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doHealStone_act";
+
+	var tempName = "auto_barrab";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Barrab Pot";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doBarrab";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_barrab_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Cure/Heal Plus Minus", currentSerial++, "plusminus", 0, 0, true, 2);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doBarrab_act";
+
+	var tempName = "title_consume_stats";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Chug/Eat for Stats:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 1;
+
+	var tempName = "auto_dexstr";
+	gumpObj[tempName] = GumpObject("Auto Dex & Str", currentSerial++, "checkbox", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Dex & Str";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doDexStr";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_dexstr_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Dex Str Plus/Minus", currentSerial++, "plusminus", 0, 0, true, 5);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 70;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doDexStr_act";
+
+	var tempName = "auto_pie";
+	gumpObj[tempName] = GumpObject("Auto HPR Pie", currentSerial++, "checkbox", 390, 25, true, 6);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Pie Eating ";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doPie";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_pie_plusminus";
+	gumpObj[tempName] = GumpObject("Auto HPR Pie Plus/Minus", currentSerial++, "plusminus", 0, 0, true, 6);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 90;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doPie_act";
+
+	var pieTypeDropdown = [];
+	Object.keys(pieTypes).forEach(function (key) {
+		pieTypeDropdown.push([key, key]);
+	});
+	var tempName = "auto_pie_dropdown";
+	gumpObj[tempName] = GumpObject("Pie Type Dropdown", currentSerial++, "combobox", 0, 0, true, 6);
+	gumpObj[tempName].droplength = pieTypeDropdown.length;
+	gumpObj[tempName].droplist = pieTypeDropdown;
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].value = 0;
+	gumpObj[tempName].globalVal = "pieTypeSelected";
+	gumpObj[tempName].xOffset = 50;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "auto_refresh";
+	gumpObj[tempName] = GumpObject("Auto Refresh", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Chug Refresh";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doRefresh";
+	gumpObj[tempName].tooltip = "Will automatically chug a refresh if stam is blow \n the level (%) set on the right. \n\n Last Target must be within 5 tiles.";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_refresh_level";
+	gumpObj[tempName] = GumpObject("Chug refresh level", currentSerial++, "textbox", 0, 0, true, 7);
+	gumpObj[tempName].value = 90;
+	gumpObj[tempName].width = 50;
+	gumpObj[tempName].xOffset = -28;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "refreshChug";
+	gumpObj[tempName].tooltip = "Stamina percentage at which auto-chug will chug a refresh.\nThis value is also used for the AttackLT_Closest_Refresh function.";
+
+	var tempName = "title_consume_misc";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 8);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Misc Consumables:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 1;
+
+	var tempName = "auto_apple";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Apple";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doApple";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_consume_appleact";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 9);
+	gumpObj[tempName].xOffset = -80;
+	gumpObj[tempName].text = "Activate:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 1;
+
+	var tempName = "auto_apple_corpse";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Corpse Skin";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].globalVal = "doCorpse";
+	var tempName = "auto_apple_sleep";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Sleep";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doSleep";
+	gumpObj[tempName].color = color.white;
+	var tempName = "auto_apple_mortal";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 50;
+	gumpObj[tempName].xOffset = -40;
+	gumpObj[tempName].text = "Mortal";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doMortal";
+	gumpObj[tempName].color = color.white;
+	var tempName = "auto_apple_plague";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = 15;
+	gumpObj[tempName].text = "Plague";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doPlauge";
+	gumpObj[tempName].color = color.white;
+	var tempName = "auto_apple_curse";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = -40;
+	gumpObj[tempName].text = "Curse";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doCurse";
+	gumpObj[tempName].color = color.white;
+	var tempName = "auto_apple_strangle";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = -40;
+	gumpObj[tempName].text = "Strangle";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doStrangle";
+	gumpObj[tempName].color = color.white;
+	var tempName = "auto_apple_bloodoath";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = -25;
+	gumpObj[tempName].text = "Blood Oath";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doBloodOath";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_nova";
+	gumpObj[tempName] = GumpObject("Auto Apple", currentSerial++, "checkbox", 390, 25, true, 10);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Nova";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 1;
+	gumpObj[tempName].globalVal = "doNovaLow";
+	gumpObj[tempName].runFunction = "NovaWhenLow";
+
+	var tempName = "auto_nova_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Nova Plus/Minus", currentSerial++, "plusminus", 0, 0, true, 10);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].globalVal = "doNovaLow_act";
+	gumpObj[tempName].parentPage = 1;
+
+	//##########################
+	//       Spells Page
+	//##########################
+
+	var tempName = "page_2";
+	gumpObj[tempName] = GumpObject("Spells Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 2;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_spells_magery";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Magery:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 2;
+
+	var tempName = "auto_reactivearmor";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Reactive Armor";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 2;
+	gumpObj[tempName].globalVal = "doRA";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_spells_bushido";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 3);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Bushido:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 2;
+
+	var tempName = "auto_warcry";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Warcry";
+	gumpObj[tempName].value = Orion.SkillValue("Bushido", "real") >= 900 ? true : false;
+	gumpObj[tempName].parentPage = 2;
+	gumpObj[tempName].globalVal = "doCry";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_warcry_plusminus";
+	gumpObj[tempName] = GumpObject("Auto Warcry Plus/Minus", currentSerial++, "plusminus", 0, 0, true, 4);
+	gumpObj[tempName].xOffset = -30;
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 2;
+	gumpObj[tempName].globalVal = "doCry_act";
+
+	var tempName = "auto_counterattack";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Counter Attack";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 2;
+	gumpObj[tempName].globalVal = "doCA";
+	//gumpObj[tempName].color = color.white;
+
+	//##########################
+	//       Action Page
+	//##########################
+
+	var tempName = "page_3";
+	gumpObj[tempName] = GumpObject("Action Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 3;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_action_weapon";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Weapons:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 3;
+
+	var tempName = "auto_ability";
+	gumpObj[tempName] = GumpObject("Auto Ability", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Ability";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doAutoAbility";
+	gumpObj[tempName].runFunction = "AutoAbility";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_rearm";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Re-Arm";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doRearm";
+	gumpObj[tempName].runFunction = "AutoRearm";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_rearm_ondisarm";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_grey_circle";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "On Disarm Only";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doRearmOnly";
+	gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_flag_OJs";
+	gumpObj[tempName] = GumpObject("AutoFlagAllOJs", currentSerial++, "checkbox", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Flag All OJ's";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doFlagOJ";
+	gumpObj[tempName].runFunction = "FlagAllOJs_Constant";
+
+	var tempName = "auto_swap_disarm";
+	gumpObj[tempName] = GumpObject("Auto Swap Weapon", currentSerial++, "checkbox", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Swap On Enemy Disarm";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doDisarmSwap";
+
+	var tempName = "title_disarmswap";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 5);
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Dress Name:";
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 3;
+
+	var tempName = "auto_swap_disarm_dress";
+	gumpObj[tempName] = GumpObject("Dress name", currentSerial++, "textbox", 0, 0, true, 5);
+	gumpObj[tempName].value = "wep_primary";
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = 15;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "swapDress";
+
+	var tempName = "auto_disarm_on_doublestrike_splint";
+	gumpObj[tempName] = GumpObject("Auto Change to disarm on splint/double", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Activate disarm after double-strike splinter";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].visible = false;
+	gumpObj[tempName].globalVal = "doDoubleStriketoDisarm";
+
+	var tempName = "title_action_misc";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 8);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Misc. Actions:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 3;
+
+	var tempName = "auto_popbox";
+	gumpObj[tempName] = GumpObject("Auto Box Pop", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Pop Box";
+	gumpObj[tempName].globalVal = "doBoxPop";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 3;
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_nerve_delay";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 9);
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].text = "Nerve Delay (ms):";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 3;
+
+	var tempName = "auto_boxpop_nervedelay";
+	gumpObj[tempName] = GumpObject("Nerve Delay", currentSerial++, "textbox", 0, 0, true, 9);
+	gumpObj[tempName].value = 500;
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].xOffset = 15;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 3;
+	gumpObj[tempName].globalVal = "doBox_nervedelay";
+
+	var tempName = "auto_equipcheck";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 10);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Equipment Check";
+	gumpObj[tempName].globalVal = "doDmgDrop";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 3;
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "auto_run_enabled";
+	gumpObj[tempName] = GumpObject("Auto Seed", currentSerial++, "checkbox", 390, 25, true, 11);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Auto Run";
+	gumpObj[tempName].globalVal = "doRun";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 3;
+	//gumpObj[tempName].color = color.white;
+
+	//##########################
+	//       HUD Page
+	//##########################
+
+	var tempName = "page_4";
+	gumpObj[tempName] = GumpObject("HUD Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 4;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "actionHUD";
+	gumpObj[tempName] = GumpObject("Action HUD", currentSerial++, "checkbox", 390, 25, true, 1);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Action HUD Enabled";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "doActionTimer";
+	gumpObj[tempName].runFunction = "ActionTimers";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_hud_active";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 2);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Enabled Actions:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 4;
+
+	var tempName = "actionHUD_disarm";
+	gumpObj[tempName] = GumpObject("HUD Disarm", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Disarm";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Disarm";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_evade";
+	gumpObj[tempName] = GumpObject("HUD Evade", currentSerial++, "checkbox", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Evade";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Evade";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_sleep";
+	gumpObj[tempName] = GumpObject("HUD Sleep", currentSerial++, "checkbox", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Sleep";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Sleep";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_splinter";
+	gumpObj[tempName] = GumpObject("HUD Splinter", currentSerial++, "checkbox", 390, 25, true, 6);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Splinter";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Splinter";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_curse";
+	gumpObj[tempName] = GumpObject("HUD Curse", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Curse";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Curse";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_apple";
+	gumpObj[tempName] = GumpObject("HUD Apple", currentSerial++, "checkbox", 390, 25, true, 8);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Apple";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Apple";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "actionHUD_cleanse";
+	gumpObj[tempName] = GumpObject("HUD Cleanse", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Cleanse";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 4;
+	gumpObj[tempName].globalVal = "ActionTimer_Cleanse";
+	gumpObj[tempName].visible = false;
+	//gumpObj[tempName].color = color.white;
+
+	//##########################
+	//       Targetting Page
+	//##########################
+
+	var tempName = "page_5";
+	gumpObj[tempName] = GumpObject("Targetting Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 5;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_targetting_notoriety";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Targetting Notoriety:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "targetting_note_blue";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Blue";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_blue";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_green";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Green";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_green";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_grey";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Grey";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_grey";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_criminal";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Criminal";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_criminal";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_orange";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Orange";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_orange";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_red";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Red";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_red";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_note_yellow";
+	gumpObj[tempName] = GumpObject("Targetting Note Blue", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 75;
+	gumpObj[tempName].xOffset = 0;
+	gumpObj[tempName].text = "Yellow";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_yellow";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "targetting_human";
+	gumpObj[tempName] = GumpObject("Targetting Human", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Human Only";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "note_humanonly";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_targetting_CTGump";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Current Target Gump:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "targetting_CTGump";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 250;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Current Target Gump Enabled";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doCTGump";
+	//gumpObj[tempName].color = color.white;
+
+	/*var tempName = "ct_gump_title_position";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 5);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Position (X/Y):";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "ct_gump_position_x";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 5);
+	var tempPos = Orion.RegRead(Player.Serial() + "/CTX") == "" ? 1100 : parseInt(Orion.RegRead(Player.Serial() + "/CTX"));
+	gumpObj[tempName].value = tempPos;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "CTX";
+	gumpObj[tempName].globalAsReg = true;
+
+	var tempName = "ct_gump_position_y";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 5);
+	var tempPos = Orion.RegRead(Player.Serial() + "/CTY") == "" || Orion.RegRead(Player.Serial() + "/CTY") == null ? 30 : parseInt(Orion.RegRead(Player.Serial() + "/CTY"));
+	gumpObj[tempName].value = tempPos;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "CTY";
+	gumpObj[tempName].globalAsReg = true;
+
+	var tempName = "targetting_CTGump_Scan";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 6);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 250;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Scan Target Suit (Uses Global CD's)";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doCTScan";
+	//gumpObj[tempName].color = color.white;*/
+
+	var tempName = "ctGump_Style_Title";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 6);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Gump Style:";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "CTGump_Style_Dropdown";
+	gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 6);
+	gumpObj[tempName].droplength = BackgroundDropdown().length;
+	gumpObj[tempName].droplist = BackgroundDropdown();
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].value = 5;
+	gumpObj[tempName].globalVal = "CTBackground";
+	gumpObj[tempName].xOffset = 20;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "title_targetting_misc";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 7);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Misc. Targetting:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "ally_color_Title";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 8);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Heal Ally Highlight Color:";
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "ally_highlight_Dropdown";
+	gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 8);
+	gumpObj[tempName].droplength = ItemColorDropdown(targetColors).length;
+	gumpObj[tempName].droplist = ItemColorDropdown(targetColors);
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].value = 3;
+	gumpObj[tempName].globalVal = "allyHighlightColor";
+	gumpObj[tempName].xOffset = 20;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "targetting_LTafterHeal";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 8);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Set Previous LT after Heal Ally";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doAllyLT";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "target_color_Title";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 9);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Target Highlight Color:";
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "target_highlight_Dropdown";
+	gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 9);
+	gumpObj[tempName].droplength = ItemColorDropdown(targetColors).length;
+	gumpObj[tempName].droplist = ItemColorDropdown(targetColors);
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].value = 0;
+	gumpObj[tempName].globalVal = "targetHighlightColor";
+	gumpObj[tempName].xOffset = 20;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "title_catchserial";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 10);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Catch Serial Targetting:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 5;
+
+	var tempName = "targetting_catchserial";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 11);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Catch Serial Enabled";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doCatch";
+	gumpObj[tempName].runFunction = "CatchSerial";
+	//gumpObj[tempName].color = color.white;
+	var catchTypeDropdown = [
+		["CatchSerial_old", "Standard"],
+		["CatchSerial_new", "Obfuscated"],
+	];
+	var tempName = "catch_version_Dropdown";
+	gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 11);
+	gumpObj[tempName].droplength = catchTypeDropdown.length;
+	gumpObj[tempName].droplist = catchTypeDropdown;
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].value = 1;
+	gumpObj[tempName].globalVal = "catchType";
+	gumpObj[tempName].xOffset = 20;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "targetting_catchserial_sendally";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 11);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Send in alliance?";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doSendAlly";
+	gumpObj[tempName].runFunction = "CatchSerial";
+
+	var tempName = "targetting_catchserial_highlightcaller";
+	gumpObj[tempName] = GumpObject("LT After Heal", currentSerial++, "checkbox", 390, 25, true, 12);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Highlight Caller";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].globalVal = "doCallerHighlight";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "caller_highlight_Dropdown";
+	gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 12);
+	gumpObj[tempName].droplength = ItemColorDropdown(targetColors).length;
+	gumpObj[tempName].droplist = ItemColorDropdown(targetColors);
+	gumpObj[tempName].width = 150;
+	gumpObj[tempName].parentPage = 5;
+	gumpObj[tempName].value = 7;
+	gumpObj[tempName].globalVal = "callerHighlightColor";
+	gumpObj[tempName].xOffset = 20;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	//##########################
+	//     Bar Pulling Page
+	//##########################
+
+	var tempName = "page_6";
+	gumpObj[tempName] = GumpObject("Bar Pulling Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 6;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_barpulling";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Automatically Pull Player Bars:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 6;
+
+	var tempName = "barpulling_enabled";
+	gumpObj[tempName] = GumpObject("Auto Bar Pulling Enabled", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Automatically Pull Player Bars";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doPullbars";
+	gumpObj[tempName].runFunction = "BarManager";
+
+	var tempName = "button_barpulling_reload";
+	gumpObj[tempName] = GumpObject("Craft Manager Button", currentSerial++, "button", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "launch";
+	gumpObj[tempName].butAction = 1;
+	gumpObj[tempName].value = ["BarManager_Reload", ["all"]];
+	gumpObj[tempName].text = "Reload Bars";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 6;
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_barpulling_positioning";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 3);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Status Bar Options:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 6;
+
+	/*var tempName = "pullbar_title_position_friend";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].text = "Friendly (X/Y):";
+	gumpObj[tempName].color = color.green;
+	gumpObj[tempName].parentPage = 6;
+
+	var tempName = "pullbar_friend_x";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 4);
+	gumpObj[tempName].value = 1500;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_friend_x";
+
+	var tempName = "pullbar_friend_y";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 4);
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_friend_y";
+
+	var tempName = "pullbar_title_position_enemy";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].text = "Enemy/OJ (X/Y):";
+	gumpObj[tempName].color = color.orange;
+	gumpObj[tempName].parentPage = 6;
+
+	var tempName = "pullbar_enemy_x";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 4);
+	gumpObj[tempName].xOffset = 9;
+	gumpObj[tempName].value = 5;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_enemy_x";
+
+	var tempName = "pullbar_enemy_y";
+	gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 4);
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].width = 40;
+	gumpObj[tempName].textPos = "center";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_enemy_y";*/
+
+	var tempName = "pullbar_title_position_numrows";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].text = "Bars Per Column:";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 6;
+
+	var tempName = "barpulling_rows_plusminus";
+	gumpObj[tempName] = GumpObject("Number of bars/row Plus Minus", currentSerial++, "plusminus", 0, 0, true, 4);
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 15;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_barsper";
+
+	var tempName = "pullbar_title_position_barheight";
+	gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 5);
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].text = "Bar Height:";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 6;
+
+	var tempName = "barpulling_barheight_plusminus";
+	gumpObj[tempName] = GumpObject("Number of bars/row Plus Minus", currentSerial++, "plusminus", 0, 0, true, 5);
+	gumpObj[tempName].width = 70;
+	gumpObj[tempName].height = 24;
+	gumpObj[tempName].value = 30;
+	gumpObj[tempName].yOffset = 2;
+	gumpObj[tempName].graphic = "black_plus_minus";
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "pb_barheight";
+
+	var tempName = "barpulling_showalias";
+	gumpObj[tempName] = GumpObject("Show alias?", currentSerial++, "checkbox", 390, 25, true, 6);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Show character alias";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doShowAlias";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "barpulling_usesimpleenemy";
+	gumpObj[tempName] = GumpObject("Simple Enemy", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Use simple enemy list";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doSimpleEnemy";
+	//gumpObj[tempName].color = color.white;
+	var tempName = "barpulling_usesimpleenemy_hideaddbut";
+	gumpObj[tempName] = GumpObject("Simple Enemy", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Hide add enemy button";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doSimpleHideAdd";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "barpulling_useoldstyle";
+	gumpObj[tempName] = GumpObject("Show alias?", currentSerial++, "checkbox", 390, 25, true, 8);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Use Old Version";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doUseOldBars";
+	//gumpObj[tempName].color = color.white;
+
+	/*var tempName = "barpulling_sallos_spacing";
+	gumpObj[tempName] = GumpObject("Sallos Bar Spacing", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 300;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Sallos Bar Spacing";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 6;
+	gumpObj[tempName].globalVal = "doSallosSpacing";*/
+
+	//##########################
+	//     Farming Page
+	//##########################
+	if (farmActive) {
+		var tempName = "page_7";
+		gumpObj[tempName] = GumpObject("Farming Page", currentSerial++, "page", 0, 0);
+		gumpObj[tempName].value = 7;
+		gumpObj[tempName].pageVis = false;
+		gumpObj[tempName].background = "background_grey_gold";
+		gumpObj[tempName].width = gumpObj.main.width;
+		gumpObj[tempName].height = gumpObj.main.height;
+
+		var tempName = "autofarming_enabled";
+		gumpObj[tempName] = GumpObject("Auto Farming Enabled", currentSerial++, "checkbox", 390, 25, true, 1);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 200;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Auto Farming Enabled";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doFarm";
+		gumpObj[tempName].runFunction = "FarmMaster";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "stealthlooter_enabled";
+		gumpObj[tempName] = GumpObject("Auto Farming Enabled", currentSerial++, "checkbox", 390, 25, true, 1);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Stealth Looter";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].visible = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doStealthLoot";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_autofarming";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 2);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Positioning Options:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "autofarming_stray_enabled";
+		gumpObj[tempName] = GumpObject("Auto Farming Stray Enabled", currentSerial++, "checkbox", 390, 25, true, 3);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Stay In Area";
+		gumpObj[tempName].value = true;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doStray";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "maxstray_plusminus";
+		gumpObj[tempName] = GumpObject("Number of bars/row Plus Minus", currentSerial++, "plusminus", 0, 0, true, 3);
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].height = 24;
+		gumpObj[tempName].value = 20;
+		gumpObj[tempName].yOffset = 2;
+		gumpObj[tempName].graphic = "black_plus_minus";
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "maxStray";
+
+		var tempName = "autofarming_stationary_enabled";
+		gumpObj[tempName] = GumpObject("Auto Farming Stray Enabled", currentSerial++, "checkbox", 390, 25, true, 3);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Stay Stationary";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doStationary";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_attackradius";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 4);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].text = "Attack Radius";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "attackradius_plusminus";
+		gumpObj[tempName] = GumpObject("Number of bars/row Plus Minus", currentSerial++, "plusminus", 0, 0, true, 4);
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].height = 24;
+		gumpObj[tempName].value = 15;
+		gumpObj[tempName].yOffset = 2;
+		gumpObj[tempName].graphic = "black_plus_minus";
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "attackRadius";
+
+		var tempName = "title_ontargtime";
+		gumpObj[tempName] = GumpObject("On Targ Time Title", currentSerial++, "text", 380, 15, true, 5);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].text = "On Target Time";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "ontargtime_plusminus";
+		gumpObj[tempName] = GumpObject("On Target Time plusminus", currentSerial++, "plusminus", 0, 0, true, 5);
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].height = 24;
+		gumpObj[tempName].value = 10;
+		gumpObj[tempName].yOffset = 2;
+		gumpObj[tempName].graphic = "black_plus_minus";
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "onTargTime";
+
+		var tempName = "autofarming_bailhide";
+		gumpObj[tempName] = GumpObject("Auto Farming Stray Enabled", currentSerial++, "checkbox", 390, 25, true, 6);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Bail & Hide";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doBail";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_farming_loopname";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 6);
+		gumpObj[tempName].xOffset = 0;
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].text = "Route Name:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "farming_loopname";
+		gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 6);
+		gumpObj[tempName].value = "cuLoop";
+		gumpObj[tempName].xOffset = -20;
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].textPos = "center";
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "loopNameID";
+
+		var tempName = "title_farming_attack";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 7);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Attack Options:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "title_farming_monsterid";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 8);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].text = "Monster ID:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "farming_monsterid";
+		gumpObj[tempName] = GumpObject("CT Position X", currentSerial++, "textbox", 0, 0, true, 8);
+		gumpObj[tempName].value = "any";
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].textPos = "center";
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "farmingMonsterID";
+
+		var tempName = "farming_los";
+		gumpObj[tempName] = GumpObject("In LOS Enabled", currentSerial++, "checkbox", 390, 25, true, 9);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "In Line-of-Sight";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doLOS";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_los";
+		gumpObj[tempName] = GumpObject("In LOS Enabled", currentSerial++, "checkbox", 390, 25, true, 9);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "In Line-of-Sight";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doLOS";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_flagall";
+		gumpObj[tempName] = GumpObject("In LOS Enabled", currentSerial++, "checkbox", 390, 25, true, 10);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Flag All Creatures";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doFlagAll";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_honor";
+		gumpObj[tempName] = GumpObject("In LOS Enabled", currentSerial++, "checkbox", 390, 25, true, 10);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Honor Target";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].visible = true;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doHonorTarg";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_sampability";
+		gumpObj[tempName] = GumpObject("Samp Ability Enabled", currentSerial++, "checkbox", 390, 25, true, 10);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Samp Ability";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].visible = true;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doSampAbiilty";
+		gumpObj[tempName].runFunction = "SampAbility";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_farming_spells";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 11);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Weapon & Spell Options:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 7;
+
+		var tempName = "farming_eoo";
+		gumpObj[tempName] = GumpObject("Enemy of One Enabled", currentSerial++, "checkbox", 390, 25, true, 12);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Enemy Of One";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doEnemyofone";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_consecrate";
+		gumpObj[tempName] = GumpObject("Consecrate", currentSerial++, "checkbox", 390, 25, true, 12);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Consecrate";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doConsecrate";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "farming_armspecific";
+		gumpObj[tempName] = GumpObject("In LOS Enabled", currentSerial++, "checkbox", 390, 25, true, 13);
+		gumpObj[tempName].visible = false;
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Arm Specific Weapon";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 7;
+		gumpObj[tempName].globalVal = "doArmSpecific";
+		//gumpObj[tempName].color = color.white;
+
+		//##########################
+		//     Looting Page
+		//##########################
+
+		var tempName = "page_8";
+		gumpObj[tempName] = GumpObject("Looting Page", currentSerial++, "page", 0, 0);
+		gumpObj[tempName].value = 8;
+		gumpObj[tempName].pageVis = false;
+		gumpObj[tempName].background = "background_grey_gold";
+		gumpObj[tempName].width = gumpObj.main.width;
+		gumpObj[tempName].height = gumpObj.main.height;
+
+		var tempName = "looting_enabled";
+		gumpObj[tempName] = GumpObject("Looting Enabled", currentSerial++, "checkbox", 390, 25, true, 1);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Auto Looting Enabled";
+		gumpObj[tempName].value = true;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "doLoot";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_lootoptions";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 2);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Looting Options:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 8;
+
+		var tempName = "title_minintensity";
+		gumpObj[tempName] = GumpObject("On Targ Time Title", currentSerial++, "text", 380, 15, true, 3);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].text = "Minimum Item Intensity";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 8;
+
+		var tempName = "minintensity_plusminus";
+		gumpObj[tempName] = GumpObject("On Target Time plusminus", currentSerial++, "plusminus", 0, 0, true, 3);
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].height = 24;
+		gumpObj[tempName].value = 160;
+		gumpObj[tempName].yOffset = 2;
+		gumpObj[tempName].graphic = "black_plus_minus";
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "onTargTime";
+
+		var tempName = "looting_insure_enabled";
+		gumpObj[tempName] = GumpObject("Looting Insure Enabled", currentSerial++, "checkbox", 390, 25, true, 4);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Insure Looted Items";
+		gumpObj[tempName].value = true;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "doInsureItems";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "looting_luck_enabled";
+		gumpObj[tempName] = GumpObject("Looting Insure Enabled", currentSerial++, "checkbox", 390, 25, true, 5);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Loot Luck Items";
+		gumpObj[tempName].value = true;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "doLootLuck";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "title_eventoptions";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 6);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Event Item Options:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 8;
+
+		var tempName = "looting_eventitem_enabled";
+		gumpObj[tempName] = GumpObject("Looting Insure Enabled", currentSerial++, "checkbox", 390, 25, true, 7);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Insure Event Items";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "doEventInsure";
+		gumpObj[tempName].runFunction = "InsureEventItem";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "eventitem_color_title";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 8);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 125;
+		gumpObj[tempName].text = "Event Item Color:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 8;
+
+		var tempName = "eventitem_color";
+		gumpObj[tempName] = GumpObject("CTGump Style Dropdown", currentSerial++, "combobox", 0, 0, true, 8);
+		gumpObj[tempName].droplength = ItemColorDropdown(eventColors).length;
+		gumpObj[tempName].droplist = ItemColorDropdown(eventColors);
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].value = 0;
+		gumpObj[tempName].globalVal = "EventColors";
+		gumpObj[tempName].xOffset = 20;
+		//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+		var tempName = "eventitem_othercolor_title";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 9);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].text = "Other Color:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 8;
+
+		var tempName = "eventitem_othercolor";
+		gumpObj[tempName] = GumpObject("Other Event Item Color", currentSerial++, "textbox", 0, 0, true, 9);
+		gumpObj[tempName].value = "0x0000";
+		gumpObj[tempName].width = 70;
+		gumpObj[tempName].textPos = "center";
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "EventColor_other";
+
+		var tempName = "eventitem_name_title";
+		gumpObj[tempName] = GumpObject("GumpTitle", currentSerial++, "text", 380, 15, true, 10);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].width = 150;
+		gumpObj[tempName].text = "Item Name:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].tooltip = "This will insure any item with this name (regardless of color).";
+
+		var tempName = "eventitem_name";
+		gumpObj[tempName] = GumpObject("Other Event Item Color", currentSerial++, "textbox", 0, 0, true, 10);
+		gumpObj[tempName].value = "Plunderin' Pirate Hat";
+		gumpObj[tempName].width = 200;
+		gumpObj[tempName].textPos = "center";
+		gumpObj[tempName].parentPage = 8;
+		gumpObj[tempName].globalVal = "EventName";
+
+		//##########################
+		//     GM Page
+		//##########################
+
+		var tempName = "page_9";
+		gumpObj[tempName] = GumpObject("GM Page", currentSerial++, "page", 0, 0);
+		gumpObj[tempName].value = 9;
+		gumpObj[tempName].pageVis = false;
+		gumpObj[tempName].background = "background_grey_gold";
+		gumpObj[tempName].width = gumpObj.main.width;
+		gumpObj[tempName].height = gumpObj.main.height;
+
+		var tempName = "title_gmaction";
+		gumpObj[tempName] = GumpObject("GM Action Settings Title", currentSerial++, "text", 380, 15, true, 1);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Actions when a GM has been seen:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 9;
+
+		var tempName = "gm_closeclient_enabled";
+		gumpObj[tempName] = GumpObject("GM Close Client", currentSerial++, "checkbox", 390, 25, true, 2);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Close Client";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 9;
+		gumpObj[tempName].globalVal = "doGMclose";
+		gumpObj[tempName].runFunction = "AntiGM";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "gm_notifydiscord_enabled";
+		gumpObj[tempName] = GumpObject("GM Notify Discord", currentSerial++, "checkbox", 390, 25, true, 3);
+		gumpObj[tempName].graphic = "checkbox_gold_x";
+		gumpObj[tempName].width = 100;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Notify Discord";
+		gumpObj[tempName].value = false;
+		gumpObj[tempName].parentPage = 9;
+		gumpObj[tempName].globalVal = "doGMnotify";
+		//gumpObj[tempName].color = color.white;
+
+		var tempName = "gm_notifydiscord_webhook_title";
+		gumpObj[tempName] = GumpObject("GM Webhook Title", currentSerial++, "text", 380, 15, true, 3);
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].text = "Discord Webhook Address:";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 9;
+
+		var tempName = "gm_notifydiscord_webhook";
+		gumpObj[tempName] = GumpObject("GM Webook Address", currentSerial++, "textbox", 0, 0, true, 3);
+		gumpObj[tempName].value = "";
+		gumpObj[tempName].width = 350;
+		gumpObj[tempName].textPos = "center";
+		gumpObj[tempName].parentPage = 9;
+		gumpObj[tempName].globalVal = "EventColor_other";
+	}
+
+	//##########################
+	//     Timers Page
+	//##########################
+
+	var tempName = "page_10";
+	gumpObj[tempName] = GumpObject("Timers Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 10;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_timer_SW";
+	gumpObj[tempName] = GumpObject("GM Action Settings Title", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Spellweaving Timers:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 10;
+
+	var tempName = "timers_havecircle_enabled";
+	gumpObj[tempName] = GumpObject("Timer Mana Shield", currentSerial++, "checkbox", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Have Circle?";
+	gumpObj[tempName].value = Orion.SkillValue("Spellweaving") >= 900 ? true : false;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doHaveCircleTimer";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "timers_manashield_enabled";
+	gumpObj[tempName] = GumpObject("Timer Mana Shield", currentSerial++, "checkbox", 390, 25, true, 3);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Mana Shield";
+	gumpObj[tempName].value = Orion.SkillValue("Spellweaving") >= 900 ? true : false;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doManaShieldTimer";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "timers_gift_enabled";
+	gumpObj[tempName] = GumpObject("Timer Mana Shield", currentSerial++, "checkbox", 390, 25, true, 4);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Gift of Renewal";
+	gumpObj[tempName].value = Orion.SkillValue("Spellweaving") >= 900 ? true : false;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doGiftTimer";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_timer_myst";
+	gumpObj[tempName] = GumpObject("Myst Timer Title", currentSerial++, "text", 380, 15, true, 6);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Mysticism Timers:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 10;
+
+	var tempName = "timers_trigger_enabled";
+	gumpObj[tempName] = GumpObject("Timer Trigger", currentSerial++, "checkbox", 390, 25, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Trigger";
+	gumpObj[tempName].value = Orion.SkillValue("Mysticism", "base") >= 800 ? true : false;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doTriggerTimer";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "title_timer_Consumeables";
+	gumpObj[tempName] = GumpObject("Consumable Timer Title", currentSerial++, "text", 380, 15, true, 8);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Consumables Timers:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 10;
+
+	var tempName = "timers_apple_enabled";
+	gumpObj[tempName] = GumpObject("Timer Apple Shield", currentSerial++, "checkbox", 390, 25, true, 9);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Apple";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doAppleTimer";
+	//gumpObj[tempName].color = color.white;
+
+	var tempName = "timers_reflect_enabled";
+	gumpObj[tempName] = GumpObject("Timer Reflect Shield", currentSerial++, "checkbox", 390, 25, true, 10);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 180;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Magic Reflect";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 10;
+	gumpObj[tempName].globalVal = "doReflectTimer";
+	//gumpObj[tempName].color = color.white;
+
+	//##########################
+	// Crafting / Training Page
+	//##########################
+	if (craftingActive) {
+		var tempName = "page_11";
+		gumpObj[tempName] = GumpObject("Crafting Page", currentSerial++, "page", 0, 0);
+		gumpObj[tempName].value = 11;
+		gumpObj[tempName].pageVis = false;
+		gumpObj[tempName].background = "background_grey_gold";
+		gumpObj[tempName].width = gumpObj.main.width;
+		gumpObj[tempName].height = gumpObj.main.height;
+
+		var tempName = "title_craft_craftmanager";
+		gumpObj[tempName] = GumpObject("Craft Manager Section", currentSerial++, "text", 380, 15, true, 1);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Crafting Utilities:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 11;
+
+		var tempName = "button_craft_manager_launch";
+		gumpObj[tempName] = GumpObject("Craft Manager Button", currentSerial++, "button", 390, 25, true, 2);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName].action = "launch";
+		gumpObj[tempName].butAction = 1;
+		gumpObj[tempName].value = ["Craft_Manager", ["all"]];
+		gumpObj[tempName].text = "Craft Manager";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 11;
+	}
+
+	//##########################
+	//     Training Main Page
+	//##########################
+	if (trainingActive) {
+		var tempTraining = SkillTraining_Setup(gumpObj, currentSerial);
+		currentSerial = tempTraining[1];
+		gumpObj = tempTraining[0];
+	}
+
+	//##########################
+	//     General Page
+	//##########################
+
+	var tempName = "page_12";
+	gumpObj[tempName] = GumpObject("General Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 12;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var tempName = "title_gump_settings";
+	gumpObj[tempName] = GumpObject("GM Action Settings Title", currentSerial++, "text", 380, 15, true, 1);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Gump Settings:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 12;
+
+	var tempName = "button_gump_reset_defaults";
+	gumpObj[tempName] = GumpObject("Reset Defaults Button", currentSerial++, "button", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "launch";
+	gumpObj[tempName].butAction = 1;
+	gumpObj[tempName].value = ["GumpMain_ResetDefault", ["all"]];
+	gumpObj[tempName].text = "Reset Defaults";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 12;
+
+	var tempName = "button_reset_gump_position";
+	gumpObj[tempName] = GumpObject("Reset Defaults Position Button", currentSerial++, "button", 390, 25, true, 2);
+	gumpObj[tempName].graphic = "button_blue_blank";
+	gumpObj[tempName].width = gumpGraphic["button_blue_blank"].butWidth;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].action = "launch";
+	gumpObj[tempName].butAction = 1;
+	gumpObj[tempName].value = ["GumpMain_ResetDefault", ["position"]];
+	gumpObj[tempName].text = "Reset Gump Pos.";
+	gumpObj[tempName].color = color.white;
+	gumpObj[tempName].parentPage = 12;
+
+	var tempName = "title_launchbutton_section";
+	gumpObj[tempName] = GumpObject("Launch Button Style", currentSerial++, "text", 380, 15, true, 4);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Launch Button:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 12;
+
+	var tempName = "launch_button_enabled";
+	gumpObj[tempName] = GumpObject("Launch Button", currentSerial++, "checkbox", 390, 25, true, 5);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Active?";
+	gumpObj[tempName].value = true;
+	gumpObj[tempName].parentPage = 12;
+	gumpObj[tempName].globalVal = "doLaunchButton";
+	//gumpObj[tempName].color = color.white;
+
+	var launchButtonDrop = [];
+	Object.keys(launchButtons).forEach(function (key) {
+		launchButtonDrop.push([key, key]);
+	});
+	var tempName = "LaunchButton_Dropdown";
+	gumpObj[tempName] = GumpObject("Launch Button Dropdown", currentSerial++, "combobox", 5, 5, true, 5);
+	gumpObj[tempName].droplength = launchButtonDrop.length;
+	gumpObj[tempName].droplist = launchButtonDrop;
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].parentPage = 12;
+	gumpObj[tempName].value = 1;
+	gumpObj[tempName].globalVal = "launchButtonStyle";
+	gumpObj[tempName].runFunction = "GumpLaunchButton";
+	gumpObj[tempName].xOffset = 0;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	var tempName = "title_gump_settings_other";
+	gumpObj[tempName] = GumpObject("GM Action Settings Title", currentSerial++, "text", 380, 15, true, 6);
+	gumpObj[tempName].xOffset = 20;
+	gumpObj[tempName].text = "Other Settings Settings:";
+	gumpObj[tempName].color = color.yellowgold;
+	gumpObj[tempName].parentPage = 12;
+
+	var tempName = "debug_window";
+	gumpObj[tempName] = GumpObject("GM Close Client", currentSerial++, "checkbox", 0, 0, true, 7);
+	gumpObj[tempName].graphic = "checkbox_gold_x";
+	gumpObj[tempName].width = 125;
+	gumpObj[tempName].xOffset = 50;
+	gumpObj[tempName].text = "Debug Window";
+	gumpObj[tempName].value = false;
+	gumpObj[tempName].parentPage = 12;
+	gumpObj[tempName].globalVal = "doDebug";
+	gumpObj[tempName].runFunction = "StatusWindow";
+	//gumpObj[tempName].color = color.white;
+
+	var debugDropdown = [
+		["error", "Error"],
+		["log", "Log"],
+		["info", "Info"],
+		["trace", "Trace"],
+	];
+	var tempName = "debug_level_Dropdown";
+	gumpObj[tempName] = GumpObject("Debug Dropdown", currentSerial++, "combobox", 5, 5, true, 7);
+	gumpObj[tempName].droplength = debugDropdown.length;
+	gumpObj[tempName].droplist = debugDropdown;
+	gumpObj[tempName].width = 100;
+	gumpObj[tempName].parentPage = 12;
+	gumpObj[tempName].value = 2;
+	gumpObj[tempName].globalVal = "debugLevel";
+	gumpObj[tempName].xOffset = 0;
+	//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+	//##########################
+	//  Function Library Page
+	//##########################
+
+	var tempName = "page_14";
+	gumpObj[tempName] = GumpObject("Function Library Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 14;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	var libPack = JSON_import("FunctionLibrary");
+	if (libPack == false) {
+		var tempName = "title_function_error";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 380, 15, true, 2);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Error loading function library file.";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+	} else {
+		var tempName = "title_function_tag_filter";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 380, 15, true, 1);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Function Tag Filter:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+
+		var tagFilterDrop = [];
+		Object.keys(libPack.tagList).forEach(function (key) {
+			tagFilterDrop.push([libPack.tagList[key], libPack.tagList[key]]);
+		});
+		tagFilterDrop.sort();
+		var tempName = "FunctionFilter_Dropdown";
+		gumpObj[tempName] = GumpObject("Function Filter Dropdown", currentSerial++, "combobox", 5, 5, true, 2);
+		gumpObj[tempName].droplength = tagFilterDrop.length;
+		gumpObj[tempName].droplist = tagFilterDrop;
+		gumpObj[tempName].width = 200;
+		gumpObj[tempName].parentPage = 14;
+		gumpObj[tempName].value = 1;
+		gumpObj[tempName].globalVal = "tagFilter";
+		//gumpObj[tempName].runFunction = "GumpLaunchButton";
+		gumpObj[tempName].xOffset = 20;
+		//gumpObj[tempName].parentSerial = craftItems[key].type;
+
+		var tempName = "FunctionFilter_Refresh";
+		gumpObj[tempName] = GumpObject("Function Filter Refresh", currentSerial++, "button", 390, 505, true, 3);
+		gumpObj[tempName].graphic = "button_blue_blank";
+		gumpObj[tempName].parentPage = 14;
+		gumpObj[tempName].action = "commit";
+		gumpObj[tempName].value = "refresh";
+		gumpObj[tempName].butAction = 1;
+		gumpObj[tempName].text = "Refresh";
+		gumpObj[tempName].color = color.white;
+		//gumpObj[tempName].buttonColor = color.glacial;
+		gumpObj[tempName].xOffset = 50;
+		gumpObj[tempName] = AdjustXY(gumpObj[tempName], AlignObject("center", gumpObj["FunctionFilter_Dropdown"], gumpObj[tempName], gumpGraphic[gumpObj[tempName].graphic].butWidth));
+
+		var tempName = "FunctionList_Window";
+		gumpObj[tempName] = GumpObject("HTML Window", currentSerial++, "html", 20, 150);
+		gumpObj[tempName].height = 330;
+		gumpObj[tempName].width = 300;
+		gumpObj[tempName].hasbackground = 0;
+		gumpObj[tempName].parentPage = 14;
+		gumpObj[tempName].parent = "FunctionList_Window";
+
+		var tempX = 0;
+		var tempY = 5;
+		gumpObj.funcLib = {};
+		gumpObj.funcLib.global = true;
+		gumpObj.funcLib.value = [];
+		var tempArray = [];
+		Object.keys(libPack.library).forEach(function (key) {
+			tempArray.push(key);
+		});
+		tempArray.sort();
+		for (var i = 0; i < tempArray.length; i++) {
+			var theFunc = libPack.library[tempArray[i]];
+			var tempName = "functionLib_" + tempArray[i];
+			gumpObj.funcLib.value.push(tempName);
+			gumpObj[tempName] = GumpObject(theFunc.name, currentSerial++, "radio", tempX, tempY, false);
+			gumpObj[tempName].graphic = "checkbox_gold_x";
+			gumpObj[tempName].width = 125;
+			gumpObj[tempName].xOffset = 0;
+			gumpObj[tempName].text = theFunc.name;
+			gumpObj[tempName].value = false;
+			gumpObj[tempName].color = color.whiteText;
+			gumpObj[tempName].parent = "FunctionList_Window";
+			gumpObj[tempName].parentPage = 14;
+			gumpObj[tempName].theFunc = theFunc;
+			//gumpObj[tempName].globalVal = "doLaunchButton";
+			//gumpObj[tempName].color = color.white;
+			tempY += 30;
+			//});
+		}
+		var tempName = "title_function_title_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 33, false);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Function Name:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_title_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 55);
+		gumpObj[tempName].xOffset = 40;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_location_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 80);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Function File Location:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_location_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 102);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_tags_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 127);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Function Tags:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_tags_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 149);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].color = color.white;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "title_function_description_title";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "text", 350, 174);
+		gumpObj[tempName].xOffset = 20;
+		gumpObj[tempName].text = "Function Description:";
+		gumpObj[tempName].color = color.yellowgold;
+		gumpObj[tempName].parentPage = 14;
+
+		var tempName = "FunctionDescription_Window";
+		gumpObj[tempName] = GumpObject("DescriptionHTML Window", currentSerial++, "html", 350, 196);
+		gumpObj[tempName].height = 300;
+		gumpObj[tempName].width = 390;
+		gumpObj[tempName].hasbackground = 0;
+		gumpObj[tempName].hasScrollbar = false;
+		gumpObj[tempName].parentPage = 14;
+		gumpObj[tempName].parent = "FunctionDescription_Window";
+
+		var tempName = "function_description_value";
+		gumpObj[tempName] = GumpObject("Function Tag Filter", currentSerial++, "htmltext", 20, 20, false);
+		gumpObj[tempName].xOffset = 30;
+		gumpObj[tempName].text = "N/A";
+		gumpObj[tempName].parent = "FunctionDescription_Window";
+		gumpObj[tempName].color = color.whiteText;
+		gumpObj[tempName].parentPage = 14;
+	}
+
+	//##########################
+	//     Character Library
+	//##########################
+	var tempName = "page_16";
+	gumpObj[tempName] = GumpObject("Character Library Page", currentSerial++, "page", 0, 0);
+	gumpObj[tempName].value = 16;
+	gumpObj[tempName].pageVis = false;
+	gumpObj[tempName].background = "background_grey_gold";
+	gumpObj[tempName].width = gumpObj.main.width;
+	gumpObj[tempName].height = gumpObj.main.height;
+
+	varTemp = CharacterLibrarySetup(gumpObj, currentSerial);
+	var currentSerial = varTemp[1];
+	var gumpObj = varTemp[0];
+
+	gumpObj.currentSerial = {};
+	gumpObj.currentSerial.global = true;
+	gumpObj.currentSerial.value = currentSerial;
+	return gumpObj;
+}
+
+function GumpMain_ResetDefault(arg) {
+	switch (arg) {
+		case "all":
+			Orion.SetGlobal("MainGump_resetDefault", "true");
+			break;
+		case "position":
+			Orion.SetGlobal("MainGump_resetPosition", "true");
+			break;
+		default:
+			return false;
+	}
+	MainGump();
+}
+
+function MainGumpResponse(unused) {
+	var JSON_fName = mainGumpJSON;
+	var code = parseInt(CustomGumpResponse.ReturnCode());
+	var serial = parseInt(CustomGumpResponse.Serial());
+	Debug("[MainGumpResponse][Info] Return code / serial : " + code + " / " + serial);
+	var gumpObj = JSON_import_handler(JSON_fName, false);
+	if (gumpObj && "main" in gumpObj && serial == gumpObj.main.serial) {
+		var returnKey = ResposeSerialFinder(code, gumpObj);
+		if (!returnKey) {
+			Debug("[MainGumpResponse][Error] Getting invalid code / serial for this gump: " + code + " / " + serial);
+			return false;
+		}
+		//Handling Character Saving
+		if ("action" in gumpObj[returnKey] && Orion.Contains(gumpObj[returnKey].value, "ModifyCharacter")) {
+			Orion.SetGlobal("doUpdateCharacter", gumpObj[returnKey].value);
+			gumpObj[returnKey].value = "refresh";
+		}
+		if ("action" in gumpObj[returnKey]) {
+			GumpResponseAction(serial, JSON_fName, gumpObj[returnKey].action, "MainGump", gumpObj[returnKey].value);
+		} else {
+			Debug("[MainGumpResponse][Error] This response has no action.");
+		}
+	} else {
+		if (gumpObj && "main" in gumpObj) {
+			Debug("[MainGumpResponse][Error] Getting invalid code / serial / main.serial for this gump: " + code + " / " + serial + "/" + main.serial);
+		} else {
+			Debug("[MainGumpResponse][Error] Main window not found, getting invalid code / serial for this gump: " + code + " / " + serial);
+		}
+	}
+}
+
+function FuncLibrary_Update(gumpObj) {
+	var selectedOne = Orion.GetGlobal("funcLib_Selected") == "" ? false : Orion.GetGlobal("funcLib_Selected");
+	var theFilter = gumpObj.FunctionFilter_Dropdown.droplist[gumpObj.FunctionFilter_Dropdown.value][0];
+	Debug("[FuncLibrary_Update][Info] Selected Function Library filter: " + theFilter + ", filtering " + gumpObj.funcLib.value.length + " functions.");
+	//Applying filter to function list
+	for (var i = 0; i < gumpObj.funcLib.value.length; i++) {
+		if (theFilter == "All") {
+			gumpObj[gumpObj.funcLib.value[i]].visible = true;
+		} else {
+			var theFunc = gumpObj[gumpObj.funcLib.value[i]].theFunc;
+			Debug("[FuncLibrary_Update][Info] Evaluating: " + gumpObj.funcLib.value[i] + " which has tags: " + theFunc.tags);
+			if (theFunc.tags.indexOf(theFilter) != -1) {
+				gumpObj[gumpObj.funcLib.value[i]].visible = true;
+			} else {
+				gumpObj[gumpObj.funcLib.value[i]].visible = false;
+				Debug("[FuncLibrary_Update][Info] Hiding: " + gumpObj.funcLib.value[i]);
+			}
+		}
+	}
+	//Adjusting the Y position of the remaining active functions
+	var tempY = 5;
+	for (var i = 0; i < gumpObj.funcLib.value.length; i++) {
+		if (gumpObj[gumpObj.funcLib.value[i]].visible == true) {
+			gumpObj[gumpObj.funcLib.value[i]].y = tempY;
+			tempY += 30;
+		}
+	}
+	//Updating the main window data
+	Debug("[FuncLibrary_Update][Info] Selected function: " + selectedOne);
+	if (selectedOne == false) {
+		gumpObj["title_function_title_value"].text = "N/A";
+		gumpObj["title_function_location_value"].text = "N/A";
+		gumpObj["title_function_tags_value"].text = "N/A";
+		gumpObj["function_description_value"].text = "N/A";
+	} else {
+		Debug("[FuncLibrary_Update][Info] Swapping Info to: " + selectedOne);
+		if (selectedOne in gumpObj && "theFunc" in gumpObj[selectedOne]) {
+			selectedOne = gumpObj[selectedOne].theFunc;
+			gumpObj["title_function_title_value"].text = selectedOne.name;
+			gumpObj["title_function_location_value"].text = selectedOne.location;
+			gumpObj["title_function_tags_value"].text = selectedOne.tags;
+			Debug("[FuncLibrary_Update][Trace] Description String Length: " + String(selectedOne.description).length);
+			gumpObj["function_description_value"].text = WordWrapString(selectedOne.description, 60);
+		}
+	}
+	return gumpObj;
+}
+
+function WordWrapString(theString, width) {
+	theString = String(theString);
+	var currPos = 0;
+	var iterations = parseInt(theString.length / width);
+	Debug("[WordWrapString][Info] Number of iterations needed: " + iterations);
+	if (theString.length > 60) {
+		for (var i = 1; i <= iterations; i++) {
+			currPos += width;
+			while (theString[currPos] != " ") {
+				currPos--;
+			}
+			Debug("[WordWrapString][Trace] Adding line break at: " + currPos);
+			theString = theString.slice(0, currPos) + "\n" + theString.slice(currPos + 1);
+			Debug("[WordWrapString][Trace] Newly formatted string: " + theString);
+		}
+
+		return theString;
+	} else {
+		return theString;
+	}
+}
+
+function WordWrapString_old(theString, width) {
+	theString = String(theString);
+	var currPos = 0;
+	var iterations = parseInt(theString.length / width);
+	Debug("[WordWrapString][Info] Number of iterations needed: " + iterations);
+	if (theString.length > 60) {
+		for (var i = 1; i <= iterations; i++) {
+			currPos += width;
+			while (theString[currPos] != " ") {
+				currPos--;
+			}
+			Debug("[WordWrapString][Trace] Adding line break at: " + currPos);
+			theString = theString.slice(0, currPos) + "\n" + theString.slice(currPos + 1);
+			Debug("[WordWrapString][Trace] Newly formatted string: " + theString);
+		}
+
+		return theString;
+	} else {
+		return theString;
+	}
+}
+
+function GumpValidation_MainGump(gumpObj) {
+	Orion.SetGlobal("characterLib_Selected", "");
+	Orion.SetGlobal("funcLib_Selected", "");
+	Object.keys(gumpObj).forEach(function (key) {
+		if ("globalVal" in gumpObj[key] && "globalAsReg" in gumpObj[key] && gumpObj[key].globalAsReg == true && gumpObj[key].visible == true) {
+			Orion.RegWrite(Player.Serial() + "/" + gumpObj[key].globalVal, gumpObj[key].value);
+		} else if ("globalVal" in gumpObj[key] && gumpObj[key].visible == true) {
+			Debug("[GumpValidation_MainGump][Trace] Setting global (" + gumpObj[key].globalVal + "), of key (" + key + ") with the following value: " + gumpObj[key].value);
+			Orion.SetGlobal(gumpObj[key].globalVal, gumpObj[key].value);
+			if (gumpObj[key].type == "combobox" && "droplist" in gumpObj[key] && "value" in gumpObj[key]) {
+				Orion.SetGlobal(gumpObj[key].globalVal, gumpObj[key].droplist[gumpObj[key].value][0]);
+			}
+		}
+		if ("runFunction" in gumpObj[key] && gumpObj[key].visible == true) {
+			Debug("[GumpValidation_MainGump][Trace] Executing the function: " + gumpObj[key].runFunction);
+			Orion.Exec(gumpObj[key].runFunction, true);
+		}
+		Debug("[GumpValidation_MainGump][Trace] Search String key: " + key + " Value: " + gumpObj[key].value);
+		if (Orion.Contains(key, "functionLib", true) && gumpObj[key].value == true) {
+			Orion.SetGlobal("funcLib_Selected", key);
+		}
+		if (Orion.Contains(key, "characterLib", true) && gumpObj[key].value == true) {
+			Orion.SetGlobal("characterLib_Selected", key);
+		}
+	});
+	if (Orion.GetGlobal("doUpdateCharacter") != "") {
+		gumpObj = CharacterLibrary_UpdateCharacter(gumpObj, Orion.GetGlobal("doUpdateCharacter"));
+		Orion.SetGlobal("doUpdateCharacter", "");
+	}
+	return gumpObj;
+}
+
+function ItemColorObject(name, color) {
+	var test = {};
+	test.name = name;
+	test.color = color;
+	test.defaultIndex = false;
+	return test;
+}
+
+function ItemColorDropdown(anObj) {
+	var dropArray = [];
+	Object.keys(anObj).forEach(function (key2) {
+		var tempArray = [];
+		tempArray = [key2, anObj[key2].name];
+		dropArray.push(tempArray);
+	});
+	return dropArray;
+}

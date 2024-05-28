@@ -1,7 +1,6 @@
 var fileName = '/AliCatalogueJSON' + '.json'
 var searchDistance = 10
 var debug = false;
-
 function CatalogueSafes()
     {
     var amOwnerFlag = true; //set to true if you own the auction safes you are cataloguing, false if they are someone else's

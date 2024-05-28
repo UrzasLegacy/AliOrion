@@ -1,0 +1,674 @@
+//@@Reads notoriety selection from gump menu and returns a concatenated string.
+//Utility,Programming
+function ActiveNotoriety() {
+	var notefilter = "";
+	if (Orion.GetGlobal("note_blue") == "true") {
+		notefilter += "blue|";
+	}
+	if (Orion.GetGlobal("note_green") == "true") {
+		notefilter += "green|";
+	}
+	if (Orion.GetGlobal("note_grey") == "true") {
+		notefilter += "gray|";
+	}
+	if (Orion.GetGlobal("note_criminal") == "true") {
+		notefilter += "criminal|";
+	}
+	if (Orion.GetGlobal("note_orange") == "true") {
+		notefilter += "orange|";
+	}
+	if (Orion.GetGlobal("note_red") == "true") {
+		notefilter += "red|";
+	}
+	if (Orion.GetGlobal("note_yellow") == "true") {
+		notefilter += "yellow";
+	}
+	return notefilter;
+}
+
+//@@Returns the current time in 12 hour format.
+//Utility,Programming
+function TimeString() {
+	var hours = parseInt(Orion.Time("hh"));
+	var minutes = parseInt(Orion.Time("m"));
+	var ampm = hours >= 12 ? "pm" : "am";
+	hours = hours % 12;
+	hours = hours ? hours : 12; // the hour '0' should be '12'
+	minutes = minutes < 10 ? "0" + minutes : minutes;
+	var strTime = hours + ":" + minutes + " " + ampm;
+	return strTime;
+}
+
+function TimeString24() {
+	var hours = Orion.Time("HH");
+	var minutes = Orion.Time("mm");
+	var strTime = hours + ":" + minutes;
+	return strTime;
+}
+function TimeString24Seconds() {
+	var hours = Orion.Time("HH");
+	var minutes = Orion.Time("mm");
+	var seconds = Orion.Time("ss");
+	var strTime = hours + ":" + minutes + ":" + seconds;
+	return strTime;
+}
+
+function TimeArray24Seconds() {
+	var hours = Orion.Time("HH");
+	var minutes = Orion.Time("mm");
+	var seconds = Orion.Time("ss");
+	var strTime = hours + ":" + minutes + ":" + seconds;
+	return [hours, minutes, seconds];
+}
+
+function DateArray() {
+	var day = Orion.Date("dd");
+	var month = Orion.Date("MM");
+
+	return [day, month];
+}
+
+function DateTimeString() {
+	var tempStr = Orion.Date("yyyy.MM.dd") + "." + Orion.Time("HH.mm.ss");
+	//Orion.Print(tempStr);
+	return tempStr;
+}
+
+function PopItemArray(array, index) {
+	//Orion.Print("Popping: " + index)
+	array.splice(index, 1);
+	return array;
+}
+
+function BackpackItems() {
+	var properties = Orion.ObjAtLayer("backpack").Properties();
+	var matches = /Contents: (\d+)\/(\d+)/.exec(properties);
+	if (matches && matches.length > 2) {
+		//Orion.Print(matches[1] + " / " +matches[2])
+		return parseInt(matches[1]);
+	}
+}
+
+function DropItem(type, color) {
+	var robeList = Orion.FindTypeEx(type, color, "backpack");
+	for (var i = 0; i < robeList.length; i++) {
+		Orion.MoveItem(robeList[i].Serial(), 1, "ground", Player.X(), Player.Y() + 1, Player.Z());
+		PingWait(1000);
+	}
+}
+
+function GumpByID(ID) {
+	var returnVal = false;
+	var gCount = Orion.GumpCount();
+	for (var i = gCount - 1; i >= 0; i--) {
+		var tempGump = Orion.GetGump(i);
+		if (tempGump != null && tempGump.ID() == ID && Orion.GumpExists("generic", tempGump.Serial())) {
+			//Orion.Print(tempGump.ID())
+			return tempGump;
+		}
+		Orion.Wait(50);
+	}
+	return returnVal;
+}
+
+function CloseGumpByID(ID) {
+	var returnVal = false;
+	var gCount = Orion.GumpCount();
+	for (var i = gCount - 1; i >= 0; i--) {
+		var tempGump = Orion.GetGump(i);
+		if (tempGump.ID() == ID && Orion.GumpExists("generic", tempGump.Serial())) {
+			//Orion.Print(tempGump.ID());
+			Orion.CloseGump("generic", tempGump.Serial(), tempGump.ID());
+			returnVal = true;
+			//PingWait(1000);
+		}
+		//Orion.Wait(50);
+	}
+	return returnVal;
+}
+
+function RemoveHousesON() {
+	if (Orion.ClientOptionGet("UseCustomMaxDrawZOffset", 1)) {
+		Orion.ClientOptionSet("UseCustomMaxDrawZOffset", 0);
+	} else {
+		Orion.ClientOptionSet("UseCustomMaxDrawZOffset", 1);
+	}
+}
+
+//Function to be used for ping related delays
+//Includes the PingPlus variable and can add an additional delay (ie. global, etc);
+function PingWait(addDelay) {
+	vars.pingBackup = 200;
+	vars.pingPlus = 50;
+	var ping = Orion.GetPing("average");
+	if (ping == 9999) {
+		ping = vars.pingBackup;
+	}
+	Orion.Wait(ping + addDelay + vars.pingPlus);
+}
+//Sister function to return the wait value as an int
+function PingVal(addDelay) {
+	var ping = Orion.GetPing("average");
+	if (ping == 9999) {
+		ping = vars.pingBackup;
+	}
+	return ping + addDelay + vars.pingPlus;
+}
+
+function parsereplace(str, insertString) {
+	return str.replace(/%n/g, insertString);
+}
+
+//A function that returns the number of items in a container by parsing the properties/tooltip.
+function ContainerCount(containerSer) {
+	daBox = Orion.FindObject(containerSer);
+	properties = daBox.Properties();
+	boxItemcount = 125;
+	if (!Orion.Contains(daBox.Properties(), "Contents:")) {
+		return false;
+	} else {
+		var matches = /Contents\:\s(\d+)\/(\d+)/.exec(properties);
+		if (matches.length > 2) {
+			//Orion.Print("Box items:" +matches[1] + " / " +matches[2]);
+			boxItemcount = matches[1];
+			if (boxItemcount == 0) {
+				boxItemcount = 2;
+			}
+			return boxItemcount;
+		} else {
+			return false;
+		}
+	}
+}
+
+function GetTileInfo() {
+	Orion.WaitForAddObject("myTarget", 120000);
+	var pos = {};
+	pos.x = SelectedTile.X();
+	pos.y = SelectedTile.Y();
+	pos.z = SelectedTile.Z();
+	//Orion.Print("X: " + x + "\nY: " + y + "\nZ: " + z);
+	return pos;
+}
+
+function TwoObjectDistance(X, Y, X2, Y2) {
+	var dist = null;
+
+	dist = Math.sqrt(Math.pow(X - X2, 2) + Math.pow(Y - Y2, 2));
+	//Orion.Print(dist);
+	return dist;
+}
+
+function ActiveEJ(server, role) {
+	var temp = Shared.GetArray("ActiveEJ_" + server, false);
+	if (temp == false) {
+		Shared.AddArray("ActiveEJ_" + server, [Player.Serial(), role]);
+		return true;
+	} else {
+		activeEJ = {
+			serial: temp[0],
+			role: temp[1],
+		};
+		var returnVal = true;
+		switch (role) {
+			case spawn:
+				Shared.AddArray("ActiveEJ_" + server, [Player.Serial(), role]);
+				return true;
+			case uw:
+				if (activeEJ.role == "spawn") {
+					return false;
+				} else {
+					Shared.AddArray("ActiveEJ_" + server, [Player.Serial(), role]);
+					return true;
+				}
+			default:
+				return true;
+		}
+	}
+}
+
+//Opens and clears the text window
+function StatusWindow() {
+	if (Orion.GetGlobal("doDebug") == "true" && !TextWindow.IsOpened()) {
+		TextWindow.Open();
+		if (Orion.GetGlobal("Debug_firstopen") != "true") {
+			TextWindow.Clear();
+			Orion.SetGlobal("Debug_firstopen", "true");
+		}
+	}
+}
+
+function Debug(msg) {
+	var debugLevel = Orion.GetGlobal("debugLevel");
+	var doDebug = Orion.GetGlobal("doDebug") == "true" ? true : false;
+	if (!doDebug) {
+		return false;
+	}
+	if (debugLevel == "trace") {
+		var debugTxt = "[log]|[trace]|[error]|[info]";
+	} else if (debugLevel == "log") {
+		var debugTxt = "[log]|[error]";
+	} else if (debugLevel == "info") {
+		var debugTxt = "[log]|[error]|[info]";
+	} else {
+		var debugTxt = "[error]";
+	}
+	if (Orion.Contains(msg, debugTxt)) {
+		TextWindow.Print("[" + TimeString24Seconds() + "] " + msg);
+	}
+}
+
+function SendDiscord(themessage, name) {
+	//Send message to:
+	// Discord
+	var discord2 = false;
+	var bot2 = "";
+	var bot = ""; // Webhook url
+	var paramText = "username=" + Player.Name() + "&content=";
+
+	Orion.HttpPost(bot, paramText + themessage);
+	if (discord2) {
+		Orion.HttpPost(bot2, paramText + themessage);
+	}
+	//Orion.Print(themessage);
+}
+
+function SendDiscord_Webhook(webhook, themessage, name) {
+	//Send message to:
+	// Discord
+	var paramText = "username=" + Player.Name() + "&content=";
+
+	Orion.HttpPost(webhook, paramText + themessage);
+}
+
+function SendDiscordFarm(themessage, webhook) {
+	//Send message to:
+	// Discord
+	var discord2 = false;
+	var bot2 = "";
+
+	var bot = webhook == null || webhook == false ? discFarmHook : webhook; // Webhook url
+	var paramText = "username=" + Player.Name() + "&content=";
+
+	Orion.HttpPost(bot, paramText + themessage);
+	if (discord2) {
+		Orion.HttpPost(bot2, paramText + themessage);
+	}
+	//Orion.Print(themessage);
+}
+
+function DiscordUpdate() {
+	var vars = {};
+	vars.longForm = false;
+	vars.maxItems = 115;
+	vars.maxWeight = 95;
+	vars.minDurability = 8;
+	vars.updateFreq = 30;
+	vars.minGold = 100000;
+	vars.isEvent = doEvent;
+	theItem = Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length;
+	//Sets the baseline for the items / hour
+	if (Orion.FindObject("startItems") == null) {
+		Orion.SetGlobal("startItems", theItem);
+	}
+	Orion.Exec("KeepGhost", true);
+	Orion.SetTimer("DiscordUpdate", -5000);
+	while (true) {
+		var fullSend = "";
+		theItem = Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length;
+		if (Orion.Timer("DiscordUpdate") >= -1 || Orion.GetGlobal("updateNow") == "true") {
+			var sndStr = "";
+			var divNum = 30;
+			//var divEmoji = ":white_square_button:";
+			var divEmoji = ":heavy_minus_sign:";
+			for (var i = 0; i < divNum; i++) {
+				sndStr += divEmoji;
+			}
+			//SendDiscordFarm(sndStr);
+			fullSend += sndStr + "\n";
+			var alive = Player.Dead() ? ":red_circle:" : ":green_circle:";
+			var script = Orion.ScriptRunning("AttackLoop") ? ":green_circle:" : ":red_circle:";
+			var sndStr = "";
+			var sndStr1 = [];
+			sndStr1.push(TimeString() + " | **" + Player.Name() + "**");
+			sndStr1.push("Alive: " + alive);
+			sndStr1.push("Script Running: " + script);
+			var currGold = CheckGold();
+			var goldnew = currGold[1];
+			if (currGold != false) {
+				var goldFlag = vars.minGold <= goldnew ? ":red_circle:" : ":yellow_circle:";
+				if (goldnew > vars.minGold * 5) {
+					goldFlag = ":green_circle:";
+				}
+				sndStr1.push("Gold: $" + currGold[0] + " (Deaths: " + currGold[2] + ")" + " " + goldFlag);
+			}
+			if (Player.Dead()) {
+				sndStr1.push(" @everyone");
+			}
+			if (vars.longForm) {
+				for (var i = 0; i < sndStr1.length; i++) {
+					//SendDiscordFarm(sndStr1[i]);
+					fullSend += sndStr1[i] + "\n";
+					Orion.Wait(200);
+				}
+			} else {
+				for (var i = 0; i < sndStr1.length; i++) {
+					sndStr += sndStr1[i];
+					if (i != sndStr1.length - 1) {
+						sndStr += " | ";
+					}
+
+					Orion.Wait(200);
+				}
+				//SendDiscordFarm(sndStr);
+				fullSend += sndStr + "\n";
+			}
+			var sndStr = "";
+			var sndStr1 = [];
+			sndStr1.push("**" + Player.Name() + "'s Stats**");
+			var hitsPer = Player.Hits() / Player.MaxHits();
+			hitsPer = (hitsPer * 100).toFixed(0);
+			var hitsFlag = hitsPer <= 30 ? ":red_circle:" : ":yellow_circle:";
+			if (hitsPer > 60) {
+				hitsFlag = ":green_circle:";
+			}
+			sndStr1.push("Health: " + hitsPer + "% " + hitsFlag);
+			var itemFlag = Orion.FindType("any", "any", "backpack", "", "", "", true).length >= vars.maxItems ? ":red_circle:" : ":green_circle:";
+			sndStr1.push(
+				"Items: " +
+					Orion.FindType("any", "any", "backpack", "", "30", "", true).length +
+					"/125 (" +
+					((Orion.FindType("any", "any", "backpack", "", "30", "", true).length / 125) * 100).toFixed(0) +
+					"%) " +
+					itemFlag
+			);
+			var weightFlag = Math.round(Player.Weight() / (Player.MaxWeight() * 1.0000000001)) >= vars.maxWeight ? ":red_circle:" : ":green_circle:";
+			sndStr1.push("Weight: " + Player.Weight() + "/" + Player.MaxWeight() + " (" + ((Player.Weight() / Player.MaxWeight()) * 100).toFixed(0) + "%) " + weightFlag);
+			var durDrop = DurabilityDrop(vars.minDurability);
+			var durFlag = durDrop[0] > 75 ? ":green_circle:" : ":yellow_circle:";
+			if (durDrop[0] <= vars.minDurability) {
+				durFlag = ":red_circle:";
+			}
+			sndStr1.push("Lowest Durability: " + durDrop[1] + " (" + durDrop[0] + "/" + durDrop[2] + ") " + durFlag + " ");
+
+			if (vars.longForm) {
+				for (var i = 0; i < sndStr1.length; i++) {
+					//SendDiscordFarm(sndStr1[i]);
+					fullSend += sndStr1[i] + "\n";
+					Orion.Wait(200);
+				}
+			} else {
+				sndStr1[0] += ":";
+				for (var i = 0; i < sndStr1.length; i++) {
+					sndStr += sndStr1[i];
+					if (i != sndStr1.length - 1) {
+						sndStr += " | ";
+					}
+
+					Orion.Wait(200);
+				}
+				//SendDiscordFarm(sndStr);
+				fullSend += sndStr + "\n";
+			}
+			Orion.Wait(100);
+			if (vars.isEvent) {
+				var startEventnum = parseInt(Orion.GetGlobal("startEventnum"));
+				if (parseInt(startEventnum) > theItem) {
+					Orion.SetGlobal("startEventnum", Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length);
+					Orion.SetTimer("eventItemtimer", 0);
+				}
+				//SendDiscordFarm( "**" + Player.Name() + "'s Loot: **" + theItem + " event items.")
+				//Orion.Print(theItem + " " + startEventnum)
+				fullSend +=
+					"**" + Player.Name() + "'s Loot: **" + theItem + " event items (" + ((parseInt(theItem) - parseInt(startEventnum)) / (Orion.Timer("eventItemtimer") / 3600000)).toFixed(1) + " / hour).\n";
+			}
+			SendDiscordFarm(fullSend);
+			Orion.SetTimer("DiscordUpdate", vars.updateFreq * -60000);
+			Orion.SetGlobal("updateNow", "false");
+		} else if (Player.Dead()) {
+			//Orion.SetGlobal("updateNow","true");
+			Orion.Wait(100);
+		}
+		if (Player.Dead() && Orion.GetGlobal("GetBody") == "false") {
+			Orion.SetGlobal("GetBody", "true");
+			Orion.SetGlobal("BodyX", Player.X());
+			Orion.SetGlobal("BodyY", Player.Y());
+			Orion.Wait(1000);
+			//Orion.SetGlobal("updateNow","true");
+		}
+		Orion.Wait(500);
+		//This part is watching out if a player is attacking you, and sending their name to discord.
+		if (Orion.InJournal("is attacking you", "sys", "0", "any", Orion.Now() - 5000, Orion.Now())) {
+			var msg = Orion.InJournal("is attacking you", "sys", "0", "any", Orion.Now() - 5000, Orion.Now());
+			msg = Orion.Split(msg.Text(), " ");
+			SendDiscord(TimeString() + " | " + Player.Name() + " is being attacked by " + msg + ". @everyone");
+			Orion.Wait();
+		}
+	}
+}
+
+function FarmMaster_EventItemNameCount() {
+	var returnCount = 0;
+	var eventName = Orion.GetGlobal("EventName");
+	if (eventName != "" && eventName != "any") {
+		var packItems = Orion.FindTypeEx("any", "any", "backpack");
+		for (var i = 0; i < packItems.length; i++) {
+			if (Orion.Contains(packItems[i].Properties(), eventName)) {
+				returnCount++;
+			}
+		}
+	}
+	return returnCount;
+}
+
+function FarmMaster_DiscordUpdate() {
+	var atOnDeath = false;
+	var vars = {};
+	vars.longForm = false;
+	vars.maxItems = 115;
+	vars.maxWeight = 95;
+	vars.minDurability = 8;
+	vars.updateFreq = 30;
+	vars.minGold = 100000;
+	vars.webhook = Orion.GetGlobal("farmWebhook") == "" ? false : Orion.GetGlobal("farmWebhook");
+	vars.isEvent = Orion.GetGlobal("doEventInsure") == "true" ? true : false;
+	theItem = Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length;
+	theItem += FarmMaster_EventItemNameCount();
+	//Sets the baseline for the items / hour
+	if (Orion.FindObject("startItems") == null) {
+		Orion.SetGlobal("startItems", theItem);
+	}
+	Orion.SetTimer("DiscordUpdate", -0);
+	while (true) {
+		var fullSend = "";
+		theItem = Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length;
+		theItem += FarmMaster_EventItemNameCount();
+		if (Orion.Timer("DiscordUpdate") >= -1 || Orion.GetGlobal("updateNow") == "true") {
+			var sndStr = "";
+			var divNum = 30;
+			//var divEmoji = ":white_square_button:";
+			var divEmoji = ":heavy_minus_sign:";
+			for (var i = 0; i < divNum; i++) {
+				sndStr += divEmoji;
+			}
+			//SendDiscordFarm(sndStr);
+			fullSend += sndStr + "\n";
+			var alive = Player.Dead() ? ":red_circle:" : ":green_circle:";
+			var script = Orion.ScriptRunning("FarmMaster") ? ":green_circle:" : ":red_circle:";
+			var sndStr = "";
+			var sndStr1 = [];
+			sndStr1.push(TimeString() + " | **" + Player.Name() + "**");
+			sndStr1.push("Alive: " + alive);
+			sndStr1.push("Script Running: " + script);
+			var currGold = CheckGold();
+			var goldnew = currGold[1];
+			if (currGold != false) {
+				var goldFlag = vars.minGold <= goldnew ? ":red_circle:" : ":yellow_circle:";
+				if (goldnew > vars.minGold * 5) {
+					goldFlag = ":green_circle:";
+				}
+				sndStr1.push("Gold: $" + currGold[0] + " (Deaths: " + currGold[2] + ")" + " " + goldFlag);
+			}
+			if (Player.Dead() && atOnDeath) {
+				sndStr1.push(" @everyone");
+			}
+			if (vars.longForm) {
+				for (var i = 0; i < sndStr1.length; i++) {
+					//SendDiscordFarm(sndStr1[i]);
+					fullSend += sndStr1[i] + "\n";
+					Orion.Wait(200);
+				}
+			} else {
+				for (var i = 0; i < sndStr1.length; i++) {
+					sndStr += sndStr1[i];
+					if (i != sndStr1.length - 1) {
+						sndStr += " | ";
+					}
+
+					Orion.Wait(200);
+				}
+				//SendDiscordFarm(sndStr);
+				fullSend += sndStr + "\n";
+			}
+			var sndStr = "";
+			var sndStr1 = [];
+			sndStr1.push("**" + Player.Name() + "'s Stats**");
+			var hitsPer = Player.Hits() / Player.MaxHits();
+			hitsPer = (hitsPer * 100).toFixed(0);
+			var hitsFlag = hitsPer <= 30 ? ":red_circle:" : ":yellow_circle:";
+			if (hitsPer > 60) {
+				hitsFlag = ":green_circle:";
+			}
+			sndStr1.push("Health: " + hitsPer + "% " + hitsFlag);
+			var itemFlag = Orion.FindType("any", "any", "backpack", "", "", "", true).length >= vars.maxItems ? ":red_circle:" : ":green_circle:";
+			sndStr1.push(
+				"Items: " +
+					Orion.FindType("any", "any", "backpack", "", "30", "", true).length +
+					"/125 (" +
+					((Orion.FindType("any", "any", "backpack", "", "30", "", true).length / 125) * 100).toFixed(0) +
+					"%) " +
+					itemFlag
+			);
+			var weightFlag = Math.round(Player.Weight() / (Player.MaxWeight() * 1.0000000001)) >= vars.maxWeight ? ":red_circle:" : ":green_circle:";
+			sndStr1.push("Weight: " + Player.Weight() + "/" + Player.MaxWeight() + " (" + ((Player.Weight() / Player.MaxWeight()) * 100).toFixed(0) + "%) " + weightFlag);
+			if (!Player.Dead()) {
+				var durDrop = DurabilityDrop(vars.minDurability);
+				var durFlag = durDrop[0] > 75 ? ":green_circle:" : ":yellow_circle:";
+				if (durDrop[0] <= vars.minDurability) {
+					durFlag = ":red_circle:";
+				}
+				sndStr1.push("Lowest Durability: " + durDrop[1] + " (" + durDrop[0] + "/" + durDrop[2] + ") " + durFlag + " ");
+			}
+			//Taking the array that has been generated and making the final string to send to discord
+			sndStr1[0] += ":";
+			for (var i = 0; i < sndStr1.length; i++) {
+				sndStr += sndStr1[i];
+				if (i != sndStr1.length - 1) {
+					sndStr += " | ";
+				}
+
+				Orion.Wait(200);
+			}
+			fullSend += sndStr + "\n";
+			//Cu/Blaze addition to the update.
+			if (Orion.GetGlobal("BlazeFarm") == "true") {
+				sndStr += Orion.GetGlobal("blazeUpdateDiscord");
+			}
+			//Handling event items and if we need to display them or not.
+			if (vars.isEvent) {
+				var startEventnum = parseInt(Orion.GetGlobal("startEventnum"));
+				if (parseInt(startEventnum) > theItem || Orion.GetGlobal("startEventnum") == "") {
+					Orion.SetGlobal("startEventnum", Orion.FindTypeEx("any", Orion.GetGlobal("LootType"), "backpack").length + FarmMaster_EventItemNameCount());
+					Orion.SetTimer("eventItemtimer", 0);
+				}
+				fullSend +=
+					"**" + Player.Name() + "'s Loot: **" + theItem + " event items (" + ((parseInt(theItem) - parseInt(startEventnum)) / (Orion.Timer("eventItemtimer") / 3600000)).toFixed(1) + " / hour).\n";
+			}
+			SendDiscordFarm(fullSend, vars.webhook);
+			Orion.SetTimer("DiscordUpdate", vars.updateFreq * -60000);
+			Orion.SetGlobal("updateNow", "false");
+		}
+		//This part is watching out if a player is attacking you, and sending their name to discord.
+		if (Orion.InJournal("is attacking you", "sys", "0", "any", Orion.Now() - 5000, Orion.Now())) {
+			var msg = Orion.InJournal("is attacking you", "sys", "0", "any", Orion.Now() - 5000, Orion.Now());
+			msg = Orion.Split(msg.Text(), " ");
+			SendDiscordFarm(TimeString() + " | " + Player.Name() + " is being attacked by " + msg + ". @everyone", vars.webhook);
+			Orion.Wait();
+		}
+		//Check and close the insurance menu
+		var insuregumpid = 0x000f3e9f;
+		if (GumpByID(insuregumpid) != false) {
+			var temp = GumpByID(insuregumpid);
+			if (temp != false) {
+				Orion.CloseGump("generic", temp.Serial());
+				Orion.Wait(500);
+			}
+		}
+		Orion.Wait(2000);
+	}
+}
+
+//--#IDOC Scripts
+function HitBarrels() {
+	while (!Player.Dead()) {
+		var barrels = Orion.FindType("0x0FAE|0x0E77|0x1EB5", "-1", ground, "near", "24", " ");
+		var barrel;
+		if (barrels.length) {
+			barrel = Orion.FindObject(barrels[0]);
+			if (barrel.Serial) {
+				var h = barrel.X();
+				var j = barrel.Y();
+				if (barrel.Distance() > 1) Orion.WalkTo(h, j, 0);
+				else Orion.Attack(barrel.Serial());
+				Orion.Wait(250);
+			}
+		}
+		Orion.Wait(250);
+	}
+}
+
+function HidePlayers() {
+	while (true) {
+		var peeps = Orion.FindType(any, any, ground, "live|ignoreself", 24, "blue");
+		for (i = 0; i < peeps.length; i++) {
+			Orion.Hide(peeps[i]);
+		}
+		Orion.Wait(100);
+	}
+	Orion.Wait(50);
+}
+
+function CharacterDirectionOffset(direction, value, trueCoord, x, y) {
+	var empty = 0;
+
+	var dict = {
+		0: [empty, -value], //direction = 0
+		1: [value, -value], //direction = 1
+		2: [value, empty], //direction = 2
+		3: [value, value], //direction = 3
+		4: [empty, value], //direction = 4
+		5: [-value, value], //direction = 5
+		6: [-value, empty], //direction = 6
+		7: [-value, -value], //direction = 7
+		128: [empty, -value], //direction = 0 / Running
+		129: [value, -value], //direction = 1 / Running
+		130: [value, empty], //direction = 2 / Running
+		131: [value, value], //direction = 3 / Running
+		132: [empty, value], //direction = 4 / Running
+		133: [-value, value], //direction = 5 / Running
+		134: [-value, empty], //direction = 6 / Running
+		135: [-value, -value], //direction = 7 / Running
+	};
+	if (trueCoord != true) {
+		var temp = {};
+		temp.x = dict[direction][0];
+		temp.y = dict[direction][1];
+		return temp;
+	} else {
+		var temp = {};
+		temp.x = dict[direction][0] + x;
+		temp.y = dict[direction][1] + y;
+		return temp;
+	}
+	return false;
+}

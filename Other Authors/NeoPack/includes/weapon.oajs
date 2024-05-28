@@ -1,0 +1,420 @@
+//@@This is the function that is called as an external function in Hotkeys in the OA. The syntax is as follows: AbilityToggle("primary","true"); You can change "primary" for "secondary", and the true sets whether or not the script keeps the ability toggled.
+//PvP,Weapons
+function AbilityToggle(abil, auto, wepChange) {
+	//Handling if auto is already turned on to keep it on for switching from secondary to primary
+	//Getting previous states of both settings
+	var prevAuto = Orion.GetGlobal("AutoAbil");
+	var prevAbil = Orion.GetGlobal("SelAbil");
+	if (abil == prevAbil && auto == "true" && (wepChange == "false" || wepChange == false || wepChange == "" || wepChange == null)) {
+		var tempAuto = prevAuto == "true" ? "false" : "true";
+		Orion.SetGlobal("AutoAbil", tempAuto);
+	} else {
+		Orion.SetGlobal("AutoAbil", auto);
+	}
+	Orion.SetGlobal("SelAbil", abil);
+	Orion.SetGlobal("AbilDoOnce", "true");
+}
+
+//@This is the function that runs in the background to keep up an ability set in the AbilityToggle script.
+//PvP,Support
+function AutoAbility() {
+	while (Orion.GetGlobal("doAutoAbility") == "true") {
+		abil = Orion.GetGlobal("SelAbil");
+		auto = Orion.GetGlobal("AutoAbil");
+		doonce = Orion.GetGlobal("AbilDoOnce");
+		manacost = 10;
+		if (Orion.Timer("SpecialUsed") > 0) {
+			manacost = manacost * 2;
+		}
+
+		if (auto == "false" && doonce == "true" && abil != "focus" && abil != "ds") {
+			Orion.UseAbility(abil);
+			Orion.SetTimer("SpecialUsed", -3050);
+		} else if (auto == "false" && doonce == "true" && abil == "focus") {
+			Orion.Cast("Focus Attack");
+		} else if (auto == "false" && doonce == "true" && abil == "ds") {
+			Orion.Cast("Death Strike");
+		} else if (auto == "true" && Player.Mana() > manacost) {
+			while (Player.Frozen() || Orion.HaveTarget()) {
+				Orion.Wait(100);
+			}
+			if (!Player.Dead() && !Orion.AbilityStatus(abil) && abil != "focus" && abil != "ds") {
+				Orion.UseAbility(abil);
+				Orion.SetTimer("SpecialUsed", -3050);
+			} else if (!Player.Dead() && !Orion.SpellStatus("Focus Attack") && abil == "focus") {
+				Orion.Cast("Focus Attack");
+			} else if (!Player.Dead() && abil == "ds" && !Orion.SpellStatus("Death Strike")) {
+				Orion.Cast("Death Strike");
+			}
+			Orion.Wait(200);
+		}
+
+		Orion.SetGlobal("AbilDoOnce", "false");
+		Orion.Wait(500);
+	}
+}
+//@@A script that runs in the background to auto-rearm your weapon (can be selected in the gump to only do so if you are disarmed).
+//PvP,Weapon
+function AutoRearm() {
+	//Requires a dress group labelled variable below
+	doit = false;
+	ondisarmonly = false;
+	while (Orion.GetGlobal("doRearm") == "true") {
+		prevwep = null;
+		ondisarmonly = Orion.GetGlobal("doRearmOnly") == "true" ? true : false;
+		if (Orion.BuffExists("disarm") && Orion.Timer("DisarmTimer") >= -1) {
+			Orion.SetTimer("DisarmTimer", -4000);
+			Orion.AddDisplayTimer("10", 4000, "AboveChar", "Circle|Bar", "Disarm", 0, 0, "55", 0xff, "0xFFFFFF");
+		}
+		if (Orion.BuffExists("disarm") || Orion.BuffExists("no rearm") || !ondisarmonly) {
+			doit = true;
+		}
+		if (!(Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) && doit) {
+			wep = Orion.FindObject("PrevWep");
+			while (!(Orion.ObjAtLayer("RightHand") || Orion.ObjAtLayer("LeftHand")) && wep) {
+				if (!Player.Frozen() && !(Orion.BuffExists("disarm") || Orion.BuffExists("no rearm"))) {
+					Orion.Equip(wep.Serial());
+					Orion.Wait(500);
+				}
+				Orion.Wait(100);
+			}
+			doit = false;
+		}
+		if (Orion.ObjAtLayer("RightHand")) {
+			Orion.AddObject("PrevWep", Orion.ObjAtLayer("RightHand").Serial());
+		} else if (Orion.ObjAtLayer("LeftHand")) {
+			Orion.AddObject("PrevWep", Orion.ObjAtLayer("LeftHand").Serial());
+		}
+		Orion.Wait(500);
+	}
+}
+
+//@@Function that can be hot-keyed in the OA to toggle auto-rearm on and off.
+//PvP,Weapon
+function ToggleRearm() {
+	if (Orion.ScriptRunning("AutoRearm")) {
+		Orion.Terminate("AutoRearm");
+		Orion.Print("Terminating Auto-Rearm");
+	} else {
+		Orion.Print("Starting Auto-Rearm");
+		Orion.Exec("AutoRearm");
+	}
+}
+
+//@@Dismounts your mount and activates your secondary ability.
+//PvP,Weapon
+function DismountSecondary() {
+	if (Orion.ObjAtLayer("Mount")) {
+		Orion.UseObject("self");
+		Orion.Wait(100);
+		Orion.UseAbility("secondary", true);
+		Orion.Wait(100);
+		Orion.Attack("lasttarget");
+	} else {
+		Orion.UseObject("MyMount");
+	}
+}
+//@@Attacks the closest target to you, your last target and if your stamina is below 90% (or a value set in the gump), chugs a refresh.  If your LT is just as close to you as the the next closest target, it will flag your LT last (to make sure you are attacking it).  This is spammable.
+//PvP,Weapon
+function AttackLT_Closest_Refresh() {
+	var doStandalone = false;
+	if (doStandalone) {
+		var note = "criminal|orange";
+		var textColor = "0x25";
+		var refreshChug = 90;
+	} else {
+		var note = ActiveNotoriety();
+		var textColor = color.darkred;
+		var refreshChug = Orion.GetGlobal("refreshChug") == "" ? 90 : parseInt(Orion.GetGlobal("refreshChug"));
+	}
+	var humanArr = Orion.FindTypeEx("-1", "-1", "ground", "live|ignoreself|ignorefriends|near|human", 20, note);
+	var creatureArr = Orion.FindTypeEx("0x0084|0x007A|0x00F6|0x0019|0x00DC|0x00DB|0x04E6", "-1", "ground", "near", 18, note);
+	var mobArr = humanArr.concat(creatureArr);
+	var attackArray = [];
+	var LT = Orion.FindObject("lasttarget");
+	//Attacking LT first
+	Orion.Attack("lasttarget");
+	if (mobArr.length > 0) {
+		Orion.Print(mobArr[0].Name());
+		//Orion.Wait(50);
+		Orion.Attack(mobArr[0].Serial());
+		attackArray.push(mobArr[0].Name());
+	}
+	//If LT is on screen, push to the array that displays names being attack, also, if the distance is closer than or equal too the closest target, make it the last one to attack.
+	if (LT) {
+		attackArray.push(LT.Name());
+		if (LT.Distance() <= mobArr[0].Distance()) {
+			//Orion.Wait(50);
+			Orion.Attack("lasttarget");
+		}
+	}
+	//Chug a refesh if stam is below the threshold set.
+	var stamPer = Player.Stam() / (Player.MaxStam() * 1.001);
+	if (!Player.Dead() && stamPer < refreshChug / 100 && !Orion.HaveTarget()) {
+		Orion.UseType(0x0f0b, 0x0000);
+	}
+	//Display the name of who you're attacking, quickly.
+	if (attackArray.length > 0) {
+		var sendText = "Attacking: " + attackArray[0];
+		if (attackArray.length > 1 && attackArray[0] != attackArray[1]) {
+			sendText += ", " + attackArray[1];
+		}
+		Orion.PrintFast(Player.Serial(), textColor, "4", sendText);
+	}
+}
+
+//@@Attacks your last attack target, and chugs a refresh if your stamina is below 90% (or the value set in the gump).
+//PvP,Weapon
+function AttackLast_Refresh() {
+	var doStandalone = false;
+	if (doStandalone) {
+		var refreshChug = 90;
+	} else {
+		var refreshChug = Orion.GetGlobal("refreshChug") == "" ? 90 : parseInt(Orion.GetGlobal("refreshChug"));
+	}
+	Orion.Attack(Orion.ClientLastAttack());
+	//Chug a refesh if stam is below the threshold set.
+	var stamPer = Player.Stam() / (Player.MaxStam() * 1.001);
+	if (!Player.Dead() && stamPer < refreshChug / 100 && !Orion.HaveTarget()) {
+		Orion.UseType(0x0f0b, 0x0000);
+	}
+}
+
+//@@This is a function to be added as a hotkey in the OA, external code.  The purpose is to specify a dress group that is a weapon, and the ability you'd like it to turn on when you arm that weapon.\nExample:\nDressPreferredAbility("wep_bokuto", "secondary")
+//PvP,Weapon
+function DressPreferredAbility(dress, ability) {
+	Orion.Dress(dress);
+	Orion.SetGlobal("SelAbil", ability);
+}
+
+//@@Using your last target as a reference, once activated waits until you are within 2 tiles, and then dismounts, then activates secondary to dismount the target.  This function hasn't been tested in some time, may not work properly.
+//PvP,Weapon
+function Dachi_Dismount() {
+	var dmountdist = 2;
+	var myTarget = Orion.FindObject(Orion.ClientLastTarget());
+	if (myTarget) {
+		var range = Orion.GetDistance(myTarget.Serial());
+		Orion.CharPrint(self, "2128", "Ready to dismount...");
+	}
+	while (range > dmountdist) {
+		Orion.Wait(100);
+		range = Orion.GetDistance(myTarget.Serial());
+	}
+	if (range <= dmountdist) {
+		Orion.UseObject("self");
+		Orion.Wait(50);
+		Orion.UseAbility("Secondary", "true");
+		Orion.Attack(myTarget.Serial());
+	}
+}
+
+//@@Spams attack last while the script is running.
+//PvP,Weapon
+function SpamAttackLast() {
+	while (!Player.Dead()) {
+		targ = Orion.ClientLastTarget();
+		targ = Orion.FindObject(targ);
+		friendlist = Orion.GetFriendList();
+		if (!Orion.HaveTarget() && targ && targ.Notoriety() != "2" && friendlist.indexOf(targ.Serial()) == -1) {
+			Orion.Attack(targ.Serial());
+			Orion.CharPrint(self, 55, "Attacking Last");
+			Orion.Wait(1000);
+		}
+		Orion.Wait(100);
+	}
+}
+
+//@@Disarms your left hand
+//Weapon
+function DisarmLeftHand() {
+	//this is a sub-function for clearing left hand if needed before drinking a potion
+	var Lhand = Orion.ObjAtLayer("2");
+	if (Lhand !== null) {
+		Orion.Print("disarming left hand");
+		Orion.MoveItem(Lhand.Serial(), "all", "backpack");
+		Orion.Wait(600);
+	} else {
+		//Orion.Print('nothing in left hand to disarm.');
+		Orion.Wait(10);
+	}
+}
+
+//@@Support function for PvM, it references a global that I don't think is set in the latest pack.
+//PvM,Sampire
+function SampAbility() {
+	var doSamp = Orion.GetGlobal("doSampAbiilty") == "true" ? true : false;
+	Debug("[SampAbility][Info] Samp Ability (doSampAbility): " + doSamp);
+	while (doSamp) {
+		var wep1 = Orion.ObjAtLayer("RightHand");
+		var wep2 = Orion.ObjAtLayer("LeftHand");
+		var prop = "";
+		if (wep1 != null) {
+			prop += wep1.Properties();
+		}
+		if (wep2 != null) {
+			prop += wep2.Properties();
+		}
+		abil = "secondary";
+		moment = false;
+		//Orion.Print(Orion.GetGlobal("AutoAbil"));
+		if (Orion.GetGlobal("AutoAbil") == "true") {
+			auto = "false";
+		} else {
+			auto = "true";
+		}
+		manacost = 12;
+		var mobArr = Orion.FindTypeEx("-1", "-1", "ground", "live|ignoreself|ignorefriends|nothuman", 2, "gray|criminal|red");
+		for (var k = 0; k < mobArr.length; k++) {
+			if (Orion.Contains(mobArr[k].Properties(), "energy vortex|Rising Colossus", true)) {
+				PopItemArray(mobArr, k);
+			}
+		}
+		//Orion.Print(mobArr.length);
+		//This is ssetup specifically for double axe
+		if (Array.isArray(mobArr) && mobArr.length == 2 && Orion.SkillValue("Bushido", "base") >= 800) {
+			moment = true;
+		} else if (Array.isArray(mobArr) && mobArr.length >= 2) {
+			abil = "secondary";
+			if (Orion.Contains(prop, "Mace Fighting|Throwing")) {
+				moment = true;
+			}
+		} else {
+			abil = "primary";
+		}
+		//This section will be for special weapons
+		//Macing / Maul
+		if (Orion.Contains(prop, "Mace Fighting|Throwing")) {
+			abil = "primary";
+		}
+		if (Orion.Timer("SpecialUsed") > 0) {
+			manacost = manacost * 2;
+		}
+		//if(Orion.ObjAtLayer(2) != null && (Orion.Contains(Orion.ObjAtLayer(2).Name(),"hachet") || Orion.Contains(Orion.ObjAtLayer(2).Name(),"bladed staff"))){
+		//  abil = "primary";
+		//  moment = false;
+		//}
+		var tempAbilities = Orion.GetCurrentAbilityNames();
+		//Checking if weapon has armor ignore, and using it if so (in the case of arming a weapon that doesn't have whirlwind)
+		if (tempAbilities.length == 2 && (tempAbilities[0] == "Armor Ignore" || tempAbilities[1] == "Armor Ignore")) {
+			if (tempAbilities[0] == "Armor Ignore") {
+				abil = "primary";
+			} else {
+				abil = "secondary";
+			}
+			if (mobArr.length >= 2 && Orion.SkillValue("Bushido", "base") >= 800) {
+				moment = true;
+			}
+		}
+		//Checking if special has been used to avoid the double mana penalty (right now only for AI)
+		if (Orion.InJournal("attack penetrates their", "system", "0", "any", Orion.Now() - 3100, Orion.Now())) {
+			abil = "lightning";
+		}
+		if (auto == "true" && (!Orion.AbilityStatus(abil) || !Orion.BuffExists("Momentum Strike") || !Orion.BuffExists("Lightning Strike")) && Player.Mana() > manacost) {
+			while (Player.Frozen() || Orion.HaveTarget()) {
+				Orion.Wait(100);
+			}
+			if (!Player.Dead() && !moment && abil != "lightning") {
+				Orion.UseAbility(abil, "true");
+				Orion.SetTimer("SpecialUsed", -3050);
+			} else if (moment && !Player.Dead()) {
+				if (!Orion.BuffExists("Momentum Strike") && !Orion.BuffExists("Lightning Strike") && Orion.SkillValue("Bushido", "base") >= 700) {
+					Orion.Cast("Momentum Strike");
+					Orion.Wait(750);
+				}
+			} else if (abil == "lightning") {
+				Orion.Cast("Lightning Strike");
+				Orion.Wait(500);
+			}
+		} else if (auto == "true" && Player.Mana() > 7 && !Orion.AbilityStatus(abil) && !Orion.BuffExists("Momentum Strike") && !Orion.BuffExists("Lightning Strike")) {
+			Orion.Cast("Lightning Strike");
+			Orion.Wait(500);
+		}
+		Orion.Wait(300);
+		doSamp = Orion.GetGlobal("doSampAbiilty") == "true" ? true : false;
+	}
+}
+
+//Old Standalone Auto Actions
+//@@Function will run in the background to auto counter-attack.  This is not required if you set this to active in the gump pack.
+//Bushido,PvP,Weapon
+function AutoCouterAttack_standalone() {
+	while (true) {
+		if (
+			!Player.Dead() &&
+			Orion.SkillValue("Bushido") > 1000 &&
+			!Player.Hidden() &&
+			!Orion.BuffExists("Counter Attack") &&
+			!Orion.BuffExists("Evasion") &&
+			!Orion.BuffExists("Confidence") &&
+			!Orion.HaveTarget() &&
+			Player.WarMode()
+		) {
+			Orion.Cast("Counter Attack");
+		}
+		Orion.Wait(100);
+	}
+}
+
+//Depricated Functions (should delete)
+
+function AbilityToggle_Old(abil, auto) {
+	//Handling if auto is already turned on to keep it on for switching from secondary to primary
+	//Getting previous state of auto
+	var autoOn = false;
+	if (Orion.GetGlobal("AutoAbil") == "true") {
+		autoOn = true;
+	}
+	//Getting previous state of which ability
+	prevsabil = Orion.GetGlobal("SelAbil");
+
+	if (abil == "primary") {
+		Orion.SetGlobal("SelAbil", "Primary");
+	} else if (abil == "focus") {
+		Orion.SetGlobal("SelAbil", "focus");
+	} else if (abil == "ds") {
+		Orion.SetGlobal("SelAbil", "ds");
+	} else {
+		Orion.SetGlobal("SelAbil", "Secondary");
+	}
+	if (auto == "true") {
+		if (Orion.GetGlobal("AutoAbil") == "true") {
+			Orion.SetGlobal("AutoAbil", "false");
+			Orion.UseAbility(prevsabil, "false");
+			if (prevsabil == "ds") {
+				Orion.Cast("Death Strike");
+			} else if (prevsabil == "focus") {
+				Orion.Cast("Focus Attack");
+			}
+		} else {
+			Orion.SetGlobal("AutoAbil", "true");
+		}
+	} else {
+		Orion.SetGlobal("AutoAbil", "false");
+	}
+	Orion.SetGlobal("AbilDoOnce", "true");
+}
+
+function AbilityToggle_newerold(abil, auto) {
+	//Handling if auto is already turned on to keep it on for switching from secondary to primary
+	//Getting previous state of auto
+	var autoOn = false;
+	if (Orion.GetGlobal("AutoAbil") == "true") {
+		autoOn = true;
+	}
+	//Getting previous state of which ability
+	prevsabil = Orion.GetGlobal("SelAbil");
+
+	if (abil == "primary") {
+		Orion.SetGlobal("SelAbil", "Primary");
+	} else if (abil == "focus") {
+		Orion.SetGlobal("SelAbil", "focus");
+	} else {
+		Orion.SetGlobal("SelAbil", "Secondary");
+	}
+	if (auto == "true" && Orion.GetGlobal("AutoAbil") == "false") {
+		Orion.SetGlobal("AutoAbil", "true");
+	} else {
+		Orion.SetGlobal("AutoAbil", "false");
+	}
+	Orion.SetGlobal("AbilDoOnce", "true");
+}

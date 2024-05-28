@@ -1,0 +1,202 @@
+itemManager_defaultvars = [];
+
+//Revision number
+var currentRevision = 1; //This will be used when writing/pulling "database" file so that older versions aren't corrupted by newer ones.
+
+//Structure for item objects
+function itemMgr_ItemObj(serial) {
+	var test = {};
+	test.serial = serial;
+	test.name = null;
+	test.container = null;
+	test.posX = null;
+	test.posY = null;
+	test.layer = null;
+	test.intesity = null;
+	test.graphic = null;
+	test.studBone = false;
+	test.totalMods = 0;
+	test.hasDurability = true;
+	test.properties = null;
+
+	return test;
+}
+
+function itemMgr_PropertyClass(propName, muxArmor, muxJewel, muxWep) {
+	var test = {};
+	test.value = false;
+	test.searchName = propName;
+	test.intensity = 0;
+	test.existOnly = false; //Checking to see if the property exists or a value
+	test.muxArmor = 1;
+	test.muxJewel = 1;
+	test.muxWep = 1;
+	test.totalMod = true;
+	test.isSkill = false;
+	test.bonus = 0;
+	test.bonusLevel = 9999;
+	return test;
+}
+
+function itemMgr_ColumnSetup() {
+	var tempDict = {};
+	var tempSkill = "Sel.";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].width = 40;
+	tempDict[tempSkill].textOffset = 10;
+	tempDict[tempSkill].order = 0;
+	var tempSkill = "Item";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].ref = "Graphic";
+	var tempSkill = "LRC";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].ref = "Lower Reagent Cost";
+	var tempSkill = "LMC";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "MR";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "HPR";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "SR";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].hide = true;
+	var tempSkill = "Str";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "Int";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "Dex";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "HPI";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "MI";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	var tempSkill = "SI";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].hide = true;
+	var tempSkill = "Inten.";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].hide = false;
+	tempDict[tempSkill].order = 19;
+	var tempSkill = "Price";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].hide = false;
+	tempDict[tempSkill].order = 20;
+	tempDict[tempSkill].itemProp = false;
+	tempDict[tempSkill].type = "entry";
+	var tempSkill = "Nearby";
+	tempDict[tempSkill] = ColumnObject(tempSkill);
+	tempDict[tempSkill].hide = true;
+	tempDict[tempSkill].itemProp = false;
+	tempDict[tempSkill].order = 21;
+
+	return tempDict;
+}
+
+function itemMgr_PropertySetup() {
+	var tempDict = {};
+	//Stat Bonuses
+	var tempSkill = "Intelligence Bonus";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 6, 3, 0.5);
+	var tempSkill = "Dexterity Bonus";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 6, 3, 0.5);
+	var tempSkill = "Strength Bonus";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 6, 3, 0.5);
+	var tempSkill = "Hit Point Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 10, 2, 1);
+	var tempSkill = "Stamina Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 4, 2, 1);
+	var tempSkill = "Mana Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 3, 2, 1);
+	//Regen Bonuses
+	var tempSkill = "Mana Regeneration";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 12, 5, 1);
+	var tempSkill = "Stamina Regeneration";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 5, 5, 1);
+	var tempSkill = "Hit Point Regeneration";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 12, 5, 1);
+	//Casting Bonuses
+	var tempSkill = "Lower Reagent Cost";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 3, 2, 1);
+	var tempSkill = "Lower Mana Cost";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 6, 4, 1);
+	var tempSkill = "Faster Casting";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 20, 45, 10);
+	var tempSkill = "Faster Casting -";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Mage Weapon -";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 3);
+	var tempSkill = "Faster Cast Recovery";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 11, 1);
+	var tempSkill = "Spell Damage Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1.5, 1);
+	var tempSkill = "Spell Channeling";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 50);
+	tempDict[tempSkill].existOnly = true;
+	var tempSkill = "Casting Focus";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 15, 1, 1);
+	//Misc Mods
+	var tempSkill = "Enhance Potions";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 2, 2);
+	var tempSkill = "Eater";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 2, 1, 1);
+	var tempSkill = "Night Sight";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	tempDict[tempSkill].existOnly = true;
+	var tempSkill = "Slayer";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	tempDict[tempSkill].existOnly = true;
+	var tempSkill = "Luck";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 0.1, 0.1, 0.1);
+	//Combat
+	var tempSkill = "Hit Chance Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Defense Chance Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Swing Speed Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Damage Increase";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	//Hit Spell
+	var tempSkill = "Splintering Weapon";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Lightning";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Fireball";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Harm";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Magic Arrow";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Lower Defense";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Lower Attack";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Fatigue";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	//Leach and extra combat
+	var tempSkill = "Hit Mana Drain";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Mana Leech";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Life Drain";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Life Leech";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Stamina Drain";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Hit Stamina Leech";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Battle Lust";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Blood Drinker";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	var tempSkill = "Reactive Paralyze";
+	tempDict[tempSkill] = PropertyClass(tempSkill, 1, 1, 1);
+	//Area Damage
+
+	//Weapon Damage
+
+	//Item Quality
+
+	return tempDict;
+}

@@ -1,0 +1,95 @@
+var fileBase = "./OA/";
+var utilitiesAddon = "includes/utilities/";
+var fileName = fileBase + utilitiesAddon + "utilities.oajs";
+
+function LibraryPackCreator() {
+	var libPack = {};
+	libPack.library = FunctionLibraryBuilder();
+	libPack.tagList = ["All"];
+	//Iterate through and pull all the tags.
+	Object.keys(libPack.library).forEach(function (key) {
+		var tags = Orion.Split(libPack.library[key].tags, ",");
+		for (var i = 0; i < tags.length; i++) {
+			if (libPack.tagList.indexOf(tags[i]) == -1) {
+				libPack.tagList.push(tags[i]);
+			}
+		}
+	});
+	Debug("[LibraryPackCreator][Info] Number of tags found: " + libPack.tagList.length);
+
+	JSON_export("FunctionLibrary", libPack);
+}
+
+function FunctionLibraryBuilder() {
+	var file = RawReadFile(fileBase + "Neos_Script_Pack.oajs");
+	Debug("[FunctionLibraryBuilder][Trace] Script Pack File Length: " + file.length);
+	var includeLib = IncludeScanner(file);
+	var functionLib = {};
+	for (var i = 0; i < includeLib.length; i++) {
+		Debug("[FunctionLibraryBuilder][Trace] Scanning Include: " + includeLib[i]);
+		functionLib = CommentScanner(fileBase + includeLib[i], functionLib);
+	}
+	Debug("[FunctionLibraryBuilder][Info] Total Functions Found: " + Object.keys(functionLib).length);
+	return functionLib;
+}
+
+function IncludeScanner(file) {
+	var includeLib = [];
+	for (var i = 0; i < file.length; i++) {
+		Debug("[IncludeScanner][Trace] Line: " + file[i]);
+		if (Orion.Contains(file[i], "#include")) {
+			var tempString = file[i];
+			//var tempName = /\/\/#include\s.\/([[:graph:]]+)/.exec(tempString);
+			var tempName = /\/\/#include\s.\/(\S+)/.exec(tempString);
+			Debug("[IncludeScanner][Trace] Found: " + tempName + " Line: " + tempString);
+			if (tempName) {
+				includeLib.push(tempName[1]);
+				Debug("[IncludeScanner][Trace] Name: " + tempName[1]);
+			}
+		}
+	}
+	Debug("[IncludeScanner][Info] Total number of include files to scan: " + includeLib.length);
+	return includeLib;
+}
+
+function CommentScanner(fileName, functionLib) {
+	var file = RawReadFile(fileName);
+	for (var i = 0; i < file.length; i++) {
+		//if (file[i].indexOf("//]]") != -1) {
+		if (Orion.Contains(file[i], "@@", false) && !Orion.Contains(file[i], "Orion.Contains|Orion.Split")) {
+			var tempString = file[i + 2];
+			var tempName = /function ([a-zA-Z_]+)/.exec(tempString);
+			if (tempName) {
+				var tempName = tempName[1];
+				var tempTags = Orion.Split(Orion.Split(file[i + 1], "//")[0], ",");
+				var tempDisc = Orion.Split(file[i], "//@@");
+				functionLib[tempName] = FunctionLibraryObject(tempName, tempTags, tempDisc, fileName);
+				i += 5;
+				Debug("[CommentScanner][Trace] Name: " + tempName + " Tags:" + tempTags.length + " (" + tempTags + ").");
+			} else {
+				Debug("[CommentScanner][Error] Comment flag was found (" + fileName + "), but error matching function (Line: " + tempString + ")");
+			}
+		}
+	}
+	return functionLib;
+}
+
+//@@Object structure to hold function descriptions and tags.
+//Structure,Programming
+function FunctionLibraryObject(name, tags, description, location) {
+	var test = {};
+	test.name = name;
+	test.tags = tags;
+	test.description = description;
+	test.location = location;
+	test.visible = true;
+	return test;
+}
+
+//@@Object structure to hold include files used to iterate through and build function library
+//Structure,Programming
+function includeLibraryObject(name) {
+	var test = {};
+	test.name = name;
+	return test;
+}
