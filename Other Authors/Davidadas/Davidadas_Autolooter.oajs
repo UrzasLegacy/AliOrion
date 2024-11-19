@@ -1,0 +1,161 @@
+const MasterLootList = [
+    0x572C, // Goblin Blood.
+    0x5722, // Vial of Vitriol.
+    0x0E24, // Silver Serpent Venom.
+    0x4077, // Dragon's Blood.
+    0x5747, // Raptor's Teeth.
+    0x5720, // Spider Carapace.
+    0x5748, // Bottle of Ichor.
+    0x5746, // Slith Tongue.
+    0x5744, // Silver Serpent Skin.
+    0x5731, // Undying Flesh.
+    0x5728, // Void Core.
+    0x5721, // Daemon Claw.
+    0x5726, // Fey Wings.
+    0x5749, // Reflective Wolf Eye.
+    0x571C, // Essence of [X].
+    0x573B, // Crushed Glass.
+    0x573A, // Delicate Scales.
+    0x5738, // Crystal Shards.
+    0x3190, // Parasitic Plant.
+    0x5737, // Elven Fletching.
+    0x573D, // Powdered Iron.
+    0x5736, // Seed of Renewal.
+    0x3191, // Luminescent Fungi.
+    0x573E, // Void Orb.
+    0x4007, // Void Essence.
+    0x573C, // Arcanic Rune Stone.
+    0x5732, // Crystalline Black Rock.
+    0x0F3F, // Arrows.
+    0x3196, // White Pearl.
+    0x3199, // Brilliant Amber.
+    0x3195, // Ecru Citrine.
+    0x3194, // Perfect Emerald.
+    0x3198, // Blue Diamond.
+    0x3192, // Dark Sapphire.
+    'legendary',
+    'gold',
+    // 0x0F13, // Ruby.
+    // 0x0F15, // Citrines.
+    // 0x0F18, // Tourmaline.
+    // 0x0F26, // Diamond.
+    // 0x0F10, // Emerald.
+    // 0x0F16, // Amethist.
+    // 0x0F11, // Sapphire.
+    // 0x0F25, // Amber.
+];
+
+const Logger = {
+    error: function (text) {
+        Orion.Print(0x0021, JSON.stringify(text));
+    },
+    info: function (text) {
+        Orion.Print(0x03E9, JSON.stringify(text));
+    },
+    warn: function (text) {
+        Orion.Print(0x035, JSON.stringify(text));
+    },
+    debug: function (text) {
+        TextWindow.Print(JSON.stringify(text));
+        if (!TextWindow.IsOpened()) {
+            TextWindow.Open();
+        }
+    },
+};
+
+const attemptList = {};
+
+function autoLoot() {
+    Orion.UseIgnoreList('IgnoredCorpses');
+    setLootContainer();
+    run();
+}
+
+function setLootContainer() {
+	var lootContainer = Orion.FindObject('lootContainer');
+	if (!lootContainer) {
+		Orion.WaitForAddObject('target');
+		Logger.info('Select container to store loot.');
+		const target = Orion.FindObject('target');
+		lootContainer = target ? target : Orion.FindObject(backpack);
+	}
+	
+	Orion.SetGlobal('lootContainer', lootContainer.Serial());
+}
+
+function run() {
+    try {
+        const corpses = getAllCorpses();
+        corpses.forEach(function (corpse) {
+            if (lootCorpse(corpse) || Orion.InJournal('earn the right to loot')) {
+                Orion.AddIgnoreListObject("IgnoredCorpses", corpse.Serial());
+                Orion.ClearJournal();
+    			Logger.info('All Looted!');
+            }
+        });
+        Orion.Wait(250);
+        run();
+    } catch (error) {
+        Logger.error(error);
+    }
+}
+
+function getAllCorpses() {
+    const corpseSerials = Orion.FindType('any', 0xFFFFF, 'any', 'ground', 2);
+    const corpses = corpseSerials
+        .map(function (serial) {
+            return Orion.FindObject(serial);
+        })
+        .filter(function (object) {
+            return object && object.Properties().toLowerCase().indexOf('corpse') > -1;
+        });
+
+    return corpses;
+}
+
+function lootCorpse(corpse) {
+    const opened = Orion.OpenContainer(corpse.Serial(), '600', 'reach that|right to loot');
+    if (!opened) {
+        Logger.warn('Could not open corpse.');
+        return opened;
+    }
+    Orion.Wait(250);
+    const lootSerials = Orion.FindType('any', 'any', corpse.Serial(), ' ', 'finddistance', ' ', true);
+    const corpseItems = lootSerials.map(function (serial) {
+        return Orion.FindObject(serial);
+    });
+    const loot = getLootableItems(corpseItems);
+    const allLooted = loot.every(lootItem);
+
+    return allLooted;
+}
+
+function getLootableItems(corpseItems) {
+	 const loot = corpseItems.reduce(function (acc, val) {
+    	for (var i = 0; i < MasterLootList.length; i++) {
+    		if (
+    			(typeof MasterLootList[i] === 'number' && MasterLootList[i] === parseInt(val.Graphic())) ||
+    			(typeof MasterLootList[i] === 'string' && val.Properties().toLowerCase().indexOf(MasterLootList[i]) > -1)
+    		) {
+    			acc.push(val);
+    			break;
+    		}
+    	}
+        
+        return acc;
+    }, []);
+
+	return loot;
+}
+
+function lootItem(item) {
+    const serial = item.Serial();
+    const container = item.Container();
+	const container = Orion.GetGlobal('lootContainer');
+	Logger.info(container);
+
+    Orion.Wait(750);
+    Orion.MoveItem(item.Serial(), container);
+    Orion.Wait(750);
+    return !Orion.FindObject(serial, any, container);
+}

@@ -1528,12 +1528,21 @@ function KeepWeapon(propertiesObj,props)
             }
         if(isHitSpell && isLowerD && (isEleDamage || (isSlowWep && wepObj['SwingSpeedIncrease']) || isBloodDrinker || isReactiveParalyze || isSpellChanneling))
             return '20+/50+/50+ God Weapon';
+        
+        var isTwoHandedAxe = props.indexOf('Two Handed Axe') > -1
+        if(isTwoHandedAxe && isEleDamage)
+            {
+            if(isOverCapSplinter && isLowerD)
+                return 'Clean 25+/0/50+ Weapon';
+            if(isHitSpell)
+                return 'Clean 20+/50+ ele Weapon';
+            }
         if(!isClean)
             {
             DebugLoot('Trash: Splinter non-bok isn\'t clean');
             return false;
             }
-        if(isSlowWep && !wepObj['SwingSpeedIncrease'])
+        if(isSlowWep && !isTwoHandedAxe && !wepObj['SwingSpeedIncrease'])
             {
             DebugLoot('Trash: Slow weapon without SSI');
             return false;

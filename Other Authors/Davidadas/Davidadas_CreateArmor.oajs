@@ -1,0 +1,944 @@
+const craftList = {
+	'Leather Gorget': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Cap': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Gloves': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Sleeves': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Leggings': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Tunic': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Shorts': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Skirt': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Leather Bustier': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+	'Female Leather Armor': {
+		'Physical Resist': 10,
+		'Fire Resist': 10,
+		'Cold Resist': 10,
+		'Poison Resist': 10,
+		'Energy Resist': 10,
+	},
+};
+
+// Main execution
+function craftArmor() {
+    setupContainers();
+    cleanup();
+    try {
+        const allBods = getAllBods(craftList);
+        allBods.forEach(function (bod, index) {
+			returnResources();
+    		fillBod(bod);
+		    returnResources();
+        });
+    } catch (error) {
+        Logger.error(error);
+    } finally {
+        Logger.info('Script Complete.');
+        cleanup();
+    }
+}
+
+function CraftingGump(type) {
+    const config = MasterGumpList.crafting[type];
+    const gumpIds = [
+        0x000001CC,
+    ];
+
+    function _getGump() {
+        for (var i = 0; i < Orion.GumpCount(); i++) {
+            const gump = Orion.GetGump(i);
+            const gumpId = parseInt(gump.ID());
+            if (gumpIds.indexOf(gumpId) > -1) {
+                return gump;
+            }
+        }
+        return null;
+    }
+
+    function _clickOption(index, warning) {
+        const gump = _getGump();
+        if (!gump) {
+            Logger.warn(warning);
+            return false;
+        }
+        const hook = Orion.CreateGumpHook(index);
+        if (!gump.Select(hook)) {
+            Logger.error('Could not select hook: ' + index);
+            return false;
+        }
+        Orion.WaitForGump(2000);
+        return true;
+    }
+
+    function selectCategory(category) {
+        const categoryID = config.categories[category];
+        return _clickOption(categoryID, "Failed to open gump category " + category + ".");
+    }
+
+    function selectOption(option) {
+        const result = _clickOption(option, "Failed to select gump option " + option + ".");
+        Orion.Wait(2000);
+        return result;
+    }
+
+    function selectResource(resource) {
+        const resourceId = resource ? config.resources[resource] : 5000;
+        return _clickOption(resourceId, "Failed to select resource " + resourceId + ".");
+    }
+
+    function selectMakeLast() {
+        return _clickOption(config.makeLast, "Failed to 'Make Last'.");
+    }
+
+    function selectSmeltItem() {
+        return _clickOption(config.smeltItem, "Failed to select 'Smelt item'.");
+    }
+
+    function close() {
+        const gump = _getGump();
+        if (!gump) {
+            return false;
+        }
+        _getGump().Close();
+
+        return true;
+    }
+
+    return {
+        selectCategory: selectCategory,
+        selectOption: selectOption,
+        selectResource: selectResource,
+        selectMakeLast: selectMakeLast,
+        selectSmeltItem: selectSmeltItem,
+        close: close,
+    };
+}
+
+function getAllBods(list) {
+   const keys = Object.keys(list);
+    return keys.map(function (key) {
+    	const craftable = list[key];
+    	const name = key;
+    	const amount = 1;
+    	const itemToCraft = ItemManager.findItemByDisplayName(name);
+        
+        return {
+        	reference: null,
+        	material: null,
+        	quality: 'Exceptional',
+        	amount: amount,
+        	target: name,
+        	targetItem: itemToCraft,
+        	remaining: amount,
+        	resists: list[key],
+        };
+    });
+}
+
+function fillBod(bod) {
+    if (!bod.remaining) {
+        moveBodToStorage(bod);
+    } else {
+    	 const itemToCraft = ItemManager.findItemByDisplayName(bod.target);
+    	 if (!itemToCraft) {
+    	 	Logger.error('Unknown item ' + bod.target);
+    	 	return;
+    	 }
+	    checkTools(bod);
+	    var crafted = false;
+	    while (!crafted) {
+	        checkResources(itemToCraft, bod.remaining * 50, bod.material);
+	        const craftedItem = craftItem(itemToCraft, 1, bod.material)[0];
+	        const parsedItem = parseItem(craftedItem, itemToCraft);
+	        if (!matchesRequirements(parsedItem, bod)) {
+	            Orion.Wait(250);
+	            destroyItem(parsedItem);
+	        } else {
+	        	crafted = true;
+	        }
+	    }
+	    Orion.Wait(2500);
+    }
+}
+
+function parseItem(item, template) {
+    const properties = item.Properties();
+    const quality = properties.indexOf('Exceptional') > -1 ? 'Exceptional' : 'Normal';
+
+    return {
+        reference: item,
+        quality: quality,
+        displayName: template.displayName,
+        craftingType: template.craftingType,
+    };
+}
+
+function getTargetCount(bod, item) {
+    const serials = Orion.FindType(item.graphic);
+    var count = Orion.Count(item.graphic);
+
+    serials.forEach(function (serial) {
+        const object = Orion.FindObject(serial);
+        const matchesTarget = matchesRequirements(parseItem(object, item), bod);
+        if (!matchesTarget) {
+            count -= 1;
+        }
+    });
+    return count;
+}
+
+function openContainer(object, recursive) {
+    var parent = object.Container();
+    const containers = [object];
+
+    function findAndOpenParent(parent) {
+        if (typeof parent === 'string') {
+            parent = Orion.FindObject(parent);
+        }
+        if (parent) {
+            containers.unshift(parent);
+            findAndOpenParent(parent.Container());
+        }
+    }
+
+    if (recursive) findAndOpenParent(parent);
+
+    containers.forEach(function (container) {
+        Orion.UseObject(container.Serial());
+        Orion.Wait(1000);
+    });
+}
+
+function setupContainers() {
+    var resourceContainer = Orion.FindObject('resourceContainer');
+    if (!resourceContainer) {
+        const resourceContainer = targetContainer('Select a Resource Container.');
+        Orion.SetGlobal('resourceContainer', resourceContainer.Serial());
+    } else {
+        Orion.SetGlobal('resourceContainer', resourceContainer.Serial());
+    }
+
+    if (!resourceContainer) {
+        throw new Error('No \'resourceContainer\' set. Add in Objects -> Lists.');
+    }
+
+    openContainer(resourceContainer, true);
+}
+
+function targetContainer(text) {
+    Logger.prompt(text);
+    Orion.WaitForAddObject('target');
+    var target = Orion.FindObject('target');
+
+    return target;
+}
+
+function craftItem(item, numToBuild, resource, crafted) {
+	Orion.CancelWaitGump();
+    numToBuild = numToBuild || 1;
+    const clonedArray = crafted ? [].concat(crafted) : [];
+    
+    if (numToBuild === clonedArray.length) return clonedArray;
+    var lastCount = Orion.Count(item.graphic);
+    // Double click crafting tool.
+    const craftingTool = ToolMap[item.craftingType];
+
+    Orion.UseType(craftingTool);
+    Orion.WaitForGump(2000);
+    
+    // Select material, if applicable.
+    const craftingGump = new CraftingGump(item.craftingType);
+    craftingGump.selectResource(Utils.toCamelCase(resource));
+
+    // Select category
+    craftingGump.selectCategory(item.category);
+    // Select the option to craft the item, then pause.
+    craftingGump.selectOption(item.option);
+
+    if (Orion.Count(item.graphic) > lastCount) {
+        lastCount = Orion.Count(item.graphic);
+        const craftedItemSerials = Orion.FindType(item.graphic);
+        const craftedItem = Orion.FindObject(craftedItemSerials[craftedItemSerials.length - 1]);
+        clonedArray.push(craftedItem);
+    } else {
+        Logger.warn('Did not make item.');
+        checkResources(item, numToBuild, resource);
+    }
+
+    return craftItem(item, numToBuild - clonedArray.length, resource, clonedArray);
+}
+
+function checkTools(bod) {
+    const tinkerTool = ItemManager.findItemByDisplayName('Tinker\'s Tools');
+    const bodTarget = ItemManager.findItemByDisplayName(bod.target);
+    const craftingTool = ItemManager.findItemByGraphic(ToolMap[bodTarget.craftingType]);
+    const tinkerToolCount = Orion.Count(tinkerTool.graphic, any, self, 1, true);
+    const craftingToolCount = Orion.Count(craftingTool.graphic, any, self, 1, true);
+
+    [
+        [craftingTool, craftingToolCount],
+        [tinkerTool, tinkerToolCount],
+    ]
+        .forEach(function (toolInfo) {
+            const tool = toolInfo[0];
+            const toolCount = toolInfo[1];
+            const numToBuild = 2 - toolCount;
+            if (toolCount <= 1) {
+                checkResources(tool, numToBuild, 0x0000);
+                craftItem(tool, numToBuild);
+    			returnResources();
+            }
+        });
+}
+
+function returnResources() {
+    const resourceContainer = Orion.FindObject(Orion.GetGlobal('resourceContainer'));
+    ['Ingots', 'Boards', 'Cloth', 'Blank Scroll', 'Shaft', 'Arrow', 'Crossbow Bolt', 'Leather'].forEach(function (resource) {
+        const resourceItem = ItemManager.findItemByDisplayName(resource);
+        const resourceSerials = Orion.FindType(resourceItem.graphic);
+        // Convert each serial to an object then return it.
+        resourceSerials.forEach(function (resourceSerial) {
+            Orion.Wait(1000);
+            const resourceObject = Orion.FindObject(resourceSerial);
+            if (!resourceObject) return;
+            Orion.MoveItem(resourceObject.Serial(), 0, resourceContainer.Serial());
+            Orion.Wait(1000);
+        });
+    });
+}
+
+function checkResources(item, count, type) {
+    const resourceContainer = Orion.FindObject(Orion.GetGlobal('resourceContainer'));
+    const requiredMaterials = item.materials.map(function (materialInfo) {
+        const graphic = materialInfo[0];
+        const quantity = materialInfo[1];
+        return {
+            graphic: graphic,
+            quantity: quantity * count,
+        };
+    });
+    requiredMaterials.forEach(function (material, index) {
+        const materialItem = ItemManager.findItemByGraphic(material.graphic);
+        const quantity = material.quantity > 300 ? 300 : material.quantity;
+        var materialColor = 0xFFFF; // This value is ignored.
+        if (materialItem.types || type) {
+            materialColor = type ? materialItem.types[Utils.toCamelCase(type)] : (Object.keys(materialItem.types)[0] || 0xFFFF);
+        }
+        const currentCount = Orion.Count(material.graphic);
+        if (currentCount >= item.materials[index][1]) {
+            return;
+        }
+        const currentSupply = Orion.Count(material.graphic, materialColor, resourceContainer.Serial());
+        if (currentSupply < quantity) {
+        	Logger.debug(currentSupply);
+        	throw new Error('Insufficient Supply of ' + material.graphic);
+        }
+        const serial = Orion.FindType(material.graphic, materialColor, resourceContainer.Serial())[0];
+        Orion.Wait(1000);
+        Orion.MoveItem(serial, quantity);
+        Orion.Wait(2000);
+    });
+}
+
+function matchesRequirements(item, bod) {
+	const parsedResists = parseResists(item.reference.Properties());
+	const matchesResists = Object.keys(parsedResists).every(function(key) {
+		return parsedResists[key] >= bod.resists[key];
+	});
+    const itemColor = parseInt(item.reference.Color());
+    const bodColor = parseInt(MaterialColorMap[bod.material]);
+    const itemGraphic = parseInt(item.reference.Graphic());
+    const isQualityMatched = item.quality === 'Exceptional' || item.quality === bod.quality;
+
+    return isQualityMatched && matchesResists;
+}
+
+function parseResists(input) {
+    var resists = {};
+    var resistPattern = /(Physical Resist|Fire Resist|Cold Resist|Poison Resist|Energy Resist) (\d+)%/g;
+    var match;
+    
+    while (match = resistPattern.exec(input)) {
+        var resistName = match[1];
+        var resistValue = parseInt(match[2], 10);
+        resists[resistName] = resistValue;
+    }
+    
+    return resists;
+}
+
+function destroyItem(item) {
+    const craftingType = item.craftingType;
+    if (craftingType === 'blacksmithing') {
+        const tongs = ItemManager.findItemByDisplayName('Tongs');
+        Orion.UseType(tongs.graphic);
+        if (!Orion.WaitForGump(2000)) {
+            throw new Error('No gump opened.');
+        }
+        const craftingGump = new CraftingGump('blacksmithing');
+        craftingGump.selectSmeltItem(item);
+        if (Orion.WaitForTarget(3000)) {
+            Orion.TargetObject(item.reference.Serial());
+            if (item.reference.Exists()) {
+	        	Logger.error('Item not smelted.');
+	        }
+        } else {
+            Logger.error('Could not smelt item. Cursor not presented.');
+        }
+
+        Orion.Wait(2500);
+    } else if (craftingType === 'tailoring') {
+    	const scissors =  ItemManager.findItemByDisplayName('Scissors');
+    	Orion.UseType(scissors.graphic);
+    	if (Orion.WaitForTarget(3000)) {
+            Orion.TargetObject(item.reference.Serial());
+            if (item.reference.Exists()) {
+	        	Logger.error('Item not smelted.');
+	        }
+        } else {
+            Logger.error('Could cut up item. Cursor not presented.');
+        }
+    } else {
+        const trashBarrelGraphic = ItemManager.findItemByDisplayName('A Trash Barrel').graphic;
+
+        Orion.Wait(500);
+        const trashBarrel = Orion.FindObject(Orion.FindType(trashBarrelGraphic, 0xFFFF, 'any')[0]);
+        if (!trashBarrel) {
+            Logger.warn('No nearby trash barrel to dispose of ' + item.Name());
+        };
+        Orion.MoveItem(item.reference.Serial(), 0, trashBarrel.Serial());
+        if (item.reference.Container() !== trashBarrel.Serial()) {
+        	Logger.error('Not trashed');
+        }
+    }
+    Orion.Wait(500);
+}
+
+function cleanup() {
+    Orion.CancelWaitGump();
+    returnResources();
+}
+
+const containers = [
+    [0x41D3E667],
+    [0x42E52A2A],
+    [0x42E57FE5],
+    [0x42E5817A],
+];
+
+function openContainers() {
+    containers.forEach(function (containerSerials) {
+        containerSerials.forEach(function (serial) {
+            Orion.UseObject(serial);
+            Orion.Wait(1500);
+        });
+    });
+}
+
+const Logger = {
+    error: function (text) {
+        Orion.Print(0x0021, JSON.stringify(text));
+    },
+    info: function (text) {
+        Orion.Print(0x03E9, JSON.stringify(text));
+    },
+    warn: function (text) {
+        Orion.Print(0x035, JSON.stringify(text));
+    },
+    prompt: function (text) {
+    	Orion.Print(0x5A, JSON.stringify(text));
+    },
+    debug: function (text) {
+        TextWindow.Print(JSON.stringify(text));
+        TextWindow.Open();
+    },
+};
+
+const Utils = {
+    toCamelCase: function (str) {
+    	if (typeof str !== 'string') return;
+        // converting all characters to lowercase
+        var ans = str.toLowerCase();
+        // Returning string to toCamelCase
+        ans = ans.split(" ").reduce(function (s, c) {
+            return s + (c.charAt(0).toUpperCase() + c.slice(1));
+        }, '');
+        ans = ans.charAt(0).toLowerCase() + ans.slice(1);
+        return ans;
+    }
+}
+
+const ItemManager = {
+    findItemByDisplayName: function (displayName) {
+        for (var i = 0; i < MasterItemList.length; i++) {
+            if (displayName.toLowerCase() === MasterItemList[i].displayName.toLowerCase()) {
+                return MasterItemList[i];
+            }
+        }
+        return null;
+    },
+    findItemByGraphic: function (graphic) {
+        for (var i = 0; i < MasterItemList.length; i++) {
+            if (graphic === MasterItemList[i].graphic) {
+                return MasterItemList[i];
+            }
+        }
+        return null;
+    },
+    findMaterialNameByGraphic: function (graphic) {
+    	const keys = Object.keys(MaterialColorMap);
+    	for (var i = 0; i < keys; i++) {
+    		if (MaterialColorMap[keys[i]] === parseInt(graphic)) {
+    			return keys[i];
+    		}
+    	}
+    	return null;
+    }
+}
+
+// ******************************************
+// ***************** CONFIGS: *****************
+// ******************************************
+const ignoreList = [
+    { target: 'Elven Fletching' },
+    { target: 'Barbed Longbow' },
+    { target: 'Slayer Longbow' },
+    { target: 'Frozen Longbow' },
+    { target: 'Longbow of Might' },
+    { target: 'Ranger\'s Shortbow' },
+    { target: 'Lightweight Shortbow' },
+    { target: 'Mystical Shortbow' },
+    { target: 'Assassin\'s Shortbow' },
+];
+
+const MasterItemList = [
+    // Blacksmithing.
+    { displayName: 'Ringmail Gloves', graphic: 0x13EB, craftingType: 'blacksmithing', category: 'metalArmor', option: 1, materials: [[0x1BF2, 10]] },
+    { displayName: 'Ringmail Leggings', graphic: 0x13F0, craftingType: 'blacksmithing', category: 'metalArmor', option: 2, materials: [[0x1BF2, 16]] },
+    { displayName: 'Ringmail Sleeves', graphic: 0x13EF, craftingType: 'blacksmithing', category: 'metalArmor', option: 3, materials: [[0x1BF2, 14]] },
+    { displayName: 'Ringmail Tunic', graphic: 0x13EC, craftingType: 'blacksmithing', category: 'metalArmor', option: 4, materials: [[0x1BF2, 18]] },
+    { displayName: 'Chainmail Coif', graphic: 0x13BB, craftingType: 'blacksmithing', category: 'metalArmor', option: 5, materials: [[0x1BF2, 10]] },
+    { displayName: 'Chainmail Leggings', graphic: 0x13BE, craftingType: 'blacksmithing', category: 'metalArmor', option: 6, materials: [[0x1BF2, 18]] },
+    { displayName: 'Chainmail Tunic', graphic: 0x13BF, craftingType: 'blacksmithing', category: 'metalArmor', option: 7, materials: [[0x1BF2, 20]] },
+    { displayName: 'Platemail Arms', graphic: 0x1410, craftingType: 'blacksmithing', category: 'metalArmor', option: 8, materials: [[0x1BF2, 18]] },
+    { displayName: 'Platemail Gloves', graphic: 0x1414, craftingType: 'blacksmithing', category: 'metalArmor', option: 9, materials: [[0x1BF2, 12]] },
+    { displayName: 'Platemail Gorget', graphic: 0x1413, craftingType: 'blacksmithing', category: 'metalArmor', option: 10, materials: [[0x1BF2, 10]] },
+    { displayName: 'Platemail Legs', graphic: 0x1411, craftingType: 'blacksmithing', category: 'metalArmor', option: 11, materials: [[0x1BF2, 20]] },
+    { displayName: 'Platemail Tunic', graphic: 0x1415, craftingType: 'blacksmithing', category: 'metalArmor', option: 12, materials: [[0x1BF2, 25]] },
+    { displayName: 'Female Plate', graphic: 0x1C04, craftingType: 'blacksmithing', category: 'metalArmor', option: 13, materials: [[0x1BF2, 30]] },
+    { displayName: 'Bascinet', graphic: 0x140C, craftingType: 'blacksmithing', category: 'helmets', option: 20, materials: [[0x1BF2, 30]] },
+    { displayName: 'Close Helmet', graphic: 0x1408, craftingType: 'blacksmithing', category: 'helmets', option: 21, materials: [[0x1BF2, 30]] },
+    { displayName: 'Helmet', graphic: 0x140A, craftingType: 'blacksmithing', category: 'helmets', option: 22, materials: [[0x1BF2, 30]] },
+    { displayName: 'Norse Helm', graphic: 0x140E, craftingType: 'blacksmithing', category: 'helmets', option: 23, materials: [[0x1BF2, 30]] },
+    { displayName: 'Plate Helm', graphic: 0x1412, craftingType: 'blacksmithing', category: 'helmets', option: 24, materials: [[0x1BF2, 30]] },
+    { displayName: 'Buckler ', graphic: 0x1B73, craftingType: 'blacksmithing', category: 'shields', option: 33, materials: [[0x1BF2, 30]] },
+    { displayName: 'Bronze Shield', graphic: 0x1B72, craftingType: 'blacksmithing', category: 'shields', option: 34, materials: [[0x1BF2, 30]] },
+    { displayName: 'Heater Shield', graphic: 0x1B76, craftingType: 'blacksmithing', category: 'shields', option: 35, materials: [[0x1BF2, 25]] },
+    { displayName: 'Metal Shield', graphic: 0x1B7B, craftingType: 'blacksmithing', category: 'shields', option: 36, materials: [[0x1BF2, 30]] },
+    { displayName: 'Metal Kite Shield', graphic: 0x1B74, craftingType: 'blacksmithing', category: 'shields', option: 37, materials: [[0x1BF2, 30]] },
+    { displayName: 'Tear Kite Shield', graphic: 0x1B78, craftingType: 'blacksmithing', category: 'shields', option: 38, materials: [[0x1BF2, 30]] },
+    { displayName: 'Bone Harvester', graphic: 0x26BB, craftingType: 'blacksmithing', category: 'bladed', option: 41, materials: [[0x1BF2, 30]] },
+    { displayName: 'Broadsword', graphic: 0x0F5E, craftingType: 'blacksmithing', category: 'bladed', option: 42, materials: [[0x1BF2, 30]] },
+    { displayName: 'Crescent Blade', graphic: 0x26C1, craftingType: 'blacksmithing', category: 'bladed', option: 43, materials: [[0x1BF2, 30]] },
+    { displayName: 'Cutlass', graphic: 0x1441, craftingType: 'blacksmithing', category: 'bladed', option: 44, materials: [[0x1BF2, 30]] },
+    { displayName: 'Dagger', graphic: 0x0F51, craftingType: 'blacksmithing', category: 'bladed', option: 45, materials: [[0x1BF2, 30]] },
+    { displayName: 'Katana', graphic: 0x13FF, craftingType: 'blacksmithing', category: 'bladed', option: 46, materials: [[0x1BF2, 30]] },
+    { displayName: 'Kryss', graphic: 0x1401, craftingType: 'blacksmithing', category: 'bladed', option: 47, materials: [[0x1BF2, 30]] },
+    { displayName: 'Longsword', graphic: 0x0F61, craftingType: 'blacksmithing', category: 'bladed', option: 48, materials: [[0x1BF2, 30]] },
+    { displayName: 'Scimitar', graphic: 0x13B6, craftingType: 'blacksmithing', category: 'bladed', option: 49, materials: [[0x1BF2, 30]] },
+    { displayName: 'Viking Sword', graphic: 0x13B9, craftingType: 'blacksmithing', category: 'bladed', option: 50, materials: [[0x1BF2, 30]] },
+    { displayName: 'Axe', graphic: 0x0F49, craftingType: 'blacksmithing', category: 'axes', option: 59, materials: [[0x1BF2, 30]] },
+    { displayName: 'Battle Axe', graphic: 0x0F47, craftingType: 'blacksmithing', category: 'axes', option: 60, materials: [[0x1BF2, 30]] },
+    { displayName: 'Double Axe', graphic: 0x0F4B, craftingType: 'blacksmithing', category: 'axes', option: 61, materials: [[0x1BF2, 30]] },
+    { displayName: 'Executioner\'s Axe', graphic: 0x0F45, craftingType: 'blacksmithing', category: 'axes', option: 62, materials: [[0x1BF2, 30]] },
+    { displayName: 'Large Battle Axe', graphic: 0x13FB, craftingType: 'blacksmithing', category: 'axes', option: 63, materials: [[0x1BF2, 30]] },
+    { displayName: 'Two Handed Axe', graphic: 0x1443, craftingType: 'blacksmithing', category: 'axes', option: 64, materials: [[0x1BF2, 30]] },
+    { displayName: 'War Axe', graphic: 0x13B0, craftingType: 'blacksmithing', category: 'axes', option: 65, materials: [[0x1BF2, 30]] },
+    { displayName: 'Bardiche', graphic: 0x0F4D, craftingType: 'blacksmithing', category: 'polearms', option: 66, materials: [[0x1BF2, 30]] },
+    { displayName: 'Bladed Staff', graphic: 0x26BD, craftingType: 'blacksmithing', category: 'polearms', option: 67, materials: [[0x1BF2, 30]] },
+    { displayName: 'Double Bladed Staff', graphic: 0x26BF, craftingType: 'blacksmithing', category: 'polearms', option: 68, materials: [[0x1BF2, 30]] },
+    { displayName: 'Halberd', graphic: 0x143F, craftingType: 'blacksmithing', category: 'polearms', option: 69, materials: [[0x1BF2, 30]] },
+    { displayName: 'Lance', graphic: 0x26C0, craftingType: 'blacksmithing', category: 'polearms', option: 70, materials: [[0x1BF2, 30]] },
+    { displayName: 'Pike', graphic: 0x26BE, craftingType: 'blacksmithing', category: 'polearms', option: 71, materials: [[0x1BF2, 30]] },
+    { displayName: 'Short Spear', graphic: 0x1403, craftingType: 'blacksmithing', category: 'polearms', option: 72, materials: [[0x1BF2, 30]] },
+    { displayName: 'Scythe', graphic: 0x26BA, craftingType: 'blacksmithing', category: 'polearms', option: 73, materials: [[0x1BF2, 30]] },
+    { displayName: 'Spear', graphic: 0x0F62, craftingType: 'blacksmithing', category: 'polearms', option: 74, materials: [[0x1BF2, 30]] },
+    { displayName: 'War Fork', graphic: 0x1405, craftingType: 'blacksmithing', category: 'polearms', option: 75, materials: [[0x1BF2, 30]] },
+    { displayName: 'Hammer Pick', graphic: 0x143D, craftingType: 'blacksmithing', category: 'bashing', option: 76, materials: [[0x1BF2, 30]] },
+    { displayName: 'Mace', graphic: 0x0F5C, craftingType: 'blacksmithing', category: 'bashing', option: 77, materials: [[0x1BF2, 30]] },
+    { displayName: 'Maul', graphic: 0x143B, craftingType: 'blacksmithing', category: 'bashing', option: 78, materials: [[0x1BF2, 30]] },
+    { displayName: 'Scepter', graphic: 0x26BC, craftingType: 'blacksmithing', category: 'bashing', option: 79, materials: [[0x1BF2, 30]] },
+    { displayName: 'War Mace', graphic: 0x1407, craftingType: 'blacksmithing', category: 'bashing', option: 80, materials: [[0x1BF2, 30]] },
+    { displayName: 'War Hammer', graphic: 0x1439, craftingType: 'blacksmithing', category: 'bashing', option: 81, materials: [[0x1BF2, 30]] },
+    { displayName: 'Soul Glaive', graphic: 0x406B, craftingType: 'blacksmithing', selection: 'bow', category: 'throwing', option: 210, materials: [[0x1BF2, 18]], minDurability: 80, speed: 'normal' },
+    // Carpentry.
+    { displayName: 'Barrel Staves', graphic: 0x1EB1, craftingType: 'carpentry', category: 'other', option: 68, materials: [[0x1BD7, 5]] },
+    { displayName: 'Barrel Lid', graphic: 0x1DB8, craftingType: 'carpentry', category: 'other', option: 69, materials: [[0x1BD7, 4]] },
+    { displayName: 'Music Stand', graphic: 0x0EB6, craftingType: 'carpentry', category: 'other', option: 70, materials: [[0x1BF2, 15]] },
+    { displayName: 'Easel With Canvas', graphic: 0x0F66, craftingType: 'carpentry', category: 'other', option: 74, materials: [[0x1BD7, 20]] },
+    { displayName: 'Red Hanging Lantern', graphic: 0x24C4, craftingType: 'carpentry', category: 'other', option: 77, materials: [[0x1BD7, 5], [0x0EF3, 10]] },
+    { displayName: 'White Hanging Lantern', graphic: 0x24C8, craftingType: 'carpentry', category: 'other', option: 78, materials: [[0x1BD7, 5], [0x0EF3, 10]] },
+    { displayName: 'Shoji Screen', graphic: 0x24CB, craftingType: 'carpentry', category: 'other', option: 79, materials: [[0x1BD7, 5], [0x0EF3, 10]] },
+    { displayName: 'Bamboo Screen', graphic: 0x24D1, craftingType: 'carpentry', category: 'other',  option: 80, materials: [[0x1BD7, 75], [0x1767, 60]] },
+    { displayName: 'Fishing Pole', graphic: 0x0DBF, craftingType: 'carpentry', category: 'other',  option: 81, materials: [[0x1BD7, 5], [0x1767, 5]] },
+    { displayName: 'Foot Stool', graphic: 0x0B5E, craftingType: 'carpentry', category: 'furniture',  option: 82, materials: [[0x1BD7, 9]] },
+    { displayName: 'Stool', graphic: 0x0A2A, craftingType: 'carpentry', category: 'furniture',  option: 83, materials: [[0x1BD7, 9]] },
+    { displayName: 'Straw Chair', graphic: 0x0B5A, craftingType: 'carpentry', category: 'furniture',  option: 84, materials: [[0x1BD7, 13]] },
+    { displayName: 'Wooden Chair', graphic: 0x0B56, craftingType: 'carpentry', category: 'furniture',  option: 85, materials: [[0x1BD7, 13]] },
+    { displayName: 'Vesper-style Chair', graphic: 0x0B4E, craftingType: 'carpentry', category: 'furniture',  option: 86, materials: [[0x1BD7, 15]] },
+    { displayName: 'Trinsic-style Chair', graphic: 0x0B52, craftingType: 'carpentry', category: 'furniture',  option: 87, materials: [[0x1BD7, 15]] },
+    { displayName: 'Wooden Bench', graphic: 0x0B2C, craftingType: 'carpentry', category: 'furniture',  option: 88, materials: [[0x1BD7, 17]] },
+    { displayName: 'Wooden Throne', graphic: 0x0B2F, craftingType: 'carpentry', category: 'furniture',  option: 89, materials: [[0x1BD7, 17]] },
+    { displayName: 'Magincia-style Throne', graphic: 0x0B33, craftingType: 'carpentry', category: 'furniture',  option: 90, materials: [[0x1BD7, 19]] },
+    { displayName: 'Small Table', graphic: 0x0B34, craftingType: 'carpentry', category: 'furniture',  option: 91, materials: [[0x1BD7,17]] },
+    { displayName: 'Writing Table', graphic: 0x0B4A, craftingType: 'carpentry', category: 'furniture',  option: 92, materials: [[0x1BD7, 17]] },
+    { displayName: 'Large Table', graphic: 0x0B7C, craftingType: 'carpentry', category: 'furniture',  option: 93, materials: [[0x1BD7, 23]] },
+    { displayName: 'Yew-wood Table', graphic: 0x0B7D, craftingType: 'carpentry', category: 'furniture',  option: 94, materials: [[0x1BD7, 27]] },
+    { displayName: 'Elegant Low Table', graphic: 0x2819, craftingType: 'carpentry', category: 'furniture',  option: 95, materials: [[0x1BD7, 35]] },
+    { displayName: 'Plain Low Table', graphic: 0x281A, craftingType: 'carpentry', category: 'furniture',  option: 96, materials: [[0x1BD7, 35]] },
+    { displayName: 'Ornate Table (south)', graphic: 0x14F0, craftingType: 'carpentry', category: 'furniture',  option: 97, materials: [[0x1BD7, 60]] },
+    { displayName: 'Hardwood Table (south)', graphic: 0x14F0, craftingType: 'carpentry', category: 'furniture',  option: 99, materials: [[0x1BD7, 50]] },
+    { displayName: 'Elven Podium', graphic: 0x2DDD, craftingType: 'carpentry', category: 'furniture',  option: 100, materials: [[0x1BD7, 20]] },
+    { displayName: 'Wooden Box', graphic: 0x0E7D, craftingType: 'carpentry', category: 'containers',  option: 97, materials: [[0x1BD7, 10]] },
+    { displayName: 'Crate', graphic: 0x0E7E, craftingType: 'carpentry', category: 'containers',  option: 98, materials: [[0x1BD7, 8]] },
+    { displayName: 'Medium Crate', graphic: 0x0E3E, craftingType: 'carpentry', category: 'containers',  option: 99, materials: [[0x1BD7, 15]] },
+    { displayName: 'Large Crate', graphic: 0x0E3C, craftingType: 'carpentry', category: 'containers',  option: 100, materials: [[0x1BD7, 18]] },
+    { displayName: 'Wooden Chest', graphic: 0x0E42, craftingType: 'carpentry', category: 'containers',  option: 101, materials: [[0x1BD7, 20]] },
+    { displayName: 'Wooden Shelf', graphic: 0x0A9E, craftingType: 'carpentry', category: 'containers',  option: 102, materials: [[0x1BD7, 25]] },
+    { displayName: 'Armoire (red)', graphic: 0x0A51, craftingType: 'carpentry', category: 'containers',  option: 103, materials: [[0x1BD7, 35]] },
+    { displayName: 'Armoire', graphic: 0x0A53, craftingType: 'carpentry', category: 'containers',  option: 104, materials: [[0x1BD7, 30]] },
+    { displayName: 'Plain Wooden Chest', graphic: 0x280C, craftingType: 'carpentry', category: 'containers',  option: 105, materials: [[0x1BD7, 30]] },
+    { displayName: 'Ornate Wooden Chest', graphic: 0x280E, craftingType: 'carpentry', category: 'containers',  option: 106, materials: [[0x1BD7, 30]] },
+    { displayName: 'Gilded Wooden Chest', graphic: 0x2810, craftingType: 'carpentry', category: 'containers',  option: 107, materials: [[0x1BD7, 30]] },
+    { displayName: 'Wooden Footlocker', graphic: 0x2812, craftingType: 'carpentry', category: 'containers',  option: 108, materials: [[0x1BD7, 30]] },
+    { displayName: 'Finished Wooden Chest', graphic: 0x2814, craftingType: 'carpentry', category: 'containers',  option: 109, materials: [[0x1BD7, 30]] },
+    { displayName: 'Tall Cabinet', graphic: 0x2816, craftingType: 'carpentry', category: 'containers',  option: 110, materials: [[0x1BD7, 35]] },
+    { displayName: 'Short Cabinet', graphic: 0x2818, craftingType: 'carpentry', category: 'containers',  option: 111, materials: [[0x1BD7, 35]] },
+    { displayName: 'Red Armoire', graphic: 0x2858, craftingType: 'carpentry', category: 'containers',  option: 112, materials: [[0x1BD7, 40]] },
+    { displayName: 'Elegant Armoire', graphic: 0x285A, craftingType: 'carpentry', category: 'containers',  option: 113, materials: [[0x1BD7, 40]] },
+    { displayName: 'Maple Armoire', graphic: 0x285C, craftingType: 'carpentry', category: 'containers',  option: 114, materials: [[0x1BD7, 40]] },
+    { displayName: 'Cherry Armoire', graphic: 0x285E, craftingType: 'carpentry', category: 'containers',  option: 115, materials: [[0x1BD7, 40]] },
+    { displayName: 'Shepherd\'s Crook', graphic: 0x0E81, craftingType: 'carpentry', category: 'weapons',  option: 117, materials: [[0x1BD7, 7]] },
+    { displayName: 'Quarter Staff', graphic: 0x0E89, craftingType: 'carpentry', category: 'weapons',  option: 118, materials: [[0x1BD7, 6]] },
+    { displayName: 'Gnarled Staff', graphic: 0x13F8, craftingType: 'carpentry', category: 'weapons',  option: 119, materials: [[0x1BD7, 7]] },
+    { displayName: 'Bokuto', graphic: 0x27A8, craftingType: 'carpentry', category: 'weapons',  option: 121, materials: [[0x1BD7, 6]] },
+    { displayName: 'Fukiya', graphic: 0x27AA, craftingType: 'carpentry', category: 'weapons',  option: 122, materials: [[0x1BD7, 8]] },
+    { displayName: 'Tetsubo', graphic: 0x27A6, craftingType: 'carpentry', category: 'weapons',  option: 123, materials: [[0x1BD7, 10]] },
+	{ displayName: 'Wild Staff', graphic: 0x2D25, craftingType: 'carpentry', category: 'weapons',  option: 135, materials: [[0x1BD7, 16]] },
+    { displayName: 'Wooden Shield', graphic: 0x1B7A, craftingType: 'carpentry', category: 'armor',  option: 120, materials: [[0x1BD7, 9]] },
+    { displayName: 'Lap Harp', graphic: 0x0EB2, craftingType: 'carpentry', category: 'instrument',  option: 124, materials: [[0x1BD7, 20], [0x1767, 10]] },
+    { displayName: 'Standing Harp', graphic: 0x0EB1, craftingType: 'carpentry', category: 'instrument',  option: 125, materials: [[0x1BD7, 35], [0x1767, 15]] },
+    { displayName: 'Drum', graphic: 0x0E9C, craftingType: 'carpentry', category: 'instrument',  option: 126, materials: [[0x1BD7, 20], [0x1767, 10]] },
+    { displayName: 'Lute', graphic: 0x0EB3, craftingType: 'carpentry', category: 'instrument',  option: 127, materials: [[0x1BD7, 25], [0x1767, 10]] },
+    { displayName: 'Tambourine', graphic: 0x0E9D, craftingType: 'carpentry', category: 'instrument',  option: 128, materials: [[0x1BD7, 15], [0x1767, 10]] },
+    { displayName: 'Tambourine (tassel)', graphic: 0x0E9E, craftingType: 'carpentry', category: 'instrument',  option: 129, materials: [[0x1BD7, 15], [0x1767, 15]] },
+    { displayName: 'Bamboo Flute', graphic: 0x2807, craftingType: 'carpentry', category: 'instrument',  option: 130, materials: [[0x1BD7, 15]] },
+    { displayName: 'Bulletin Board', graphic: 0x2312, craftingType: 'carpentry', category: 'miscellaneous',  option: 131, materials: [[0x1BD7, 50]] },
+    { displayName: 'Dress Form', graphic: 0x0EC6, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 133, materials: [[0x1BD7, 25], [0x1767, 10]] },
+    { displayName: 'Elven Spinning Wheel (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 60], [0x1767, 40]] },
+    { displayName: 'Elven Oven (south)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 80]] },
+    { displayName: 'Spinning Wheel (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 75], [0x1767, 25]] },
+    { displayName: 'Loom (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 85], [0x1767, 25]] },
+    { displayName: 'Stone Oven (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 85], [0x1767, 125]] },
+    { displayName: 'Flour Mill (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 100], [0x1BF2, 50]] },
+    { displayName: 'Water Trough (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'trainingAndCooking',  option: 76, materials: [[0x1BD7, 150]] },
+    { displayName: 'Elven Forge', graphic: 0x14F0, craftingType: 'carpentry', category: 'anvilsAndForges',  option: 76, materials: [[0x1BD7, 200]] },
+    { displayName: 'Small Forge', graphic: 0x14F0, craftingType: 'carpentry', category: 'anvilsAndForges',  option: 76, materials: [[0x1BD7, 5], [0x1BF2, 75]] },
+    { displayName: 'Large Forge (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'anvilsAndForges',  option: 76, materials: [[0x1BD7, 5], [0x1767, 100]] },
+    { displayName: 'Anvil (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'anvilsAndForges',  option: 76, materials: [[0x1BD7, 5], [0x1767, 150]] },
+    { displayName: 'Training Dummy (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'training',  option: 76, materials: [[0x1BD7, 55], [0x1767, 60]] },
+    { displayName: 'Pickpocket Dip (east)', graphic: 0x14F0, craftingType: 'carpentry', category: 'training',  option: 76, materials: [[0x1BD7, 65], [0x1767, 60]] },
+    // Fletching
+    { displayName: 'Bow', graphic: 0x13B2, craftingType: 'fletching', category: 'weapons', option: 6, materials: [[0x1BD7, 7]] },
+    { displayName: 'Crossbow', graphic: 0x0F4F, craftingType: 'fletching', category: 'weapons', option: 7, materials: [[0x1BD7, 7]] },
+    { displayName: 'Heavy Crossbow', graphic: 0x13FD, craftingType: 'fletching', category: 'weapons', option: 8, materials: [[0x1BD7, 10] ]},
+	{ displayName: 'Composite Bow', graphic: 0x26C2, craftingType: 'fletching', category: 'weapons', option: 9, materials: [[0x1BD7, 8]] },
+    { displayName: 'Repeating Crossbow', graphic: 0x26C3, craftingType: 'fletching', category: 'weapons', option: 10, materials: [[0x1BD7, 10]] },
+	{ displayName: 'Yumi', graphic: 0x27A5, craftingType: 'fletching', category: 'weapons', option: 11, materials: [[0x1BD7, 10]] },
+    { displayName: 'Elven Composite Longbow', graphic: 0x2D1E, craftingType: 'fletching', category: 'weapons', option: 12, materials: [[0x1BD7, 20]] },
+    { displayName: 'Magical Shortbow', graphic: 0x2D1F, craftingType: 'fletching', category: 'weapons', option: 13, materials: [[0x1BD7, 15]] },
+    { displayName: 'Kindling', graphic: 0x0DE1, craftingType: 'fletching', category: 'materials', option: 1, materials: [[0x1BD7, 1]] },
+    { displayName: 'Shaft', graphic: 0x1BD4, craftingType: 'fletching', category: 'materials', option: 2, materials: [[0x1BD7, 1]] },
+    { displayName: 'Arrow', graphic: 0x0F3F, craftingType: 'fletching', category: 'ammunition', option: 3, materials: [[0x1BD7, 1]] },
+    { displayName: 'Crossbow Bolt', graphic: 0x1BFB, craftingType: 'fletching', category: 'ammunition', option: 4, materials: [[0x1BD7, 1]] },
+    { displayName: 'Fukiya Dart', graphic: 0x2806, craftingType: 'fletching', category: 'ammunition', option: 5, materials: [[0x1BD7, 1]] },
+    { displayName: 'Composite Bow', graphic: 0x26C2, selection: 'bow', craftingType: 'fletching', category: 'weapons', option: 9, materials: [[0x1BD7, 8]], minDurability: 72, speed: 'fast' },
+	{ displayName: 'Yumi', graphic: 0x27A5, selection: 'bow', craftingType: 'fletching', category: 'weapons', option: 11, materials: [[0x1BD7, 10]], minDurability: 72, speed: 'veryFast' },
+	{ displayName: 'Magical Shortbow', graphic: 0x2D1F, selection: 'bow', craftingType: 'fletching', category: 'weapons', option: 13, materials: [[0x1BD7, 8]], minDurability: 80, speed: 'veryFast' },
+	// Tailoring
+    { displayName: 'Leather Gorget', graphic: 0x13C7, craftingType: 'tailoring', category: 'leatherArmor', option: 608, materials: [[0x1081, 4]] },
+    { displayName: 'Leather Cap', graphic: 0x1DB9, craftingType: 'tailoring', category: 'leatherArmor', option: 609, materials: [[0x1081, 2]] },
+    { displayName: 'Leather Gloves', graphic: 0x13C6, craftingType: 'tailoring', category: 'leatherArmor', option: 610, materials: [[0x1081, 3]] },
+    { displayName: 'Leather Sleeves', graphic: 0x13C5, craftingType: 'tailoring', category: 'leatherArmor', option: 611, materials: [[0x1081, 4]] },
+    { displayName: 'Leather Leggings', graphic: 0x13CB, craftingType: 'tailoring', category: 'leatherArmor', option: 612, materials: [[0x1081, 10]] },
+    { displayName: 'Leather Tunic', graphic: 0x13CC, craftingType: 'tailoring', category: 'leatherArmor', option: 613, materials: [[0x1081, 12]] },
+    
+    { displayName: 'Leather Shorts', graphic: 0x1C00, craftingType: 'tailoring', category: 'femaleArmor', option: 635, materials: [[0x1081, 8]] },
+    { displayName: 'Leather Skirt', graphic: 0x1C08, craftingType: 'tailoring', category: 'femaleArmor', option: 636, materials: [[0x1081, 6]] },
+    { displayName: 'Leather Bustier', graphic: 0x1C0C, craftingType: 'tailoring', category: 'femaleArmor', option: 638, materials: [[0x1081, 6]] },
+    { displayName: 'Female Leather Armor', graphic: 0x1C06, craftingType: 'tailoring', category: 'femaleArmor', option: 639, materials: [[0x1081, 8]] },
+	// Tinkering
+    { displayName: 'Tinker\'s Tools', graphic: 0x1EB9, craftingType: 'tinkering', category: 'tools', option: 11, materials: [[0x1BF2, 18]] },
+    { displayName: 'Saw', graphic: 0x1034, craftingType: 'tinkering', category: 'tools', option: 15, materials: [[0x1BF2, 18]] },
+    { displayName: 'Tongs', graphic: 0x0FBC, craftingType: 'tinkering', category: 'tools', option: 20, materials: [[0x1BF2, 18]] },
+	{ displayName: 'Fletcher\'s Tools', graphic: 0x1022, craftingType: 'tinkering', category: 'tools', option: 28, materials: [[0x1BF2, 3]] },
+	{ displayName: 'Sewing Kit', graphic: 0x0F9D, craftingType: 'tinkering', category: 'tools', option: 14, materials: [[0x1BF2, 2]] },
+	{ displayName: 'Scissors', graphic: 0x0F9E, craftingType: 'tinkering' },
+    // Resources
+    { displayName: 'Ingots', graphic: 0x1BF2, types: { iron: 0x0000, dullCopper: 0x0973, shadowIron: 0x0966, copper: 0x096D, bronze: 0x0972, gold: 0x08A5, golden: 0x08A5, agapite: 0x0979, verite: 0x089F, valorite: 0x08AB } },
+    { displayName: 'Boards', graphic: 0x1BD7, types: { wood: 0x0000, oak: 0x07DA, ash: 0x04A7, yew: 0x04A8, heartwood: 0x04A9, bloodwood: 0x04AA, frostwood: 0x047F } },
+    { displayName: 'Cloth', graphic: 0x1767, types: {} },
+    { displayName: 'Blank Scroll', graphic: 0x0EF3, types: {} },
+    { displayName: 'Leather', graphic: 0x1081, types: {} },
+    // Miscellaneous
+    { displayName: 'A Bulk Order Deed', graphic: 0x2258 },
+    { displayName: 'A Trash Barrel', graphic: 0x0E77 },
+];
+
+const ToolMap = {
+	blacksmithing: 0x0FBC,
+	carpentry: 0x1034,
+	tinkering: 0x1EB9,
+	fletching: 0x1022,
+	tailoring: 0x0F9D,
+};
+
+const ResourceColorMap = {
+	blacksmithing: {
+		// Ingots.
+	    0x0000: 'Iron',
+	    0x0973: 'Dull Copper',
+	    0x0966: 'Shadow Iron',
+	    0x096D: 'Copper',
+	    0x0972: 'Bronze',
+	    0x08A5: 'Golden',
+	    0x0979: 'Agapite',
+	    0x089F: 'Verite',
+	    0x08AB: 'Valorite',
+    },
+    carpentry: {
+	    // Boards.
+	    0x0000: 'Wood',
+	    0x07DA: 'Ash',
+	    0x04A8: 'Yew',
+	    0x04A9: 'Heartwood',
+	    0x04AA: 'Bloodwood',
+	    0x047F: 'Frostwood',
+    },
+    tailoring: {
+    	0x0000: 'Leather',
+    	0x1081: 'Horned',
+    	0x0851: 'Barbed',
+    }
+};
+
+const MaterialColorMap = {
+	'Iron': 0x0000,
+	'Dull Copper': 0x0973,
+	'Shadow Iron': 0x0966,
+	'Copper': 0x096D,
+	'Bronze': 0x0972,
+	'Gold': 0x08A5,
+	'Golden': 0x08A5,
+	'Agapite': 0x0979,
+	'Verite': 0x089F,
+	'Valorite': 0x08AB,
+	'Wood': 0x0000,
+	'Oak': 0x07DA,
+	'Ash': 0x04A7,
+	'Yew': 0x04A8,
+	'Heartwood': 0x04A9,
+	'Bloodwood': 0x04AA,
+	'Frostwood': 0x047F
+}
+
+const MaterialsList = [
+	// Ingots.
+	'Iron',
+	'Dull Copper',
+	'Shadow Iron',
+	'Copper',
+	'Bronze',
+	'Gold',
+	'Golden',
+	'Agapite',
+	'Verite',
+	'Valorite',
+	// Boards.
+	'Wood',
+	'Oak',
+	'Ash',
+	'Yew',
+	'Heartwood',
+	'Bloodwood',
+	'Frostwood',
+	// Leather/Cloth
+	'Barbed',
+	// Misc.
+	'Cloth',
+	'Blank Scroll',
+];
+const materialsRegex = new RegExp('(' + MaterialsList.join('|') + ')');
+const qualityRegex = new RegExp(/(Normal|Exceptional)/);
+
+const MasterGumpList = {
+    crafting: {
+        tinkering: {
+            categories: {
+                jewelry: 9001,
+                woodenItems: 9002,
+                tools: 9003,
+                parts: 9004,
+                utensils: 9005,
+                miscellaneous: 9006,
+                assemblies: 9007,
+                traps: 9008,
+                magicJewelry: 9009,
+            },
+        },
+        blacksmithing: {
+            categories: {
+                metalArmor: 9001,
+                helmets: 9002,
+                shields: 9003,
+                bladed: 9004,
+                axes: 9005,
+                polearms: 9006,
+                bashing: 9007,
+				throwing: 9009,
+            },
+            resources: {
+                iron: 5000,
+                dullCopper: 5001,
+                shadowIron: 5002,
+                copper: 5003,
+                bronze: 5004,
+                gold: 5005,
+                golden: 5005,
+                agapite: 5006,
+                verite: 5007,
+                valorite: 5008,
+            },
+            smeltItem: 7000,
+            makeLast: 1999
+        },
+        carpentry: {
+        	categories: {
+        		other: 9001,
+        		furniture: 9002,
+        		containers: 9003,
+        		weapons: 9004,
+        		armor: 9005,
+        		instruments: 9006,
+        		miscellaneous: 9007,
+        		tailoringAndCooking: 9008,
+        		anvilAndForges: 9009,
+        		training: 9010,
+        	},
+        	resources: {
+                wood: 5000,
+                oak: 5001,
+                ash: 5002,
+                yew: 5003,
+                heartwood: 5004,
+                bloodwood: 5005,
+                frostwood: 5006,
+            },
+            makeLast: 1999
+        },
+        fletching: {
+			categories: {
+				materials: 9001,
+				ammunition: 9002,
+				weapons: 9003,
+			},
+			resources: {
+				wood: 5000,
+				oak: 5001,
+				ash: 5002,
+				yew: 5003,
+				heartwood: 5004,
+				bloodwood: 5005,
+				frostwood: 5006,
+			},
+			makeLast: 1999
+		},
+	    tailoring: {
+	    	categories: {
+	    		materials: 9001,
+	    		hats: 9002,
+	    		shirtsAndPants: 9003,
+	    		miscellaneous: 9004,
+	    		footwear: 9005,
+	    		leatherArmor: 9006,
+	    		clothArmor: 9007,
+	    		studdedArmor: 9008,
+	    		femalearmor: 9009,
+	    		boneArmor: 9010,
+	    	},
+	    	resources: {
+				leather: 5000,
+				spined: 5001,
+				horned: 5002,
+				barbed: 5003,
+			},
+	            makeLast: 1999
+	    },
+    },
+    bulkOrder: {
+        combineWithItem: 10,
+        combineWithContainer: 11
+    }
+};

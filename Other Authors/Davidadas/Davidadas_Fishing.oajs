@@ -1,0 +1,253 @@
+const waypoints = [[3685,2906,1],[3673,2905,3],[3657,2910,3],[3635,2903,3],[3620,2890,3],[3605,2883,3],[3585,2878,3],[3568,2885,-2],[3553,2894,1]];
+const waypointManager = new WaypointManager(waypoints);
+var inventorySerials;
+
+function trainCrafting() {
+	setInitialInventory();
+	waypointManager.moveToNext();
+	try {
+		while (getCurrentSkillLevel() < 1000) {
+			// Refresh any lingering Orion hooks waiting for an event.
+			clearStates();
+			castFishingLine();
+			cutFish();
+			dropFish();
+			if (Orion.InJournal('The fish don\'t seem to be biting here')) {
+				waypointManager.moveToNext();
+			}
+			Orion.Wait(500);
+			Orion.ClearJournal();
+		}
+	} catch (error) {
+		clearStates();
+		Logger.error(error);
+	}
+}
+
+function setInitialInventory() {
+	const backpackItems = Orion.FindType(any, any, backpack);
+	inventorySerials = backpackItems;
+}
+
+function getInventoryDiff() {
+	const backpackItems = Orion.FindType(any, any, backpack);
+	return backpackItems.reduce(function(acc, serial) {
+		if(inventorySerials.indexOf(serial) === -1) {
+			acc.push(Orion.FindObject(serial));
+		}
+		return acc;
+	}, []);
+}
+
+function castFishingLine() {
+	const fishingPole = getFishingPole();
+	const waterTiles = getTilesWithinRadius('water', 4);
+	const waterTile = getCurrentSkillLevel() < 500 ? waterTiles[0] : waterTiles[waterTiles.length - 1];
+	
+	Orion.WalkTo(waterTile.X(), waterTile.Y(), waterTile.Z());
+
+	Orion.UseObject(fishingPole.Serial());
+	Orion.WaitForTarget(2000);
+	
+	targetTile(waterTile);
+
+	waitForCatch();
+}
+
+function calculateDistanceFromPlayer(tile) {
+	var x1 = Player.X(), y1 = Player.Y(), z1 = Player.Z();
+	var x2 = tile.X(), y2 = tile.Y(), z2 = tile.Z();
+
+	var dx = x2 - x1;
+	var dy = y2 - y1;
+	var dz = z2 - z1;
+
+	var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+	return distance;
+}
+
+function getCurrentSkillLevel() {
+	return Orion.SkillValue('Fishing', 'base');
+}
+
+function getFishingPole() {
+	return Orion.ObjAtLayer('LeftHand');
+}
+
+function getTilesWithinRadius(tileType, radius) {
+	const tiles = Orion
+		.GetTilesInRect(tileType, Player.X() - radius, Player.Y() - radius, Player.X() + radius, Player.Y() + radius)
+		.sort(function (tileA, tileB) {
+			return calculateDistanceFromPlayer(tileA) - calculateDistanceFromPlayer(tileB);
+		});
+
+	return tiles;
+}
+
+function findTile(tileType, radius) {
+	const closestTile = getTilesWithinRadius(tileType, radius).shift();
+
+	return closestTile;
+}
+
+function targetTile(tile) {
+	Orion.TargetTile(tile, tile.X(), tile.Y(), tile.Z());
+}
+
+function parseItemName(str) {
+    // Define the prefix that indicates the start of the item name
+    var prefix = "You pull out an item: ";
+    // Check if the string starts with the prefix
+    if (str.indexOf(prefix) === 0) {
+        // Extract the item name by removing the prefix from the string
+        var itemName = str.substring(prefix.length);
+        return itemName;
+    }
+    // If the string does not contain the prefix, return null
+    return null;
+}
+
+function cutFish() {
+	const daggerSerial = Orion.FindType(0x0F51)[0];
+	if (daggerSerial) {
+		const droppedResources = getInventoryDiff();
+		droppedResources.forEach(function(resource) {
+			Orion.UseObject(daggerSerial);
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(resource.Serial());
+			Orion.Wait(500);
+		});
+	}
+}
+
+function dropFish() {
+	const sortedLandTiles = getTilesWithinRadius('land', 2);
+	const dropTile = sortedLandTiles[1];
+	const droppedResources = getInventoryDiff();
+
+	if (!droppedResources.length || !dropTile) return;
+
+	Orion.Wait(1000);
+	
+	droppedResources.forEach(function (resource) {
+		const resourceGraphic = resource.Graphic();
+		const resourceColor = resource.Color();;
+		const resourceSerials = Orion.FindType(resourceGraphic, resourceColor);
+		const groundResourceSerials = Orion.FindType(resourceGraphic, resourceColor, ground, 2);
+
+		resourceSerials.forEach(function (resourceSerial) {
+			// If there's a similar item nearby, add to stack.
+			if (groundResourceSerials[0]) {
+				Orion.MoveItem(resourceSerial, -1, groundResourceSerials[0]);
+			} else {
+				Orion.MoveItem(resourceSerial, -1, 'ground', dropTile.X(), dropTile.Y(), dropTile.Z());
+			}
+			Orion.Wait(1000);
+		});
+	});
+}
+
+function waitForCatch() {
+	const conditional = function () {
+		return Orion.InJournal('You pull out an item');
+	};
+	
+	Utils.pollConditional(conditional, 10000);
+}
+
+function clearStates() {
+	Orion.CancelWaitGump();
+	Orion.CancelWaitTarget();
+	Orion.CancelTarget();
+	Orion.ClearJournal();
+}
+
+const Logger = {
+	log: function (text, color) {
+		Orion.Print(color, JSON.stringify(text));
+	},
+	error: function (text) {
+		Orion.Print(0x0021, JSON.stringify(text));
+	},
+	info: function (text) {
+		Orion.Print(0x03E9, JSON.stringify(text));
+	},
+	warn: function (text) {
+		Orion.Print(0x035, JSON.stringify(text));
+	},
+	debug: function (text) {
+		TextWindow.Print(JSON.stringify(text));
+		if (!TextWindow.IsOpened()) {
+			TextWindow.Open();
+		}
+	},
+};
+
+const Utils = {
+	pollConditional: function (fn, timeout) {
+	    const start = new Date().getTime();
+	    const end = start + timeout;
+	    
+	    // Define a loop that will run until the function returns true or the timeout is reached
+	    while (new Date().getTime() < end) {
+	        // Check if the function returns true
+	        if (fn()) {
+	            return true;
+	        }
+	        Orion.Wait(50);
+	    }
+	    
+	    // If the loop exits without the function returning true, return false
+	    return false;
+	}
+};
+
+function WaypointManager(waypoints) {
+	var index = 0;
+
+	function moveToNext() {
+		const currentWaypoint = waypoints[index];
+		Logger.info('Moving to waypoint: ' + index);
+		if (index === waypoints.length - 1) {
+			index = 0;
+		}
+		if (!_moveToWaypoint(currentWaypoint)) {
+			Logger.info('Cannot find next waypoint. Moving to nearest point.');
+			index = _findClosestPointIndex(currentWaypoint, waypoints);
+			_moveToWaypoint(waypoints[index]);
+		} else {
+			index += 1;
+		}
+	}
+	
+	function _moveToWaypoint(waypoint) {
+		return Orion.WalkTo(waypoint[0], waypoint[1], waypoint[2]);
+	}
+	
+	function _findClosestPointIndex(currentWaypoint, coordinates) {
+	    // Initialize variables to store the closest distance and point
+	    var closestDistance = Number.MAX_SAFE_INTEGER;
+	    var closestIndex;
+	    var x = currentWaypoint[0];
+	    var y = currentWaypoint[1];
+	    var z = currentWaypoint[2];
+	
+	    // Iterate through each point in the array of coordinates
+	    for (var i = 0; i < coordinates.length; i++) {
+	        const pointX = coordinates[i][0];
+	        const pointY = coordinates[i][1];
+	        const pointZ = coordinates[i][2];
+	        const distance = Math.sqrt(Math.pow(pointX - x, 2) + Math.pow(pointY - y, 2) + Math.pow(pointZ - z, 2));
+	        
+	        if (!closestIndex || distance < closestDistance) {
+	            closestDistance = distance;
+	            closestIndex = i;
+	        }
+	    }
+	    return closestIndex;
+	}
+
+	return {
+		moveToNext: moveToNext,
+	};
+}

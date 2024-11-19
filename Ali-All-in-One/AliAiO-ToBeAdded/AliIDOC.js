@@ -906,7 +906,7 @@ function DomPlacer()
         }
     if(fullAuto)
         {
-        Orion.Wait(20000);
+        Orion.Wait(10000);
         while(Orion.UdpRecv("DomPlacer"))
             Orion.Wait(10)
         }

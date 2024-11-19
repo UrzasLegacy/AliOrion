@@ -1,7 +1,7 @@
 //--# AliAutomation
 /*
 These scripts are meant to automate actions over a long period of time. There is some overlap in "automation" between
-AliAutomation and AliQoL. The difference is that functions in AliQoL are meant to act as utility helpers for 
+AliAutomation and AliQoL. The difference is that functions in AliQoL are meant to act as utility helpers for
 annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style functions that either
 run in the background all the time as you do other things, or are useful for accomplishing something while afk.
 */
@@ -18,11 +18,10 @@ function GMScan()
     var gmCheck;
 	while(true)
 		{
-        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob)
-            {
+        gmCheck = Orion.FindTypeEx(any,any,ground,'mobile',10,'yellow').filter(function(mob) {
             return mob.Properties().indexOf('GM ') > -1;
-            }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
-        timeStamp = Orion.Now();    
+		}).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 500, Orion.Now() + 1000);
+        timeStamp = Orion.Now();
         if(gmCheck)
             {
 			 if(useDiscordPush)
@@ -61,7 +60,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -154,6 +153,32 @@ function BandieBot()
 			}
 		}
 	}
+
+function GuildPetRezBot() {
+    while (!Player.Dead()) {
+        while (!Orion.GumpExists('container', backpack)) {
+            Orion.UseObject(backpack);
+            Orion.Wait(1300);
+        }
+        Orion.Wait(200);
+
+        var bandies = Orion.FindType('0x0E21')[0];
+        if (Orion.Count('0x0E21') < 50) {
+            Orion.Wait(200);
+            if (Orion.Count('0x0E21') < 50)
+                Orion.Print("Running low on bandies")
+        }
+
+        var deadList = Orion.FindTypeEx(any, any, ground, "dead", 2, 'green')
+
+        var target = deadList[0];
+        if (target && !Orion.BuffExists('Healing Skill') && bandies) {
+            Orion.UseObject(bandies);
+            if (Orion.WaitForTarget(2000))
+                Orion.TargetObject(target.Serial());
+        }
+    }
+}
 
 function AutoBuffs()
     {
@@ -302,7 +327,7 @@ function AutoAttack()
         Orion.Wait(500);
         }
     }
-	
+
 function AutoAttackBackup()
     {
     //Orion.Exec('AutoBuffs',true);
@@ -390,7 +415,7 @@ function AlwaysAttackAdjacent()
 	{
 	while(true)
 		{
-		var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 1, 'gray|criminal|red')[0]; 
+		var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 1, 'gray|criminal|red')[0];
 		Orion.TargetSystemSerial(target);
 		Orion.Attack(target);
 		Orion.Wait(200);
@@ -406,9 +431,9 @@ function AutoGatherMobs()
         GatherMobs();
         Orion.Wait(500);
         }
-    }	
+    }
 
-function AutoInsure() 
+function AutoInsure()
 	{
 	var stringSearch = profile.useStringSearch;
 	var checkName = profile.checkNameString;
@@ -419,14 +444,14 @@ function AutoInsure()
 	var searchFrequency = profile.searchFrequency;
 	while(stringSearch && !Player.Dead())
 		{
-		var item = Orion.FindTypeEx(any).filter(function (part) 
+		var item = Orion.FindTypeEx(any).filter(function (part)
 					{
 					if(!Orion.Contains(part.Properties(), 'insured'))
 						{
 						if(checkName && !checkProp)
 							return Orion.Contains(part.Name(), checkName);
 						else if(checkProp && !checkName)
-							return Orion.Contains(part.Properties(), checkProp)      
+							return Orion.Contains(part.Properties(), checkProp)
 						else if(checkProp && checkName)
 							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
 						}
@@ -461,8 +486,8 @@ function AutoInsure()
 		}
 	}
 
-    
-function AutoInsureInContainer() 
+
+function AutoInsureInContainer()
     {
     Orion.CharPrint(self,1159, "Target container with items you wish to uninsure")
     Orion.WaitForAddObject('myTarget')
@@ -487,7 +512,7 @@ function AutoInsureInContainer()
         Orion.CancelTarget();
     }
 
-function AutoUnInsureInContainer() 
+function AutoUnInsureInContainer()
 	{
     Orion.CharPrint(self,1159, "Target container with items you wish to uninsure")
     Orion.WaitForAddObject('myTarget')
@@ -512,34 +537,34 @@ function AutoUnInsureInContainer()
         Orion.CancelTarget();
 	}
 
-function BagOfSendingGold() 
+function BagOfSendingGold()
 	{
     var goldLimit = 58000;
-    while(!Player.Dead()) 
+    while(!Player.Dead())
         {
         Orion.Wait(2000);
-        if(Player.Weight() >= Player.MaxWeight() - 25 || Player.Gold() > goldLimit) 
+        if(Player.Weight() >= Player.MaxWeight() - 25 || Player.Gold() > goldLimit)
             {
             var bags = Orion.FindTypeEx(0x0E76, any, backpack).filter(function (bag)
 				{
 				return (Orion.Contains(bag.Name(), "Sending") && (((bag.Properties().match(/Charges:\s(\d)/i) || [])[1] || 0) > 0))
 				});
-            if(bags[0]) 
+            if(bags[0])
                 {
 				Orion.Print('Sending gold');
                 Orion.UseObject(bags[0].Serial());
                 Orion.WaitForTarget(2000);
                 Orion.TargetType('0x0EED', any, backpack);
                 }
-            else 
+            else
                 {
                 TextWindow.Open();
 				TextWindow.Print('Out of BoS Charges!');
                 }
             Orion.Wait(1000);
             }
-        else if(Player.Weight() >= Player.MaxWeight() - 10 && Player.Gold() < goldLimit) 
-            {   
+        else if(Player.Weight() >= Player.MaxWeight() - 10 && Player.Gold() < goldLimit)
+            {
             Orion.Print("Backpack overloaded");
             }
         Orion.Wait(1000);
@@ -568,12 +593,12 @@ function SingleMageHealBot()
 				Orion.CancelTarget();
 				Orion.Cast('Cure');
 				if(Orion.WaitForTarget(3000))
-					Orion.TargetObject(target.Serial());	
+					Orion.TargetObject(target.Serial());
 				}
 			else
 				{
 				if(Orion.WaitForTarget(3000))
-					Orion.TargetObject(target.Serial());	
+					Orion.TargetObject(target.Serial());
 				}
 			}
 		Orion.Wait(300);
@@ -607,7 +632,7 @@ function MysticHealBot()
 				{
 				if(Orion.WalkTo(items[0].X(), items[0].Y(), 0, 0))
 					Orion.MoveItem(items[0].Serial())
-				}	
+				}
 			}
 		Orion.Wait(200);
 		}

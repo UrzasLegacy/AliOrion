@@ -123,58 +123,52 @@ function ClearMarkers()
     Orion.ClearFakeMapObjects();
     }
 
-function AliGumpRedraw()
-    {
-    var highSerial = 10000;
+function AliGumpRedraw() {
+    var miscSerial = 10000;
     var gumpRedraw = Orion.CreateCustomGump(11001);
     gumpRedraw.Clear();
+    gumpRedraw.AddText(5, -20, 32, "CLONE");
+    gumpRedraw.SetCallback("AliGumpRedrawCallback");
 
-    //'--Ali Gump Redraw--';
     var gump = Orion.GetGump('last');
     var gumpCommands = gump.CommandList();
-    for(var i=0;i<gumpCommands.length;i++)
-        {
-        var gumpCommand = Orion.Split(gumpCommands[i],' ');
-        if(gumpCommand[0] == 'tilepic')
-            {
+    for (var i = 0; i < gumpCommands.length; i++) {
+        var gumpCommand = Orion.Split(gumpCommands[i], ' ');
+        if (gumpCommand[0] == 'tilepic') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
-            var graphic = gumpCommand[3]
+            var graphic = gumpCommand[3];
             gumpRedraw.AddTilePic(x, y, graphic, '0');
-            }
-        else if(gumpCommand[0] == 'resizepic')
-            {
+        }
+        else if (gumpCommand[0] == 'resizepic') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
-            var graphic = gumpCommand[3]
+            var graphic = gumpCommand[3];
             var width = gumpCommand[4];
             var height = gumpCommand[5];
             gumpRedraw.AddResizepic(x, y, graphic, width, height);
-            }
-        else if(gumpCommand[0] == 'gumppic')
-            {
+        }
+        else if (gumpCommand[0] == 'gumppic') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
             var graphic = gumpCommand[3]
             gumpRedraw.AddGumpPic(x, y, graphic, '0');
-            }
-        else if(gumpCommand[0] == 'button')
-            {
+        }
+        else if (gumpCommand[0] == 'button') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
-            var graphicOne = gumpCommand[3]
+            var graphicOne = gumpCommand[3];
             var graphicTwo = gumpCommand[4];
             var graphicThree = gumpCommand[3];
             var action = gumpCommand[5];
             var toPage = gumpCommand[6];
             var serial = gumpCommand[7];
-            gumpRedraw.AddButton(serial, x, y, graphicOne,graphicTwo,graphicThree, '0',action,toPage);
-            }
-        else if(gumpCommand[0] == 'buttontileart')
-            {
+            gumpRedraw.AddButton(serial, x, y, graphicOne, graphicTwo, graphicThree, '0', action, toPage);
+        }
+        else if (gumpCommand[0] == 'buttontileart') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
-            var graphicOne = gumpCommand[3]
+            var graphicOne = gumpCommand[3];
             var graphicTwo = gumpCommand[4];
             var graphicThree = gumpCommand[4];
             var color = gumpCommand[5];
@@ -184,39 +178,52 @@ function AliGumpRedraw()
             var tileColor = gumpCommand[9];
             var tileX = gumpCommand[10];
             var tileY = gumpCommand[11];
-            gumpRedraw.AddButtonTileArt(highSerial++, x, y, graphicOne, graphicTwo, graphicThree, color, tileGraphic, tileColor, tileX, tileY, action, toPage);
-            }
-        else if(gumpCommand[0] == 'checkertrans')
-            {
+            gumpRedraw.AddButtonTileArt(miscSerial++, x, y, graphicOne, graphicTwo, graphicThree, color, tileGraphic, tileColor, tileX, tileY, action, toPage);
+        }
+        else if (gumpCommand[0] == 'checkertrans') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
             var width = gumpCommand[3]
             var height = gumpCommand[4];
             gumpRedraw.AddCheckerTrans(x, y, width, height)
-            }
-        else if(gumpCommand[0] == 'text')
-            {
+        }
+        else if (gumpCommand[0] == 'text') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
-            var color = gumpCommand[3]
-            var text = gumpCommand[4];
-            gumpRedraw.AddText(x, y, color, gump.Text(text));
-            }
-        else if(gumpCommand[0] == 'xmfhtmlgumpcolor')
-            {
+            var color = gumpCommand[3];
+            var textIndex = gumpCommand[4];
+            gumpRedraw.AddText(x, y, color, gump.Text(textIndex));
+        }
+        else if (gumpCommand[0] == 'xmfhtmlgump') {
             var x = gumpCommand[1];
             var y = gumpCommand[2];
             var width = gumpCommand[3];
             var height = gumpCommand[4];
-            var text = gumpCommand[5];
+            var textCliloc = gumpCommand[5];
+            var hasBackground = gumpCommand[6];
+            var hasScrollbar = gumpCommand[7];
+            //Dunno how to get the actual background graphic
+            gumpRedraw.AddHtmlGump(miscSerial++, x, y, width, height, 'graphic', hasBackground, hasScrollbar, color, Orion.GetCliLocString(textCliloc));
+        }
+        else if (gumpCommand[0] == 'xmfhtmlgumpcolor') {
+            var x = gumpCommand[1];
+            var y = gumpCommand[2];
+            var width = gumpCommand[3];
+            var height = gumpCommand[4];
+            var textCliloc = gumpCommand[5];
             var hasBackground = gumpCommand[6];
             var hasScrollbar = gumpCommand[7];
             var color = gumpCommand[8];
-            gumpRedraw.AddHtmlGump(highSerial++, x, y, width, height, 'graphic', hasBackground, hasScrollbar, color, Orion.GetCliLocString(text));
-            }
+            //Dunno how to get the actual background graphic
+            gumpRedraw.AddHtmlGump(miscSerial++, x, y, width, height, 'graphic', hasBackground, hasScrollbar, color, Orion.GetCliLocString(textCliloc));
         }
-    gumpRedraw.Update()
     }
+    gumpRedraw.Update();
+}
+
+function AliGumpRedrawCallback() {
+    Orion.Print("Response Code: " + CustomGumpResponse.ReturnCode());
+}
 
 function GetAllUniqueGraphicsInContainer()
     {

@@ -1,0 +1,119 @@
+function AliAtlas(targetX,targetY,targetMap)
+    { //e.g., AliAtlas(1240,500,"Trammel")
+    var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
+    var gateArr = 
+        [//location name, facet, facet# x, y
+            ['Moonglow', 'Trammel', 1, 4467, 1283],
+            ['Britain', 'Trammel', 2, 1421, 1696],
+            ['Jhelom', 'Trammel', 3, 1499, 3771],
+            ['Yew', 'Trammel', 4, 771, 752],
+            ['Minoc', 'Trammel', 5, 2701, 692],
+            ['Trinsic', 'Trammel', 6, 1828, 2948],
+            ['Skara Brae', 'Trammel', 7, 643, 2067],
+            ['New Magincia', 'Trammel', 8, 3566, 2140],
+            ['New Haven', 'Trammel', 27, 3450, 2677],
+            ['Moonglow', 'Felucca', 9, 4467, 1283],
+            ['Britain', 'Felucca', 10, 1421, 1696],
+            ['Jhelom', 'Felucca', 11, 1499, 3771],
+            ['Yew', 'Felucca', 12, 771, 752],
+            ['Minoc', 'Felucca', 13, 2701, 692],
+            ['Trinsic', 'Felucca', 14, 1828, 2948],
+            ['Skara Brae', 'Felucca', 15, 643, 2067],
+            ['New Magincia', 'Felucca', 16, 3566, 2140],
+            ['Buccaneers Den', 'Felucca', 26, 2711, 2234],
+            ['Compassion', 'Ilshenar', 17, 1215, 467],
+            ['Honesty', 'Ilshenar', 18, 772, 1366],
+            ['Honor', 'Ilshenar', 19, 744, 724],
+            ['Humility', 'Ilshenar', 20, 281, 1016],
+            ['Justice', 'Ilshenar', 21, 987, 1011],
+            ['Sacrifice', 'Ilshenar', 22, 1174, 1286],
+            ['Spirituality', 'Ilshenar', 23, 1532, 1340],
+            ['Valor', 'Ilshenar', 24, 528, 216],
+            ['Chaos', 'Ilshenar', 25, 1721, 218],
+            ['Luna', 'Malas', 28, 1015, 527],
+            ['Umbra', 'Malas', 29, 1997, 1386],
+            ['Isamu-Jima', 'TerMur', 30, 1169, 998],
+            ['Makoto-Jima', 'TerMur', 31, 802, 1204],
+            ['Homare-Jima', 'TerMur', 32, 270, 628],
+            ['Royal City', 'TerMur', 33, 850, 3525],
+            ['Valley of Eodon', 'TerMur', 34, 719, 1863],
+        ]
+    var map = maps[Orion.ObjAtLayer('backpack').Map()]
+    //Orion.Print(map)
+    if(Orion.GetDistance(targetX,targetY) == 0)
+        {
+        Orion.CharPrint(self,1159,'Already at destination: ' + targetX + ',' + targetY + ' in ' + targetMap);
+        Orion.WarMode(0);
+        return;
+        }
+    if(Orion.GetDistance(targetX,targetY) < 250 && Orion.GetPathArray(targetX, targetY, 256, 0).length && map == targetMap)
+        {
+        Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
+        Orion.WarMode(1);
+        AliWalkTo(targetX,targetY);
+        Orion.WarMode(0);
+        return;
+        }
+    var nearestGate = gateArr.filter(function(gate){return gate[1] == map})
+        .sort(function(a,b)
+        	{
+	        //return Orion.GetPathArray(a[3], a[4], 256, 0).length - Orion.GetPathArray(b[3], b[4], 256, 0).length
+	        return Orion.GetDistance(a[3],a[4]) - Orion.GetDistance(b[3],b[4]);
+	        })[0];
+    var destinationGate = gateArr.filter(function(gate){return gate[1] == targetMap})
+        .sort(function(a,b)
+        {
+        return DistBetweenPoints(targetX,targetY,a[3],a[4]) - DistBetweenPoints(targetX,targetY,b[3],b[4])
+        })[0];
+    Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
+    Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
+    Orion.WarMode(1);
+    
+    Orion.CharPrint(self,1159,'Walking to nearest gate');
+    AliWalkTo(nearestGate[3], nearestGate[4])
+    //var tempX = Player.X();
+    //var tempY = Player.Y();
+    while(Orion.GetDistance(destinationGate[3],destinationGate[4]) > 10)
+        {
+        Orion.Print('Waiting for gate gump')
+        var gump = Orion.GetGump('any','0x00000258');
+        if(gump !== null)
+            {
+            var gumpHook = Orion.CreateGumpHook(1);
+            gumpHook.AddCheck(destinationGate[2], true);
+            gump.Select(gumpHook);
+            Orion.Wait(100);
+            }
+        else
+            {
+            var gate = Orion.FindTypeEx('0x0F6C', any, ground, 'near', 23);
+            Orion.CharPrint(self,1159,'Searching for gate');
+            if(gate[0])
+                {
+                Orion.CharPrint(self,1159,'Walking to gate');
+                AliWalkTo(gate[0].X(), gate[0].Y());
+                Orion.Wait(500);
+                Orion.Resend();
+                Orion.Wait(500);
+                Orion.UseObject(gate[0].Serial());
+                }
+            else 
+                {
+                Orion.CharPrint(self,1159,'Walking to nearest gate');
+                if(!AliWalkTo(nearestGate[3], nearestGate[4]))
+                    if(!AliWalkTo(1174, 1283))
+                        AliWalkTo(1016, 524);
+                }
+            }
+        Orion.Wait(1000);
+        }
+    Orion.WarMode(1);
+    Orion.CharPrint(self,1159,'Walking to ' + targetX + ',' + targetY + ' in ' + targetMap);
+    AliWalkTo(targetX,targetY);
+    Orion.WarMode(0);
+    }
+
+function DistBetweenPoints(x1,y1,x2,y2)
+    {
+    return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)))
+    }

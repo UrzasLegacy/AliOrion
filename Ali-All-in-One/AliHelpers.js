@@ -42,28 +42,28 @@ function ListLoot(findlist,ignorelist)  //v1
     		{
     		return (part.Properties().match(/Evil/i))
     		});
-    if(list.length) 
+    if(list.length)
         var corpse = list[0];
     else
         Orion.Print('no corpse found');
-    if(corpse == null) 
+    if(corpse == null)
         {
         Orion.ResetIgnoreList();
-        Orion.IgnoreReset();        
+        Orion.IgnoreReset();
         }
-    else 
+    else
         {
         Orion.UseObject(corpse.Serial());
         Orion.Wait(1100);
         var instancedcorpse = Orion.FindObject(Orion.GetSerial(lastcontainer))
-        var lootbag = Orion.FindObject(Orion.GetSerial(backpack));       
+        var lootbag = Orion.FindObject(Orion.GetSerial(backpack));
         if(ignorelist)
             Orion.UseIgnoreList(ignorelist);
         var lootlist = Orion.FindList(findlist, instancedcorpse.Serial())
         if(lootlist.length)
             {
-            for(var i = 0;i<lootlist.length;i++) 
-                {            
+            for(var i = 0;i<lootlist.length;i++)
+                {
                 if(Orion.GetDistance(corpse.Serial()) > 2)
                     break;
                 var b = Orion.FindObject(lootlist[i]);
@@ -71,8 +71,8 @@ function ListLoot(findlist,ignorelist)  //v1
                 Orion.MoveItem(lootlist[i], 0, lootbag.Serial());
                 Orion.Wait(1100);
                 }
-            }    
-        Orion.Ignore(corpse.Serial())       
+            }
+        Orion.Ignore(corpse.Serial())
         }
     }
 
@@ -148,7 +148,7 @@ function VerifyOpenVendor(vendorSerial,vendorPack,delay)
     return true;
     }
 
-function CheckGumpCliloc(gumpID, clilocID)//check if clilocID is in gump. Return 1 if it is, 0 if not, and null if gump isn't found. 
+function CheckGumpCliloc(gumpID, clilocID)//check if clilocID is in gump. Return 1 if it is, 0 if not, and null if gump isn't found.
     {
     if(Orion.WaitForGump(2000))
         {
@@ -171,7 +171,7 @@ function PinkGumpButton(button, ms)
             gump.Select(Orion.CreateGumpHook(button));
             Orion.Wait(ms);
             }
-        }   
+        }
     }
 
 function VendorGumpButton(button, ms)
@@ -186,7 +186,7 @@ function VendorGumpButton(button, ms)
             gump.Select(Orion.CreateGumpHook(button));
             Orion.Wait(ms);
             }
-        }   
+        }
     }
 
 function JewelryBoxGumpButton(button)
@@ -302,8 +302,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)
@@ -347,7 +347,7 @@ function DistBetweenPoints(x1,y1,x2,y2)
 
 function cPrint(txt)
     {
-    Orion.CharPrint(self,1159,txt) 
+    Orion.CharPrint(self,1159,txt)
     }
 
 function isTargetHourUTC(targetHour)
@@ -389,7 +389,7 @@ function SetDiscordRegistryEntry()
     Orion.RegWrite(registryName, discordConfig);
     return discordConfig;
     }
-    
+
 function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, destinationContainerSerial)
     {
     if(!colorID)
@@ -433,7 +433,7 @@ function Restock(itemName, graphicID, supplyContainerSerial, amount, colorID, de
     return true;
     }
 
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	{
 	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
 	//create global scope variable runeIndex to increment through the book starting from '1'
@@ -486,9 +486,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
 	            {
 	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
+	            var runeIndexNum = +runeIndex + 1
 	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
+					runeIndex = String(runeIndexNum);
 	            else
 					runeIndex = '1';
 	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
@@ -509,9 +509,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        Orion.Wait(2000);
             if(rotateToggle)
                 {
-                var runeIndexNum = +runeIndex + 1 
+                var runeIndexNum = +runeIndex + 1
                 if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
+                    runeIndex = String(runeIndexNum);
                 else
                     runeIndex = '1';
                 }
@@ -522,11 +522,11 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(1000);
 	Orion.Resend();
 	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
 	}
 
-function AtlasByName(bookName,runeName,backupBook,backupRune) 
+function AtlasByName(bookName,runeName,backupBook,backupRune)
 	{
 	if(backupBook == undefined)
 		var backupBook = bookName;
@@ -541,7 +541,7 @@ function AtlasByName(bookName,runeName,backupBook,backupRune)
     if(!runeItem[0])
         {
         Orion.Print("Atlas named '" + bookName + "' not found!");
-        return;    
+        return;
         }
     if(Orion.SkillValue('Magery', 'base') >= 650)
     	var recallType = 4000; //recall index
@@ -569,7 +569,7 @@ function AtlasByName(bookName,runeName,backupBook,backupRune)
 			        var index = textList.indexOf(runeName);
 			        var buttonList = gump.ButtonList();
 			        if(buttonList.length == 25)
-			        	index++;	    
+			        	index++;
 			        var buttonText = buttonList[index];
 			        var splitText = Orion.Split(buttonText, ' ');
 			        var buttonCode = splitText.pop();
@@ -615,7 +615,7 @@ function AtlasByName(bookName,runeName,backupBook,backupRune)
         else
             Orion.Print("No backup atlas named '" + backupBook + "' found!");
 		}
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         AtlasByName(bookName,runeName,backupBook,backupRune);
 	}
 
@@ -654,7 +654,7 @@ function AtlasFindButton(string)
 			        var index = textList.indexOf(string);
 			        var buttonList = gump.ButtonList();
 			        if(buttonList.length == 25)
-			        	index++;	    
+			        	index++;
 			        var buttonText = buttonList[index];
 			        var splitText = Orion.Split(buttonText, ' ');
 			        var buttonCode = splitText.pop();
@@ -677,7 +677,7 @@ function WalkThrough(ali)
 	// waypointArray = [x, y, step]
 	// waypointArray = [x, y, step, testString]
 	// testString format = 'xCoordToTest:yCoordToTest:stepDirection'
-	
+
 	// Walks to x,y and then if step isn't false, takes a step in whatever direction (e.g 'n','e','s','w'). This step can be useful
 	// for certain area transitions, but usually isn't necessary and can be left as false.
 	// If a testString is supplied, after attempting to walk to the coordinates given, a check is performed to see if the player
@@ -711,7 +711,7 @@ function WalkThrough(ali)
 		}
 	}
 
-function BorderEdge(x, y, p2, range) 
+function BorderEdge(x, y, p2, range)
 	{
   	return (x == (p2.X() - range))
     	|| (x == (p2.X() + range))
@@ -719,15 +719,15 @@ function BorderEdge(x, y, p2, range)
     	|| (y == (p2.Y() + range));
 	}
 
-function WalkToRadiusBorder(targetSerial, distance) 
+function WalkToRadiusBorder(targetSerial, distance)
     {
     var target = Orion.FindObject(targetSerial)
-    if(target) 
+    if(target)
         {
         var x = target.X();
         var y = target.Y();
         var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, x + distance, y + distance)
-            .filter(function(tile) 
+            .filter(function(tile)
                 {
                 var tileX = tile.X();
                 var tileY = tile.Y();
@@ -735,7 +735,7 @@ function WalkToRadiusBorder(targetSerial, distance)
                 || (x == (tileX + distance))
                 || (y == (tileY - distance))
                 || (y == (tileY + distance));
-                }).sort(function (a,b) 
+                }).sort(function (a,b)
                     {
                     return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
                     });
@@ -744,8 +744,8 @@ function WalkToRadiusBorder(targetSerial, distance)
             Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
             })
         for(var i=0;i<tiles.length;i++)
-            {             
-            var closest = tiles[i]; 
+            {
+            var closest = tiles[i];
             Orion.AddFakeMapObject(55555, '0x051A', 32, closest.X(), closest.Y(), closest.Z());
             if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
                 break;
@@ -756,7 +756,7 @@ function WalkToRadiusBorder(targetSerial, distance)
 function DrawSquare(minX,minY,maxX,maxY)
 	{
 	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
-		.forEach(function (tile,ind) 
+		.forEach(function (tile,ind)
 			{
 			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
 			});
@@ -765,7 +765,7 @@ function DrawSquare(minX,minY,maxX,maxY)
 function DrawBorder(minX,minY,maxX,maxY)
 	{
 	Orion.GetTilesInRect('land', minX, minY, maxX, maxY)
-		.forEach(function (tile,ind) 
+		.forEach(function (tile,ind)
 			{
 			Orion.AddFakeMapObject(ind, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
 			});
@@ -797,7 +797,7 @@ function SetAvoidRadius(mobSerial,range)
 function AvoidRectangle(x1,y1,x2,y2,borderOnly)
     {
     if(borderOnly === undefined) borderOnly = true
-    var tiles = Orion.GetTilesInRect('land', x1, y1, x2, y2).filter(function(tile) 
+    var tiles = Orion.GetTilesInRect('land', x1, y1, x2, y2).filter(function(tile)
         {
         var tileX = tile.X();
         var tileY = tile.Y();
@@ -818,7 +818,7 @@ function AvoidRectangle(x1,y1,x2,y2,borderOnly)
         Orion.AddFakeMapObject(i + 30000, '0x051A', 32, tileX, tileY, tileZ);
         }
     }
-    
+
 function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingTime,pathMarkers,startCallBackFn,endCallBackFn)
     {
     if(z === undefined) z = 0;
@@ -889,7 +889,7 @@ function Fill(profString, skillString, skillValue, toolGraphic, containerSerial,
             var needed = Math.min(500 - +benchGump.TextList()[textInd] - have, 25);
             if(needed < 1)
                 return Orion.CharPrint(self, 1159, skillString + ' charges filled');
-            if(Orion.SkillValue(skillString, 'base') < skillValue*10) 
+            if(Orion.SkillValue(skillString, 'base') < skillValue*10)
                 return Orion.CharPrint(self, 1159, skillString + " skill isn't high enough");
             var tool = Orion.FindType(toolGraphic)[0];
             if(!tool)
@@ -940,7 +940,7 @@ function Fill(profString, skillString, skillValue, toolGraphic, containerSerial,
                         Orion.CancelTarget();
                     Orion.Wait(200);
                     }
-                }          
+                }
             }
         Orion.CloseGump('generic', benchSerial, '0x00002415');
         Orion.Wait(200);
@@ -1048,7 +1048,7 @@ function Commodifier(stackSize,useCommodityDeeds,useSpecificArray)
             var item = items[i];
             var graphicColorPair = item.Graphic() + ':' + item.Color();
             itemHash[graphicColorPair] = true;
-            }    
+            }
         for(graphicColor in itemHash)
             {
             var graphicColorSplit = Orion.Split(graphicColor, ':');
@@ -1124,7 +1124,7 @@ function Commodify(graphicSerial, colorCode, containerSerial, stackCount)
 function AliAtlas(targetX,targetY,targetMap)
     { //[x,y,facet]
     var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
-    var gateArr = 
+    var gateArr =
         [//location name, facet, facet# x, y
             ['Moonglow', 'Trammel', 1, 4467, 1283],
             ['Britain', 'Trammel', 2, 1421, 1696],
@@ -1196,7 +1196,7 @@ function AliAtlas(targetX,targetY,targetMap)
     Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
     Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
     Orion.WarMode(1);
-    
+
     Orion.CharPrint(self,1159,'Walking to nearest gate');
     AliWalkTo(nearestGate[3], nearestGate[4])
     //var tempX = Player.X();
@@ -1225,7 +1225,7 @@ function AliAtlas(targetX,targetY,targetMap)
                 Orion.Wait(500);
                 Orion.UseObject(gate[0].Serial());
                 }
-            else 
+            else
                 {
                 Orion.CharPrint(self,1159,'Walking to nearest gate');
                 if(!AliWalkTo(nearestGate[3], nearestGate[4]))
@@ -1609,7 +1609,7 @@ function DirectionalTeleport(direction,range)
         coordX = tiles[0].X();
         coordY = tiles[0].Y();
         }
-        
+
     if(!Orion.HaveTarget())
         {
         Orion.Cast('Teleport');
