@@ -1,9 +1,10 @@
 //--# AliQoL
 /*
-These scripts are meant to automate short, tedious tasks. There is some overlap in "automation" between
-AliQoL and AliAutomation. The difference is that functions in AliQoL are meant to act as utility helpers for 
-annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style functions that either
-run in the background all the time as you do other things, or are useful for accomplishing something while afk.
+These scripts are meant to automate short, tedious tasks.
+
+There is some overlap in "automation" between AliQoL and AliAutomation. The difference is that functions in AliQoL are meant to
+act as utility helpers for annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style
+functions that either run in the background all the time as you do other things, or are useful for accomplishing something while afk.
 */
 
 function TestHue()
@@ -13,7 +14,7 @@ function TestHue()
     var serial = Orion.GetSerial('myTarget');
     Orion.TestItemColor(serial, hue);
     }
-    
+
 function RecallRepair()
 	{
     Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RecallRepair');
@@ -242,14 +243,14 @@ function SuitReader()
     gump.AddText(x3, y, "0", 'Stam+:');
     gump.AddText(x3+xOffset2, y, "0", propertiesList[20][1]);
     gump.AddText(x4, y, "0", 'SR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]); 
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]);
     y+=yOffset;
     gump.AddText(x1, y, "0", 'Int+:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]); 
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]);
     gump.AddText(x3, y, "0", 'Mana+:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]); 
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]);
     gump.AddText(x4, y, "0", 'MR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]); 
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]);
     y+=yOffset*2;
     gump.AddText(x1, y, "0", 'CF:');
     gump.AddText(x1+xOffset2, y, "0", propertiesList[25][1]);
@@ -274,7 +275,7 @@ function SuitReader()
 
 function SuitReaderCall(playerOrContainerSerial)
 	{
-    var propertiesList = 
+    var propertiesList =
     [
         ['Physical Resist', 0], //0
         ['Fire Resist', 0],
@@ -417,7 +418,7 @@ function AliVendorBuy()
     }
 
 function AliVendorBuyWithComments()
-    { 
+    {
 
     // WARNING WARNING WARNING
     // Will purchase whatever you target instantly, do not target something you don't intend to buy!
@@ -508,12 +509,12 @@ function RepairGear()
     var masonryLowAlarm = false;
     var glassblowingLowAlarm = false;
     var fletchingLowAlarm  = false;
-	
+
     var alarmThreshold = 20; //If the repair bench gets below this number of scrolls for a repair type, send a discord message
 
 	var flavorText = true; //adds overhead emotes describing the amount of items you need to repair
-    
-    var repairDict = 
+
+    var repairDict =
         { //graphicString: buttonCode
         // tinker: 2001 | tinker: 2001 | bsmith: 2002 | carpenter: 2003 | tailor: 2006 | fletcher: 2009 | masonry: 2010
         '0x170B': 2006,'0x2D2D': 2002,'0x2D21': 2002,'0x0F4A': 2002,'0x0F49': 2002,'0x0F4E': 2002,'0x0F4D': 2002,'0x0F48': 2002,'0x0F47': 2002,'0x0DF0': 2003,'0x0DF1': 2003,'0x26BD': 2002,'0x26C7': 2002,'0x27A8': 2003,'0x26BB': 2002,'0x26C5': 2002,'0x13B1': 2009,'0x13B2': 2009,'0x0F5F': 2002,'0x0F5E': 2002,'0x1B72': 2002,'0x1B73': 2002,
@@ -573,7 +574,7 @@ function RepairGear()
     else if(outStrs.length < 3)
         Orion.CharPrint(self,1159,'*You check your equipment and find some things that need your attention*')
     else if(outStrs.length < 8)
-        Orion.CharPrint(self,1159,"*You check your equipment and make a mental note to not get hit so much in the future*") 
+        Orion.CharPrint(self,1159,"*You check your equipment and make a mental note to not get hit so much in the future*")
     else if(outStrs.length < 20)
         Orion.CharPrint(self,1159,"*You check what's left of your equipment and marvel that any of it is still attached to you given its abysmal condition*")
     outStrs.sort(function(a,b)
@@ -656,7 +657,7 @@ function RepairGear()
                                 Orion.TargetObject(obj.Serial());
                             }
                         Orion.WaitForGump(2000);
-				        }		   
+				        }
 			        }
       			}
     		}
@@ -680,7 +681,7 @@ function RepairGear()
                     var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
                     if(bench)
                         return RepairGear();
-                    }                   
+                    }
                 }
             }
         }
@@ -715,7 +716,7 @@ function DropDraggedToContainer() //v2
     //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
 	var dropContainer = Orion.FindObject('dropContainer');
 	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
 		var lastSerial = Orion.GetSerial('dropContainer');
@@ -846,7 +847,7 @@ function DropFromQueue(_)
                     //Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
                     Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
                     }
-                Orion.Wait(250);  
+                Orion.Wait(250);
                 }
             endStamp = Orion.Now() + 5000;
             }
@@ -902,15 +903,15 @@ function GrabFromQueue(_)
         if(tempArr.length)
             {
             var itemSerial = tempArr.shift();
-            Shared.AddArray('grabQueue',tempArr);	
+            Shared.AddArray('grabQueue',tempArr);
             var itemObj = Orion.FindObject(itemSerial)
             if(itemObj)
                 {
                 var fromContainer = itemObj.Container()
                 while(itemObj.Container() == fromContainer)
                     {
-                    Orion.MoveItem(itemSerial, 0, toContainer); 
-                    Orion.Wait(1300);  
+                    Orion.MoveItem(itemSerial, 0, toContainer);
+                    Orion.Wait(1300);
                     }
                 endStamp = Orion.Now() + 5000;
                 }
@@ -1006,9 +1007,9 @@ function AutoPriceSimple()
 			Orion.SendPrompt(textInput);
 		}
 	}
-    
+
 function HighlightUnlocked()
-	{ 
+	{
     //Highlights all items nearby that don't have 'Locked Down' in their tooltip
 	var items = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
 		{
@@ -1024,10 +1025,10 @@ function HighlightUnlocked()
 function NeedleInAHayStack()
     { //v1
     // This function finds all containers on the same floor as the player and systematically searches through
-    // all of them to find any object with the textSearch string in its tooltip. 
+    // all of them to find any object with the textSearch string in its tooltip.
     // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
     var textSearch = 'Retouch';
-    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item) 
+    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
         {
         var itemZ = item.Z();
         var itemProps = item.Properties();
@@ -1088,7 +1089,7 @@ function StayLoggedIn()
 		}
 	}
 
-    
+
 function StayHidden()
     {
     // Simple loop that keeps you hidden with the hiding skill
@@ -1175,7 +1176,7 @@ function AttackNearest()
     {
     // Attacks nearest hostile mob
 	Orion.ResetSearchArea();
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignoreself|ignorefriends', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
@@ -1190,7 +1191,7 @@ function GatherMobs()
             Orion.Attack(mob);
             Orion.Wait(10);
             });
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
@@ -1219,7 +1220,7 @@ function ActivateChampSpawn()
 	Orion.InvokeVirtue('valor')
 	if(Orion.WaitForTarget(2000))
 		Orion.TargetObject(altar);
-	}	
+	}
 
 function BuyHorse()
     {
@@ -1241,7 +1242,7 @@ function BuyHorse()
     Orion.Wait(1300);
     var horsey = Orion.FindTypeEx(any, any, ground, 'mobile', 2, 'blue|green').filter(function(mobile)
         {
-        return Orion.Contains(mobile.Name(), 'a horse');  
+        return Orion.Contains(mobile.Name(), 'a horse');
         })[0];
     while(!Orion.ObjAtLayer('Mount'))
         {
@@ -1261,7 +1262,7 @@ function RecallBandieBuy()
 	Orion.Wait(1500);
 	Orion.Exec('WalkThroughCurrentFarm');
     }
-    
+
 function BandieBuy()
 	{
     // Buys bolts from a weaver npc (and scissors if you don't have any) and cuts them into bandages
@@ -1512,7 +1513,7 @@ function TeleportChargeCounter()
         var flag = Orion.Contains(ring.Properties(), 'Ring') && Orion.Contains(ring.Properties(), 'Teleport Charges:')
         if(!flag)
         	Orion.Print(ring.Properties())
-        return 
+        return
         });
     var charges = rings.reduce(function(sum, current)
         {
@@ -1603,7 +1604,7 @@ function VendorRepricer()
             Orion.CharPrint(self,1159, "Checking price...")
             var itemCheck = Orion.FindObject(itemSerial);
             if(Orion.Contains(itemCheck.Properties().replace(/,/g,""), 'Price: ' + adjPrice))
-               break; 
+               break;
             else
                 {
                 Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
@@ -1628,7 +1629,7 @@ var vendorRecords = {
         "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
         "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
         }
-        
+
     vendor2Serial: {
         "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
         "itemSerial": {"itemName": "torch", "itemX": 1, "itemY": 2, "gridIndex": 3, "price": 4},
@@ -1656,7 +1657,7 @@ function VendorPacker()
     var vendorSerial = Orion.GetSerial('myTarget');
     var vendorObj = Orion.FindObject(vendorSerial);
     if(!vendorObj.Mobile())
-    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')    
+    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')
     var vendorContainer = Orion.ObjAtLayer('backpack', vendorSerial).Serial();
     Orion.CharPrint(self,1159,'Choose container to pack items to')
     Orion.WaitForAddObject('myTarget');
@@ -1670,7 +1671,7 @@ function VendorPacker()
         {
         return a.GridIndex() - b.GridIndex();
         });
-        
+
  // VendorRecordsObj[containerContents][inventoryItemObj][itemPrice]
     vendorRecordsObj[containerSerial] = {}; // VendorRecordsObj[containerSerial][itemSerial][itemData]
     TextWindow.Print("{");
@@ -1731,7 +1732,7 @@ function VendorUNPacker()
     var vendorSerial = Orion.GetSerial('myTarget');
     var vendorObj = Orion.FindObject(vendorSerial);
     if(!vendorObj.Mobile())
-    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')    
+    	return Orion.CharPrint(self,1159,'Target your vendor! Halting...')
     var vendorContainer = Orion.ObjAtLayer('backpack', vendorSerial).Serial();
     Orion.CharPrint(self,1159,'Choose container to stock items from')
     Orion.WaitForAddObject('myTarget');
@@ -1741,7 +1742,7 @@ function VendorUNPacker()
         Orion.UseObject(containerSerial)
         Orion.Wait(1300);
         }
-        
+
     var items = Orion.FindTypeEx(any,any, containerSerial).sort(function(a,b)
         {
         return a.GridIndex() - b.GridIndex();
@@ -1780,7 +1781,7 @@ function VendorUNPacker()
             Orion.CharPrint(self,1159, "Checking price...")
             var itemCheck = Orion.FindObject(itemSerial);
             if(Orion.Contains(itemCheck.Properties().replace(/,/g,""), 'Price: ' + price))
-               break; 
+               break;
             else
                 {
                 Orion.MoveItem(itemSerial, 0, vendorContainer, itemX, itemY, -1, gridIndex);
@@ -1897,13 +1898,13 @@ function CombineAllRefinements()
         Orion.UseObject(container);
         Orion.Wait(1300);
         }
-    for(var r=0;r<refinements.length;r++) 
+    for(var r=0;r<refinements.length;r++)
         {
         var refinement = refinements[r];
         for(var a=0;a<armors.length;a++)
             {
             var armor = armors[a];
-            for(var l=0;l<levels.length;l++) 
+            for(var l=0;l<levels.length;l++)
                 {
                 var level = levels[l];
                 var amount = upgradeAmount[level];

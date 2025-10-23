@@ -75,7 +75,7 @@ function GMScan()
             {
             return mob.Properties().indexOf('GM ') > -1;
             }).length || Orion.InJournal('GM ', 'sys', '0', 'any', timeStamp - 3500, Orion.Now() + 500);
-        timeStamp = Orion.Now();    
+        timeStamp = Orion.Now();
         if(gmCheck)
             {
 			 if(useDiscordPush)
@@ -103,7 +103,7 @@ function DiscordPush(message)
 
 function SetDiscordRegistryEntry()
     {
-    var discordConfig = "https://discordapp.com/api/webhooks/" + "941921319463841843" + '/' + "7edeWcihk41muJgZGU2RouSAzICkLSAH8P4GoEKbv_OyRTa_kMumiQhWHcb4XEYispwI";
+    var discordConfig = "";
     var registryName = 'discordConfig';
     Orion.RegWrite(registryName, discordConfig);
     return discordConfig;

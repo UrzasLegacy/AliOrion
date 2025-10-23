@@ -1,9 +1,10 @@
 //--# AliAutomation
 /*
-These scripts are meant to automate actions over a long period of time. There is some overlap in "automation" between
-AliAutomation and AliQoL. The difference is that functions in AliQoL are meant to act as utility helpers for
-annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style functions that either
-run in the background all the time as you do other things, or are useful for accomplishing something while afk.
+These scripts are meant to automate actions over a long period of time.
+
+There is some overlap in "automation" between AliAutomation and AliQoL. The difference is that functions in AliQoL are meant to
+act as utility helpers for annoying but relatively quick tasks. In contrast AliAutomation focuses on "set it and forget it" style
+functions that either run in the background all the time as you do other things, or are useful for accomplishing something while afk.
 */
 
 

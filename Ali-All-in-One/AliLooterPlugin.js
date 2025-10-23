@@ -43,12 +43,12 @@ var ModularGumpButtons = //[ xsize, ysize, CallBackID, 'displayText', 'functionN
         [],
         [ [100, 30, serialIndex++, "SuitReader", 'SuitReader'], [100, 30, serialIndex++, "AliStringSearch", 'AliStringSearchGump'], [100, 30, serialIndex++, "PasteProps", 'PasteProperties'] ],
     ]
-   
 
-function ModularGumpCallback(_) 
+
+function ModularGumpCallback(_)
     {
     var code = CustomGumpResponse.ReturnCode();
-    if(code == 0) 
+    if(code == 0)
         {
         var gump = Orion.CreateCustomGump(12002);
         gump.Close();
@@ -148,12 +148,12 @@ function MoveLootCall(keep)
                 Orion.TestItemColor(item, 1152)
             return check;
             });
-        } 
+        }
     }
 
 function MoveAllJewelBySkill(skillIntTarget)
 	{
-    var skillMods = 
+    var skillMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
@@ -276,9 +276,9 @@ function AliLootUW()  //v2
                     Orion.Wait(1300);
                     }
                 }
-            Orion.Wait(10);	
+            Orion.Wait(10);
             }
-        }	
+        }
     }
 
 function AliLootHouse()
@@ -299,7 +299,7 @@ function AliLootHouse()
     var unsortedY1 = unsortedY - range;
     var unsortedX2 = unsortedX + range;
     var unsortedY2 = unsortedY + range;
-    
+
     Orion.SetSearchArea(unsortedX1,unsortedY1,unsortedX2,unsortedY2);
     var unsortedContainer = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
         {
@@ -544,9 +544,9 @@ function PutAwayLoot()
         }
 
     //Weapons / Shields
-    var weapons = weapons.concat(shields);
-    if(weapons.length)
-        {    
+    var weaponsAndShields = weapons.concat(shields);
+    if(weaponsAndShields.length)
+        {
         Orion.ResetSearchArea();
         var categoryBook = Orion.FindTypeEx('0x0FF1|0x0FF2',any,ground,'item',24).filter(function(item)
             {
@@ -581,9 +581,9 @@ function PutAwayLoot()
             Orion.Wait(100);
             }
         VerifyOpenContainer(sortContainerWeapon.Serial());
-        for(var i=0;i<weapons.length;i++)
+        for(var i=0;i<weaponsAndShields.length;i++)
             {
-            var weapon = weapons[i];
+            var weapon = weaponsAndShields[i];
             var weaponSerial = weapon.Serial();
             if(!AliKeep(weaponSerial))
                 continue;
@@ -618,18 +618,18 @@ function PutAwayLoot()
                 VerifyOpenContainer(sortContainerWeapon.Serial());
                 }
             }
-        }    
+        }
     }
 
 
 
-function JewelryModSearch() 
+function JewelryModSearch()
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
     var tmpFile = Orion.NewFile();
     tmpFile.Open(tmpFilePath);
     var savedSearches = [];
-    var fileString = tmpFile.ReadAll(); 
+    var fileString = tmpFile.ReadAll();
     if(fileString)
         savedSearches = JSON.parse(fileString);
     var skills =
@@ -638,7 +638,7 @@ function JewelryModSearch()
         'Magery','Musicianship','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
         'Clear'
         ]
-    var mods = 
+    var mods =
         [
         'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
         'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
@@ -648,7 +648,7 @@ function JewelryModSearch()
 
     var title = "Ali Jewelry Search"
     //var startTime = Orion.Now();
-    var gump = Orion.CreateCustomGump(10420); 
+    var gump = Orion.CreateCustomGump(10420);
 	var rowStart = 40;
 	var columnStart = 25;
     var height = 650;
@@ -656,7 +656,7 @@ function JewelryModSearch()
 
     gump.Clear();
     gump.SetCallback('JewelryModSearchCallback');
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -664,13 +664,13 @@ function JewelryModSearch()
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
     gump.Select('gump');
-    
+
     //Custom Assets
 	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
 	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
     var xPos = columnStart;
     var yPos = rowStart;
-    
+
     var heightAdjust;
     var value;
     var shared;
@@ -691,7 +691,7 @@ function JewelryModSearch()
         gump.AddTooltip('Skill Minimum Value');
         yPos += heightAdjust;
         }
-    
+
     gump.AddText(xPos + 35,yPos,554,'Minimum Total Skill Amount');
     gump.AddResizepic(xPos + 205, yPos , '0x0BB8', 28, 19);
     gump.AddTextEntry(2000, xPos + 205 + 3, yPos, 0, Shared.GetVar('Skill Amount',''), 28, 20);
@@ -717,7 +717,7 @@ function JewelryModSearch()
     var buttonOffGraphic = ['0x25F8','0x25F9','0x25F9']; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
     gump.AddText(xPos + 130,yPos + 3,554,"Clean Only");
     gump.AddCheckbox(996, xPos + 205, yPos, '0x25F8', '0x25F9', '0x25FB', Shared.GetVar('isClean',0), '0');
-    gump.AddTooltip('Check to restrict search to only non-antique, non-imbued jewelry');    
+    gump.AddTooltip('Check to restrict search to only non-antique, non-imbued jewelry');
     yPos += heightAdjust + 12;
 
     gump.AddText(30,yPos - 20,554,'Saved Searches');
@@ -754,11 +754,11 @@ function JewelryModSearch()
     gump.AddTooltip('Delete currently selected saved search');
 
     gump.Update();
-    
+
     //Orion.Print('interval: ' + (Orion.Now() - startTime))
 	}
 
-function JewelryModSearchCallback(_) 
+function JewelryModSearchCallback(_)
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliJewelrySavedSearches.json';
     var skills =
@@ -767,7 +767,7 @@ function JewelryModSearchCallback(_)
         'Magery','Musicianship','Mysticism','Necromancy','Ninjitsu','Parrying','ResistingSpells','SpiritSpeak','Stealth','Swordsmanship','Tactics','Throwing','Wrestling',
         'Clear',
         ]
-    var mods = 
+    var mods =
         [
         'StrengthBonus','DexterityBonus','IntelligenceBonus','ManaIncrease','StaminaIncrease',
         'ManaRegeneration','EnhancePotions','HitChanceIncrease','DefenseChanceIncrease',
@@ -837,10 +837,10 @@ function JewelryModSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
-        
+
         Shared.ClearVars();
         var combo = CustomGumpResponse.ComboBox(20000);
         var savedSearch = savedSearches[combo];
@@ -877,7 +877,7 @@ function JewelryModSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
         var skillObj = {};
@@ -949,7 +949,7 @@ function JewelryModSearchCallback(_)
         Shared.AddVar('Skill Amount', skillAmount)
         tmpFile.Remove();
         tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
+        Orion.Print("Recording To File: " + tmpFilePath);
         tmpFile.Write(JSON.stringify(savedSearches));
         tmpFile.Close();
         }
@@ -958,11 +958,11 @@ function JewelryModSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
         tmpFile.Close()
-        
+
         var combo = CustomGumpResponse.ComboBox(20000);
         var savedSearch = savedSearches[combo];
         if(!savedSearch)
@@ -974,7 +974,7 @@ function JewelryModSearchCallback(_)
             })
         tmpFile.Remove();
         tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
+        Orion.Print("Recording To File: " + tmpFilePath);
         tmpFile.Write(JSON.stringify(outArr));
         tmpFile.Close();
         }
@@ -1014,7 +1014,7 @@ function JewelryScoreSearch()
         'any'
     ];
     var title = "Ali Jewelry Score Search"
-    var gump = Orion.CreateCustomGump(10421); 
+    var gump = Orion.CreateCustomGump(10421);
 	var rowStart = 40;
 	var columnStart = 25;
     var height = 175;
@@ -1022,7 +1022,7 @@ function JewelryScoreSearch()
 
     gump.Clear();
     gump.SetCallback('JewelryScoreCallback');
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -1030,7 +1030,7 @@ function JewelryScoreSearch()
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
     gump.Select('gump');
-    
+
     //Custom Assets
 	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
 	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
@@ -1071,7 +1071,7 @@ function JewelryScoreSearch()
     gump.Update();
 	}
 
-function JewelryScoreCallback(_) 
+function JewelryScoreCallback(_)
 	{
     var templates = [
         'MysticWrestle',
@@ -1113,7 +1113,7 @@ function JewelryScoreCallback(_)
             return Orion.CharPrint(self,1159,'Enter a minimum score');
         Shared.AddVar('Template Name',templates[combo]);
         Shared.AddVar('Score',textEntry);
-        Shared.AddVar('Minimum Skill Amount',textEntry2);   
+        Shared.AddVar('Minimum Skill Amount',textEntry2);
         HighlightJewelryScore(templates[combo],textEntry,textEntry2);
         }
     else if(code == 1001)
@@ -1160,7 +1160,7 @@ function CalculateScoreCall(templateName)
 function CalculateHighScore(itemProperties)
     {
     var parse = parseJewelryProperties(itemProperties);
-    var values = calculateTemplateValues(parse); 
+    var values = calculateTemplateValues(parse);
     values.forEach(function(value)
         {
         outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
@@ -1349,6 +1349,52 @@ function HighlightContainersCall(keep)
 
 function AliKeep(itemSerial)
     {
+    /**
+     * Determine whether a looted item should be kept.
+     *
+     * This function resolves the provided item serial into an Orion object, performs
+     * a series of quick filters (cursed, heavy, ranged requirements, etc.), then
+     * classifies the item as jewelry, weapon, armor, or other and delegates deeper
+     * evaluation to the appropriate helper (KeepWeapon, KeepJewelry, KeepArmor).
+     *
+     * Parameters:
+     * @param {string|number} itemSerial
+     *   The serial identifier for the item to evaluate. This may be an Orion-style
+     *   serial string (e.g. "0x40123456") or a numeric serial. The value is passed
+     *   to Orion.FindObject(itemSerial) to obtain the item instance. If the serial
+     *   does not resolve to an object, the function returns false.
+     *
+     * Returns:
+     * @returns {false|string}
+     *   - false:
+     *       The item should not be kept (discard or ignore). false is returned when:
+     *         * The serial does not resolve to an object.
+     *         * The item is explicitly filtered out (e.g. contains "Cursed",
+     *           "Weight: 50 Stones", requires Archery or Throwing).
+     *         * The item fails all keep checks (not jewelry, weapon, armor, or
+     *           special-case shield luck).
+     *
+     *   - string:
+     *       A human-readable string describing why the item was kept. Examples:
+     *         * 'Kept by Item Graphic' — the item's graphic is listed in the
+     *           lootItems mapping (Shared.GetVar('lootItems')).
+     *         * 'Luck Shield' — returned for qualifying shield items (Luck 150,
+     *           not Antique).
+     *         * Any string returned by KeepWeapon(parse, props),
+     *           KeepJewelry(parse, props), or KeepArmor(parse, props, itemGraphic).
+     *           Those helper functions typically return descriptive reasons for
+     *           keeping an item (e.g. "High damage weapon", "Jewelry: high score",
+     *           etc.).
+     *
+     * Notes / Side effects:
+     *  - The function logs debug information via DebugLoot and uses Orion APIs
+     *    (Orion.FindObject, Orion.Contains, etc.).
+     *  - Classification is based on item properties and graphics:
+     *      * Jewelry detection uses graphic membership (0x1F06|0x1086|0x108A|0x1F09).
+     *      * Weapon and armor are detected via property text (One-/Two-handed,
+     *        resist lines).
+     *  - Special-cased shields are considered even if not jewelry/weapon/armor.
+     */
 	var item = Orion.FindObject(itemSerial);
 	if(!item)
         return false;
@@ -1359,7 +1405,7 @@ function AliKeep(itemSerial)
 	if(lootItems[itemGraphic])
         return 'Kept by Item Graphic';
 	var props = item.Properties();
-	
+
     var isJewelry = Orion.Contains('0x1F06|0x1086|0x108A|0x1F09', itemGraphic);
 	var is2hWeapon = props.indexOf('Two-handed Weapon') > -1;
 	var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
@@ -1369,9 +1415,9 @@ function AliKeep(itemSerial)
     //Exclude cursed items and ranged weapons (looted bows and throwing weps are never good)
 	if(props.indexOf('Cursed') > -1 || props.indexOf('Weight: 50 Stones') > -1)
         return false;
-    if(props.indexOf('Skill Required: Archery') > -1) 
+    if(props.indexOf('Skill Required: Archery') > -1)
         return false;
-    if(props.indexOf('Skill Required: Throwing') > -1) 
+    if(props.indexOf('Skill Required: Throwing') > -1)
         return false;
 
     if(!isJewelry && !is2hWeapon && !is1hWeapon && !isArmor)
@@ -1412,12 +1458,12 @@ function KeepWeapon(propertiesObj,props)
 	var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
 	if(is2hWeapon) //handle 2 handed weapon special cases
         { // I want to exclude all 2h EXCEPT these
-		if( 
-			!(props.indexOf('Hatchet') > -1) && 
+		if(
+			!(props.indexOf('Hatchet') > -1) &&
 			!(props.indexOf('Spear') > -1 && props.indexOf('Weapon Speed 2.75') > -1) && //Not short spear
-			!(props.indexOf('Pitchfork') > -1) && 
-			!(props.indexOf('No-dachi') > -1) && 
-			!(props.indexOf('Double Axe') > -1) && 
+			!(props.indexOf('Pitchfork') > -1) &&
+			!(props.indexOf('No-dachi') > -1) &&
+			!(props.indexOf('Double Axe') > -1) &&
 			!(props.indexOf('Bladed Staff') > -1 && props.indexOf('Double Bladed Staff') === -1) &&  //Not double bladed staff
 			!(props.indexOf('Gnarled Staff') > -1) &&
 			!(props.indexOf('Lajatang') > -1) &&
@@ -1432,12 +1478,12 @@ function KeepWeapon(propertiesObj,props)
 		    }
 	    }
 	if(is1hWeapon) //handle 1 handed weapon special cases
-        { 
+        {
         if(props.indexOf("Spell Channeling") > -1 && props.indexOf('Luck 150') > -1 && props.indexOf('Mage Weapon') > -1)
             return 'Luck Weapon';
 		if( //I want to exclude THESE specific 1h weapons
 			props.indexOf('Elven Machete') > -1 ||
-			props.indexOf('Radiant Scimitar') > -1 || 
+			props.indexOf('Radiant Scimitar') > -1 ||
 			props.indexOf('Wild Staff') > -1 ||
 			props.indexOf('Lance') > -1 ||
 			props.indexOf('Scepter') > -1 ||
@@ -1502,9 +1548,9 @@ function KeepWeapon(propertiesObj,props)
         if(numProps == 1)
             return 'One Mod Splinter Bok';
         DebugLoot('Trash: Splinter bok');
-        return false;		
+        return false;
         }
-    var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") > 1 || props.indexOf("Broadsword") > 1 || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1 || props.indexOf("War Axe") > -1 || props.indexOf("Hammer Pick") > -1;
+    var isAIWep = props.indexOf("Bladed Staff") > -1 || props.indexOf("Longsword") > -1 || props.indexOf("Broadsword") > -1 || props.indexOf("Hatchet") > -1 || props.indexOf("Katana") > -1 || props.indexOf("Leafblade") > -1 || props.indexOf("War Axe") > -1 || props.indexOf("Hammer Pick") > -1;
     if(isSplinter)
         {
         if(isAntique)
@@ -1514,7 +1560,7 @@ function KeepWeapon(propertiesObj,props)
             }
         var isBloodDrinker = wepObj['BloodDrinker'];
         var isReactiveParalyze = wepObj['ReactiveParalyze'];
-        var isDisarmWep = props.indexOf("Butcher Knife") > -1 && props.indexOf("Ornate Axe") > -1 && props.indexOf("War Cleaver") > -1 && props.indexOf("War Fork") > -1 && props.indexOf("Mace") > -1 && props.indexOf("Wand") > -1 && props.indexOf("Hatchet") > -1 && props.indexOf("Pickaxe") > -1;
+        var isDisarmWep = props.indexOf("Butcher Knife") > -1 || props.indexOf("Ornate Axe") > -1 || props.indexOf("War Cleaver") > -1 || props.indexOf("War Fork") > -1 || props.indexOf("Mace") > -1 || props.indexOf("Wand") > -1 || props.indexOf("Hatchet") > -1 || props.indexOf("Pickaxe") > -1;
         var isSlowWep = props.indexOf('Weapon Speed 3.25s') > -1 || props.indexOf('Weapon Speed 3.5s') > -1 || props.indexOf('Weapon Speed 3.75s') > -1 || props.indexOf('Weapon Speed 4s') > -1 || props.indexOf('Weapon Speed 4.25s') > -1 || props.indexOf('Weapon Speed 4.5') > -1 || props.indexOf('Weapon Speed 4.75s') > -1
         if(numProps == 1)
             return 'One Mod Splinter Weapon';
@@ -1528,7 +1574,7 @@ function KeepWeapon(propertiesObj,props)
             }
         if(isHitSpell && isLowerD && (isEleDamage || (isSlowWep && wepObj['SwingSpeedIncrease']) || isBloodDrinker || isReactiveParalyze || isSpellChanneling))
             return '20+/50+/50+ God Weapon';
-        
+
         var isTwoHandedAxe = props.indexOf('Two Handed Axe') > -1
         if(isTwoHandedAxe && isEleDamage)
             {
@@ -1562,7 +1608,7 @@ function KeepWeapon(propertiesObj,props)
         if(isDisarmWep && isOverCapSplinter && isLowerD)
             return 'Clean 25+/0+/50+ Butcher Knife';
         DebugLoot('Trash: Splinter weapon failed all previous checks');
-        return false;		
+        return false;
         }
     if(isAIWep && isClean)
         {
@@ -1602,7 +1648,7 @@ function KeepJewelry(propertiesObj,props)
     {
     var isClean = props.indexOf('Antique') === -1 && props.indexOf('Imbued') === -1;
     var targetModCount = isClean ? 6 : 7;
-    var skillMods = 
+    var skillMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
@@ -1610,17 +1656,17 @@ function KeepJewelry(propertiesObj,props)
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
         Throwing:true,Healing:true, Archery:true,Meditation:true,Musicianship:true,Discordance:true,
         }
-    // var statMods = 
+    // var statMods =
     //     {
     //     StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,
     //     StaminaIncrease:true,ManaIncrease:true,
     //     }
-    var mageMods = 
+    var mageMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,
         Mysticism:true,SpellDamageIncrease:true,LowerReagentCost:true,
         }
-    var dexxerMods = 
+    var dexxerMods =
         {
         Archery:true,Healing:true,Throwing:true,
         }
@@ -1639,7 +1685,7 @@ function KeepJewelry(propertiesObj,props)
         return '1/3 +20 Magery Jewel';
     var score = calculateTemplateValues(propertiesObj)[0][1];
     //Orion.Print('score: ' + score)
-    
+
     if(propertiesObj['StrengthBonus'] == 10 && propertiesObj['DexterityBonus'] == 10 && propertiesObj['IntelligenceBonus'] == 10)
         return 'Str10/Dex10/Int10';
     if(score < 70)
@@ -1701,7 +1747,7 @@ function CountMatchingMods(propObj, mods)
     }
 
 function KeepArmor(propertiesObj,props,itemGraphic)
-    {    
+    {
     var isArmor = props.indexOf("Poison Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1 && props.indexOf("Energy Resist") > -1;
     if(!isArmor)
         {
@@ -1719,8 +1765,8 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         return false;
         }
 
-    
-    var lmcArr = 
+
+    var lmcArr =
         { //graphic: intrinsicLMCBonus
         '0x153F':'0','0x140D':'1','0x140C':'1','0x1545':'0','0x1454':'3','0x144F':'3','0x144E':'3','0x1453':'3','0x1450':'3','0x1455':'3',
         '0x1451':'3','0x1456':'3','0x1457':'3','0x1452':'3','0x13BB':'1','0x13C0':'1','0x2774':'1','0x13C3':'1','0x13BE':'1','0x13C4':'1',
@@ -1742,24 +1788,24 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x2FB8':'0','0x1715':'0','0x1716':'0','0x1719':'0','0x4213':'0','0x4051':'1','0x4055':'1','0x4059':'1','0x405B':'1','0x405F':'0',
         '0x4061':'0','0x4063':'0','0x4065':'0','0x4060':'0','0x4060':'0',
         }
-      
+
     var hatArr =
         {
         '0x1451':true,'0x1456':true,'0x1F0B':true,'0x1F0C':true,'0x140A':true,'0x140B':true,'0x13BB':true,'0x13C0':true,'0x140C':true,
         '0x140D':true,'0x1408':true,'0x1409':true,'0x1412':true,'0x1419':true,'0x140E':true,'0x140F':true,'0x2B71':true,'0x2B72':true,
         }
-    
+
     var tunicsArr =
         {
         '0x1454':true,'0x144F':true,'0x1C02':true,'0x1C03':true,'0x13E2':true,'0x13DB':true,'0x1C0C':true,'0x1C0D':true,'0x13ED':true,
         '0x13EC':true,'0x13BF':true,'0x13C4':true,'0x1C04':true,'0x1C05':true,'0x1415':true,'0x1416':true,
         }
-    
+
     var glovesArr =
         {
         '0x1455':true,'0x1450':true,'0x13D5':true,'0x13DD':true,'0x13EB':true,'0x13F2':true,'0x1414':true,'0x1418':true,
         }
-    
+
     var armsArr =
         {
         '0x1410':true,'0x1417':true,'0x1453':true,'0x144E':true,'0x13EE':true,'0x13EF':true,'0x13D4':true,'0x13DC':true,
@@ -1811,7 +1857,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         }
     else
         var intrinsicLMC = intrinsicLMCArr[0];
-        
+
     DebugLoot('\nanyEater: ' + anyEater + '\ntotalStats: ' + totalStats + '\nMR: ' + mr + '\nHPR: ' + hpr + '\nisArtifact: ' + isArtifact + '\nintrinsicLMC: ' + intrinsicLMC);
     if(isHat)
         {
@@ -1826,7 +1872,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
     if(stam < 7 && intrinsicLMC === '1')
         {
         DebugLoot('Trash: Intrinsic LMC 1 non-stam Armor');
-        return false; 
+        return false;
         }
 
     if(hpi >= 3)
@@ -1898,9 +1944,9 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '3':
                 var lrcThreshold = 15;
                 var lmcThreshold = 5;
-                var statThreshold = mr >= 3 ? 20 : 25;   
+                var statThreshold = mr >= 3 ? 20 : 25;
                 if(lrc >= lrcThreshold)
-                    statThreshold -= 5;     
+                    statThreshold -= 5;
                 break
             default: //default to best case scenario
                 DebugLoot('stam intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
@@ -1908,7 +1954,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             case '1':
                 var lrcThreshold = 10;
                 var lmcThreshold = 6;
-                var statThreshold = 25;  
+                var statThreshold = 25;
                 if(lrc >= lrcThreshold)
                     statThreshold -= 5;
                 break
@@ -1988,7 +2034,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
                 // var lrcThreshold = 15;
                 // var lmcThreshold = 8;
                 // var totalRegensThreshold = 6;
-                // var statThreshold = anyEater ? 7 : 11;  
+                // var statThreshold = anyEater ? 7 : 11;
                 // if(lrc >= lrcThreshold)
                 //     statThreshold -= 5;
                 break;
@@ -2018,7 +2064,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
 
 function parseJewelryProperties(jewelryProperties)
     {
-    var targetMods = 
+    var targetMods =
         {
         //good mods
         Magery:true,MaceFighting:true,Fencing:true,Swordsmanship:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,Tactics:true,
@@ -2053,7 +2099,7 @@ function parseJewelryProperties(jewelryProperties)
 
 function parseWeaponProperties(weaponProperties)
     {
-    var targetMods = 
+    var targetMods =
         {
         SpellChanneling:true,MageWeapon:true,FasterCasting:true,DamageIncrease:true,SwingSpeedIncrease:true,Balanced:true,HitChanceIncrease:true,
         DefenseChanceIncrease:true,UseBestWeaponSkill:true,HitPoisonArea:true,HitPhysicalArea:true,HitFireArea:true,HitEnergyArea:true,
@@ -2096,7 +2142,7 @@ function parseWeaponProperties(weaponProperties)
 
 function parseArmorProperties(armorProperties)
     {
-    var targetMods = 
+    var targetMods =
         {
         ManaIncrease:true,StaminaIncrease:true,HitPointIncrease:true,StrengthBonus:true,DexterityBonus:true,IntelligenceBonus:true,
         ManaRegeneration:true,HitPointRegeneration:true,LowerReagentCost:true,LowerManaCost:true,
@@ -2132,7 +2178,7 @@ function TestResists()
 
 function parseArmorResists(armorProperties)
     {
-    var targetMods = 
+    var targetMods =
         {
         PhysicalResist:true,FireResist:true,ColdResist:true,PoisonResist:true,EnergyResist:true
         }
@@ -2305,7 +2351,7 @@ function MoveTrashContainer(serial)
 function PutAwayJewelry(jewelry)
     {
     var playerBackpack = Orion.GetSerial(backpack);
-    var skillMods = 
+    var skillMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
@@ -2464,7 +2510,7 @@ function AliCompareJewels(itemToCompare, skillsThreshold,skillsSearchObject,mods
         return false;
     for (var prop in modsSearchObject)
         {
-        if(!itemToCompare.hasOwnProperty(prop) || itemToCompare[prop] < modsSearchObject[prop]) 
+        if(!itemToCompare.hasOwnProperty(prop) || itemToCompare[prop] < modsSearchObject[prop])
             return false;
         }
     return true;
@@ -2506,7 +2552,7 @@ function HighlightJewelryScore(templateString,score,skillInt)
                 {
                 if(templateString == 'any')
                     return true;
-                return template[0] == templateString;  
+                return template[0] == templateString;
                 })[0];
             return value[1] && value[1] >= score && value[2] >= skillInt;
             }).forEach(function(keeper)
@@ -2596,7 +2642,7 @@ function highlightConditionalJewels(conditionalCallback)
 
 function calculateTemplateValues(mods,templateName)
     {
-    var templates = 
+    var templates =
         {
         //Caster
         MysticWrestle: {
@@ -2768,16 +2814,16 @@ function calculateTemplateValues(mods,templateName)
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':4.17,'FasterCasting':12.5,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':.5,'DamageIncrease':.4,'LowerReagentCost':.4
-            },  
+            },
         SwordsArcherDiscord: {
             'Musicianship': .83,'Discordance': .83,'Parrying': .83,'ResistingSpells': .83,'Tactics':.27,'Swordsmanship':.83,'Archery':.83,
             'StrengthBonus':.38,'DexterityBonus':.38,'IntelligenceBonus':.5,'ManaIncrease':.4,'StaminaIncrease':.4,
             'ManaRegeneration':4.17,'EnhancePotions':.5,'HitChanceIncrease':.73,'DefenseChanceIncrease':.73,
             'FasterCastRecovery':1,'FasterCasting':6,'LowerManaCost':1,'SpellDamageIncrease':0,
             'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
-            },  
+            },
         }
-    var skillMods = 
+    var skillMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
         Mysticism:true,MaceFighting:true,Fencing:true,Swordsmanship:true,Stealth:true,
@@ -2785,7 +2831,7 @@ function calculateTemplateValues(mods,templateName)
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
         Throwing:true,Healing:true, Archery:true,Musicianship:true,Discordance:true
         }
-    var specialBonus = 
+    var specialBonus =
         {
         'EnhancePotions':[35,5],
         'FasterCastRecovery':[4,5],
@@ -2889,7 +2935,7 @@ function Gump_DisplayInfo(templateName, outArr, totalValue, templateMultiplier)
     var width = 575;
 
     gump.Clear();
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -2897,7 +2943,7 @@ function Gump_DisplayInfo(templateName, outArr, totalValue, templateMultiplier)
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + templateName + ' Info' + "</center>"); //x,y arguments are bugged and don't do anything
     gump.Select('gump');
-    
+
     var yPos = rowStart + heightAdjust;
     var columns = [55,157,245,328,402,491];
     var columns2 = [25,175,260,335,410,495,560];
@@ -2930,7 +2976,7 @@ function Gump_DisplayInfo(templateName, outArr, totalValue, templateMultiplier)
     }
 
 
-function AliStringSearchGump() 
+function AliStringSearchGump()
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliStringSavedSearches.json';
     var tmpFile = Orion.NewFile();
@@ -2947,7 +2993,7 @@ function AliStringSearchGump()
 
     var height = 455;
     var width = 288;
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -2962,7 +3008,7 @@ function AliStringSearchGump()
 
     var xPos = columnStart;
     var yPos = rowStart;
-    
+
     var value;
     var shared;
 
@@ -3024,7 +3070,7 @@ function AliStringSearchGump()
 
 	}
 
-function StringSearchCallback(_) 
+function StringSearchCallback(_)
 	{
     var tmpFilePath = Orion.CurrentScriptDirPath() + '/AliStringSavedSearches.json';
     var code = CustomGumpResponse.ReturnCode();
@@ -3080,10 +3126,10 @@ function StringSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
-        
+
 
         var combo = CustomGumpResponse.ComboBox(20000);
         var savedSearch = savedSearches[combo];
@@ -3104,7 +3150,7 @@ function StringSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
         var searchStringsList = [];
@@ -3154,7 +3200,7 @@ function StringSearchCallback(_)
             }
         tmpFile.Remove();
         tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
+        Orion.Print("Recording To File: " + tmpFilePath);
         tmpFile.Write(JSON.stringify(savedSearches));
         tmpFile.Close();
         }
@@ -3163,11 +3209,11 @@ function StringSearchCallback(_)
         var tmpFile = Orion.NewFile();
         tmpFile.Open(tmpFilePath);
         var savedSearches = [];
-        var fileString = tmpFile.ReadAll(); 
+        var fileString = tmpFile.ReadAll();
         if(fileString)
             savedSearches = JSON.parse(fileString);
         tmpFile.Close()
-        
+
         var combo = CustomGumpResponse.ComboBox(20000);
         var savedSearch = savedSearches[combo];
         if(!savedSearch)
@@ -3179,7 +3225,7 @@ function StringSearchCallback(_)
             })
         tmpFile.Remove();
         tmpFile.Open(tmpFilePath);
-        Orion.Print("Recording To File: " + tmpFilePath); 
+        Orion.Print("Recording To File: " + tmpFilePath);
         tmpFile.Write(JSON.stringify(outArr));
         tmpFile.Close();
         }
@@ -3340,7 +3386,7 @@ function MoveItems(items)
         }
     }
 
-function PasteProperties() 
+function PasteProperties()
 	{
     var title = "Ali Paste Properties";
     var gump = Orion.CreateCustomGump(10423);
@@ -3349,7 +3395,7 @@ function PasteProperties()
 
     var height = 83;
     var width = 288;
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -3373,7 +3419,7 @@ function PasteProperties()
     gump.Update();
 	}
 
-function PastePropertiesCallback(_) 
+function PastePropertiesCallback(_)
 	{
     var code = CustomGumpResponse.ReturnCode();
     if(code == 0)
@@ -3415,7 +3461,7 @@ function GetContainers()
     var firstPassContainers = groundContainers.concat(packContainers).concat(npcContainers);
     for(var i=0;i<firstPassContainers.length;i++)
             {
-            
+
             }
     }
 
@@ -3607,14 +3653,14 @@ function SuitReader()
     gump.AddText(x3, y, "0", 'Stam+:');
     gump.AddText(x3+xOffset2, y, "0", propertiesList[20][1]);
     gump.AddText(x4, y, "0", 'SR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]); 
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[23][1]);
     y+=yOffset;
     gump.AddText(x1, y, "0", 'Int+:');
-    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]); 
+    gump.AddText(x1+xOffset2, y, "0", propertiesList[18][1]);
     gump.AddText(x3, y, "0", 'Mana+:');
-    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]); 
+    gump.AddText(x3+xOffset2, y, "0", propertiesList[21][1]);
     gump.AddText(x4, y, "0", 'MR:');
-    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]); 
+    gump.AddText(x4+xOffset2, y, "0", propertiesList[24][1]);
     y+=yOffset*2;
     gump.AddText(x1, y, "0", 'CF:');
     gump.AddText(x1+xOffset2, y, "0", propertiesList[25][1]);
@@ -3639,7 +3685,7 @@ function SuitReader()
 
 function SuitReaderCall(playerOrContainerSerial)
 	{
-    var propertiesList = 
+    var propertiesList =
     [
         ['Physical Resist', 0], //0
         ['Fire Resist', 0],
@@ -3748,33 +3794,4 @@ function DebugLoot(msg)
         TextWindow.Open();
     Orion.Print(msg);
     TextWindow.Print('DEBUG:' + Orion.Time() + ': ' + msg);
-    }
-
-function DiscordPush(message)
-	{
-	var bot = Orion.RegRead('discordConfig') || SetDiscordRegistryEntry();
-	Orion.HttpPost(bot, "content=" + message);
-	}
-
-function SetDiscordRegistryEntry()
-    {
-    var discordConfig = "https://discordapp.com/api/webhooks/" + profile.discordHook + '/' + profile.discordKey;
-    var registryName = 'discordConfig';
-    Orion.RegWrite(registryName, discordConfig);
-    return discordConfig;
-    }
-
-
-function VerifyOpenContainer(containerSerial,delay)
-    {
-    var startTime = Orion.Now();
-    var endTime = startTime + (delay || 5000);
-    while(!Orion.GumpExists('container',containerSerial))
-        {
-        if(Orion.Now() > endTime)
-            return false;
-        Orion.UseObject(containerSerial);
-        Orion.Wait(1000);
-        }
-    return true;
     }

@@ -102,8 +102,9 @@ function GetAllSubContainers(containerSerial,ignoreEmpties)
 
 function VerifyOpenContainer(containerSerial,delay)
     {
+    if(delay === undefined) delay = 5000;
     var startTime = Orion.Now();
-    var endTime = startTime + (delay || 5000);
+    var endTime = startTime + delay;
     while(!Orion.GumpExists('container',containerSerial))
         {
         if(Orion.Now() > endTime)
