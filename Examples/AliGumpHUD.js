@@ -13,7 +13,7 @@
 //'tooltip': Add a tooltip to the previous asset. Args: 'text'
 
 
-var gumpAssets = 
+var gumpAssets =
 [
     [ ['toggle','Example1Function','Example1','0x2c88|0x2c89|0x2c8A','0x2c92|0x2c93|0x2c94', 6, 6], ['toggle','Example3Function','Three'], ['toggle','Example4Function','4'] ],
     [ ['toggle','Example2Function','ExampleTwo'],['ySpacer',10] ],
@@ -23,11 +23,11 @@ var gumpAssets =
     [ ['xSpacer', 330],['button','ClearAll',20,0,2,'0x2EE3|0x2EE3|0x2EE4'] ]
 ];
 
-function AliGumpRenderer() 
+function AliGumpRenderer()
 	{
     var title = "Ali's Modular Gump"
     //var startTime = Orion.Now();
-    var gump = Orion.CreateCustomGump(10420); 
+    var gump = Orion.CreateCustomGump(10420);
 
     var rowAdj = 45;
     var characterAdj = 6;
@@ -95,7 +95,7 @@ function AliGumpRenderer()
     var height = (gumpButtons.length * rowAdj) + rowStart + heightAdjust;
     gump.Clear();
     gump.SetCallback('AliGumpCallback');
-    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5 
+    gump.AddResizepic(0, 0, 'a3c', width, height); //background 0xDAC 0x254e 0x2560 9bf5
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF660066', 0, 1, 0, 0, 0); //title background
     gump.AddColoredPolygone(10, 12, width - 20, 15, '#FF666600', 1, 2, 0, 0, 0); //title border
     gump.AddColoredPolygone(10, 12, width - 20, height - 24, '#FF666600', 1, 2, 0, 0, 0); //gump border
@@ -104,11 +104,11 @@ function AliGumpRenderer()
     gump.Select('htmlgump');
     gump.AddHtmlText('doesnt matter what', 'i put here', width, height, 554, "<center>" + title + "</center>"); //x,y arguments are bugged and don't do anything
     gump.Select('gump');
-    
+
     //Custom Assets
 	//gump.AddButton(100, width - 95, height - 35,'0x2EE0','0x2EE0','0x2EE1','0x0487'); //accept
 	//gump.AddButton(101, 21, height - 35,'0x2EE3','0x2EE3','0x2EE4','0x0487'); //clear
-    
+
     //Modular Assets
     var rowPos = rowStart;
     var colPos = columnStart;
@@ -215,12 +215,12 @@ function AliGumpRenderer()
         rowPos += rowAdj;
         }
     //Custom Assets
-    
+
     gump.Update();
     //Orion.Print('interval: ' + (Orion.Now() - startTime))
 	}
 
-function AliGumpCallback(_) 
+function AliGumpCallback(_)
 	{
     var code = CustomGumpResponse.ReturnCode();
     //Orion.Print('Code: ' + code)
@@ -285,7 +285,7 @@ function AliGumpCallback(_)
     Orion.Wait(50);
     AliGumpRenderer();
 	}
-	
+
 function Example1Function()
     {
     while(true) Orion.Wait(1000);
@@ -323,13 +323,13 @@ function ClearAll()
     Orion.Terminate('all','Example5Function|AliGumpCallback')
     }
 
-    
+
 function MinimizeButton()
     {
     var gump = Orion.CreateCustomGump(11);
     gump.Clear();
 
-    //gump.AddResizepic(0, 0, '5',80, 80); //background 0xDAC 0x254e 0x2560 9bf5 
+    //gump.AddResizepic(0, 0, '5',80, 80); //background 0xDAC 0x254e 0x2560 9bf5
     //gump.AddButton(0, 30, 30, 0x589, 0x6b1, 0x6b1, '0x0487');
     gump.AddButton(0, 0, 0, 0x7d6, 0x7d6, 0x7d6, '0x0487');
     gump.Update();
@@ -352,7 +352,7 @@ function initVars()
                 {
                 case 'textInput':
                     var sharedName = asset[1];
-                    Shared.AddVar(sharedName) 
+                    Shared.AddVar(sharedName)
                     break;
                 default:
                     break;
@@ -397,10 +397,10 @@ function SimpleModularGump()
     gump.Update();
     }
 
-function ModularGumpCallback(_) 
+function ModularGumpCallback(_)
     {
     var code = CustomGumpResponse.ReturnCode();
-    if(code == 0) 
+    if(code == 0)
         {
         var gump = Orion.CreateCustomGump(15);
         gump.Close();

@@ -69,7 +69,6 @@ function ModularGumpCallback(_)
 
 function EvalKeep()
     {
-    debug = true;
     Orion.CharPrint(self,1159,'Target item');
     Orion.WaitForAddObject('myTarget')
     var serial = Orion.GetSerial('myTarget');
@@ -1140,6 +1139,7 @@ function JewelryScoreCallback(_)
 
 function CalculateScoreCall(templateName)
     {
+    var exampleString = "";
     if(!exampleString)
         {
         Orion.WaitForAddObject('myTarget');
@@ -1153,8 +1153,8 @@ function CalculateScoreCall(templateName)
         {
         outMsg += value[1] + '(' + value[2] + '): ' + value[0] + '\n';
         });
-    //TextWindow.Print(outMsg)
-    //Orion.Print(outMsg)
+    // TextWindow.Print(outMsg)
+    Orion.Print(outMsg)
     }
 
 function CalculateHighScore(itemProperties)
@@ -1385,16 +1385,8 @@ function AliKeep(itemSerial)
      *           Those helper functions typically return descriptive reasons for
      *           keeping an item (e.g. "High damage weapon", "Jewelry: high score",
      *           etc.).
-     *
-     * Notes / Side effects:
-     *  - The function logs debug information via DebugLoot and uses Orion APIs
-     *    (Orion.FindObject, Orion.Contains, etc.).
-     *  - Classification is based on item properties and graphics:
-     *      * Jewelry detection uses graphic membership (0x1F06|0x1086|0x108A|0x1F09).
-     *      * Weapon and armor are detected via property text (One-/Two-handed,
-     *        resist lines).
-     *  - Special-cased shields are considered even if not jewelry/weapon/armor.
      */
+
 	var item = Orion.FindObject(itemSerial);
 	if(!item)
         return false;
@@ -1786,7 +1778,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
         '0x4056':'1','0x030A':'1','0x404E':'0','0x4050':'1','0x405C':'1','0x405D':'1','0x405E':'1','0x4058':'1','0x4057':'1','0x405A':'1',
         '0x4D0A':'1','0x4062':'0','0x404B':'0','0x4210':'0','0x4052':'1','0x4053':'1','0x4048':'0','0x4064':'0','0x404D':'0','0x4060':'0',
         '0x2FB8':'0','0x1715':'0','0x1716':'0','0x1719':'0','0x4213':'0','0x4051':'1','0x4055':'1','0x4059':'1','0x405B':'1','0x405F':'0',
-        '0x4061':'0','0x4063':'0','0x4065':'0','0x4060':'0','0x4060':'0',
+        '0x4061':'0','0x4063':'0','0x4065':'0','0x2643':'1',
         }
 
     var hatArr =
@@ -1881,7 +1873,7 @@ function KeepArmor(propertiesObj,props,itemGraphic)
             {
             default: //default to best case scenario
                 DebugLoot('hpi intrinsicLMC defaulted on graphic: ' + itemGraphic + '\n' + props);
-                Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list')
+                Orion.Print('Add ' + itemGraphic + ' to intrinsicLMC list\n' + props)
             case '3':
                 if(isArms || isGloves)
                     {
@@ -2126,13 +2118,11 @@ function parseWeaponProperties(weaponProperties)
                 if(weaponProperties.indexOf('Faster Casting') === -1)
                     {
                     propertiesObj['FasterCasting'] = 1;
-                    DebugLoot('Faster Casting: 1');
                     }
                 }
             if(targetMods[modName] || (modName == 'Durability' && Orion.Contains(line,'%')))
                 {
                 var modValue = parseInt(modMatch[2]) || 1;
-                DebugLoot(modName + ': ' + modValue);
                 propertiesObj[modName] = modValue;
                 }
             }
@@ -2195,7 +2185,6 @@ function parseArmorResists(armorProperties)
                 {
                 var modValue = parseInt(modMatch[2]) || 0;
                 totalResists += modValue;
-                DebugLoot(modName + ': ' + modValue);
                 propertiesObj[modName] = modValue;
                 }
             }
@@ -2823,6 +2812,7 @@ function calculateTemplateValues(mods,templateName)
             'SwingSpeedIncrease':1.25,'DamageIncrease':.4,'LowerReagentCost':0
             },
         }
+
     var skillMods =
         {
         Magery:true,Wrestling:true,Focus:true,EvaluateIntelligence:true,Chivalry:true,
@@ -2831,11 +2821,13 @@ function calculateTemplateValues(mods,templateName)
         Tactics:true,Necromancy:true,AnimalTaming:true,AnimalLore:true,SpiritSpeak:true,
         Throwing:true,Healing:true, Archery:true,Musicianship:true,Discordance:true
         }
+
     var specialBonus =
         {
         'EnhancePotions':[35,5],
         'FasterCastRecovery':[4,5],
         }
+
     if(templateName == undefined)
         {
         var templateValues = [];

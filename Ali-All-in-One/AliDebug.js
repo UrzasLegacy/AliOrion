@@ -37,18 +37,6 @@ function ClearUdp()
 	{
 	Orion.RemoveAllUdpServers();
 	}
-    
-function GetTargetCoords()
-    {
-    var x = SelectedTile.X();
-    var y = SelectedTile.Y();
-    var z = SelectedTile.Z();
-    var str = '[' + x + ',' + y + ',' + z + ']';
-    TextWindow.Open();
-    TextWindow.Print('Coords: ' + str);
-    Orion.CopyToClipboard(str);
-    //Shared.AddArray('coords', [x,y,z]);
-    }
 
 function RecordPlayerPosition()
 	{
@@ -57,7 +45,7 @@ function RecordPlayerPosition()
 	TextWindow.Print('[' + Player.X() + ', ' + Player.Y() + '],')
 	Orion.AddFakeMapObject(Orion.Random(1,20000), '0x051A', 1152, Player.X(), Player.Y(), Player.Z());
 	}
-	
+
 function SurveyMarkRange()
     {
     var range = 24
@@ -67,7 +55,7 @@ function SurveyMarkRange()
     var startY = Player.Y() - range * 2;
     var endY = Player.Y() + range * 2;
     var tiles = Orion.GetTilesInRect('land', startX, startY, endX, endY);
-    tiles.forEach(function (tile) 
+    tiles.forEach(function (tile)
             {
             var tileX = tile.X();
             var tileY = tile.Y();
@@ -80,7 +68,7 @@ function SurveyMarkRange()
     var startY = Player.Y() - range;
     var endY = Player.Y() + range;
     var tiles = Orion.GetTilesInRect('land', startX, startY, endX, endY);
-    tiles.forEach(function (tile) 
+    tiles.forEach(function (tile)
             {
             var tileX = tile.X();
             var tileY = tile.Y();
@@ -93,7 +81,7 @@ function SurveyMarkRange()
     var startY = Player.Y() - range * 2;
     var endY = Player.Y() + range * 2;
     var tiles = Orion.GetTilesInRect('land', Player.X(), startY, Player.X(), endY);
-    tiles.forEach(function (tile) 
+    tiles.forEach(function (tile)
             {
             var tileX = tile.X();
             var tileY = tile.Y();
@@ -103,7 +91,7 @@ function SurveyMarkRange()
             Orion.AddFakeMapObject(serial, '0x051A', 1, tileX, tileY, tileZ);
             });
     var tiles = Orion.GetTilesInRect('land', startX, Player.Y(), endX, Player.Y());
-    tiles.forEach(function (tile) 
+    tiles.forEach(function (tile)
             {
             var tileX = tile.X();
             var tileY = tile.Y();
@@ -111,7 +99,7 @@ function SurveyMarkRange()
             var serial = String(tileX) + String(tileY);
             Orion.AddFakeMapObject(serial, '0x051A', 1, tileX, tileY, tileZ);
             Orion.AddFakeMapObject(serial, '0x051A', 1, tileX, tileY, tileZ);
-            }); 
+            });
     Orion.AddFakeMapObject(1, '0x051A', 1, Player.X(), Player.Y(), Player.Z());
     Orion.AddFakeMapObject(1, '0x051A', 1, Player.X(), Player.Y(), Player.Z());
     Orion.AddFakeMapObject(1, '0x051A', 1, Player.X(), Player.Y(), Player.Z());

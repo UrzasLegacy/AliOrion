@@ -8,8 +8,6 @@ functions that either run in the background all the time as you do other things,
 */
 
 
-
-
 function GMScan()
 	{
 	var useDiscordPush = true//profile.useDiscordPush;
@@ -109,7 +107,6 @@ function JournalScan()
 		}
 	}
 
-
 function BandieBot()
 	{
 	var useBandieOthers = profile.useBandieOthers;
@@ -190,6 +187,8 @@ function AutoBuffs()
     var useCounterAttack = profile.useCounterAttack;
     var useConsecrateWeapon = profile.useConsecrateWeapon;
     var useDivineFury = profile.useDivineFury;
+
+	//
     var nextSpellTime = 0;
     while(!Player.Dead())
         {

@@ -24,43 +24,39 @@ function RecordPlayerPosition()
 var primevalGraphics = '!0x0131|!0x013D|!0x00A5|!0x0130|!0x02D2|!0x00FC|!0x02E4|!0x0068';
 Orion.Exec('JournalScan',true);
 Orion.Exec('BuffMonitor',true);
-var profiles = 
+var profile =
     {
-    Primeval: 
-        {
-        farmType: 'Mobile', //false, 'Static' , 'Mobile' , 'Leash'
-        walkThrough: 'Primeval',
-        useGatherMobs: true, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
-        mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
-        mobileFarmConfinementZone: [6500,921,7300,1070], //[x1,y1,x2,y2] x1, y1 is northwest corner; x2, y2 is southeast corner. Set to false to ignore this setting.
-        leashFarmRadius: 6, //Radius around the leader to search for mobs
-        leashLeader: 0x003DB071, //Serial number of leader
-        useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-            singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-		useOnslaught: true,
-        useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-            whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-        useEnemyOfOne: false, //true , false.
-        useCounterAttack: true, //true , false.
-        useConsecrateWeapon: false, //true , false.
-        useDivineFury: false, //true , false.
-        useAutoLoot: false, //true, false.
-        useConfidence: false, //true , false.
-            useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-        useBandieSelf: false, //true , false.
-            useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-        useBandieOthers: false, //true , false.
-            useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
-        useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '887268637315047444', //Put Discord WebHook here
-            discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
-        },
+	farmType: 'Mobile', //false, 'Static' , 'Mobile' , 'Leash'
+	walkThrough: 'Primeval',
+	useGatherMobs: true, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
+	mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+	mobileFarmConfinementZone: [6500,921,7300,1070], //[x1,y1,x2,y2] x1, y1 is northwest corner; x2, y2 is southeast corner. Set to false to ignore this setting.
+	leashFarmRadius: 6, //Radius around the leader to search for mobs
+	leashLeader: 0x003DB071, //Serial number of leader
+	useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+		singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+	useOnslaught: true,
+	useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+		whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+	useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+	useEnemyOfOne: false, //true , false.
+	useCounterAttack: true, //true , false.
+	useConsecrateWeapon: false, //true , false.
+	useDivineFury: false, //true , false.
+	useAutoLoot: false, //true, false.
+	useConfidence: false, //true , false.
+		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
+	useBandieSelf: false, //true , false.
+		useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
+	useBandieOthers: false, //true , false.
+		useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
+	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+		discordHook: '887268637315047444', //Put Discord WebHook here
+		discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+	journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
     }
 
-var profile = profiles.Primeval;
-var gumpAssets = 
+var gumpAssets =
     [ //functionName,displayName,assetType,value
         [ ['toggle','AutoAttack','AutoAttack'], ['toggle','AutoBuffs','AutoBuffs'], ['toggle','AutoEvade','AutoEvade'], ['toggle','AutoGatherMobs','AutoGatherMobs'] ],
         [ ['toggle','Monitor','Monitor'], ['toggle','Listener','Listener'], ['toggle','DragonHeadMonitor','DragonMonitor'], ['toggle','DemonSkullMonitor','DemonMonitor'] ],
@@ -158,7 +154,7 @@ function StaticAutoFarm()
 		}
 	if(staticFarmStartingPoint[0])
 		{
-		var startDist = Orion.GetDistance(staticFarmStartingPoint[0],staticFarmStartingPoint[1]) 
+		var startDist = Orion.GetDistance(staticFarmStartingPoint[0],staticFarmStartingPoint[1])
 		while(startDist > 0 && startDist < 20)
 			{
 			Orion.WalkTo(staticFarmStartingPoint[0],staticFarmStartingPoint[1],0,0)
@@ -219,7 +215,7 @@ function MobileAutoFarm()
     var playerStartY = Player.Y();
     var mobileFarmConfinementZone = profile.mobileFarmConfinementZone;
 
-    while(!Player.Dead()) 
+    while(!Player.Dead())
         {
         if(Orion.Now() >= cycle + 5000)
             {
@@ -236,7 +232,7 @@ function MobileAutoFarm()
             }
         else
             var mob = Orion.FindTypeEx(any, any, ground, 'near|mobile|ignorefriends', 24, 'gray|orange|red|criminal')[0];
-        if(mob) 
+        if(mob)
             {
             if(mob.Distance() > 1 && !Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,50000))
                 {
@@ -248,7 +244,7 @@ function MobileAutoFarm()
             Orion.WalkTo(playerStartX, playerStartY, 0, 0);
         Orion.Wait(200);
         }
-    }	
+    }
 
 
 function DropDraggedHere()
@@ -279,8 +275,8 @@ function DropDraggedHere()
         Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
         Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
         }
-    else 
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    else
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function AddToDropQueue()
@@ -348,7 +344,7 @@ function DropFromQueue()
                     //Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
                     Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
                     }
-                Orion.Wait(250);  
+                Orion.Wait(250);
                 }
             endStamp = Orion.Now() + 5000;
             }
@@ -368,7 +364,7 @@ function DropDraggedToContainer()
         return Orion.CharPrint(self,1159,"Can't set new drop container while target cursor is up!");
         }
 	else if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
         Orion.CharPrint(self,1159,'Target new drop container or press Escape to keep using old container')
@@ -432,8 +428,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)
@@ -580,12 +576,12 @@ function WalkThroughCurrentFarm()
 	{
 	Orion.Terminate('all', 'WalkThroughCurrentFarm|JournalScan');
 	if(profile.walkThrough == 'Oni')
-		{	
+		{
 		RecallByGump('Main','Dojo', 'Main', 'Dojo2');
 		WalkThrough([[987, 196, false, '67:337:w'],[66, 352, false, '63:524:w'],[103, 556, false, '76:691:w'],[176, 664, false,'176:664:w']]);
 		}
 	else if(profile.walkThrough == 'Primeval')
-		{	
+		{
 		RecallByGump('Aaron','Aaron');
 		AliWalkTo(957,561)
 		while(Orion.GetDistance(957,561) == 0)
@@ -607,7 +603,7 @@ function WalkThrough(ali)
 	// waypointArray = [x, y, step]
 	// waypointArray = [x, y, step, testString]
 	// testString format = 'xCoordToTest:yCoordToTest:stepDirection'
-	
+
 	// Walks to x,y and then if step isn't false, takes a step in whatever direction (e.g 'n','e','s','w'). This step can be useful
 	// for certain area transitions, but usually isn't necessary and can be left as false.
 	// If a testString is supplied, after attempting to walk to the coordinates given, a check is performed to see if the player
@@ -642,7 +638,7 @@ function WalkThrough(ali)
 	}
 
 
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	{
 	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
 	//create global variable runeIndex to increment through the book starting from '1'
@@ -662,7 +658,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
     if(!runeBook[0])
         {
         Orion.Print("Runebook named '" + bookName + "' not found!");
-        return false;    
+        return false;
         }
     if(Orion.SkillValue('Magery', 'base') >= 600)
     	var startInd = 50; //recall index
@@ -695,9 +691,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
 	            {
 	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
+	            var runeIndexNum = +runeIndex + 1
 	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
+					runeIndex = String(runeIndexNum);
 	            else
 					runeIndex = '1';
 	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
@@ -718,9 +714,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        Orion.Wait(2000);
             if(rotateToggle)
                 {
-                var runeIndexNum = +runeIndex + 1 
+                var runeIndexNum = +runeIndex + 1
                 if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
+                    runeIndex = String(runeIndexNum);
                 else
                     runeIndex = '1';
                 }
@@ -731,7 +727,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(1000);
 	Orion.Resend();
 	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
 	}
 
@@ -919,7 +915,7 @@ function DecoHighlighter()
         Orion.Wait(1000)
         }
 	}
-	
+
 function DecoPickup()
 	{
     var startX = Player.X();
@@ -1206,7 +1202,7 @@ function Listener()
 	var port = 50000;
 	var create = 1;
 	var endTime = Orion.Now() + 5000;
-	while(create != 0 && Orion.Now() < endTime) 
+	while(create != 0 && Orion.Now() < endTime)
 		{
 		create = Orion.CreateUdpServer('Candle', ++port);
 		Orion.Wait(10);
@@ -1296,7 +1292,7 @@ function Monitor()
             {
             Orion.SetSearchArea(searchArea[0],searchArea[1],searchArea[2],searchArea[3]);
             var redCandles = Orion.FindType(candleGraphics,'0x0026',ground,'item',24).length;
-            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length; 
+            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length;
             Orion.ResetSearchArea();
 			var data = redCandles + ':' + whiteCandles + ':Candles';
 			for(var i=50001;i<50010;i++)
@@ -1353,14 +1349,14 @@ function DragonHeadMonitor()
 			var data = 0;
             if(Orion.DisplayTimerExists('revertTimer'))
             if(!dragonHead || !rune)
-                {	
+                {
 				Orion.SetSearchArea(7003,936,7003,936);
 				var dragonHead = Orion.FindType('0x2234',any,ground, '', 24)[0];
 				Orion.SetSearchArea(6985,954,6985,954);
 				var rune = Orion.FindType('0x0E5F',any,ground, '', 24)[0];
 				Orion.ResetSearchArea();
 				if(!dragonHead || !rune)
-					{	
+					{
 					DiscordPush('Shenanigans afoot. First FindType found something, but not the second');
 					Orion.Wait(1000);
 					Orion.PauseScript('DragonHeadMonitor');
@@ -1390,7 +1386,7 @@ function DragonHeadMonitor()
 				if(susCheck[0])
 					{
 					var outMsg = 'dragonHead detector found players: \n';
-					susCheck.forEach(function(mob) 
+					susCheck.forEach(function(mob)
 						{
 						outMsg += '\t' + outMsg + mob.Name() + '\n';
 						Orion.Ignore(mob.Serial());
@@ -1406,7 +1402,7 @@ function DragonHeadMonitor()
 			Orion.AddDisplayTimer('revertTimer', 600000, 'AboveChar', 'bar', 'Candle Revert');
             }
         Orion.Wait(1000);
-		
+
 		data = Orion.DisplayTimerGetTime('revertTimer');
 		for(var i=50001;i<50010;i++)
 			Orion.UdpSend(i,'Dragon:' + data);
@@ -1418,7 +1414,7 @@ function DragonHeadMonitor()
 		if(susCheck[0])
 			{
 			var outMsg = 'dragonHead detector found players: \n';
-			susCheck.forEach(function(mob) 
+			susCheck.forEach(function(mob)
 				{
 				'\t' + outMsg + mob.Name() + '\n';
 				Orion.Ignore(mob.Serial());
@@ -1453,14 +1449,14 @@ function DemonSkullMonitor()
 			var data = 0;
             if(Orion.DisplayTimerExists('revertTimer'))
             if(!skull1 || !skull2)
-                {	
+                {
 				Orion.SetSearchArea(6995,953,6995,953);
 				var skull1 = Orion.FindType('0x2251',any,ground, '', 24)[0];
 				Orion.SetSearchArea(7005,953,7005,953);
 				var skull2 = Orion.FindType('0x2251',any,ground, '', 24)[0];
 				Orion.ResetSearchArea();
 				if(!skull1 || !skull2)
-					{	
+					{
 					DiscordPush('Shenanigans afoot. First FindType found something, but not the second');
 					Orion.Wait(1000);
 					Orion.PauseScript('DemonSkullMonitor');
@@ -1490,7 +1486,7 @@ function DemonSkullMonitor()
 				if(susCheck[0])
 					{
 					var outMsg = 'demonSkull detector found players: \n';
-					susCheck.forEach(function(mob) 
+					susCheck.forEach(function(mob)
 						{
 						outMsg += '\t' + outMsg + mob.Name() + '\n';
 						Orion.Ignore(mob.Serial());
@@ -1506,7 +1502,7 @@ function DemonSkullMonitor()
 			Orion.AddDisplayTimer('revertTimer', 600000, 'AboveChar', 'bar', 'Candle Revert');
             }
         Orion.Wait(1000);
-		
+
 		data = Orion.DisplayTimerGetTime('revertTimer');
 		for(var i=50001;i<50010;i++)
 			Orion.UdpSend(i,'Dragon:' + data);
@@ -1518,7 +1514,7 @@ function DemonSkullMonitor()
 		if(susCheck[0])
 			{
 			var outMsg = 'demonSkull detector found players: \n';
-			susCheck.forEach(function(mob) 
+			susCheck.forEach(function(mob)
 				{
 				'\t' + outMsg + mob.Name() + '\n';
 				Orion.Ignore(mob.Serial());
@@ -1560,7 +1556,7 @@ function CandleMonitor()
             {
             Orion.SetSearchArea(searchArea[0],searchArea[1],searchArea[2],searchArea[3]);
             var redCandles = Orion.FindType(candleGraphics,'0x0026',ground,'item',24).length;
-            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length; 
+            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length;
             Orion.ResetSearchArea();
 			var data = redCandles + ':' + whiteCandles;
 			for(var i=60001;i<60010;i++)
@@ -1592,7 +1588,7 @@ function CandleReceiver()
 	var port = 60000;
 	var create = 1;
 	var endTime = Orion.Now() + 5000;
-	while(create != 0 && Orion.Now() < endTime) 
+	while(create != 0 && Orion.Now() < endTime)
 		{
 		create = Orion.CreateUdpServer('Candle', ++port);
 		Orion.Wait(10);
@@ -1639,7 +1635,7 @@ var levers = [//[color,order,x,y]
 	[0x0489,6,7015,977, 'Orange'],
 	[0x048E,7,7018,977, 'Pink']
 	]
-	
+
 function PrimevalLevers()
 	{
 	var remaining = CheckRemainingEntries(solution);
@@ -1760,7 +1756,7 @@ function TestLeverPair(leverAarr,leverBarr)
 		{
 		for(var i = 0;i<solution.length;i++)
 			{
-			
+
 			var currentTestPosition = solution[i];
 			if(currentTestPosition !== false)
 				continue;
@@ -1789,7 +1785,7 @@ function TestLeverPair(leverAarr,leverBarr)
 							Orion.Wait(500);
 							}
 						return 'B';
-						}  
+						}
 					}
 				}
 			if(Orion.InJournal('An eerie voice says: "Pulling the levers out of order will get you nothing, fool!"','sys',any,any,startTime))

@@ -11,38 +11,33 @@ var y = Player.Y()
 //No benefit to doing it in fel, fel luck bonus does not apply to this, confirmed by devs
 
 
-//Tweak these settings and don't forget to change the Discord hook and key
-var profiles = 
+// Tweak these settings and don't forget to change the Discord hook and key
+var profile =
     {
-    Thorns:
-        {
-        mobGraphic: bunnyGraphic, //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
-        useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-            singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-        useOnslaught: false,
-        useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-            whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-        useCounterAttack: false, //true , false.
-        useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '88726863736875314', //Put Discord WebHook here
-            discordKey: 'SJfWniY7drrewqrvXSPb3EasdFs7VH5_qTg695utEsfasdfVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'		
-        useAutoInsure: true, //true , false. Automatically insure items based on the following options:
-        useStringSearch: false, //can search name, properties, or both(inclusive; not one or the other). Will override list search.
-            checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
-            checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
-        UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
-            insureFindList: 'BotLootNoGold', //create a find list with this name and set find criteria.
-            insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
-        searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
-        },
+    mobGraphic: bunnyGraphic, //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+    useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+        singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+    useOnslaught: false,
+    useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+        whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+    useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+    useCounterAttack: false, //true , false.
+    useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+        discordHook: '88726863736875314', //Put Discord WebHook here
+        discordKey: 'SJfWniY7drrewqrvXSPb3EasdFs7VH5_qTg695utEsfasdfVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+    journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
+    useAutoInsure: true, //true , false. Automatically insure items based on the following options:
+    useStringSearch: false, //can search name, properties, or both(inclusive; not one or the other). Will override list search.
+        checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
+        checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
+    UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
+        insureFindList: 'BotLootNoGold', //create a find list with this name and set find criteria.
+        insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
+    searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
     }
 
-var profile = profiles.Thorns;
-
 Orion.Exec('JournalScan',true);
-function AutoInsure() 
+function AutoInsure()
 	{
 	var stringSearch = profile.useStringSearch;
 	var checkName = profile.checkNameString;
@@ -53,14 +48,14 @@ function AutoInsure()
 	var searchFrequency = profile.searchFrequency;
 	while(stringSearch && !Player.Dead())
 		{
-		var item = Orion.FindTypeEx(any).filter(function (part) 
+		var item = Orion.FindTypeEx(any).filter(function (part)
 					{
 					if(!Orion.Contains(part.Properties(), 'insured'))
 						{
 						if(checkName && !checkProp)
 							return Orion.Contains(part.Name(), checkName);
 						else if(checkProp && !checkName)
-							return Orion.Contains(part.Properties(), checkProp)      
+							return Orion.Contains(part.Properties(), checkProp)
 						else if(checkProp && checkName)
 							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
 						}
@@ -300,7 +295,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -341,8 +336,8 @@ function EggMover6000()
 		Orion.MoveItemType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', any, sourceContainer, 0, destinationContainer);
 		Orion.Wait(1100);
 		}
-	}	
-	
+	}
+
 function RareEggMover6000() //need to add new rare hues
 	{
 	while(Orion.FindType('0x9F13|0x9F14|0x9F15|0x9F16|0x9F17|0x9F18', '0x0AC7|0x0AC6|0x0AC1|0x0AB0|0x081C|0x081B|0x0AA1|0x044B|0x044C', sourceContainer)[0])

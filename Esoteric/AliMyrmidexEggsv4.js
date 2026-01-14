@@ -1,32 +1,28 @@
 //Myrmidex v4
-var profiles = 
+var profile =
     {
-    Myrmidex: 
-        {
-        useGatherMobs: true, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
-        mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
-        useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-            singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-        useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-            whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-        useEnemyOfOne: false, //true , false.
-        useCounterAttack: true, //true , false.
-        useConsecrateWeapon: false, //true , false.
-        useDivineFury: false, //true , false.
-        useConfidence: false, //true , false.
-            useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-        useBandieSelf: false, //true , false.
-            useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-        useBandieOthers: false, //true , false.
-            useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
-        useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '1022287622137200660', //Put Discord WebHook here
-            discordKey: 'w0Nsz8IXTJK2ZcJM0hntdlPMeeLKOLSMweHtBhWb7-0vUI8-lvZdkVUUv10r08_vUJMl', //Put Discord Bot Key here
-        journalScanType: '', //'GM' 'Control Messages', 'Equipment Damage'
-        },
+	useGatherMobs: true, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
+	mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+	useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+		singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+	useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+		whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+	useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+	useEnemyOfOne: false, //true , false.
+	useCounterAttack: true, //true , false.
+	useConsecrateWeapon: false, //true , false.
+	useDivineFury: false, //true , false.
+	useConfidence: false, //true , false.
+		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
+	useBandieSelf: false, //true , false.
+		useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
+	useBandieOthers: false, //true , false.
+		useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
+	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+		discordHook: '1022287622137200660', //Put Discord WebHook here
+		discordKey: 'w0Nsz8IXTJK2ZcJM0hntdlPMeeLKOLSMweHtBhWb7-0vUI8-lvZdkVUUv10r08_vUJMl', //Put Discord Bot Key here
+	journalScanType: '', //'GM' 'Control Messages', 'Equipment Damage'
     }
-var profile = profiles.Myrmidex;
 
 function FarmMyrmidexEggs()
     {
@@ -62,9 +58,9 @@ function FarmMyrmidexEggs()
                 return Orion.Contains(object.Properties(),'a myrmidex drone') && !hashMem[object.Serial()]
                 }).sort(function(a,b)
 					{
-					return a.Distance() - b.Distance();	
+					return a.Distance() - b.Distance();
 					})[0];
-			
+
             while(drone)
                 {
                 Orion.CharPrint(drone.Serial(),1159,'here')
@@ -115,7 +111,7 @@ function FarmMyrmidexEggs()
 									return Orion.Contains(object.Properties(),'a myrmidex drone') && !hashMem[object.Serial()]
 									}).sort(function(a,b)
 										{
-										return a.Distance() - b.Distance();	
+										return a.Distance() - b.Distance();
 										})[0];
 								break;
 								}
@@ -151,7 +147,7 @@ function FarmMyrmidexEggs()
                     return Orion.Contains(object.Properties(),'a myrmidex drone') && !hashMem[object.Serial()]
                     }).sort(function(a,b)
 						{
-						return a.Distance() - b.Distance();	
+						return a.Distance() - b.Distance();
 						})[0];
                 }
             }
@@ -379,7 +375,7 @@ function AutoGatherMobs()
         GatherMobs();
         Orion.Wait(500);
         }
-    }	
+    }
 
 function GatherMobs()
     {
@@ -390,14 +386,14 @@ function GatherMobs()
             Orion.Attack(mob);
             Orion.Wait(10);
             });
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
 
 function AttackNearest()
     {
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
@@ -413,7 +409,7 @@ function DropDraggedToContainer()
         return Orion.CharPrint(self,1159,"Can't set new drop container while target cursor is up!");
         }
 	else if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
         Orion.CharPrint(self,1159,'Target new drop container or press Escape to keep using old container')
@@ -477,8 +473,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)
@@ -577,7 +573,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -646,7 +642,7 @@ function WaitForSpecificGump(delay, type, serial, id)
 
 function RepairGear()
 	{
-	var itemArr = 
+	var itemArr =
 		[
 		'0x2D2D',	'Assassin Spike(left)',							'blacksmith',
 		'0x2D21',	'Assassin Spike(right)',						'blacksmith',
@@ -952,7 +948,7 @@ function RepairGear()
 		'0x1087','earrings','tinker',
 		]
 	minDura = 40; //Durability below which to repair
-	layers = 
+	layers =
 		[
 		0,
 		"RightHand",
@@ -996,7 +992,7 @@ function RepairGear()
 				var dura = theobj.Properties().match(/Durability (\d+) \/ (\d+)/)
 				if(dura.shift() && Number(dura[0]) < minDura && Number(dura[0]) < Number(dura[1]))
 			        {
-			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);		        
+			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);
 			        Orion.Print(theobj.Name() + ' | ' + dura[0] + '/' + dura[1] + ' | ' + layers[theobj.Layer()]);
 				    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
 			        if(bench)
@@ -1031,7 +1027,7 @@ function RepairGear()
 				        Orion.WaitForTarget(2000);
 				        Orion.TargetObject(theobj.Serial());
 				        Orion.Wait(200)
-				        }			   
+				        }
 			        }
       			}
     		}

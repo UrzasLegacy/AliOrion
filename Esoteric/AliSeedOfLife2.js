@@ -1,11 +1,7 @@
-//#include Master/VarietyFunctions.oajs
-//#include Master/MonitorFunctions.oajs
-//#include Master/CallFunctions.oajs
-//#include underworldpuzzle2.oajs
 function SeedGump()
 	{
     var gump;
-    var starttime = Orion.Now(); 
+    var starttime = Orion.Now();
     var numseeds = 0;
     var attempts = 0;
     var successes = 0;
@@ -14,12 +10,12 @@ function SeedGump()
         {
         var currenttime = ((Orion.Now() - starttime) / 1000) / 60;
         var startseeds = Orion.Count(0x1727)
-        var successrate = successes / attempts;
-        var seedrate = numseeds / attempts
-       // Orion.Print('Minutes: ' + currenttime.toFixed(2) + ' Attempts: ' + t + '  Successes: ' + s + ' Seeds: ' + numseeds);
-       // Orion.Print('Success Rate: ' + successrate.toFixed(2) + ' Seed Rate: ' + seedrate.toFixed(2));
+        // var successrate = successes / attempts;
+        // var seedrate = numseeds / attempts
+        // Orion.Print('Minutes: ' + currenttime.toFixed(2) + ' Attempts: ' + t + '  Successes: ' + s + ' Seeds: ' + numseeds);
+        // Orion.Print('Success Rate: ' + successrate.toFixed(2) + ' Seed Rate: ' + seedrate.toFixed(2));
         var check = Orion.WaitJournal(scanmessage, Orion.Now(), Orion.Now()+5000, ' ');
-        if(check)    
+        if(check)
             {
             var checkarr = Orion.Split(check.Text(), ' ')
             for(i = 0;i<checkarr.length;i++)
@@ -28,7 +24,7 @@ function SeedGump()
                     {
                     case 'reach':
                         attempts++;
-                        break;    
+                        break;
                     case 'successfully':
                         attempts++;
                         successes++;
@@ -40,7 +36,7 @@ function SeedGump()
             }
         if(Orion.Count(0x1727) > startseeds)
             numseeds++
-        var seedsperhour = numseeds / ((currenttime.toFixed(0) / 60).toFixed(2))    
+        var seedsperhour = numseeds / ((currenttime.toFixed(0) / 60).toFixed(2))
 		var gump = Orion.CreateCustomGump(11001);
         gump.Clear();
         gump.SetX(-10);
@@ -63,7 +59,7 @@ function SeedGump()
         gump.Update();
         }
     }
-    
+
 //function Autostart()
 	//{
 	//Orion.Wait(1500);
@@ -87,7 +83,7 @@ function OrganizeStealList(itemSerial)
 		Orion.Wait(1200);
 		item = Orion.FindType('0x1F13')[0];
 		}
-	}	
+	}
 
 function initScripts()
 	{
@@ -104,7 +100,7 @@ function termScripts()
 
 function Trash()
 	{
-	Orion.Terminate('all', 'Trash|GMJournalScan');	
+	Orion.Terminate('all', 'Trash|GMJournalScan');
 	var rune = Orion.FindTypeEx(0x22C5).filter(function(part)
 		{
 		return Orion.Contains(part.Properties(), 'Trash')
@@ -125,7 +121,7 @@ function Trash()
 
 function WalkThroughSprirituality()
 	{
-	Orion.Terminate('all', 'WalkThroughSprirituality');	
+	Orion.Terminate('all', 'WalkThroughSprirituality');
 	var rune = Orion.FindTypeEx(0x22C5).filter(function(part)
 		{
 		return Orion.Contains(part.Properties(), 'Jaw')
@@ -153,7 +149,7 @@ function WalkThroughSprirituality()
 	Orion.Exec('initScripts', true);
 	}
 
-function RecallRune(runeItem, runeItem2) 
+function RecallRune(runeItem, runeItem2)
 	{
 	var x = Player.X();
 	var y = Player.Y();
@@ -236,7 +232,7 @@ function Preservation()
             Orion.WaitForTarget(4000);
             Orion.TargetObject(self);
             Orion.Wait(1000);
-            } 
+            }
         else if(enemy.length)
             {
             Orion.PauseScript('all', 'Preservation|GMJournalScan')
@@ -244,7 +240,7 @@ function Preservation()
 		    Orion.Cast('Flame Strike');
 		    StayAway(enemy[0].Serial(), 8);
 		    Orion.WaitForTarget(4000);
-		    Orion.TargetObject(enemy[0].Serial());   
+		    Orion.TargetObject(enemy[0].Serial());
 		    Orion.Wait(3000);
 		    Orion.ResumeScript('all')
             }
@@ -252,10 +248,10 @@ function Preservation()
         	Orion.Wait(500);
         }
     }
-    
+
 function SeedOfLifeWander()
 	{
- 	var locArr = 
+ 	var locArr =
 		[
 			[1610, 1080],
 			[1675, 1080],
@@ -268,7 +264,7 @@ function SeedOfLifeWander()
  	var deathcycle;
  	var ignorecycle = Orion.Now();
     var loc = 0;
-    while(!Player.Dead()) 
+    while(!Player.Dead())
         {
         if(Orion.Now() >= ignorecycle + 5000)
             {
@@ -287,8 +283,8 @@ function SeedOfLifeWander()
                 {
                 Orion.InterruptCast();
                 Orion.Wait(300);
-                while(mob.Exists() && !Player.Dead()) 
-                    {	
+                while(mob.Exists() && !Player.Dead())
+                    {
                     Orion.Cast('Mind Blast');
                     Orion.WaitForTarget(4000);
                     Orion.TargetObject(mob.Serial());
@@ -306,15 +302,15 @@ function SeedOfLifeWander()
 		                {
 		                Orion.InterruptCast();
 		                Orion.Wait(300);
-		                while(mob.Exists()) 
-		                    {	
+		                while(mob.Exists())
+		                    {
 		                    Orion.Cast('Mind Blast');
 		                    Orion.WaitForTarget(4000);
 		                    Orion.TargetObject(mob.Serial());
 		                    Orion.Wait(2000);
 		                    }
 		                break;
-		                }    
+		                }
                     Orion.UseSkill('Stealing');
                     Orion.WaitForTarget(2000);
                     Orion.TargetObject(mob.Serial());
@@ -322,8 +318,8 @@ function SeedOfLifeWander()
                     Orion.Wait(1000);
                     if(Orion.Now() > deathcycle + 120000 || Orion.InJournal('successfully steal|already been stolen', ' ', 0, any, Orion.Now()-3000, Orion.Now()+3000))
                         {
-                        while(mob.Exists()) 
-                            {	
+                        while(mob.Exists())
+                            {
                             Orion.Cast('Mind Blast');
                             Orion.WaitForTarget(4000);
                             Orion.TargetObject(mob.Serial());
@@ -333,7 +329,7 @@ function SeedOfLifeWander()
                     }
                 else if(Orion.DisplayTimerExists('stealtimer'))
                     {
-                    Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,10000)	
+                    Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,10000)
 					Orion.Wait(100);
                     Consolidate();
                     }
@@ -345,7 +341,7 @@ function SeedOfLifeWander()
                     }
                 }
             }
-        else if(Orion.DisplayTimerExists('stealtimer'))     	     	
+        else if(Orion.DisplayTimerExists('stealtimer'))
 			Consolidate();
 		else
             {
@@ -356,7 +352,7 @@ function SeedOfLifeWander()
             Orion.WalkTo(locCurrX, locCurrY, 0, 1, 255, 1)
             Orion.Wait(100);
             loc++;
-            }  
+            }
         Orion.Wait(1000);
         }
     }
@@ -399,9 +395,9 @@ function Consolidate()
 function GMJournalScan()
 	{
 	var bot = "https://discordapp.com/api/webhooks/"
-        + '887268637315047444' //hook
+        + '' //hook
         + "/"
-        + 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z'; //key
+        + ''; //key
     var paramText = "content=" + Player.Name() + ": GM";
 	var msg = 'GM';
 	while(true)
@@ -412,7 +408,7 @@ function GMJournalScan()
 		for(i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{	
+				{
 				case 'GM':
 					Orion.HttpPost(bot, paramText);
 					//Orion.PlayWav('Alarm09.wav');
@@ -420,8 +416,8 @@ function GMJournalScan()
                     Orion.Wait(1000);
                     Orion.StopWalking();
 					Orion.OAOptionSet('AutoReconnect', '0');
-					Orion.Wait(2000);			
-					break;	
+					Orion.Wait(2000);
+					break;
 				default:
 					break;
 				}

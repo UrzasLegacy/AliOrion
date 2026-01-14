@@ -1,8 +1,8 @@
 //Primeval Spawn
 
-var profiles = 
+var profiles =
     {
-    Primeval: 
+    Primeval:
         {
         farmType: 'Mobile', //false, 'Static' , 'Mobile' , 'Leash'
         walkThrough: 'Primeval',
@@ -42,10 +42,9 @@ var gumpButtons = [
 	['DecoHighlighter', 'RunAndHide'],
 	]
 
-function AliPrimevalGumpCall(_) 
+function AliPrimevalGumpCall(_)
 	{
-	
-    var gump = Orion.CreateCustomGump(10420); 
+    var gump = Orion.CreateCustomGump(10420);
 	var buttonGraphic = [0x16D4,0x16D5]; //0x16D3,0x16D5 0x2640,0x2641  0x16D3
     var state // Shared variable to set the initial state to off (Untoggled Radio Dot), defaults to '0x00D0'
 	var gumpOption
@@ -70,7 +69,7 @@ function AliPrimevalGumpCall(_)
         var row = gumpButtons[r];
         for(var c = 0;c<row.length;c++)
             {
-            var gumpOption = row[c];
+            gumpOption = row[c];
             state = Shared.GetVar(gumpOption, false);
             gump.AddButton(i, columnStart + (columnAdj * c), rowStart + (rowAdj * (r)), state ? buttonGraphic[1] : buttonGraphic[0], state ? buttonGraphic[1] : buttonGraphic[0], state ? buttonGraphic[1] : buttonGraphic[0], '0x0000');
             gump.AddText(columnStart + buttonTextHorAdj + (columnAdj * (c)), rowStart + buttonTextVerAdj + (rowAdj * r), textColor, gumpOption)
@@ -101,7 +100,7 @@ function AliPrimevalGumpCall(_)
 	// state = Shared.GetVar(gumpOption, false);
 	// gump.AddButton(i, columnStart + (columnAdj * (c - 1)), rowStart + (rowAdj * (r - 1)), state ? buttonGraphic[1] : buttonGraphic[0], state ? buttonGraphic[1] : buttonGraphic[0], state ? buttonGraphic[1] : buttonGraphic[0], '0x0000');
 	// gump.AddText(columnStart + buttonTextAdj + (columnAdj * (c - 1)), rowStart + 3 + (rowAdj * (r - 1)), textColor, gumpOption)
-	
+
 	// //Column 2
 	// gumpOption = 'AutoBuffs';
 	// i =5, c = 1, r = 2;
@@ -112,7 +111,7 @@ function AliPrimevalGumpCall(_)
     gump.Update();
 	}
 
-function AliPrimevalGumpCallback(_) 
+function AliPrimevalGumpCallback(_)
 	{
     var code = CustomGumpResponse.ReturnCode();
     var i = 1
@@ -201,7 +200,7 @@ function StaticAutoFarm()
 		}
 	if(staticFarmStartingPoint[0])
 		{
-		var startDist = Orion.GetDistance(staticFarmStartingPoint[0],staticFarmStartingPoint[1]) 
+		var startDist = Orion.GetDistance(staticFarmStartingPoint[0],staticFarmStartingPoint[1])
 		while(startDist > 0 && startDist < 20)
 			{
 			Orion.WalkTo(staticFarmStartingPoint[0],staticFarmStartingPoint[1],0,0)
@@ -262,7 +261,7 @@ function MobileAutoFarm()
     var playerStartY = Player.Y();
     var mobileFarmConfinementZone = profile.mobileFarmConfinementZone;
 
-    while(!Player.Dead()) 
+    while(!Player.Dead())
         {
         if(Orion.Now() >= cycle + 5000)
             {
@@ -279,7 +278,7 @@ function MobileAutoFarm()
             }
         else
             var mob = Orion.FindTypeEx(any, any, ground, 'near|mobile|ignorefriends', 24, 'gray|orange|red|criminal')[0];
-        if(mob) 
+        if(mob)
             {
             if(mob.Distance() > 1 && !Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,50000))
                 {
@@ -403,7 +402,7 @@ function AutoBuffs()
         Orion.Wait(100);
         }
     }
- 
+
 function AutoGatherMobs()
     {
 	Shared.AddVar('AutoGatherMobs',true);
@@ -412,7 +411,7 @@ function AutoGatherMobs()
         GatherMobs();
         Orion.Wait(500);
         }
-    }	
+    }
 
 function GatherMobs()
     {
@@ -423,7 +422,7 @@ function GatherMobs()
             Orion.Attack(mob);
             Orion.Wait(10);
             });
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends|ignoreself|nothuman', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
@@ -431,7 +430,7 @@ function GatherMobs()
 
 function AttackNearest()
     {
-    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0]; 
+    var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0];
     Orion.TargetSystemSerial(target);
     Orion.Attack(target);
     }
@@ -464,8 +463,8 @@ function DropDraggedHere()
         Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
         Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
         }
-    else 
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    else
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function AddToDropQueue()
@@ -533,7 +532,7 @@ function DropFromQueue()
                     //Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
                     Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
                     }
-                Orion.Wait(250);  
+                Orion.Wait(250);
                 }
             endStamp = Orion.Now() + 5000;
             }
@@ -553,7 +552,7 @@ function DropDraggedToContainer()
         return Orion.CharPrint(self,1159,"Can't set new drop container while target cursor is up!");
         }
 	else if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
         Orion.CharPrint(self,1159,'Target new drop container or press Escape to keep using old container')
@@ -617,8 +616,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)
@@ -704,12 +703,12 @@ function WalkThroughCurrentFarm()
 	{
 	Orion.Terminate('all', 'WalkThroughCurrentFarm|JournalScan');
 	if(profile.walkThrough == 'Oni')
-		{	
+		{
 		RecallByGump('Main','Dojo', 'Main', 'Dojo2');
 		WalkThrough([[987, 196, false, '67:337:w'],[66, 352, false, '63:524:w'],[103, 556, false, '76:691:w'],[176, 664, false,'176:664:w']]);
 		}
 	else if(profile.walkThrough == 'Primeval')
-		{	
+		{
 		RecallByGump('Fel Dungeons','Aaron', 'Fel Dungeons','Aaron');
 		while(Orion.GetDistance(957,561) > 0)
 			{
@@ -734,7 +733,7 @@ function WalkThrough(ali)
 	// waypointArray = [x, y, step]
 	// waypointArray = [x, y, step, testString]
 	// testString format = 'xCoordToTest:yCoordToTest:stepDirection'
-	
+
 	// Walks to x,y and then if step isn't false, takes a step in whatever direction (e.g 'n','e','s','w'). This step can be useful
 	// for certain area transitions, but usually isn't necessary and can be left as false.
 	// If a testString is supplied, after attempting to walk to the coordinates given, a check is performed to see if the player
@@ -769,7 +768,7 @@ function WalkThrough(ali)
 	}
 
 
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	{
 	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
 	//create global variable runeIndex to increment through the book starting from '1'
@@ -789,7 +788,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
     if(!runeBook[0])
         {
         Orion.Print("Runebook named '" + bookName + "' not found!");
-        return false;    
+        return false;
         }
     if(Orion.SkillValue('Magery', 'base') >= 600)
     	var startInd = 50; //recall index
@@ -822,9 +821,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
 	            {
 	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
+	            var runeIndexNum = +runeIndex + 1
 	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
+					runeIndex = String(runeIndexNum);
 	            else
 					runeIndex = '1';
 	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
@@ -845,9 +844,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        Orion.Wait(2000);
             if(rotateToggle)
                 {
-                var runeIndexNum = +runeIndex + 1 
+                var runeIndexNum = +runeIndex + 1
                 if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
+                    runeIndex = String(runeIndexNum);
                 else
                     runeIndex = '1';
                 }
@@ -858,7 +857,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(1000);
 	Orion.Resend();
 	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
 	}
 
@@ -881,7 +880,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -950,7 +949,7 @@ function WaitForSpecificGump(delay, type, serial, id)
 
 function RepairGear()
 	{
-	var itemArr = 
+	var itemArr =
 		[
 		'0x2D2D',	'Assassin Spike(left)',							'blacksmith',
 		'0x2D21',	'Assassin Spike(right)',						'blacksmith',
@@ -1255,7 +1254,7 @@ function RepairGear()
 		'0x2FB8','Elven Glasses','tinker',
 		]
 	minDura = 40; //Durability below which to repair
-	layers = 
+	layers =
 		[
 		0,
 		"RightHand",
@@ -1299,7 +1298,7 @@ function RepairGear()
 				var dura = theobj.Properties().match(/Durability (\d+) \/ (\d+)/)
 				if(dura.shift() && Number(dura[0]) < minDura && Number(dura[0]) < Number(dura[1]))
 			        {
-			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);		        
+			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);
 			        Orion.Print(theobj.Name() + ' | ' + dura[0] + '/' + dura[1] + ' | ' + layers[theobj.Layer()]);
 				    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
 			        if(bench)
@@ -1334,7 +1333,7 @@ function RepairGear()
 				        Orion.WaitForTarget(2000);
 				        Orion.TargetObject(theobj.Serial());
 				        Orion.Wait(200)
-				        }			   
+				        }
 			        }
       			}
     		}
@@ -1458,7 +1457,7 @@ function CastEvasion()
 	if(check && check.Text() == 'You feel that you might be able to deflect any attack!')
 		Orion.AddDisplayTimer('Evasion', 20000 + Orion.BuffTimeRemaining('Evasion'), 'UnderChar', 'bar', 'Evasion CD', 0, 40);
 	}
-	
+
 function ProgressSpawn()
 	{
 	DiscordPush(Player.Name() + ' progressing spawn');
@@ -1509,7 +1508,7 @@ function Listener()
 	var port = 60000;
 	var create = 1;
 	var endTime = Orion.Now() + 5000;
-	while(create != 0 && Orion.Now() < endTime) 
+	while(create != 0 && Orion.Now() < endTime)
 		{
 		create = Orion.CreateUdpServer('Candle', ++port);
 		Orion.Wait(10);
@@ -1582,7 +1581,7 @@ function Monitor()
             {
             Orion.SetSearchArea(searchArea[0],searchArea[1],searchArea[2],searchArea[3]);
             var redCandles = Orion.FindType(candleGraphics,'0x0026',ground,'item',24).length;
-            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length; 
+            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length;
             Orion.ResetSearchArea();
 			var data = redCandles + ':' + whiteCandles + ':Candles';
 			for(var i=60001;i<60010;i++)
@@ -1646,7 +1645,7 @@ function CandleMonitor()
             {
             Orion.SetSearchArea(searchArea[0],searchArea[1],searchArea[2],searchArea[3]);
             var redCandles = Orion.FindType(candleGraphics,'0x0026',ground,'item',24).length;
-            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length; 
+            var whiteCandles = Orion.FindType(candleGraphics,'!0x0026',ground,'item',24).length;
             Orion.ResetSearchArea();
 			var data = redCandles + ':' + whiteCandles;
 			for(var i=60001;i<60010;i++)
@@ -1678,7 +1677,7 @@ function CandleReceiver()
 	var port = 60000;
 	var create = 1;
 	var endTime = Orion.Now() + 5000;
-	while(create != 0 && Orion.Now() < endTime) 
+	while(create != 0 && Orion.Now() < endTime)
 		{
 		create = Orion.CreateUdpServer('Candle', ++port);
 		Orion.Wait(10);
@@ -1762,7 +1761,7 @@ var levers = [//[color,order,x,y]
 	[0x0489,6,7015,977, 'Orange'],
 	[0x048E,7,7018,977, 'Pink']
 	]
-	
+
 function PrimevalLevers()
 	{
 	var remaining = CheckRemainingEntries(solution);
@@ -1883,7 +1882,7 @@ function TestLeverPair(leverAarr,leverBarr)
 		{
 		for(var i = 0;i<solution.length;i++)
 			{
-			
+
 			var currentTestPosition = solution[i];
 			if(currentTestPosition !== false)
 				continue;
@@ -1912,7 +1911,7 @@ function TestLeverPair(leverAarr,leverBarr)
 							Orion.Wait(500);
 							}
 						return 'B';
-						}  
+						}
 					}
 				}
 			if(Orion.InJournal('An eerie voice says: "Pulling the levers out of order will get you nothing, fool!"','sys',any,any,startTime))

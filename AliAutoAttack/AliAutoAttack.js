@@ -25,29 +25,25 @@ function GumpCallback(_) {
     }
 }
 
-var profiles = 
-	{
-	Ali: 
-		{
-		useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
-		useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-			singleTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-		useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-			whirlwindSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-		useMomentumStrike: true, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-		useCounterAttack: true, //boolean. Set to true to maintain Counter Attack at all times.
-		useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
-		useConsecrateWeapon: false, //boolean. Set to true to maintain Consecrate Weapon at all times.
-		useDivineFury: false, //boolean, Set to true to maintain Divine Fury at all times.
-		useConfidence: true, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
-			useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-		useBandieSelf: false, //boolean. Set to true to heal self with bandage when HP drops below a percentage threshold defined below.
-			useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-		useBandieOthers: false, //boolean. Will preferentially heal others over self if BandieSelf and BandieOthers are both on.
-			useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
-		}
-	}
-var profile = profiles.Ali;
+
+var profile = {
+	useGatherMobs: true, //boolean. Set to true to attack all mobs in the area to gather them towards you.
+	useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+		singleTargetSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+	useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+		whirlwindSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+	useMomentumStrike: true, //boolean. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+	useCounterAttack: true, //boolean. Set to true to maintain Counter Attack at all times.
+	useEnemyOfOne: false, //boolean. Set to true to maintain Enemy Of One at all times. Careful using this! It's not smart enough to change enemies.
+	useConsecrateWeapon: false, //boolean. Set to true to maintain Consecrate Weapon at all times.
+	useDivineFury: false, //boolean, Set to true to maintain Divine Fury at all times.
+	useConfidence: true, //boolean. Set to true to use Confidence when HP drops below a percentage threshold defined below.
+		useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
+	useBandieSelf: false, //boolean. Set to true to heal self with bandage when HP drops below a percentage threshold defined below.
+		useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
+	useBandieOthers: false, //boolean. Will preferentially heal others over self if BandieSelf and BandieOthers are both on.
+		useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
+	};
 
 function initScripts()
 	{//Hotkey to run all relevant continuous scripts
@@ -199,14 +195,14 @@ function GatherMobs()
 			Orion.Attack(mob);
 			Orion.Wait(10);
 			});
-	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 20, 'gray|red')[0]; 
+	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 20, 'gray|red')[0];
 	Orion.TargetSystemSerial(target);
 	Orion.Attack(target);
 	}
 
 function AttackNearest()
 	{
-	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 20, 'gray|red')[0]; 
+	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 20, 'gray|red')[0];
 	Orion.TargetSystemSerial(target);
 	Orion.Attack(target);
 	}
@@ -316,8 +312,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)

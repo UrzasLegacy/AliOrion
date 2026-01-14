@@ -14,41 +14,38 @@ function allinit()
 	{
 	FollowerMassMessage('Init');
 	}
-    
+
 function allterminate()
 	{
 	FollowerMassMessage('TerminateAll');
 	}
 
-var profiles = 
+var profile =
     {
-    Primeval: 
-        {
-        farmType: 'Mobile', //false, 'Static' , 'Mobile' , 'Leash'
-        useGatherMobs: true, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
-        mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
-        useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-            singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-		useOnslaught: false,
-        useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-            whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-        useEnemyOfOne: false, //true , false.
-        useCounterAttack: true, //true , false.
-        useConsecrateWeapon: false, //true , false.
-        useDivineFury: true, //true , false.
-        useAutoLoot: false, //true, false.
-        useConfidence: true, //true , false.
-            useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
-        useBandieSelf: true, //true , false.
-            useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
-        useBandieOthers: true, //true , false.
-            useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
-        useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '887268637315047444', //Put Discord WebHook here
-            discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
-        },
+    farmType: 'Mobile', //false, 'Static' , 'Mobile' , 'Leash'
+    useGatherMobs: true, //true/false. Set to true to attack all mobs in the area each loop of AutoAttack();
+    mobGraphic: '!0x0308|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+    useSingleTargetSpecial: true, //true/false. Set to true to use a special when only 1 mob is nearby to attack.
+        singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+    useOnslaught: false,
+    useWhirlwind: false, //true/false. Set to true to use a special when more than 2 mobs are nearby to attack.
+        whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+    useMomentumStrike: true, //true/false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+    useEnemyOfOne: false, //true/false.
+    useCounterAttack: true, //true/false.
+    useConsecrateWeapon: false, //true/false.
+    useDivineFury: true, //true/false.
+    useAutoLoot: false, //true/false.
+    useConfidence: true, //true/false.
+        useConfidenceThresholdPercent: 90, //Percentage of self HP to attempt to cast confidence
+    useBandieSelf: true, //true/false.
+        useBandieSelfThresholdPercent: 80, //Percentage of self HP to attempt to use bandage on self
+    useBandieOthers: true, //true/false.
+        useBandieOtherThresholdPercent: 75, //Percentage of other's HP to attempt to use bandage on others
+    useDiscordPush: true,  //true/false. Set to true to use Discord notifications for JournalScan
+        discordHook: '887268637315047444', //Put Discord WebHook here
+        discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+    journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
     }
 
 function Autostart()
@@ -76,7 +73,6 @@ function checkarr()
     Orion.Print(Shared.GetArray('followerArr'))
     }
 
-var profile = profiles.Primeval;
 function AliComLeader()
 	{
 	Orion.RemoveAllUdpServers();
@@ -153,7 +149,7 @@ function AliComFollower()
 	var port = 59999;
 	var create = 1;
 	var endTime = Orion.Now() + 5000;
-	while(create != 0 && Orion.Now() < endTime && port < 60099) 
+	while(create != 0 && Orion.Now() < endTime && port < 60099)
 		{
 		create = Orion.CreateUdpServer('Coms', ++port);
 		Orion.Wait(10);

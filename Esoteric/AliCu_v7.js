@@ -11,29 +11,23 @@
 
 var testMode = false;
 
-var profiles = 
-    {
-    Cu: 
-        {
-        mobGraphic: '0x0115|0x007A|0x0080', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
-        useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-            singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-        useOnslaught: true,
-        useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-            whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-        useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-        useCounterAttack: false, //true , false.
-        useConfidence: false, //true , false.
-            useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
-        useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-            discordHook: '', //Put Discord WebHook here if its your first time using one of my scripts
-            discordKey: '', //Put Discord Bot Key here if its your first time using one of my scripts
-        journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
-        selfTame: true,
-        },
-    }
-
-var profile = profiles.Cu;
+var profile = {
+    mobGraphic: '0x0115|0x007A|0x0080', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic instead
+    useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+        singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+    useOnslaught: true,
+    useWhirlwind: false, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+        whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+    useMomentumStrike: false, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+    useCounterAttack: false, //true , false.
+    useConfidence: false, //true , false.
+        useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
+    useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+        discordHook: '', //Put Discord WebHook here if its your first time using one of my scripts
+        discordKey: '', //Put Discord Bot Key here if its your first time using one of my scripts
+    journalScanType: 'GM|Equipment Damage', //'GM' 'Control Messages', 'Equipment Damage'
+    selfTame: true,
+    };
 
 var cuHue = {
     '0x0000': 'Plain', //0
@@ -57,13 +51,13 @@ var cuHue = {
     '0x0489': 'Blaze', //1161
 }
 
-var hueOrder = 
+var hueOrder =
     [
     '0x0000','0x0501','0x0978',
     '0x05A7','0x08AA','0x097A',
     '0x0901','0x0527','0x08AC',
     '0x0515','0x0482','0x04B1',
-    '0x0674','0x0455','0x0481', 
+    '0x0674','0x0455','0x0481',
     '0x0489', //1161
     ]
 
@@ -252,7 +246,7 @@ function CuGump()
     gump.AddButton(0, x5 + 30, 10, 1535, 1536, 1536, '0x0000');//close
     gump.AddButton(1, x5 + 30, 400, 10740, 10742, 10741, '0x0000');
     gump.Update();
-    
+
     CalculatePercentages();
     while(true)
         {
@@ -313,7 +307,7 @@ function CuGumpCallback(_)
 
 function WalkSpawn()
 	{
-    var waypoints = 
+    var waypoints =
     [
         [1252, 1218],
         [1406, 1215],
@@ -343,7 +337,7 @@ function RareAlert()
         var blazeColor = '0x0000'
     else
         var blazeColor = '0x0489'
-        
+
     while(true)
         {
         if(Orion.Timer('cull') > 300000)
@@ -410,7 +404,7 @@ function testLoreParser()
     var serial = Orion.GetSerial('mySerial');
     var parse = LoreParser(serial);
     Orion.Print(parse);
-    
+
     }
 
 function BlazeProtocol(mobSerial,outMsg)
@@ -525,7 +519,7 @@ function LoreParser(mobSerial,mobColor)
     y += yAdj;
     gump.Update()
     return [hp,cold,ener];
-	} 
+	}
 
 function AttackSpawn()
 	{
@@ -694,7 +688,7 @@ function AppendColor(colorID)
     var gump = Orion.CreateCustomGump(15001);
     gump.AddText(x2,y,0,currentObj[colorID],100,hueSerial[0]);
     gump.AddText(x4,y,0,logObj[colorID],100,hueSerial[1]);
-    
+
     var totalCurrent = 0;
     var totalTotal = 0;
     for(var prop in currentObj)
@@ -798,7 +792,7 @@ function TameCu()
     var y = obj.Y();
     var enclosureRadius = 10;
     Orion.WalkTo(x,y,0,5);
-    Orion.GetTilesInRect('land', x - enclosureRadius, y - enclosureRadius, x + enclosureRadius, y + enclosureRadius).filter(function(tile) 
+    Orion.GetTilesInRect('land', x - enclosureRadius, y - enclosureRadius, x + enclosureRadius, y + enclosureRadius).filter(function(tile)
         {
         var tileX = tile.X();
         var tileY = tile.Y();
@@ -806,7 +800,7 @@ function TameCu()
             || (x == (tileX + enclosureRadius))
             || (y == (tileY - enclosureRadius))
             || (y == (tileY + enclosureRadius));
-        }).forEach(function(tile,ind) 
+        }).forEach(function(tile,ind)
             {
             var x = tile.X();
             var y = tile.Y();
@@ -851,7 +845,7 @@ function TameCu()
         Orion.Wait(300);
         if(obj.CanChangeName())
             break;
-            
+
         // while(!Player.Dead() && Player.Hits('%') < 80)
         //     {
         //     WalkToRadiusBorder(serial,15);
@@ -896,7 +890,7 @@ function TameCu()
 function AsyncTame(mobSerial)
     {
     var startTime = Orion.Now();
-    
+
     Shared.AddVar('leashDistance',3)
     Orion.UseSkill('Animal Taming');
     if(Orion.WaitForTarget(2000))
@@ -919,7 +913,7 @@ function AsyncTame(mobSerial)
             }
         }
     }
-    
+
 function StoreCu()
     {
     var serial = Shared.GetVar('cuSerial');
@@ -985,7 +979,7 @@ function StoreCu()
 function RunToRepair()
 	{
     if(Orion.ScriptRunning('TameCu') > 0)
-        return;    
+        return;
     var shards =
         {
             "Pacific": [1040,512,'Malas'],
@@ -999,13 +993,13 @@ function RunToRepair()
     var repairArr = shards[shardName];
     if(!repairArr)
         return Orion.CharPrint(self,1159,"Looks like your shard isn't configured correctly. Don't forget to send Ali your shard's repair house coords! Instead of auto repairing, your character will die a slow and painful death!")
-    
+
     Shared.AddVar('pauseStamp',Orion.Now());
     Orion.PauseScript('all','JournalScan|AliComFollower|AliComLeader|RunToRepair');
     Orion.Wait(500);
     Orion.Terminate('all','JournalScan|AliComFollower|AliComLeader|RunToRepair|CuGump');
 	//RecallByGump('Main', 'Repair', 'Main', 'Repair2');
-    
+
     AliAtlas(repairArr[0],repairArr[1],repairArr[2])
     var tempX = Player.X();
     var tempY = Player.Y();
@@ -1026,7 +1020,7 @@ function RunToRepair()
 function AliAtlas(targetX,targetY,targetMap)
     { //[x,y,facet]
     var maps = ['Felucca', 'Trammel', 'Ilshenar', 'Malas', 'Tokuno', 'TerMur'];
-    var gateArr = 
+    var gateArr =
         [//location name, facet, facet# x, y
             ['Moonglow', 'Trammel', 1, 4467, 1283],
             ['Britain', 'Trammel', 2, 1421, 1696],
@@ -1091,7 +1085,7 @@ function AliAtlas(targetX,targetY,targetMap)
     Orion.Print(nearestGate[1] + ' - ' + nearestGate[0] + ' ' + nearestGate[3] + ', ' + nearestGate[4] + ':' + Orion.GetPathArray(nearestGate[3], nearestGate[4], 256, 0).length)
     Orion.Print(destinationGate[1] + ' - ' + destinationGate[0] + ' ' + destinationGate[3] + ', ' + destinationGate[4])
     Orion.WarMode(1);
-    
+
     Orion.CharPrint(self,1159,'Walking to nearest gate');
     AliWalkTo(nearestGate[3], nearestGate[4])
     //var tempX = Player.X();
@@ -1120,7 +1114,7 @@ function AliAtlas(targetX,targetY,targetMap)
                 Orion.Wait(500);
                 Orion.UseObject(gate[0].Serial());
                 }
-            else 
+            else
                 {
                 Orion.CharPrint(self,1159,'Walking to nearest gate');
                 if(!AliWalkTo(nearestGate[3], nearestGate[4]))
@@ -1232,17 +1226,17 @@ function AliWalkTo(x,y,z,distanceXY,distanceZ,chunkSize,run,openDoor,maxWalkingT
     return true;
     }
 
-function WalkToRadiusBorder(targetSerial, distance) 
+function WalkToRadiusBorder(targetSerial, distance)
 	{
 	var target = Orion.FindObject(targetSerial)
-	if(target) 
+	if(target)
 		{
 		var x = target.X();
 		var y = target.Y();
 		var z = target.Z();
-	
+
 		var tiles = Orion.GetTilesInRect('land', x - distance, y - distance, z - 8, x + distance, y + distance, z + 8)
-			.filter(function(tile) 
+			.filter(function(tile)
 				{
 				var tileX = tile.X();
 				var tileY = tile.Y();
@@ -1250,7 +1244,7 @@ function WalkToRadiusBorder(targetSerial, distance)
 				|| (x == (tileX + distance))
 				|| (y == (tileY - distance))
 				|| (y == (tileY + distance));
-				}).sort(function (a,b) 
+				}).sort(function (a,b)
 					{
 					return Orion.GetDistance(a.X(), a.Y()) - Orion.GetDistance(b.X(), b.Y())
 					});
@@ -1259,8 +1253,8 @@ function WalkToRadiusBorder(targetSerial, distance)
 			Orion.AddFakeMapObject(ind + 40000, '0x051A', 1159, tile.X(), tile.Y(), tile.Z());
 			})
 		for(var i=0;i<tiles.length;i++)
-			{             
-			var closest = tiles[i]; 
+			{
+			var closest = tiles[i];
 			if(Orion.WalkTo(closest.X(),closest.Y(),closest.Z(),0))
 				break;
 			}
@@ -1359,7 +1353,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -1564,7 +1558,7 @@ function EquipRegularSuitByBotName()
     Orion.Dress(setname);
     }
 
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	{
 	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
 	//create global scope variable runeIndex to increment through the book starting from '1'
@@ -1619,9 +1613,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
 	            {
 	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
+	            var runeIndexNum = +runeIndex + 1
 	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
+					runeIndex = String(runeIndexNum);
 	            else
 					runeIndex = '1';
 	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
@@ -1642,9 +1636,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        Orion.Wait(2000);
             if(rotateToggle)
                 {
-                var runeIndexNum = +runeIndex + 1 
+                var runeIndexNum = +runeIndex + 1
                 if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
+                    runeIndex = String(runeIndexNum);
                 else
                     runeIndex = '1';
                 }
@@ -1655,7 +1649,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(1000);
 	Orion.Resend();
 	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
 	}
 
@@ -1681,7 +1675,7 @@ function DropDraggedToContainer() //v2
     //You can press Escape instead of targeting something to retain the previous drop container if you accidentally bring up the target cursor.
 	var dropContainer = Orion.FindObject('dropContainer');
 	if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
 		var lastSerial = Orion.GetSerial('dropContainer');
@@ -1704,12 +1698,12 @@ function RepairGear()
     var masonryLowAlarm = false;
     var glassblowingLowAlarm = false;
     var fletchingLowAlarm  = false;
-	
+
     var alarmThreshold = 20; //If the repair bench gets below this number of scrolls for a repair type, send a discord message
 
 	var flavorText = false; //adds overhead emotes describing the amount of items you need to repair
-    
-    var repairDict = 
+
+    var repairDict =
         { //graphicString: buttonCode
         // tinker: 2001 | tinker: 2001 | bsmith: 2002 | carpenter: 2003 | tailor: 2006 | fletcher: 2009 | masonry: 2010
         '0x2D2D': 2002,'0x2D21': 2002,'0x0F4A': 2002,'0x0F49': 2002,'0x0F4E': 2002,'0x0F4D': 2002,'0x0F48': 2002,'0x0F47': 2002,'0x0DF0': 2003,'0x0DF1': 2003,'0x26BD': 2002,'0x26C7': 2002,'0x27A8': 2003,'0x26BB': 2002,'0x26C5': 2002,'0x13B1': 2009,'0x13B2': 2009,'0x0F5F': 2002,'0x0F5E': 2002,'0x1B72': 2002,'0x1B73': 2002,
@@ -1769,7 +1763,7 @@ function RepairGear()
     else if(outStrs.length < 3)
         Orion.CharPrint(self,1159,'*You check your equipment and find some things that need your attention*')
     else if(outStrs.length < 8)
-        Orion.CharPrint(self,1159,"*You check your equipment and make a mental note to not get hit so much in the future*") 
+        Orion.CharPrint(self,1159,"*You check your equipment and make a mental note to not get hit so much in the future*")
     else if(outStrs.length < 20)
         Orion.CharPrint(self,1159,"*You check what's left of your equipment and marvel that any of it is still attached to you given its abysmal condition*")
     outStrs.sort(function(a,b)
@@ -1852,7 +1846,7 @@ function RepairGear()
                                 Orion.TargetObject(obj.Serial());
                             }
                         Orion.WaitForGump(2000);
-				        }		   
+				        }
 			        }
       			}
     		}
@@ -1876,7 +1870,7 @@ function RepairGear()
                     var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
                     if(bench)
                         return RepairGear();
-                    }                   
+                    }
                 }
             }
         }
@@ -1915,8 +1909,8 @@ function DropDraggedHere() //v2
         Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
         Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
         }
-    else 
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    else
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function CloseAllGumps()

@@ -8,55 +8,49 @@ function Debug(msg)
     TextWindow.Print(Orion.Time() + ': ' + msg);
     }
 
-var profiles = 
-	{
-	Fezzik:
-		{
-		farmType: 'Static', //false, 'Static' , 'Mobile' , 'Leash'
-		walkThrough: 'Oni', //'Oni'
-        stayStill: false,
-		useGatherMobs: false, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
-		mobGraphic: '!0x013F|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic
-		staticFarmRadius: 24, //Radius within which to search for mobs
-		staticFarmStartingPoint: [5691,521],
-		mobileFarmConfinementZone: [0,0,0,0], //[x1,y1,x2,y2] x1, y1 is northwest corner; x2, y2 is southeast corner. Set to false to ignore this setting.
-		leashFarmRadius: 6, //Radius around the leader to search for mobs
-		leashLeader: 0x003DB071, //Serial number of leader
-		useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
-			singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
-		useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
-			whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
-		useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
-		useEnemyOfOne: false, //true , false.
-		useCounterAttack: true, //true , false.
-		useConsecrateWeapon: false, //true , false.
-		useDivineFury: true, //true , false.
-		useAutoLoot: true,
-		autolootAgentHotkey: 48, //JavaScript Event Keycode. Use https://keycode.info/
-		useConfidence: true, //true , false.
-			useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
-		useBandieSelf: true, //true , false.
-			useBandieSelfThresholdPercent: 70, //Percentage of self HP to attempt to use bandage on self
-		useBandieOthers: true, //true , false.
-			useBandieOtherThresholdPercent: 90, //Percentage of other's HP to attempt to use bandage on others
-		useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
-			discordHook: '887268637315047444', //Put Discord WebHook here
-			discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
-		journalScanType: 'JournalScan',
-		useAlarmSound: false, //true , false. Default sound can be changed by putting a different .wav in the Ultima Online Classic folder. Used in JournalScan
-		useAutoInsure: true, //true , false. Automatically insure items based on the following options:
-			useStringSearch: false, //can search name, properties, or both(inclusive; not one or the other). Will override list search.
-				checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
-				checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
-			UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
-				insureFindList: 'Jewelry', //create a find list with this name and set find criteria.
-				insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
-			searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
-		//useLootCorpses: true,
-		},
-	}
-
-var profile = profiles.Fezzik;
+var profile = {
+	farmType: 'Static', //false, 'Static' , 'Mobile' , 'Leash'
+	walkThrough: 'Oni', //'Oni'
+	stayStill: false,
+	useGatherMobs: false, //true , false. Set to true to attack all mobs in the area each loop of AutoAttack();
+	mobGraphic: '!0x013F|!0x001F', //any , '0x00F1' , '!0x0308', '0x00F1|!0x00F2'. Mob graphic to search for. Put ! before graphic to exclude that graphic
+	staticFarmRadius: 24, //Radius within which to search for mobs
+	staticFarmStartingPoint: [5691,521],
+	mobileFarmConfinementZone: [0,0,0,0], //[x1,y1,x2,y2] x1, y1 is northwest corner; x2, y2 is southeast corner. Set to false to ignore this setting.
+	leashFarmRadius: 6, //Radius around the leader to search for mobs
+	leashLeader: 0x003DB071, //Serial number of leader
+	useSingleTargetSpecial: true, //true , false. Set to true to use a special when only 1 mob is nearby to attack.
+		singleTargetSpecial: 'Primary', //'Primary' , 'Secondary'. Set which special is used when only 1 mob is nearby to attack.
+	useWhirlwind: true, //true , false. Set to true to use a special when more than 2 mobs are nearby to attack.
+		whirlwindSpecial: 'Secondary', //'Primary' , 'Secondary'. Set which special is used when more than 2 mobs are nearby to attack.
+	useMomentumStrike: true, //true , false. Set to true to use momentum strike when exactly 2 mobs are nearby to attack.
+	useEnemyOfOne: false, //true , false.
+	useCounterAttack: true, //true , false.
+	useConsecrateWeapon: false, //true , false.
+	useDivineFury: true, //true , false.
+	useAutoLoot: true,
+	autolootAgentHotkey: 48, //JavaScript Event Keycode. Use https://keycode.info/
+	useConfidence: true, //true , false.
+		useConfidenceThresholdPercent: 70, //Percentage of self HP to attempt to cast confidence
+	useBandieSelf: true, //true , false.
+		useBandieSelfThresholdPercent: 70, //Percentage of self HP to attempt to use bandage on self
+	useBandieOthers: true, //true , false.
+		useBandieOtherThresholdPercent: 90, //Percentage of other's HP to attempt to use bandage on others
+	useDiscordPush: true,  //true , false. Set to true to use Discord notifications for JournalScan
+		discordHook: '887268637315047444', //Put Discord WebHook here
+		discordKey: 'SJfWniY7dpD9URmrvXSPb3EFs7DzrZiVH5_Wd4f16Tg695utEVXeLc7quvb8Gwjmg_0Z', //Put Discord Bot Key here
+	journalScanType: 'JournalScan',
+	useAlarmSound: false, //true , false. Default sound can be changed by putting a different .wav in the Ultima Online Classic folder. Used in JournalScan
+	useAutoInsure: true, //true , false. Automatically insure items based on the following options:
+		useStringSearch: false, //can search name, properties, or both(inclusive; not one or the other). Will override list search.
+			checkNameString: 'Demonic', //not case sensitive. Separate strings can be added with the vertical line |. Set to false to ignore name.
+			checkPropString: 'Faster Cast Recovery 3|hit point increase', //not case sensitive. Will insure items with any of the properties listed. Set to false to ignore props.
+		UseListSearch: true, //set to true to use lists instead of string searches. String search must be set to false.
+			insureFindList: 'Jewelry', //create a find list with this name and set find criteria.
+			insureIgnoreList: 'InsureIgnore', //create an ignore list with this name and set ignore criteria. Create a property called 'Insured'.
+		searchFrequency: 500, //in milliseconds; minimum of 250. How often to check for new items in pack.
+	//useLootCorpses: true,
+	};
 
 var leaderSerial = 0x003DB071;
 function initScripts()
@@ -83,7 +77,7 @@ function terminateScripts()
 	{
 	Orion.Terminate('all', 'BandieBot|JournalScan|JournalScanGMonly|JournalScanNoEquipmentDamage');
 	}
-	
+
 function Autostart()
 	{
     var journalScanType = profile.journalScanType;
@@ -256,7 +250,7 @@ function TurnIns()
 		Orion.Wait(100);
 		}
 	}
-function BorderEdge(x, y, p2, range) 
+function BorderEdge(x, y, p2, range)
 	{
   	return (x == (p2.X() - range))
     	|| (x == (p2.X() + range))
@@ -279,7 +273,7 @@ function StaticAutoFarm()
 		{
 		playerStartX = staticFarmStartingPoint[0];
 		playerStartY = staticFarmStartingPoint[1];
-		// var startDist = Orion.GetDistance(playerStartX,playerStartY) 
+		// var startDist = Orion.GetDistance(playerStartX,playerStartY)
 		// while(startDist > 0 && startDist < 20)
 		// 	{
 		// 	Orion.WalkTo(playerStartX,playerStartY,0,0)
@@ -318,7 +312,7 @@ function StaticAutoFarm()
 				Orion.ControlAgent('autoloot','BotLoot','toggle');
 				if(Orion.WaitJournal("Autoloot 'BotLoot' stopped", Orion.Now() - 200, Orion.Now() + 200))
 					Orion.ControlAgent('autoloot','BotLoot','toggle');
-				}	
+				}
 			if(isLeader)
 				Debug('Fezzik Found')
 			var timeStamp = Orion.Now();
@@ -425,8 +419,8 @@ function MobileAutoFarm()
 	var playerStartX = Player.X();
 	var playerStartY = Player.Y();
 	var mobileFarmConfinementZone = profile.mobileFarmConfinementZone;
-	
-	while(!Player.Dead()) 
+
+	while(!Player.Dead())
 		{
 		if(Orion.Now() >= cycle + 5000)
 			{
@@ -443,7 +437,7 @@ function MobileAutoFarm()
 			}
 		else
 			var mob = Orion.FindTypeEx(any, any, ground, 'near|mobile|ignorefriends', 24, 'gray|orange|red|criminal')[0];
-		if(mob) 
+		if(mob)
 			{
 			if(mob.Distance() > 1 && !Orion.WalkTo(mob.X(), mob.Y(), mob.Z(),0,100,1,1,50000))
 				{
@@ -594,7 +588,7 @@ function AutoGatherMobs()
 		GatherMobs();
 		Orion.Wait(500);
 		}
-	}	
+	}
 
 function GatherMobs()
 	{
@@ -605,14 +599,14 @@ function GatherMobs()
 			Orion.Attack(mob);
 			Orion.Wait(10);
 			});
-	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0]; 
+	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0];
 	Orion.TargetSystemSerial(target);
 	Orion.Attack(target);
 	}
 
 function AttackNearest()
 	{
-	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0]; 
+	var target = Orion.FindType(any, any, ground, 'near|live|inlos|ignorefriends', 24, 'gray|criminal|red')[0];
 	Orion.TargetSystemSerial(target);
 	Orion.Attack(target);
 	}
@@ -699,7 +693,7 @@ function MysticBot()
 				{
 				if(Orion.WalkTo(items[0].X(), items[0].Y(), 0, 0))
 					Orion.MoveItem(items[0].Serial())
-				}	
+				}
 			}
 		Orion.Wait(200);
 		}
@@ -721,13 +715,13 @@ function MageHealBot()
 		else if(target && !target.Poisoned())
 			{
 			if(Orion.WaitForTarget(5000))
-				Orion.TargetObject(target.Serial());	
+				Orion.TargetObject(target.Serial());
 			}
 		else if(target && target.Poisoned())
 			{
 			Orion.Cast('Cure');
 			if(Orion.WaitForTarget(5000))
-				Orion.TargetObject(target.Serial());	
+				Orion.TargetObject(target.Serial());
 			}
 		Orion.Wait(300);
 		}
@@ -747,34 +741,34 @@ function injuredCheck(range, threshold, healDead)
 	return injurelist[0];
     }
 
-function BagOfSendingGold() 
+function BagOfSendingGold()
 	{
     var goldLimit = 58000;
-    while(!Player.Dead()) 
+    while(!Player.Dead())
         {
         Orion.Wait(2000);
-        if(Player.Weight() >= Player.MaxWeight() - 25 || Player.Gold() > goldLimit) 
+        if(Player.Weight() >= Player.MaxWeight() - 25 || Player.Gold() > goldLimit)
             {
             var bags = Orion.FindTypeEx(0x0E76, any, backpack).filter(function (bag)
 				{
 				return (Orion.Contains(bag.Name(), "Sending") && (((bag.Properties().match(/Charges:\s(\d)/i) || [])[1] || 0) > 0))
 				});
-            if(bags[0]) 
+            if(bags[0])
                 {
 				Orion.Print('Sending gold');
                 Orion.UseObject(bags[0].Serial());
                 Orion.WaitForTarget(2000);
                 Orion.TargetType('0x0EED', any, backpack);
                 }
-            else 
+            else
                 {
                 TextWindow.Open();
 				TextWindow.Print('Out of BoS Charges!');
                 }
             Orion.Wait(1000);
             }
-        else if(Player.Weight() >= Player.MaxWeight() - 10 && Player.Gold() < goldLimit) 
-            {   
+        else if(Player.Weight() >= Player.MaxWeight() - 10 && Player.Gold() < goldLimit)
+            {
             Orion.Print("Backpack overloaded");
             }
         Orion.Wait(1000);
@@ -861,7 +855,7 @@ function MoveZeroPropItems()
 		}
 	}
 
-function AutoInsure() 
+function AutoInsure()
 	{
 	var stringSearch = profile.useStringSearch;
 	var checkName = profile.checkNameString;
@@ -872,14 +866,14 @@ function AutoInsure()
 	var searchFrequency = profile.searchFrequency;
 	while(stringSearch && !Player.Dead())
 		{
-		var item = Orion.FindTypeEx(any).filter(function (part) 
+		var item = Orion.FindTypeEx(any).filter(function (part)
 					{
 					if(!Orion.Contains(part.Properties(), 'insured'))
 						{
 						if(checkName && !checkProp)
 							return Orion.Contains(part.Name(), checkName);
 						else if(checkProp && !checkName)
-							return Orion.Contains(part.Properties(), checkProp)      
+							return Orion.Contains(part.Properties(), checkProp)
 						else if(checkProp && checkName)
 							return Orion.Contains(part.Name(), checkName) && Orion.Contains(part.Properties(), checkProp)
 						}
@@ -942,8 +936,8 @@ function DropDraggedHere()
         Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
         Orion.DropDraggedItem(ground, validTileX, validTileY, validTileZ);
         }
-    else 
-        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');    
+    else
+        Orion.CharPrint(self, 1159, 'No valid tiles nearby!');
     }
 
 function AddToDropQueue()
@@ -1011,7 +1005,7 @@ function DropFromQueue(_)
                     //Orion.AddFakeMapObject(0, '0x051A', 1159, validTileX, validTileY, validTileZ);
                     Orion.Drop(itemSerial, 0, validTileX, validTileY, validTileZ);
                     }
-                Orion.Wait(250);  
+                Orion.Wait(250);
                 }
             endStamp = Orion.Now() + 5000;
             }
@@ -1031,7 +1025,7 @@ function DropDraggedToContainer()
         return Orion.CharPrint(self,1159,"Can't set new drop container while target cursor is up!");
         }
 	else if(dropContainer && Orion.Dragging())
-		Orion.DropDraggedItem('dropContainer');	
+		Orion.DropDraggedItem('dropContainer');
 	else
 		{
         Orion.CharPrint(self,1159,'Target new drop container or press Escape to keep using old container')
@@ -1095,8 +1089,8 @@ function EquipWep(slayer, element, weapon, cameo)
 		weapon = ' ';
 	var wep = Orion.FindTypeEx(any).filter(function(part)
 		{
-		return Orion.Contains(part.Properties(), element) 
-			&& Orion.Contains(part.Properties(), slayer) 
+		return Orion.Contains(part.Properties(), element)
+			&& Orion.Contains(part.Properties(), slayer)
 			&& Orion.Contains(part.Properties(), weapon);
 		});
 	if(slayer != ' ' && cameo == undefined)
@@ -1282,7 +1276,7 @@ function WalkThrough(ali)
 	// waypointArray = [x, y, step]
 	// waypointArray = [x, y, step, testString]
 	// testString format = 'xCoordToTest:yCoordToTest:stepDirection'
-	
+
 	// Walks to x,y and then if step isn't false, takes a step in whatever direction (e.g 'n','e','s','w'). This step can be useful
 	// for certain area transitions, but usually isn't necessary and can be left as false.
 	// If a testString is supplied, after attempting to walk to the coordinates given, a check is performed to see if the player
@@ -1317,7 +1311,7 @@ function WalkThrough(ali)
 	}
 
 
-function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle) 
+function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	{
 	//to be able to rotate through a runebook, ensure rotateToggle is set to true and
 	//create global scope variable runeIndex to increment through the book starting from '1'
@@ -1370,9 +1364,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        if(rotateToggle && backupBook == 'skipDoubleBlocked')
 	            {
 	            //BotPush('Double Blocked at ' + eggIndex);
-	            var runeIndexNum = +runeIndex + 1 
+	            var runeIndexNum = +runeIndex + 1
 	            if(runeIndexNum <= numRunes)
-					runeIndex = String(runeIndexNum); 
+					runeIndex = String(runeIndexNum);
 	            else
 					runeIndex = '1';
 	            return RecallByGump(bookName,runeIndex,backupBook,runeIndex,rotateToggle);
@@ -1393,9 +1387,9 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	        Orion.Wait(2000);
             if(rotateToggle)
                 {
-                var runeIndexNum = +runeIndex + 1 
+                var runeIndexNum = +runeIndex + 1
                 if(runeIndexNum <= numRunes)
-                    runeIndex = String(runeIndexNum); 
+                    runeIndex = String(runeIndexNum);
                 else
                     runeIndex = '1';
                 }
@@ -1406,7 +1400,7 @@ function RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle)
 	Orion.Wait(1000);
 	Orion.Resend();
 	Orion.Wait(200);
-	if(x == Player.X() && y == Player.Y()) 
+	if(x == Player.X() && y == Player.Y())
         return RecallByGump(bookName,runeName,backupBook,backupRune,rotateToggle);
 	}
 
@@ -1423,7 +1417,7 @@ function JournalScan()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -1484,7 +1478,7 @@ function JournalScanNoEquipmentDamage()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{		
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -1526,7 +1520,7 @@ function JournalScanNoEquipmentDamage()
 			}
 		}
 	}
-	
+
 function JournalScanGMonly()
 	{
 	var useDiscordPush = profile.useDiscordPush;
@@ -1539,7 +1533,7 @@ function JournalScanGMonly()
 		for(var i = 0;i<checkarr.length;i++)
 			{
 			switch(checkarr[i])
-				{	
+				{
 				case 'GM':
 					if(useDiscordPush)
 						DiscordPush(Player.Name() + ": GM")
@@ -1719,7 +1713,7 @@ function Tithe()
 
 function Chumbawumba()
     {
-    if(Player.WarMode())    
+    if(Player.WarMode())
     	RecallByGump('Main','Luna');
     while(Player.Dead())
         {
@@ -1787,7 +1781,7 @@ function BuyHorse()
     Orion.Wait(1300);
     var horsey = Orion.FindTypeEx(any, any, ground, 'mobile', 2, 'blue|green').filter(function(mobile)
         {
-        return Orion.Contains(mobile.Name(), 'a horse');  
+        return Orion.Contains(mobile.Name(), 'a horse');
         })[0];
     while(!Orion.ObjAtLayer('Mount'))
         {
@@ -1871,7 +1865,7 @@ function RecallRepair()
 
 function RepairGear()
 	{
-	var itemArr = 
+	var itemArr =
 		[
 		'0x2D2D',	'Assassin Spike(left)',							'blacksmith',
 		'0x2D21',	'Assassin Spike(right)',						'blacksmith',
@@ -2200,10 +2194,10 @@ function RepairGear()
 		'0x46B4',	'Gargish Sash Bearing the Crest of Blackthorn',		'tailor',
 		'0x4210',	'Gargish Necklace',							'tinker',
 		'0x4052',	'Gargish Platemail Chest',				'blacksmith',
-	
+
 		]
 	minDura = 40; //Durability below which to repair
-	layers = 
+	layers =
 		[
 		0,
 		"RightHand",
@@ -2247,7 +2241,7 @@ function RepairGear()
 				var dura = theobj.Properties().match(/Durability (\d+) \/ (\d+)/)
 				if(dura.shift() && Number(dura[0]) < minDura && Number(dura[0]) < Number(dura[1]))
 			        {
-			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);		        
+			        //Orion.CharPrint(self, 40, layers[theobj.Layer()] + ": " +dura[0] + " / " +dura[1]);
 			        Orion.Print(theobj.Name() + ' | ' + dura[0] + '/' + dura[1] + ' | ' + layers[theobj.Layer()]);
 				    var bench = Orion.FindType('0xA278|0xA277|0xA27F|0xA27E', any, ground, '', 2)[0];
 			        if(bench)
@@ -2291,7 +2285,7 @@ function RepairGear()
 				        Orion.WaitForTarget(2000);
 				        Orion.TargetObject(theobj.Serial());
 				        Orion.Wait(200)
-				        }			   
+				        }
 			        }
       			}
     		}
@@ -2348,7 +2342,7 @@ function PlayerDetector()
 		gump.AddResizepic(0, 0, 0xBB8, gumpWidth, gumpHeight + (Object.keys(playersDetected).length * gumpHeightOffset));
 		gump.AddText(55, 5, "0", 'Players:');
 		gump.AddText(125, 5, '0', players.length);
-		line = 0;	
+		line = 0;
 		for(var property in playersDetected)
 			{
 			if(playerSerialList.indexOf(property) > -1)

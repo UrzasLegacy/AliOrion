@@ -7,6 +7,65 @@ act as utility helpers for annoying but relatively quick tasks. In contrast AliA
 functions that either run in the background all the time as you do other things, or are useful for accomplishing something while afk.
 */
 
+function BuffMonitor()
+	{
+	var color = { //[textColorHue,barColorRRGGBBAA]
+		'red': [32,'0xFF0000FF'],
+		'tangle': [1159,'0xF0FF0BFF']
+	}
+	var goodActive = color.tangle;
+	var badActive = color.red;
+
+	var buffs = [ //buffID,buffCooldown,timerPosition,timerName,xOffset,yOffset,textColor,font,backgroundColor,cooldownColorObj,dispelWarning,persistentBuff
+		['Evasion', 20000, 'underChar','Evasion', 0, 40,goodActive[0], -1, goodActive[1], badActive],
+		['Blood Oath', 0, 'aboveChar','BLOODOATH', 100, -40,badActive[0], -1, badActive[1]],
+		['Vampiric Embrace', 60000, 'aboveChar','VE Missing!', -100, 40,badActive[0], -1, '0x00000000', false, true],
+		['Hiding', 60000, 'underChar','Hidden', 100, 40,goodActive[0], -1, '0x00000000',false,false,true],
+	]
+
+	while(true)
+		{
+		//var startTime = Orion.Now();
+		Orion.Wait(100);
+		for(var i=0,len=buffs.length;i<len;i++)
+			{
+			var buff = buffs[i];
+			if(Orion.BuffExists(buff[0]))
+				{
+				if(buff[10])
+					Orion.RemoveDisplayTimer(buff[0]);
+				else if(!Orion.DisplayTimerExists(buff[0]))
+					{
+					Orion.AddDisplayTimer(buff[0], buff[1] + Orion.BuffTimeRemaining(buff[0]), buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+					if(buff[9])
+						buff[9][2] = false;
+					else if(buff[11])
+						Orion.DisplayTimerSetShowTime(buff[0], false);
+					}
+				}
+			else if(Orion.DisplayTimerExists(buff[0]))
+				{
+				if(buff[9])
+					{
+					Orion.DisplayTimerSetColorStage(buff[0], 100, buff[9][0], buff[9][1]);
+					buff[9][2] = true;
+					}
+				else if(buff[11])
+					{
+					Orion.RemoveDisplayTimer(buff[0]);
+					}
+				}
+			else if(buff[10])
+				{
+				Orion.AddDisplayTimer(buff[0], buff[1], buff[2], 'bar', buff[3], buff[4], buff[5], buff[6], buff[7], buff[8]);
+				Orion.Wait(10)
+				Orion.DisplayTimerSetShowTime(buff[0], false);
+				}
+			}
+		//Orion.Print('Interval: ' + (Orion.Now() - startTime))
+		}
+	}
+
 function TestHue()
     {
     var hue = 2730;
@@ -892,7 +951,6 @@ function AddToGrabQueue()
         }
     }
 
-
 function GrabFromQueue(_)
     {
     var endStamp = Orion.Now() + 5000;
@@ -923,7 +981,6 @@ function GrabFromQueue(_)
         }
     }
 
-
 function MoveAll()
 	{
     Orion.CharPrint(self,1159,"Select 'From' container");
@@ -944,6 +1001,9 @@ function MoveAll()
 
 function MoveZeroPropItems()
     {
+    // This is an extremely niche function for sorting armor pieces that have no visible mods aside from resistances.
+    // It moves them from one targeted container to another for easy identification and sorting.
+    // (I collect the ToT armor pieces that rolled only resist mods so that they look like normal non-magic armor.)
     if(Player.WarMode())
         {
         Orion.CharPrint(self, 1159, 'Target Source Container');
@@ -974,13 +1034,18 @@ function MoveZeroPropItems()
         }
     }
 
+
+// region SettingToggles
+
 function ContainerGumpToggle()
-	{//Easily toggle between gridded and classic containers.
+	{
+    // Easily toggle between gridded and classic containers.
     Orion.ClientOptionSet('GriddedContainers', !Orion.ClientOptionGet('GriddedContainers'));
 	}
 
 function ZAxisToggle()
 	{
+    // Easily toggle Z-axis drawing on and off (hide buildings).
     Orion.ClientOptionSet('CustomMaxDrawZOffsetValue', 1)
 	if (Orion.ClientOptionGet('UseCustomMaxDrawZOffset') == 1)
 		Orion.ClientOptionSet('UseCustomMaxDrawZOffset', 0)
@@ -996,10 +1061,12 @@ function LandGridToggle()
 		Orion.ClientOptionSet('MarkingLandTiles', 1)
 	}
 
+// endregion SettingToggles
+
 function AutoPriceSimple()
 	{
     // Simple loop that automatically inputs the textInput string to any prompts that occur while the loop is running
-    // For pricing things on vendors or renaming runes, etc
+    // Useful dor pricing things on vendors or renaming runes, etc
     var textInput = "30000"
 	while(true)
 		{
@@ -1017,60 +1084,10 @@ function HighlightUnlocked()
 		})
     Orion.CharPrint(self,1159,items.length + " unlocked items found!")
     items.forEach(function(item)
-			{
-			Orion.TestItemColor(item.Serial(),1152)
-			});
+        {
+        Orion.TestItemColor(item.Serial(),1152)
+        });
 	}
-
-function NeedleInAHayStack()
-    { //v1
-    // This function finds all containers on the same floor as the player and systematically searches through
-    // all of them to find any object with the textSearch string in its tooltip.
-    // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
-    var textSearch = 'Retouch';
-    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
-        {
-        var itemZ = item.Z();
-        var itemProps = item.Properties();
-        var playerZ = Player.Z();
-        var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
-        var containerCheck = Orion.Contains(itemProps,'Contents: ');
-        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
-        return zCheck && containerCheck && !emptyCheck;
-        }).sort(function(a,b) //sort by nearest
-            {
-            return a.Distance() - b.Distance();
-            });
-    for(var i=0;i<containers.length;i++) //loop through em
-        {
-        var containerObj = containers[i];
-        var containerSerial = containerObj.Serial();
-        var containerX = containerObj.X();
-        var containerY = containerObj.Y();
-        var containerZ = containerObj.Z();
-        VerifyWalkTo(containerX,containerY,containerZ,1);
-        var subContainers = GetAllSubContainers(containerSerial,true);
-        for(var j=0;j<subContainers.length;j++)
-            {
-            var subContainerSerial = subContainers[j];
-            var searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
-                {
-                return Orion.Contains(item.Properties(),textSearch)
-                });
-            while(searchItem[0])
-                {
-                Orion.CharPrint(containerSerial,1159,textSearch + ' Found!')
-				Orion.TestItemColor(containerSerial, 1152);
-                Orion.MoveItem(searchItem[0].Serial());
-                Orion.Wait(1300);
-                searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
-                    {
-                    return Orion.Contains(item.Properties(),textSearch)
-                    });
-                }
-            }
-        }
-    }
 
 function LogOut()
     {
@@ -1089,25 +1106,12 @@ function StayLoggedIn()
 		}
 	}
 
-
-function StayHidden()
-    {
-    // Simple loop that keeps you hidden with the hiding skill
-    while(!Player.Dead())
-        {
-        while(!Orion.BuffExists('Hiding'))
-            {
-            Orion.UseSkill('Hiding');
-            Orion.Wait(500);
-            }
-        Orion.Wait(500);
-        }
-    }
-
 function HideTilHidden()
 	{
-    // More robust loop that keeps you hidden using hiding skill, attacks nearby mobs while visible until you can hide,
-    // automatically turns off when you move, and sends discord message if you are revealed without moving
+    // Gets you into hiding and keeps you there using hiding skill,
+    // attacks directly adjacent mobs while visible until you can hide,
+    // monitors hidden state and uses backpack to stay logged in while hidden,
+    // sends a discord push when revealed and restarts attempting to hide.
 	var startTile;
     while(!Player.Dead() && !Orion.BuffExists('hiding'))
 		{
@@ -1129,43 +1133,7 @@ function HideTilHidden()
 		Orion.Wait(500)
 		}
 	Orion.Wait(1000);
-	if((''+ Player.X() + Player.Y()) == startTile)
-		{
-		DiscordPush(Player.Name() + ' Revealed!')
-		return HideTilHidden();
-		}
-	}
-
-
-
-    function HideTilHidden()
-	{
-	Orion.Terminate('AlwaysAttackAdjacent');
-	while(!Player.Dead() && !Orion.BuffExists('hiding'))
-		{
-		var startTile = '' + Player.X() + Player.Y();
-		Orion.UseSkill('Hiding');
-		Orion.Wait(1000);
-		var enemies = Orion.FindType(any, any, ground, "live|ignoreself|ignorefriends", 1, 'gray|red|criminal|orange');
-		if(!Orion.BuffExists('hiding') && enemies.length)
-			{
-			Orion.Attack(enemies[0]);
-			if(!Orion.AbilityStatus(profile.singleTargetSpecial) && Player.Mana() >= 15)
-				Orion.UseAbility(profile.singleTargetSpecial);
-			}
-		}
-	Orion.SetTimer('StayLoggedIn');
-	while(Orion.BuffExists('hiding'))
-		{
-		if(Orion.Timer('StayLoggedIn') > 60000)
-			{
-			Orion.UseObject(backpack);
-			Orion.SetTimer('StayLoggedIn');
-			}
-		Orion.Wait(500)
-		}
-	Orion.Wait(1000);
-	if((''+ Player.X() + Player.Y()) == startTile)
+	if(('' + Player.X() + Player.Y()) == startTile)
 		{
 		DiscordPush(Player.Name() + ' Revealed!')
 		return HideTilHidden();
@@ -1265,9 +1233,9 @@ function RecallBandieBuy()
 
 function BandieBuy()
 	{
-    // Buys bolts from a weaver npc (and scissors if you don't have any) and cuts them into bandages
+    // Finds an appropriate NPC on screen, walks to them and buys bolts (and scissors if you don't have any) and cuts them into bandages.
     var amountOfClothBolts = 4
-    //var amount = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
+    //var amountOfClothBolts = Math.max((Player.MaxWeight() - Player.Weight() - 275)/5, 4)
 	do {
 		var vendors = Orion.FindTypeEx(any,any,ground,'mobile',20,'yellow').filter(function(vendor)
 			{
@@ -1314,15 +1282,16 @@ function BandieBuy()
         Orion.MoveItem(bandies);
         Orion.Wait(1300);
         }
-     if(Player.Weight() > Player.MaxWeight())
-		{
-		DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying bandies. Halting...')
-		//RecallByGump('Main','Home');
-		Orion.LogOut();
-		Orion.PauseScript('all');
-		Orion.Wait(1000);
-		Orion.Terminate('all');
-		}
+    // Uncomment the following if you are using this function as part of an automated script
+    // if(Player.Weight() > Player.MaxWeight())
+	// 	{
+	// 	DiscordPush(Orion.ShardName() + ': ' + Player.Name() + ': Overweight after buying bandies. Halting...')
+	// 	//RecallByGump('Main','Home');
+	// 	Orion.LogOut();
+	// 	Orion.PauseScript('all');
+	// 	Orion.Wait(1000);
+	// 	Orion.Terminate('all');
+	// 	}
 	}
 
 function TotTurnIns()
@@ -1348,7 +1317,7 @@ function TotTurnIns()
 
 function Tithe()
     {
-    // Tithes to 100k if there is an ankh nearby
+    // Tithes to 100k if there is an ankh on screen
     CloseAllGumps();
     var endTime = Orion.Now() + 10000;
     while(Player.TithingPoints() < 100000)
@@ -1390,113 +1359,6 @@ function Tithe()
         }
     }
 
-/*
-Combine and Commodify Resources
-Written by Ali
-August 1, 2022
-
-Commodifier Call Variants:
-    Commodifier(stackSize);
-    Commodifier(stackSize, useCommodityDeeds);
-    Commodifier(stackSize, useCommodityDeeds, useSpecificArray);
-Arguments:
-    stackSize: integer. Size of stacks to create.
-    useCommodityDeeds: boolean. Use commodity deed on complete stacks. Default value: true.
-    useSpecificArray: array [[graphicId, colorId]]. If this is specified, only items included in the array will be combined. Default: false. Everything is combined
-
-Commodifier will first Combine everything to the stackSize you set and then use a commodity deed on any stacks that meet the stackSize.
-You must have commodity deeds in either your bank or the commodity deed box you target if useCommodityDeeds is true.
-*/
-
-function CommodifyEverything60k()
-    { //will combine stacks to 60k and then use a commodity deed on the stack
-    Commodifier(60000);
-    }
-
-function CombineEverything60k()
-    { //will combine stacks to 60k without using a commodity deed on the stack
-    Commodifier(60000, false);
-    }
-
-function CommodifyEverything10k()
-    {
-    Commodifier(10000);
-    }
-
-function CombineEverything10k()
-    {
-    Commodifier(10000, false);
-    }
-
-function CombineSpecificItemsArrayExample()
-    {
-    var itemArr = [
-        //[graphicId, colorId]
-        ['0x1BF2', '0x0000'], //iron ingot
-        ['0x1BF2', '0x0973'], //dull copper ingot
-        ['0x1BF2', '0x0966'], //shadow iron ingot
-        ['0x1BF2', '0x0972'], //bronze ingot
-        ['0x1BF2', '0x096D'], //copper ingot
-        ['0x1BF2', '0x08A5'], //gold ingot
-        ['0x1BF2', '0x0979'], //agapite ingot
-        ['0x1BF2', '0x089F'], //verite ingot
-        ['0x1BF2', '0x08AB'], //valorite ingot
-    ];
-    Commodifier(10000, false, itemArr); //will combine everything in the array to stacks of 10,000 without using a commodity deed on them
-    }
-
-function MoveCommodityDeeds()
-	{ //Easily move large amounts of filled or unfilled commodity deeds from one container to another
-    Orion.CharPrint(self,1159,"Peaceful = unfilled deeds\nWarmode = filled deeds");
-    Orion.CharPrint(self,1159,"Select 'From' container\nPress Escape to select Bank");
-    var fromCheck = Orion.WaitForAddObject('myTarget');
-    if(fromCheck == 0)
-        {
-        while(!Orion.GumpExists('container', Player.BankSerial()))
-            {
-            Orion.Say('bank');
-            Orion.Wait(1300);
-            }
-        var fromContainer = Player.BankSerial();
-        }
-    else if(fromCheck == 1)
-        {
-        var fromContainer = Orion.GetSerial('myTarget');
-        while(!Orion.GumpExists('container', fromContainer))
-            {
-            Orion.UseObject(fromContainer);
-            Orion.Wait(1300);
-            }
-        }
-    Orion.CharPrint(self,1159,"Select 'To' container\nPress Escape to select Bank");
-    var toCheck = Orion.WaitForAddObject('myTarget');
-    if(toCheck == 0)
-        {
-        while(!Orion.GumpExists('container', Player.BankSerial()))
-            {
-            Orion.Say('bank');
-            Orion.Wait(1300);
-            }
-        var toContainer = Player.BankSerial();
-        }
-    else if(toCheck == 1)
-        {
-        var toContainer = Orion.GetSerial('myTarget');
-        while(!Orion.GumpExists('container', toContainer))
-            {
-            Orion.UseObject(toContainer);
-            Orion.Wait(1300);
-            }
-        }
-    do
-        {
-        var colorString = Player.WarMode() ? '0x0592' : '0x0047';
-        commodity = Orion.FindType('0x14F0',colorString,fromContainer)[0];
-        Orion.MoveItem(commodity,0,toContainer);
-        Orion.Wait(1300);
-        } while(commodity)
-	}
-
 function TeleportChargeCounter()
     {
     // Count total teleport charges in a given container
@@ -1521,8 +1383,131 @@ function TeleportChargeCounter()
         return sum + currentCharges;
         }, 0);
     Orion.Print("Total rings: " + rings.length + '\nTotal charges: ' + charges + '\nAverage charges per ring: ' + (charges/rings.length));
-
     }
+
+
+function WaitForAuctionItem()
+	{
+    // Monitors player auction and sends discord message when an item with the given searchString appears on screen
+	var searchString = 'lava'
+	var startTime = Orion.Now();
+	while(true)
+		{
+		var found = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+			{
+			return Orion.Contains(item.Properties(), searchString);
+			})[0];
+		var journal = Orion.InJournal(searchString, "", '0', 'any', startTime);
+		if(found || journal)
+			{
+			DiscordPush('Auction Item Up!');
+			Orion.PauseScript();
+			}
+		Orion.Wait(1000);
+		}
+	}
+
+// region HouseManagement
+
+function SecureAndCoOwn(itemSerial)
+    {
+    // Secure item in house and change access to Co-Owner in one hotkey
+    if(itemSerial === undefined)
+        {
+        Orion.WaitForAddObject('myTarget');
+        var itemSerial = Orion.GetSerial('myTarget');
+        }
+    var startTime = Orion.Now();
+    var target = Orion.FindObject(itemSerial);
+    var targetSerial = target.Serial();
+    while(true)
+        {
+        Orion.Say('i wish to secure this');
+        if(Orion.WaitForTarget(3000))
+            {
+            Orion.TargetObject(targetSerial);
+            var endTime = Orion.Now() + 4000;
+            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
+            if(check)
+                {
+                startTime = Orion.Now();
+                var gump = Orion.GetGump(any, '0x00000295');
+                while(!gump)
+                    {
+                    Orion.WaitContextMenuID(targetSerial, 600);
+                    Orion.RequestContextMenu(targetSerial);
+                    Orion.Wait(500);
+                    gump = Orion.GetGump(any, '0x00000295');
+                    }
+                gump.Select(Orion.CreateGumpHook(2));
+                endTime = Orion.Now() + 4000;
+                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
+                if(check)
+                    break;
+                }
+            }
+        Orion.Wait(100);
+        }
+    Orion.CharPrint(self,1159,'Secured and Access Set')
+    }
+
+// endregion HouseManagement
+
+// region GrabAndMove
+
+function NeedleInAHayStack()
+    { //v1
+    // This function finds all containers on the same floor as the player and systematically searches through
+    // all of them to find any object with the textSearch string in its tooltip.
+    // Will take the item into your backpack, highlight the parent container it was found in, and continue searching.
+    var textSearch = 'Retouch';
+    var containers = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+        {
+        var itemZ = item.Z();
+        var itemProps = item.Properties();
+        var playerZ = Player.Z();
+        var zCheck = itemZ >= playerZ && itemZ <= playerZ + 19
+        var containerCheck = Orion.Contains(itemProps,'Contents: ');
+        var emptyCheck = Orion.Contains(itemProps,'Contents: 0/');
+        return zCheck && containerCheck && !emptyCheck;
+        }).sort(function(a,b) //sort by nearest
+            {
+            return a.Distance() - b.Distance();
+            });
+    for(var i=0;i<containers.length;i++) //loop through em
+        {
+        var containerObj = containers[i];
+        var containerSerial = containerObj.Serial();
+        var containerX = containerObj.X();
+        var containerY = containerObj.Y();
+        var containerZ = containerObj.Z();
+        VerifyWalkTo(containerX,containerY,containerZ,1);
+        var subContainers = GetAllSubContainers(containerSerial,true);
+        for(var j=0;j<subContainers.length;j++)
+            {
+            var subContainerSerial = subContainers[j];
+            var searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
+                {
+                return Orion.Contains(item.Properties(),textSearch)
+                });
+            while(searchItem[0])
+                {
+                Orion.CharPrint(containerSerial,1159,textSearch + ' Found!')
+				Orion.TestItemColor(containerSerial, 1152);
+                Orion.MoveItem(searchItem[0].Serial());
+                Orion.Wait(1300);
+                searchItem = Orion.FindTypeEx(any,any,subContainerSerial).filter(function(item)
+                    {
+                    return Orion.Contains(item.Properties(),textSearch)
+                    });
+                }
+            }
+        }
+    }
+
+// endregion GrabAndMove
+
+// region PlayerVendors
 
 function VendorRepricer()
     {
@@ -1804,69 +1789,239 @@ function VendorRecordsread()
     TextWindow.Print(Orion.RegRead("vendorJSON"))
     }
 
+// endregion PlayerVendors
 
-function WaitForAuctionItem()
+// region Commodifier
+
+/*
+Combine and Commodify Resources
+Written by Ali
+August 1, 2022
+
+Commodifier Call Variants:
+    Commodifier(stackSize);
+    Commodifier(stackSize, useCommodityDeeds);
+    Commodifier(stackSize, useCommodityDeeds, useSpecificArray);
+Arguments:
+    stackSize: integer. Size of stacks to create.
+    useCommodityDeeds: boolean. Use commodity deed on complete stacks. Default value: true.
+    useSpecificArray: array [[graphicId, colorId]]. If this is specified, only items included in the array will be combined. Default: false. Everything is combined
+
+Commodifier will first Combine everything to the stackSize you set and then use a commodity deed on any stacks that meet the stackSize.
+You must have commodity deeds in either your bank or the commodity deed box you target if useCommodityDeeds is true.
+*/
+
+function CommodifyEverything60k()
+    { //will combine stacks to 60k and then use a commodity deed on the stack
+    Commodifier(60000);
+    }
+
+function CombineEverything60k()
+    { //will combine stacks to 60k without using a commodity deed on the stack
+    Commodifier(60000, false);
+    }
+
+function CommodifyEverything10k()
+    {
+    Commodifier(10000);
+    }
+
+function CombineEverything10k()
+    {
+    Commodifier(10000, false);
+    }
+
+function CombineSpecificItemsArrayExample()
+    {
+    var itemArr = [
+        //[graphicId, colorId]
+        ['0x1BF2', '0x0000'], //iron ingot
+        ['0x1BF2', '0x0973'], //dull copper ingot
+        ['0x1BF2', '0x0966'], //shadow iron ingot
+        ['0x1BF2', '0x0972'], //bronze ingot
+        ['0x1BF2', '0x096D'], //copper ingot
+        ['0x1BF2', '0x08A5'], //gold ingot
+        ['0x1BF2', '0x0979'], //agapite ingot
+        ['0x1BF2', '0x089F'], //verite ingot
+        ['0x1BF2', '0x08AB'], //valorite ingot
+    ];
+    Commodifier(10000, false, itemArr); //will combine everything in the array to stacks of 10,000 without using a commodity deed on them
+    }
+
+function Commodifier(stackSize,useCommodityDeeds,useSpecificArray)
+    {
+    if(useCommodityDeeds == undefined)
+        useCommodityDeeds = true;
+    Orion.CharPrint(self,1159,"Select container\nPress Escape to select Bank");
+    var fromCheck = Orion.WaitForAddObject('myTarget');
+    if(fromCheck == 0)
+        {
+        while(!Orion.GumpExists('container', Player.BankSerial()))
+            {
+            Orion.Say('bank');
+            Orion.Wait(1300);
+            }
+        var container = Player.BankSerial();
+        }
+    else if(fromCheck == 1)
+        {
+        var container = Orion.GetSerial('myTarget');
+        while(!Orion.GumpExists('container', container))
+            {
+            Orion.UseObject(container);
+            Orion.Wait(1300);
+            }
+        }
+    if(useSpecificArray)
+        {
+        for(var i=0;i<useSpecificArray.length;i++)
+            {
+            var item = useSpecificArray[i];
+            var itemGraphic = item[0];
+            var itemColor = item[1];
+            CombineCommodity(itemGraphic,itemColor,container,stackSize);
+            if(useCommodityDeeds)
+                Commodify(itemGraphic, itemColor, container, stackSize);
+            }
+        }
+    else
+        {
+        var itemHash = {};
+        var items = Orion.FindTypeEx(any,any,container);
+        for(var i=0;i<items.length;i++)
+            {
+            var item = items[i];
+            var graphicColorPair = item.Graphic() + ':' + item.Color();
+            itemHash[graphicColorPair] = true;
+            }
+        for(graphicColor in itemHash)
+            {
+            var graphicColorSplit = Orion.Split(graphicColor, ':');
+            var itemGraphic = graphicColorSplit[0];
+            var itemColor = graphicColorSplit[1];
+            CombineCommodity(itemGraphic, itemColor, container, stackSize);
+            if(useCommodityDeeds)
+                Commodify(itemGraphic, itemColor, container, stackSize);
+            }
+        }
+    }
+
+function CombineCommodity(graphicSerial, colorCode, containerSerial, stackCount)
 	{
-    // Monitors player auction and sends discord message when an item with the given searchString appears on screen
-	var searchString = 'lava'
-	var startTime = Orion.Now();
-	while(true)
+    var itemOverstacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
+        {
+        var itemCount = item.Count();
+        return itemCount > 1 && itemCount > stackCount;
+        });
+    while(itemOverstacked[0])
+        {
+        Orion.MoveItem(itemOverstacked[0].Serial(), stackCount, containerSerial, 0, 0);
+        Orion.Wait(1300);
+        itemOverstacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
+            {
+            var itemCount = item.Count();
+            return itemCount > 1 && itemCount > stackCount;
+            });
+        }
+	var itemUnderstacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
 		{
-		var found = Orion.FindTypeEx(any,any,ground,'item',24).filter(function(item)
+        var itemCount = item.Count();
+		return itemCount > 1 && itemCount < stackCount;
+		});
+	while(itemUnderstacked[1])
+		{
+		var neededCount = stackCount - itemUnderstacked[0].Count();
+		Orion.MoveItem(itemUnderstacked[1].Serial(), neededCount, itemUnderstacked[0].Serial())
+		Orion.Wait(1300);
+		itemUnderstacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
 			{
-			return Orion.Contains(item.Properties(), searchString);
-			})[0];
-		var journal = Orion.InJournal(searchString, "", '0', 'any', startTime);
-		if(found || journal)
-			{
-			DiscordPush('Auction Item Up!');
-			Orion.PauseScript();
-			}
-		Orion.Wait(1000);
+            var itemCount = item.Count();
+            return itemCount > 1 && itemCount < stackCount;
+			});
 		}
 	}
 
-function SecureAndCoOwn(itemSerial)
+function Commodify(graphicSerial, colorCode, containerSerial, stackCount)
     {
-    // Secure item in house and change access to Co-Owner in one hotkey
-    if(itemSerial === undefined)
+    var itemStacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
+		{
+		return item.Count() == stackCount;
+		})[0];
+    while(itemStacked)
         {
-        Orion.WaitForAddObject('myTarget');
-        var itemSerial = Orion.GetSerial('myTarget');
-        }
-    var startTime = Orion.Now();
-    var target = Orion.FindObject(itemSerial);
-    var targetSerial = target.Serial();
-    while(true)
-        {
-        Orion.Say('i wish to secure this');
-        if(Orion.WaitForTarget(3000))
+        var commodityDeed = Orion.FindTypeEx('0x14F0','0x0047',containerSerial)[0];
+        if(!commodityDeed)
+            return false;
+        while(Orion.Contains(commodityDeed.Properties(), 'Unfilled'))
             {
-            Orion.TargetObject(targetSerial);
-            var endTime = Orion.Now() + 4000;
-            check = Orion.WaitJournal('Secure!|Locked down!',startTime,endTime,'item',targetSerial);
-            if(check)
-                {
-                startTime = Orion.Now();
-                var gump = Orion.GetGump(any, '0x00000295');
-                while(!gump)
-                    {
-                    Orion.WaitContextMenuID(targetSerial, 600);
-                    Orion.RequestContextMenu(targetSerial);
-                    Orion.Wait(500);
-                    gump = Orion.GetGump(any, '0x00000295');
-                    }
-                gump.Select(Orion.CreateGumpHook(2));
-                endTime = Orion.Now() + 4000;
-                check = Orion.WaitJournal('New access level set.',startTime,endTime,'sys');
-                if(check)
-                    break;
-                }
+            Orion.UseObject(commodityDeed.Serial());
+            if(Orion.WaitForTarget(3000))
+                Orion.TargetObject(itemStacked.Serial());
+            Orion.Wait(1300);
             }
-        Orion.Wait(100);
+        itemStacked = Orion.FindTypeEx(graphicSerial, colorCode, containerSerial).filter(function(item)
+            {
+            return item.Count() == stackCount;
+            })[0];
         }
-    Orion.CharPrint(self,1159,'Secured and Access Set')
     }
+
+
+function MoveCommodityDeeds()
+	{ //Easily move large amounts of filled or unfilled commodity deeds from one container to another
+    Orion.CharPrint(self,1159,"Peaceful = unfilled deeds\nWarmode = filled deeds");
+    Orion.CharPrint(self,1159,"Select 'From' container\nPress Escape to select Bank");
+    var fromCheck = Orion.WaitForAddObject('myTarget');
+    if(fromCheck == 0)
+        {
+        while(!Orion.GumpExists('container', Player.BankSerial()))
+            {
+            Orion.Say('bank');
+            Orion.Wait(1300);
+            }
+        var fromContainer = Player.BankSerial();
+        }
+    else if(fromCheck == 1)
+        {
+        var fromContainer = Orion.GetSerial('myTarget');
+        while(!Orion.GumpExists('container', fromContainer))
+            {
+            Orion.UseObject(fromContainer);
+            Orion.Wait(1300);
+            }
+        }
+    Orion.CharPrint(self,1159,"Select 'To' container\nPress Escape to select Bank");
+    var toCheck = Orion.WaitForAddObject('myTarget');
+    if(toCheck == 0)
+        {
+        while(!Orion.GumpExists('container', Player.BankSerial()))
+            {
+            Orion.Say('bank');
+            Orion.Wait(1300);
+            }
+        var toContainer = Player.BankSerial();
+        }
+    else if(toCheck == 1)
+        {
+        var toContainer = Orion.GetSerial('myTarget');
+        while(!Orion.GumpExists('container', toContainer))
+            {
+            Orion.UseObject(toContainer);
+            Orion.Wait(1300);
+            }
+        }
+    do
+        {
+        var colorString = Player.WarMode() ? '0x0592' : '0x0047';
+        commodity = Orion.FindType('0x14F0',colorString,fromContainer)[0];
+        Orion.MoveItem(commodity,0,toContainer);
+        Orion.Wait(1300);
+        } while(commodity)
+	}
+
+// endregion Commodifier
+
+// region CombineAllRefinements
 
 /*
 Combine All Refinements
@@ -1936,6 +2091,66 @@ function CombineAllRefinements()
         }
     }
 
+function Combine(items,amount)
+    {
+    var amalgamator = Orion.FindType('0x9966','0x0480')[0];
+    if(!amalgamator)
+        return false;
+    var backpackSerial = Orion.GetSerial(backpack);
+    for(var i=0;i<amount;i++)
+        {
+        while(Orion.GetContainer(items[i]) != backpackSerial)
+            {
+            Orion.MoveItem(items[i]);
+            Orion.Wait(1300);
+            }
+        while(ParseAmalgamator(amalgamator).fulfilled == i)
+            {
+            Orion.UseObject(amalgamator);
+            if(Orion.WaitForTarget(2000))
+                Orion.TargetObject(items[i]);
+            Orion.Wait(1300);
+            }
+        }
+    return true;
+    }
+
+function ParseRefinement(itemSerial)
+    {
+    var itemObj = Orion.FindObject(itemSerial);
+    var itemProps = itemObj.Properties();
+    var itemInfo = itemProps.match(/(\w+) Of (\w+)[\w\/\:\n\r<>\s]+Armor Type: ([\w ]+)\nBonus Type: (\w+)/) || [];
+    if(!itemInfo[0])
+        return false;
+    var type = itemInfo[1];
+    var level = itemInfo[2];
+    var armor = itemInfo[3];
+    var bonus = itemInfo[4];
+    return {'type': type,'level': level,'armor': armor,'bonus': bonus};
+    }
+
+function ParseAmalgamator(itemSerial)
+    {
+    var itemObj = Orion.FindObject(itemSerial);
+    if(itemObj.Color() == '0x0480') //empty amalgamator
+        return {'fulfilled': 0, 'requested': 0};
+    var itemProps = itemObj.Properties();
+    var itemInfo = itemProps.match(/(\w+) Of (\w+)[\w\/\:\n\r<>\s]+Armor Type: ([\w ]+)\nBonus Type: (\w+)\nCurrent Status : (\d+)\/(\d)/) || [];
+    if(!itemInfo[0])
+        return false;
+    var type = itemInfo[1];
+    var level = itemInfo[2];
+    var armor = itemInfo[3];
+    var bonus = itemInfo[4];
+    var fulfilled = itemInfo[5];
+    var requested = itemInfo[6];
+    return {'type': type,'level': level,'armor': armor,'bonus': bonus, 'fulfilled': fulfilled, 'requested': requested,'empty': false};
+    }
+
+// endregion CombineAllRefinements
+
+// region FillRepairBench
+
 function FillRepairBench()
     {
     Orion.CharPrint(self, 1159, 'Select supply container. It should contain blank scrolls');
@@ -1954,3 +2169,80 @@ function FillRepairBench()
     //Fill('Alchemist', 'Alchemy', 100, '0x0E8A', supplyContainer, bench, 11); //untested, also no check for Glassblowing Specialization in place
     Fill('Fletcher', 'Bowcraft/Fletching', 100, '0x1022', supplyContainer, bench, 13);
     }
+
+function Fill(profString, skillString, skillValue, toolGraphic, containerSerial, benchSerial, textInd)
+    {
+    while(true)
+        {
+        WaitForObjectTimeout();
+        Orion.UseObject(benchSerial);
+        lastObjectUsedTime = Orion.Now();
+        var benchGump = WaitForSpecificGump(2000, 'generic', benchSerial, '0x00002415');
+        if(benchGump)
+            {
+            var have = Orion.FindTypeEx('0x14F0').filter(function(deed)
+                {
+                return Orion.Contains(deed.Properties(), profString);
+                }).length;
+            var needed = Math.min(500 - +benchGump.TextList()[textInd] - have, 25);
+            if(needed < 1)
+                return Orion.CharPrint(self, 1159, skillString + ' charges filled');
+            if(Orion.SkillValue(skillString, 'base') < skillValue*10)
+                return Orion.CharPrint(self, 1159, skillString + " skill isn't high enough");
+            var tool = Orion.FindType(toolGraphic)[0];
+            if(!tool)
+                return Orion.CharPrint(self, 1159, profString + ' tool not found');
+            Restock('Blank Scroll', '0x0EF3', containerSerial, needed);
+            Orion.CharPrint(self, 1159, 500 - +benchGump.TextList()[textInd] + ' deeds needed');
+            Orion.CharPrint(self, 1159, 'Making batch of ' + needed + ' ' + profString + ' deeds');
+            for(var i=0;i<needed;i++)
+                {
+                if(!Orion.GumpExists('generic', tool, '0x000001CC'))
+                    {
+                    WaitForObjectTimeout();
+                    Orion.UseObject(tool);
+                    lastObjectUsedTime = Orion.Now();
+                    }
+                var toolGump = WaitForSpecificGump(2000, 'generic', tool, '0x000001CC');
+                if(toolGump)
+                    {
+                    toolGump.Select(Orion.CreateGumpHook(8000));
+                    if(Orion.WaitForTarget(2000))
+                        Orion.TargetType('0x0EF3');
+                    }
+                Orion.Wait(200);
+                //WaitForSpecificGump(2000, 'generic', tool, '0x000001CC'); //faster but causes problems if window isn't in focus or fps is low
+                }
+            Orion.Wait(500);
+            var deeds = Orion.FindTypeEx('0x14F0').filter(function(deed)
+                {
+                return Orion.Contains(deed.Properties(), profString);
+                });
+            if(deeds[0])
+                {
+                Orion.CloseGump('generic', tool, '0x000001CC');
+                Orion.CharPrint(self, 1159, 'Adding charges to bench');
+                WaitForObjectTimeout();
+                Orion.UseObject(benchSerial);
+                lastObjectUsedTime = Orion.Now();
+                benchGump = WaitForSpecificGump(2000, 'generic', benchSerial, '0x00002415');
+                if(benchGump)
+                    {
+                    benchGump.Select(Orion.CreateGumpHook(100));
+                    for(var i=0;i<deeds.length;i++)
+                        {
+                        if(Orion.WaitForTarget(2000))
+                            Orion.TargetObject(deeds[i].Serial());
+                        }
+                    if(Orion.WaitForTarget(2000))
+                        Orion.CancelTarget();
+                    Orion.Wait(200);
+                    }
+                }
+            }
+        Orion.CloseGump('generic', benchSerial, '0x00002415');
+        Orion.Wait(200);
+        }
+    }
+
+// endregion FillRepairBench
